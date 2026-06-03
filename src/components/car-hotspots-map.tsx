@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Map as MlMap } from "maplibre-gl";
 import { Map, MapMarker, MarkerContent, MarkerLabel, MarkerTooltip } from "@/components/ui/mapcn-marker-label";
 
@@ -64,14 +64,24 @@ async function fetchOverpass(query: string): Promise<{ elements?: OverpassEl[] }
   return null;
 }
 
+// Default view if geolocation is denied — somewhere full of cars so pins always show.
+const DEFAULT_CENTER: [number, number] = [-118.2437, 34.0522]; // Los Angeles
+
 export function CarHotspotsMap() {
   const mapRef = useRef<MlMap | null>(null);
   const [spots, setSpots] = useState<Spot[]>([]);
-  const [statusText, setStatusText] = useState("Finding luxury dealers & car spots near you…");
-  const located = useRef(false);
+  const [statusText, setStatusText] = useState("Loading map…");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastFetchRef = useRef<{ lat: number; lon: number } | null>(null);
+  const started = useRef(false);
 
-  async function findSpots(lat: number, lon: number) {
-    setStatusText("Finding luxury dealers & car spots near you…");
+  const findSpots = useCallback(async (lat: number, lon: number) => {
+    const last = lastFetchRef.current;
+    // skip if we already loaded this area (~2.5 km)
+    if (last && Math.abs(last.lat - lat) < 0.025 && Math.abs(last.lon - lon) < 0.025) return;
+    lastFetchRef.current = { lat, lon };
+    setStatusText("Finding car spots in this area…");
+
     const R = 12000;
     const filters = [
       'node["shop"="car"]',
@@ -89,7 +99,8 @@ export function CarHotspotsMap() {
 
     const data = await fetchOverpass(query);
     if (!data) {
-      setStatusText("All map servers are busy right now — tap 📍 to retry.");
+      lastFetchRef.current = null; // allow a retry of the same area
+      setStatusText("Map servers are busy — pan the map a little to retry.");
       return;
     }
     const found: Spot[] = [];
@@ -105,67 +116,61 @@ export function CarHotspotsMap() {
       if (seen.has(id)) continue;
       seen.add(id);
       const cat = CATS[key];
-      found.push({
-        id,
-        name: tags.name || cat.label,
-        category: cat.label,
-        color: cat.color,
-        luxury: key === "luxury",
-        lng: plon,
-        lat: plat,
-      });
+      found.push({ id, name: tags.name || cat.label, category: cat.label, color: cat.color, luxury: key === "luxury", lng: plon, lat: plat });
     }
-    // luxury dealers first, cap to keep the map readable
     found.sort((a, b) => Number(b.luxury) - Number(a.luxury));
-    const limited = found.slice(0, 80);
-    setSpots(limited);
+    setSpots(found.slice(0, 80));
     const lux = found.filter((s) => s.luxury).length;
     setStatusText(
       found.length
-        ? `Found ${found.length} spots nearby${lux ? ` · ${lux} luxury dealer${lux > 1 ? "s" : ""}` : ""}.`
-        : "Nothing found here — pan to a city and tap 📍.",
+        ? `Found ${found.length} spots here${lux ? ` · ${lux} luxury dealer${lux > 1 ? "s" : ""}` : ""}. Pan to explore more.`
+        : "No car spots in this exact area — pan to a town/city.",
     );
+  }, []);
+
+  // Fetch whenever the visible area settles (no geolocation required).
+  function handleViewport(vp: { center: [number, number]; zoom: number }) {
+    if (vp.zoom < 9) {
+      setStatusText("Zoom in to a city to see car spots.");
+      return;
+    }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => findSpots(vp.center[1], vp.center[0]), 700);
   }
 
   function locate() {
-    if (!("geolocation" in navigator)) {
-      setStatusText("Location unavailable on this device.");
-      return;
-    }
+    if (!("geolocation" in navigator)) return;
     setStatusText("Locating you…");
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        mapRef.current?.flyTo({ center: [longitude, latitude], zoom: 11, duration: 1200 });
-        findSpots(latitude, longitude);
-      },
-      () => setStatusText("Allow location (or pan the map) and tap 📍."),
-      { enableHighAccuracy: true, timeout: 10000 },
+      (pos) => mapRef.current?.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 12, duration: 1200 }),
+      () => setStatusText("Couldn't get your location — pan the map to your area."),
+      { enableHighAccuracy: true, timeout: 8000 },
     );
   }
 
+  // On mount: try to fly to the user; if denied, fly to a default city so pins show.
   useEffect(() => {
-    if (located.current) return;
-    located.current = true;
-    if (!("geolocation" in navigator)) {
-      setStatusText("Pan the map and tap 📍 to find car spots.");
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        mapRef.current?.flyTo({ center: [longitude, latitude], zoom: 11, duration: 1200 });
-        findSpots(latitude, longitude);
-      },
-      () => setStatusText("Allow location (or pan the map) and tap 📍 to find spots."),
-      { enableHighAccuracy: true, timeout: 10000 },
-    );
+    if (started.current) return;
+    started.current = true;
+    const flyDefault = () => {
+      mapRef.current?.flyTo({ center: DEFAULT_CENTER, zoom: 11, duration: 800 });
+      setStatusText("Showing Los Angeles — tap 📍 to jump to your area.");
+    };
+    const t = setTimeout(() => {
+      if (!("geolocation" in navigator)) return flyDefault();
+      navigator.geolocation.getCurrentPosition(
+        (pos) => mapRef.current?.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 12, duration: 1200 }),
+        () => flyDefault(),
+        { enableHighAccuracy: true, timeout: 8000 },
+      );
+    }, 400); // let the map initialize first
+    return () => clearTimeout(t);
   }, []);
 
   return (
     <div>
       <div className="h-[440px] w-full overflow-hidden rounded-2xl border border-white/[0.06]">
-        <Map ref={mapRef} center={[-98, 39]} zoom={3.4}>
+        <Map ref={mapRef} center={DEFAULT_CENTER} zoom={4} onViewportChange={handleViewport}>
           {spots.map((s) => (
             <MapMarker key={s.id} longitude={s.lng} latitude={s.lat}>
               <MarkerContent>
