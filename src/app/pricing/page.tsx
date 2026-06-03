@@ -2,11 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { SiteHeader } from "@/components/site-header";
 import { PLANS, PLAN_ORDER, type PlanId } from "@/lib/plans";
 
 export default function PricingPage() {
   const router = useRouter();
+  const { status: authStatus } = useSession();
+  const signedIn = authStatus === "authenticated";
+  const [authEnabled, setAuthEnabled] = useState(false);
+  const needsAuth = authEnabled && !signedIn;
   const [current, setCurrent] = useState<PlanId | null>(null);
   const [busy, setBusy] = useState<PlanId | null>(null);
   const [promo, setPromo] = useState("");
@@ -15,6 +20,10 @@ export default function PricingPage() {
 
   async function redeem() {
     if (!promo.trim()) return;
+    if (needsAuth) {
+      router.push("/signin?callbackUrl=/pricing");
+      return;
+    }
     setRedeeming(true);
     setPromoMsg(null);
     try {
@@ -41,11 +50,18 @@ export default function PricingPage() {
   useEffect(() => {
     fetch("/api/me")
       .then((r) => r.json())
-      .then((s) => setCurrent(s.plan))
+      .then((s) => {
+        setCurrent(s.plan);
+        setAuthEnabled(!!s.authEnabled);
+      })
       .catch(() => {});
   }, []);
 
   async function choose(plan: PlanId) {
+    if (needsAuth) {
+      router.push("/signin?callbackUrl=/pricing");
+      return;
+    }
     setBusy(plan);
     try {
       const r = await fetch("/api/upgrade", {
@@ -73,6 +89,15 @@ export default function PricingPage() {
             Start free. Upgrade when you&apos;re spotting more.
           </p>
         </div>
+
+        {needsAuth && (
+          <div className="mx-auto mt-6 max-w-md rounded-2xl border border-sky-500/40 bg-sky-500/10 p-4 text-center text-sm">
+            You&apos;ll need an account to subscribe or redeem a code.{" "}
+            <a href="/signin?callbackUrl=/pricing" className="font-semibold text-sky-300 underline">
+              Sign in or sign up
+            </a>
+          </div>
+        )}
 
         <div className="mt-12 grid gap-6 md:grid-cols-3">
           {PLAN_ORDER.map((id) => {

@@ -13,6 +13,8 @@ import {
 import { PLANS } from "@/lib/plans";
 import { identifyCar, IdentifyError } from "@/lib/identify";
 import { goalsForDate, evaluateGoals } from "@/lib/gamification";
+import { auth } from "@/auth";
+import { recordSpot } from "@/lib/leaderboard";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -68,6 +70,14 @@ export async function POST(req: Request) {
       completedGoals,
       effectivePlan,
     );
+    // Record to the global leaderboard for signed-in users.
+    const session = await auth();
+    if (session?.user?.email) {
+      await recordSpot(
+        { id: session.user.email, name: session.user.name, image: session.user.image },
+        car,
+      );
+    }
     return NextResponse.json({ car, status, completedGoals });
   } catch (e) {
     const message = e instanceof IdentifyError ? e.message : "Identification failed.";

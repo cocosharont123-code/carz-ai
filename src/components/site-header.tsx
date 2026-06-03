@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Sparkles } from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
 
 type Status = { planName: string; plan: string };
 
 export function SiteHeader() {
+  const { data: session } = useSession();
   const [status, setStatus] = useState<Status | null>(null);
 
   useEffect(() => {
@@ -39,6 +41,9 @@ export function SiteHeader() {
         <Link href="/spot" className="text-foreground/80 hover:text-foreground">
           Spot
         </Link>
+        <Link href="/leaderboard" className="hidden text-foreground/80 hover:text-foreground sm:inline">
+          Ranks
+        </Link>
         <Link href="/pricing" className="text-foreground/80 hover:text-foreground">
           Plans
         </Link>
@@ -49,6 +54,19 @@ export function SiteHeader() {
           <Sparkles className="h-3.5 w-3.5 text-violet-300" />
           Assistant
         </Link>
+        {session?.user ? (
+          <button
+            onClick={() => signOut()}
+            title={session.user.email ?? undefined}
+            className="hidden text-foreground/80 hover:text-foreground sm:inline"
+          >
+            Sign out
+          </button>
+        ) : (
+          <Link href="/signin" className="text-foreground/80 hover:text-foreground">
+            Sign in
+          </Link>
+        )}
       </nav>
     </header>
   );

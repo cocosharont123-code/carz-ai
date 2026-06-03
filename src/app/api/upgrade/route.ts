@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getUserId, setPlan, UID_COOKIE, PLAN_COOKIE } from "@/lib/store";
 import { PLANS, type PlanId } from "@/lib/plans";
+import { auth } from "@/auth";
 
 const COOKIE_OPTS = { httpOnly: true, sameSite: "lax" as const, maxAge: 60 * 60 * 24 * 365, path: "/" };
 
@@ -12,6 +13,16 @@ export const runtime = "nodejs";
  * session and only flip the plan after a verified webhook (see README).
  */
 export async function POST(req: Request) {
+  // Enforce sign-in only once a real provider (Google) is configured.
+  const authEnabled = !!process.env.AUTH_GOOGLE_ID;
+  const session = await auth();
+  if (authEnabled && !session?.user) {
+    return NextResponse.json(
+      { error: "auth_required", message: "Please sign in to subscribe." },
+      { status: 401 },
+    );
+  }
+
   const { id, isNew } = await getUserId();
   const jar = await cookies();
   if (isNew) jar.set(UID_COOKIE, id, COOKIE_OPTS);

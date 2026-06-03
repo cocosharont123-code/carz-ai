@@ -22,6 +22,7 @@ export async function GET() {
     ...status,
     plans: PLANS,
     apiConfigured: !!process.env.ANTHROPIC_API_KEY,
+    authEnabled: !!process.env.AUTH_GOOGLE_ID,
     history: status.saveHistory ? recentHistory(user) : [],
     totalSpots: user.totalSpots ?? 0,
     badges: badgesFor(user.totalSpots ?? 0),
