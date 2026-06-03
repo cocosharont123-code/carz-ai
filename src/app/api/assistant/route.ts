@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { PLANS } from "@/lib/plans";
+import { isPlanId, PLAN_COOKIE } from "@/lib/store";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -13,6 +16,17 @@ const SYSTEM =
 type Msg = { role: "user" | "assistant"; content: string };
 
 export async function POST(req: Request) {
+  // Max-only feature.
+  const jar = await cookies();
+  const cookiePlan = jar.get(PLAN_COOKIE)?.value;
+  const plan = isPlanId(cookiePlan) ? cookiePlan : "free";
+  if (!PLANS[plan].aiAssistant) {
+    return NextResponse.json(
+      { reply: "🔒 The AI assistant is a Max-only feature. Upgrade to Max to chat with it." },
+      { status: 403 },
+    );
+  }
+
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ error: "Server has no ANTHROPIC_API_KEY set." }, { status: 500 });

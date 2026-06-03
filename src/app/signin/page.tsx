@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
@@ -19,6 +19,14 @@ function GoogleIcon() {
 function SignInInner() {
   const params = useSearchParams();
   const callbackUrl = params.get("callbackUrl") || "/pricing";
+  const [authEnabled, setAuthEnabled] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    fetch("/api/me")
+      .then((r) => r.json())
+      .then((d) => setAuthEnabled(!!d.authEnabled))
+      .catch(() => setAuthEnabled(false));
+  }, []);
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center px-5 py-20 text-center">
@@ -28,10 +36,17 @@ function SignInInner() {
         Sign in or create an account to subscribe and unlock Pro & Max.
       </p>
 
+      {authEnabled === false && (
+        <div className="mt-6 w-full rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-200">
+          Sign-in is being set up and isn&apos;t available just yet. Check back soon.
+        </div>
+      )}
+
       <div className="mt-8 w-full space-y-3">
         <button
           onClick={() => signIn("google", { callbackUrl })}
-          className="flex w-full items-center justify-center gap-3 rounded-xl bg-white px-4 py-3 font-semibold text-[#1f1f1f] transition hover:bg-white/90"
+          disabled={authEnabled !== true}
+          className="flex w-full items-center justify-center gap-3 rounded-xl bg-white px-4 py-3 font-semibold text-[#1f1f1f] transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <GoogleIcon />
           Continue with Google

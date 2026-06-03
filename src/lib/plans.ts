@@ -11,6 +11,7 @@ export type Plan = {
   premiumReport: boolean; // valuation / reliability / collectibility
   saveHistory: boolean;
   hotspotsMap: boolean; // Max-only nearby car hotspots map
+  aiAssistant: boolean; // Max-only AI chat assistant
   blurb: string;
   features: string[];
 };
@@ -24,6 +25,7 @@ export const PLANS: Record<PlanId, Plan> = {
     premiumReport: false,
     saveHistory: false,
     hotspotsMap: false,
+    aiAssistant: false,
     blurb: "Spot a couple cars a day.",
     features: [
       "2 identifications / day",
@@ -34,14 +36,15 @@ export const PLANS: Record<PlanId, Plan> = {
   pro: {
     id: "pro",
     name: "Pro",
-    price: 9.99,
-    dailyLimit: 50,
+    price: 7.99,
+    dailyLimit: 20,
     premiumReport: false,
     saveHistory: true,
     hotspotsMap: false,
+    aiAssistant: false,
     blurb: "For the daily spotter.",
     features: [
-      "50 identifications / day",
+      "20 identifications / day",
       "Everything in Free",
       "Saved spotting history",
       "Priority identification",
@@ -50,17 +53,19 @@ export const PLANS: Record<PlanId, Plan> = {
   max: {
     id: "max",
     name: "Max",
-    price: 24.99,
+    price: 9.99,
     dailyLimit: null,
     premiumReport: true,
     saveHistory: true,
     hotspotsMap: true,
-    blurb: "Unlimited, with deep reports & the hotspots map.",
+    aiAssistant: true,
+    blurb: "Unlimited, with deep reports, the hotspots map & AI assistant.",
     features: [
       "Unlimited identifications",
       "Everything in Pro",
       "Deep valuation, reliability & collectibility reports",
       "Car hotspots map near you",
+      "AI car assistant chat",
     ],
   },
 };
