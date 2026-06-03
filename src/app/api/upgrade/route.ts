@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { getUserId, setPlan, UID_COOKIE } from "@/lib/store";
+import { getUserId, setPlan, UID_COOKIE, PLAN_COOKIE } from "@/lib/store";
 import { PLANS, type PlanId } from "@/lib/plans";
+
+const COOKIE_OPTS = { httpOnly: true, sameSite: "lax" as const, maxAge: 60 * 60 * 24 * 365, path: "/" };
 
 export const runtime = "nodejs";
 
@@ -11,10 +13,8 @@ export const runtime = "nodejs";
  */
 export async function POST(req: Request) {
   const { id, isNew } = await getUserId();
-  if (isNew) {
-    const jar = await cookies();
-    jar.set(UID_COOKIE, id, { httpOnly: true, sameSite: "lax", maxAge: 60 * 60 * 24 * 365, path: "/" });
-  }
+  const jar = await cookies();
+  if (isNew) jar.set(UID_COOKIE, id, COOKIE_OPTS);
 
   let body: { plan?: string };
   try {
@@ -29,5 +29,6 @@ export async function POST(req: Request) {
   }
 
   const status = setPlan(id, plan);
+  jar.set(PLAN_COOKIE, plan, COOKIE_OPTS); // persist plan across serverless instances
   return NextResponse.json({ ok: true, status });
 }

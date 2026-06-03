@@ -12,6 +12,13 @@ const DATA_DIR = process.env.VERCEL
   : path.join(process.cwd(), ".data");
 const STORE_PATH = path.join(DATA_DIR, "store.json");
 export const UID_COOKIE = "cs_uid";
+// Plan is also mirrored into a cookie so it stays consistent across Vercel's
+// stateless serverless instances (the file/memory store is per-instance only).
+export const PLAN_COOKIE = "cs_plan";
+
+export function isPlanId(s: string | null | undefined): s is PlanId {
+  return s === "free" || s === "pro" || s === "max";
+}
 
 let memory: Store | null = null;
 
@@ -98,8 +105,8 @@ export type PlanStatus = {
   hotspotsMap: boolean;
 };
 
-export function planStatus(user: UserRecord): PlanStatus {
-  const plan: Plan = PLANS[user.plan] ?? PLANS.free;
+export function planStatusFor(planId: PlanId, user: UserRecord): PlanStatus {
+  const plan: Plan = PLANS[planId] ?? PLANS.free;
   const used = usageToday(user);
   const limit = plan.dailyLimit;
   return {
@@ -114,20 +121,29 @@ export function planStatus(user: UserRecord): PlanStatus {
   };
 }
 
-export function atLimit(user: UserRecord): boolean {
-  const plan = PLANS[user.plan] ?? PLANS.free;
+export function planStatus(user: UserRecord): PlanStatus {
+  return planStatusFor(user.plan, user);
+}
+
+export function atLimitFor(planId: PlanId, user: UserRecord): boolean {
+  const plan = PLANS[planId] ?? PLANS.free;
   if (plan.dailyLimit === null) return false;
   return usageToday(user) >= plan.dailyLimit;
+}
+
+export function atLimit(user: UserRecord): boolean {
+  return atLimitFor(user.plan, user);
 }
 
 export function recordIdentification(
   id: string,
   car: { make?: string; model?: string; yearRange?: string; isCar?: boolean },
   completedGoalIds: string[] = [],
+  planOverride?: PlanId,
 ) {
   const store = loadStore();
   const user = ensureUser(store, id);
-  const plan = PLANS[user.plan] ?? PLANS.free;
+  const plan = PLANS[planOverride ?? user.plan] ?? PLANS.free;
   const today = todayStr();
   user.usage[today] = usageToday(user) + 1;
   if (car.isCar) {
@@ -147,7 +163,7 @@ export function recordIdentification(
     user.goalsDone[today] = Array.from(merged);
   }
   saveStore(store);
-  return planStatus(user);
+  return planStatusFor(planOverride ?? user.plan, user);
 }
 
 export function setPlan(id: string, plan: PlanId): PlanStatus {

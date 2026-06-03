@@ -1,6 +1,15 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { getUserId, getUser, planStatus, atLimit, recordIdentification, UID_COOKIE } from "@/lib/store";
+import {
+  getUserId,
+  getUser,
+  planStatusFor,
+  atLimitFor,
+  recordIdentification,
+  UID_COOKIE,
+  PLAN_COOKIE,
+  isPlanId,
+} from "@/lib/store";
 import { PLANS } from "@/lib/plans";
 import { identifyCar, IdentifyError } from "@/lib/identify";
 import { goalsForDate, evaluateGoals } from "@/lib/gamification";
@@ -10,10 +19,11 @@ export const maxDuration = 60;
 
 export async function POST(req: Request) {
   const { id, isNew } = await getUserId();
+  const jar = await cookies();
   if (isNew) {
-    const jar = await cookies();
     jar.set(UID_COOKIE, id, { httpOnly: true, sameSite: "lax", maxAge: 60 * 60 * 24 * 365, path: "/" });
   }
+  const cookiePlan = jar.get(PLAN_COOKIE)?.value;
 
   let body: { image?: string; note?: string };
   try {
@@ -34,14 +44,15 @@ export async function POST(req: Request) {
   }
 
   const user = getUser(id);
-  const plan = PLANS[user.plan] ?? PLANS.free;
+  const effectivePlan = isPlanId(cookiePlan) ? cookiePlan : user.plan;
+  const plan = PLANS[effectivePlan] ?? PLANS.free;
 
-  if (atLimit(user)) {
+  if (atLimitFor(effectivePlan, user)) {
     return NextResponse.json(
       {
         error: "limit_reached",
         message: `You've hit your daily limit of ${plan.dailyLimit} on the ${plan.name} plan.`,
-        status: planStatus(user),
+        status: planStatusFor(effectivePlan, user),
       },
       { status: 402 },
     );
@@ -55,6 +66,7 @@ export async function POST(req: Request) {
       id,
       { make: car.make, model: car.model, yearRange: car.yearRange, isCar: car.isCar },
       completedGoals,
+      effectivePlan,
     );
     return NextResponse.json({ car, status, completedGoals });
   } catch (e) {
