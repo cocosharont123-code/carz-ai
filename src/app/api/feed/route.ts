@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { createPost, listPosts, feedConfigured } from "@/lib/feed";
+import { verifyPostToken } from "@/lib/posttoken";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,11 +20,25 @@ export async function POST(req: Request) {
   if (!session?.user) {
     return NextResponse.json({ ok: false, error: "Please sign in to post." }, { status: 401 });
   }
-  let body: { image?: string; make?: string; model?: string; yearRange?: string; caption?: string };
+  let body: {
+    image?: string;
+    make?: string;
+    model?: string;
+    yearRange?: string;
+    caption?: string;
+    token?: string;
+  };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ ok: false, error: "invalid JSON" }, { status: 400 });
+  }
+  // Enforce: you can only post a car you actually identified through the app.
+  if (!verifyPostToken(body.token || "", body.make || "", body.model || "")) {
+    return NextResponse.json(
+      { ok: false, error: "You can only post a car you've just identified." },
+      { status: 403 },
+    );
   }
   const res = await createPost(
     { name: session.user.name, image: session.user.image },

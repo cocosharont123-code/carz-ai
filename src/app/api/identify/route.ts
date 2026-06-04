@@ -15,6 +15,7 @@ import { identifyCar, IdentifyError } from "@/lib/identify";
 import { goalsForDate, evaluateGoals } from "@/lib/gamification";
 import { auth } from "@/auth";
 import { recordSpot } from "@/lib/leaderboard";
+import { signPostToken } from "@/lib/posttoken";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -78,7 +79,8 @@ export async function POST(req: Request) {
         car,
       );
     }
-    return NextResponse.json({ car, status, completedGoals });
+    const postToken = car.isCar ? signPostToken(car.make, car.model) : null;
+    return NextResponse.json({ car, status, completedGoals, postToken });
   } catch (e) {
     const message = e instanceof IdentifyError ? e.message : "Identification failed.";
     return NextResponse.json({ error: "identify_failed", message }, { status: 502 });

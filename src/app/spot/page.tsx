@@ -354,6 +354,7 @@ export default function SpotPage() {
   const [caption, setCaption] = useState("");
   const [sharing, setSharing] = useState(false);
   const [shareMsg, setShareMsg] = useState("");
+  const [postToken, setPostToken] = useState<string | null>(null);
   const router = useRouter();
   const { status: authStatus } = useSession();
 
@@ -433,6 +434,7 @@ export default function SpotPage() {
         return;
       }
       setCar(data.car);
+      setPostToken(data.postToken ?? null);
       setStatus((prev) => ({ ...(prev as Status), ...data.status }));
       // keep the photo on screen after identifying
       await refresh();
@@ -451,6 +453,7 @@ export default function SpotPage() {
     setLimitHit(false);
     setCaption("");
     setShareMsg("");
+    setPostToken(null);
   }
 
   async function shareToFeed() {
@@ -473,6 +476,7 @@ export default function SpotPage() {
           model: car.model,
           yearRange: car.yearRange,
           caption,
+          token: postToken,
         }),
       });
       const data = await res.json();
