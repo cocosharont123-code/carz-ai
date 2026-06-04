@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { ImagePlus, Upload, Trash2, X } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
@@ -349,6 +351,11 @@ export default function SpotPage() {
   const [limitHit, setLimitHit] = useState(false);
   const [note, setNote] = useState("");
   const [isDragging, setIsDragging] = useState(false);
+  const [caption, setCaption] = useState("");
+  const [sharing, setSharing] = useState(false);
+  const [shareMsg, setShareMsg] = useState("");
+  const router = useRouter();
+  const { status: authStatus } = useSession();
 
   const {
     previewUrl,
@@ -442,6 +449,44 @@ export default function SpotPage() {
     setCar(null);
     setError("");
     setLimitHit(false);
+    setCaption("");
+    setShareMsg("");
+  }
+
+  async function shareToFeed() {
+    if (authStatus !== "authenticated") {
+      router.push("/signin?callbackUrl=/spot");
+      return;
+    }
+    if (!previewUrl || !car) return;
+    setSharing(true);
+    setShareMsg("");
+    try {
+      const raw = await objectUrlToDataUrl(previewUrl);
+      const thumb = await downscale(raw, 720, 0.7);
+      const res = await fetch("/api/feed", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          image: thumb,
+          make: car.make,
+          model: car.model,
+          yearRange: car.yearRange,
+          caption,
+        }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setShareMsg("Posted to the feed! 🎉");
+        setTimeout(() => router.push("/feed"), 900);
+      } else {
+        setShareMsg(data.error || "Couldn't post.");
+      }
+    } catch {
+      setShareMsg("Network error — try again.");
+    } finally {
+      setSharing(false);
+    }
   }
 
   const premium = status?.premiumReport;
@@ -617,6 +662,21 @@ export default function SpotPage() {
                   </span>
                 </div>
                 {car.notes && <p className="mt-1 text-sm text-muted-foreground">{car.notes}</p>}
+
+                {/* Post to community feed */}
+                <div className="mt-4 rounded-2xl border border-white/[0.06] bg-white/[0.03] p-3">
+                  <input
+                    value={caption}
+                    onChange={(e) => setCaption(e.target.value)}
+                    placeholder="Add a caption…"
+                    maxLength={280}
+                    className="w-full rounded-lg bg-transparent px-1 py-1.5 text-sm outline-none placeholder:text-muted-foreground"
+                  />
+                  <Button onClick={shareToFeed} disabled={sharing} className="mt-1 w-full">
+                    {sharing ? "Posting…" : "📤 Post this spot to the feed"}
+                  </Button>
+                  {shareMsg && <p className="mt-2 text-center text-sm text-emerald-300">{shareMsg}</p>}
+                </div>
 
                 <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <Spec k="Body style" v={car.bodyStyle} />

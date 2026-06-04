@@ -41,6 +41,9 @@ export function SiteHeader() {
         <Link href="/spot" className="text-foreground/80 hover:text-foreground">
           Spot
         </Link>
+        <Link href="/feed" className="text-foreground/80 hover:text-foreground">
+          Feed
+        </Link>
         <Link href="/leaderboard" className="hidden text-foreground/80 hover:text-foreground sm:inline">
           Ranks
         </Link>
