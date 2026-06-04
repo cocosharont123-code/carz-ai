@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { createPost, listPosts, feedConfigured } from "@/lib/feed";
 import { verifyPostToken } from "@/lib/posttoken";
+import { getProfile } from "@/lib/profile";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,8 +18,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "The feed isn't connected yet." }, { status: 503 });
   }
   const session = await auth();
-  if (!session?.user) {
+  if (!session?.user?.email) {
     return NextResponse.json({ ok: false, error: "Please sign in to post." }, { status: 401 });
+  }
+  const profile = await getProfile(session.user.email);
+  if (!profile?.username) {
+    return NextResponse.json(
+      { ok: false, needUsername: true, error: "Pick a username before posting." },
+      { status: 400 },
+    );
   }
   let body: {
     image?: string;
@@ -41,7 +49,7 @@ export async function POST(req: Request) {
     );
   }
   const res = await createPost(
-    { name: session.user.name, image: session.user.image },
+    { username: profile.username, displayName: profile.displayName, image: profile.image },
     {
       image: body.image || "",
       make: body.make || "",

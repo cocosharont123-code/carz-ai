@@ -10,6 +10,18 @@ type Status = { planName: string; plan: string };
 export function SiteHeader() {
   const { data: session } = useSession();
   const [status, setStatus] = useState<Status | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!session?.user) {
+      setUsername(null);
+      return;
+    }
+    fetch("/api/profile")
+      .then((r) => r.json())
+      .then((d) => setUsername(d.profile?.username ?? ""))
+      .catch(() => {});
+  }, [session]);
 
   useEffect(() => {
     fetch("/api/me")
@@ -58,13 +70,21 @@ export function SiteHeader() {
           Assistant
         </Link>
         {session?.user ? (
-          <button
-            onClick={() => signOut()}
-            title={session.user.email ?? undefined}
-            className="hidden text-foreground/80 hover:text-foreground sm:inline"
-          >
-            Sign out
-          </button>
+          <>
+            <Link
+              href="/profile"
+              className="font-semibold text-foreground/90 hover:text-foreground"
+              title="Edit profile"
+            >
+              {username ? `@${username}` : "Set username"}
+            </Link>
+            <button
+              onClick={() => signOut()}
+              className="hidden text-foreground/60 hover:text-foreground sm:inline"
+            >
+              Sign out
+            </button>
+          </>
         ) : (
           <Link href="/signin" className="text-foreground/80 hover:text-foreground">
             Sign in

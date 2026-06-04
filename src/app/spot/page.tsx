@@ -483,6 +483,8 @@ export default function SpotPage() {
       if (data.ok) {
         setShareMsg("Posted to the feed! 🎉");
         setTimeout(() => router.push("/feed"), 900);
+      } else if (data.needUsername) {
+        router.push("/profile?next=/spot");
       } else {
         setShareMsg(data.error || "Couldn't post.");
       }

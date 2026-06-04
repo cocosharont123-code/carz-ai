@@ -26,7 +26,8 @@ async function cmd(args: (string | number)[]): Promise<unknown> {
 
 export type FeedPost = {
   id: string;
-  userName: string;
+  username: string;
+  displayName: string;
   userImage: string;
   image: string; // base64 data URL thumbnail
   make: string;
@@ -40,7 +41,7 @@ export type FeedPost = {
 const TIMELINE = "feed:timeline";
 
 export async function createPost(
-  user: { name?: string | null; image?: string | null },
+  user: { username: string; displayName: string; image?: string | null },
   data: { image: string; make: string; model: string; yearRange: string; caption: string },
 ): Promise<{ ok: boolean; id?: string; error?: string }> {
   if (!feedConfigured()) return { ok: false, error: "feed not configured" };
@@ -50,7 +51,8 @@ export async function createPost(
   const id = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const post: FeedPost = {
     id,
-    userName: user.name || "Spotter",
+    username: user.username,
+    displayName: user.displayName || user.username,
     userImage: user.image || "",
     image: data.image,
     make: data.make || "",

@@ -6,7 +6,8 @@ import { SiteHeader } from "@/components/site-header";
 
 type Post = {
   id: string;
-  userName: string;
+  username: string;
+  displayName: string;
   userImage: string;
   image: string;
   make: string;
@@ -23,6 +24,18 @@ function timeAgo(ts: number): string {
   if (s < 3600) return `${Math.floor(s / 60)}m`;
   if (s < 86400) return `${Math.floor(s / 3600)}h`;
   return `${Math.floor(s / 86400)}d`;
+}
+
+function Avatar({ post }: { post: Post }) {
+  if (post.userImage) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={post.userImage} alt="" className="h-9 w-9 rounded-full object-cover" />;
+  }
+  return (
+    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-violet-500 text-sm font-bold text-white">
+      {(post.displayName || post.username || "?").charAt(0).toUpperCase()}
+    </div>
+  );
 }
 
 export default function FeedPage() {
@@ -63,38 +76,35 @@ export default function FeedPage() {
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto w-full max-w-xl px-4 py-8">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-extrabold tracking-tight">Spotted 🏎️</h1>
+      <main className="mx-auto w-full max-w-[468px] px-0 py-6 sm:px-4">
+        <div className="flex items-center justify-between px-4 sm:px-0">
+          <h1 className="text-2xl font-extrabold tracking-tight">Spotted</h1>
           <Link
             href="/spot"
-            className="rounded-xl bg-gradient-to-br from-sky-400 to-violet-500 px-4 py-2 text-sm font-bold text-white"
+            className="rounded-full bg-gradient-to-br from-sky-400 to-violet-500 px-4 py-2 text-sm font-bold text-white"
           >
-            + Post a spot
+            + Post
           </Link>
         </div>
-        <p className="mt-1 text-sm text-muted-foreground">Cars spotted by the community.</p>
 
         {loading ? (
-          <div className="mt-6 space-y-4">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="h-80 animate-pulse rounded-3xl bg-white/[0.04]" />
+          <div className="mt-6 space-y-6">
+            {[0, 1].map((i) => (
+              <div key={i} className="h-[440px] animate-pulse bg-white/[0.04] sm:rounded-2xl" />
             ))}
           </div>
         ) : !configured ? (
-          <div className="mt-6 rounded-3xl border border-sky-500/40 bg-sky-500/10 p-6 text-center">
+          <div className="mx-4 mt-6 rounded-3xl border border-sky-500/40 bg-sky-500/10 p-6 text-center sm:mx-0">
             <h3 className="text-lg font-bold">The feed is being set up</h3>
             <p className="mt-1 text-sm text-muted-foreground">
               The community feed needs its database connected. Check back soon!
             </p>
           </div>
         ) : posts.length === 0 ? (
-          <div className="mt-6 rounded-3xl border border-white/[0.06] bg-card p-8 text-center backdrop-blur-xl">
+          <div className="mx-4 mt-6 rounded-3xl border border-white/[0.06] bg-card p-8 text-center backdrop-blur-xl sm:mx-0">
             <div className="text-4xl">📷</div>
             <h3 className="mt-3 text-lg font-bold">No spots yet</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Be the first — identify a car and post it to the feed.
-            </p>
+            <p className="mt-1 text-sm text-muted-foreground">Be the first — identify a car and post it.</p>
             <Link
               href="/spot"
               className="mt-4 inline-block rounded-xl bg-gradient-to-br from-sky-400 to-violet-500 px-5 py-2.5 font-semibold text-white"
@@ -103,43 +113,49 @@ export default function FeedPage() {
             </Link>
           </div>
         ) : (
-          <div className="mt-6 space-y-6">
+          <div className="mt-4 space-y-6">
             {posts.map((p) => (
-              <article key={p.id} className="overflow-hidden rounded-3xl border border-white/[0.06] bg-card backdrop-blur-xl">
-                <div className="flex items-center gap-3 p-3">
-                  {p.userImage ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={p.userImage} alt="" className="h-9 w-9 rounded-full" />
-                  ) : (
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.08] text-sm font-bold">
-                      {(p.userName || "?").charAt(0).toUpperCase()}
+              <article key={p.id} className="border-y border-white/[0.06] bg-card sm:rounded-2xl sm:border">
+                {/* header */}
+                <div className="flex items-center gap-3 px-3 py-2.5">
+                  <Avatar post={p} />
+                  <div className="min-w-0 flex-1 leading-tight">
+                    <div className="truncate text-sm font-semibold">
+                      {p.displayName}{" "}
+                      <span className="font-normal text-muted-foreground">@{p.username}</span>
                     </div>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-semibold">{p.userName}</div>
-                    <div className="text-xs text-muted-foreground">{timeAgo(p.ts)} ago</div>
+                    {(p.make || p.model) && (
+                      <div className="truncate text-xs text-muted-foreground">
+                        {p.make} {p.model} {p.yearRange}
+                      </div>
+                    )}
                   </div>
+                  <span className="text-xs text-muted-foreground">{timeAgo(p.ts)}</span>
                 </div>
+
+                {/* image */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={p.image} alt={`${p.make} ${p.model}`} className="aspect-square w-full object-cover" />
-                <div className="p-4">
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => like(p.id)}
-                      className={`text-2xl transition active:scale-90 ${liked[p.id] ? "" : "grayscale"}`}
-                      aria-label="like"
-                    >
-                      ❤️
-                    </button>
-                    <span className="text-sm font-semibold">{p.likes}</span>
-                  </div>
-                  {(p.make || p.model) && (
-                    <p className="mt-2 font-bold">
-                      {p.make} {p.model}{" "}
-                      <span className="font-normal text-muted-foreground">{p.yearRange}</span>
+
+                {/* actions */}
+                <div className="px-3 pt-2.5">
+                  <button
+                    onClick={() => like(p.id)}
+                    className={`text-2xl transition active:scale-90 ${liked[p.id] ? "" : "grayscale"}`}
+                    aria-label="like"
+                  >
+                    ❤️
+                  </button>
+                </div>
+                <div className="px-3 pb-3 pt-1">
+                  <p className="text-sm font-semibold">
+                    {p.likes} {p.likes === 1 ? "like" : "likes"}
+                  </p>
+                  {p.caption && (
+                    <p className="mt-0.5 text-sm">
+                      <span className="font-semibold">@{p.username}</span> {p.caption}
                     </p>
                   )}
-                  {p.caption && <p className="mt-1 text-sm">{p.caption}</p>}
                 </div>
               </article>
             ))}
