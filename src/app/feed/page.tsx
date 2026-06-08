@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
+import { Heart } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 
 type Post = {
@@ -138,14 +140,24 @@ export default function FeedPage() {
                 <img src={p.image} alt={`${p.make} ${p.model}`} className="aspect-square w-full object-cover" />
 
                 {/* actions */}
-                <div className="px-3 pt-2.5">
-                  <button
+                <div className="px-2 pt-2">
+                  <motion.button
                     onClick={() => like(p.id)}
-                    className={`text-2xl transition active:scale-90 ${liked[p.id] ? "" : "grayscale"}`}
+                    whileTap={{ scale: 0.9 }}
+                    className="rounded-full p-1.5 transition-colors hover:bg-white/[0.06]"
                     aria-label="like"
                   >
-                    ❤️
-                  </button>
+                    <motion.div
+                      animate={{ scale: liked[p.id] ? [1, 1.3, 1] : 1 }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                    >
+                      <Heart
+                        className={`h-7 w-7 transition-colors ${
+                          liked[p.id] ? "fill-red-500 text-red-500" : "text-muted-foreground"
+                        }`}
+                      />
+                    </motion.div>
+                  </motion.button>
                 </div>
                 <div className="px-3 pb-3 pt-1">
                   <p className="text-sm font-semibold">
