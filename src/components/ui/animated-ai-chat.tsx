@@ -346,13 +346,13 @@ export function AnimatedAIChat() {
                     </div>
 
                     {messages.length > 0 && (
-                        <div className="max-h-[42vh] space-y-3 overflow-y-auto rounded-2xl border border-white/[0.05] bg-white/[0.02] p-4 backdrop-blur-xl">
+                        <div className="max-h-[42vh] space-y-3 overflow-y-auto rounded-2xl border border-foreground/[0.05] bg-foreground/[0.02] p-4 backdrop-blur-xl">
                             {messages.map((m, i) => (
                                 <div key={i} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
                                     <div
                                         className={cn(
                                             "max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2 text-sm leading-relaxed",
-                                            m.role === "user" ? "bg-white text-[#0A0A0B]" : "bg-white/[0.06] text-white/90",
+                                            m.role === "user" ? "bg-white text-[#0A0A0B]" : "bg-foreground/[0.06] text-white/90",
                                         )}
                                     >
                                         {m.content}
@@ -361,7 +361,7 @@ export function AnimatedAIChat() {
                             ))}
                             {isTyping && (
                                 <div className="flex justify-start">
-                                    <div className="flex items-center gap-2 rounded-2xl bg-white/[0.06] px-4 py-2 text-sm text-white/70">
+                                    <div className="flex items-center gap-2 rounded-2xl bg-foreground/[0.06] px-4 py-2 text-sm text-white/70">
                                         Thinking <TypingDots />
                                     </div>
                                 </div>
@@ -370,7 +370,7 @@ export function AnimatedAIChat() {
                     )}
 
                     <motion.div
-                        className="relative backdrop-blur-2xl bg-white/[0.02] rounded-2xl border border-white/[0.05] shadow-2xl"
+                        className="relative backdrop-blur-2xl bg-foreground/[0.02] rounded-2xl border border-foreground/[0.05] shadow-2xl"
                         initial={{ scale: 0.98 }}
                         animate={{ scale: 1 }}
                         transition={{ delay: 0.1 }}
@@ -455,7 +455,7 @@ export function AnimatedAIChat() {
                                     {attachments.map((file, index) => (
                                         <motion.div
                                             key={index}
-                                            className="flex items-center gap-2 text-xs bg-white/[0.03] py-1.5 px-3 rounded-lg text-white/70"
+                                            className="flex items-center gap-2 text-xs bg-foreground/[0.03] py-1.5 px-3 rounded-lg text-white/70"
                                             initial={{ opacity: 0, scale: 0.9 }}
                                             animate={{ opacity: 1, scale: 1 }}
                                             exit={{ opacity: 0, scale: 0.9 }}
@@ -473,7 +473,7 @@ export function AnimatedAIChat() {
                             )}
                         </AnimatePresence>
 
-                        <div className="p-4 border-t border-white/[0.05] flex items-center justify-between gap-4">
+                        <div className="p-4 border-t border-foreground/[0.05] flex items-center justify-between gap-4">
                             <div className="flex items-center gap-3">
                                 <motion.button
                                     type="button"
@@ -483,7 +483,7 @@ export function AnimatedAIChat() {
                                 >
                                     <Paperclip className="w-4 h-4" />
                                     <motion.span
-                                        className="absolute inset-0 bg-white/[0.05] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                        className="absolute inset-0 bg-foreground/[0.05] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
                                         layoutId="button-highlight"
                                     />
                                 </motion.button>
@@ -502,7 +502,7 @@ export function AnimatedAIChat() {
                                 >
                                     <Command className="w-4 h-4" />
                                     <motion.span
-                                        className="absolute inset-0 bg-white/[0.05] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                        className="absolute inset-0 bg-foreground/[0.05] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
                                         layoutId="button-highlight"
                                     />
                                 </motion.button>
@@ -519,7 +519,7 @@ export function AnimatedAIChat() {
                                     "flex items-center gap-2",
                                     value.trim()
                                         ? "bg-white text-[#0A0A0B] shadow-lg shadow-white/10"
-                                        : "bg-white/[0.05] text-white/40"
+                                        : "bg-foreground/[0.05] text-white/40"
                                 )}
                             >
                                 {isTyping ? (
@@ -537,7 +537,7 @@ export function AnimatedAIChat() {
                             <motion.button
                                 key={suggestion.prefix}
                                 onClick={() => selectCommandSuggestion(index)}
-                                className="flex items-center gap-2 px-3 py-2 bg-white/[0.02] hover:bg-white/[0.05] rounded-lg text-sm text-white/60 hover:text-white/90 transition-all relative group"
+                                className="flex items-center gap-2 px-3 py-2 bg-foreground/[0.02] hover:bg-foreground/[0.05] rounded-lg text-sm text-white/60 hover:text-white/90 transition-all relative group"
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.1 }}
@@ -545,7 +545,7 @@ export function AnimatedAIChat() {
                                 {suggestion.icon}
                                 <span>{suggestion.label}</span>
                                 <motion.div
-                                    className="absolute inset-0 border border-white/[0.05] rounded-lg"
+                                    className="absolute inset-0 border border-foreground/[0.05] rounded-lg"
                                     initial={false}
                                     animate={{
                                         opacity: [0, 1],
@@ -565,13 +565,13 @@ export function AnimatedAIChat() {
             <AnimatePresence>
                 {isTyping && (
                     <motion.div
-                        className="fixed bottom-8 mx-auto transform -translate-x-1/2 backdrop-blur-2xl bg-white/[0.02] rounded-full px-4 py-2 shadow-lg border border-white/[0.05]"
+                        className="fixed bottom-8 mx-auto transform -translate-x-1/2 backdrop-blur-2xl bg-foreground/[0.02] rounded-full px-4 py-2 shadow-lg border border-foreground/[0.05]"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 20 }}
                     >
                         <div className="flex items-center gap-3">
-                            <div className="w-8 h-7 rounded-full bg-white/[0.05] flex items-center justify-center text-center">
+                            <div className="w-8 h-7 rounded-full bg-foreground/[0.05] flex items-center justify-center text-center">
                                 <span className="text-xs font-medium text-white/90 mb-0.5">zap</span>
                             </div>
                             <div className="flex items-center gap-2 text-sm text-white/70">

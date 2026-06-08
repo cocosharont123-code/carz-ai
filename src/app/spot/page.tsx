@@ -33,7 +33,7 @@ type Status = {
 function DailyGoals({ goals }: { goals?: { id: string; label: string; done: boolean }[] }) {
   if (!goals || goals.length === 0) return null;
   return (
-    <div className="mt-6 rounded-3xl border border-white/[0.05] bg-card p-5 backdrop-blur-xl">
+    <div className="mt-6 rounded-3xl border border-foreground/[0.05] bg-card p-5 backdrop-blur-xl">
       <div className="flex items-center justify-between">
         <h3 className="font-bold">🎯 Today&apos;s goals</h3>
         <span className="text-xs text-muted-foreground">Resets daily</span>
@@ -61,7 +61,7 @@ function Badges({
   const t = total ?? 0;
   const next = badges.find((b) => !b.earned);
   return (
-    <div className="mt-6 rounded-3xl border border-white/[0.05] bg-card p-5 backdrop-blur-xl">
+    <div className="mt-6 rounded-3xl border border-foreground/[0.05] bg-card p-5 backdrop-blur-xl">
       <div className="flex items-center justify-between">
         <h3 className="font-bold">🏅 Badges</h3>
         <span className="text-xs text-muted-foreground">
@@ -74,7 +74,7 @@ function Badges({
             key={b.id}
             className={cn(
               "flex flex-col items-center rounded-2xl p-3 text-center transition",
-              b.earned ? "bg-white/[0.06] ring-1 ring-amber-400/40" : "bg-white/[0.02] opacity-40",
+              b.earned ? "bg-foreground/[0.06] ring-1 ring-amber-400/40" : "bg-foreground/[0.02] opacity-40",
             )}
           >
             <span className="text-2xl">{b.emoji}</span>
@@ -91,7 +91,7 @@ function Badges({
               {t}/{next.threshold}
             </span>
           </div>
-          <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-white/[0.06]">
+          <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-foreground/[0.06]">
             <div
               className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-600"
               style={{ width: `${Math.min(100, (t / next.threshold) * 100)}%` }}
@@ -152,7 +152,7 @@ function RarityMeter({ score, reason }: { score: number; reason?: string }) {
   const s = Math.max(0, Math.min(100, score));
   const label = s >= 85 ? "Extremely rare" : s >= 70 ? "Rare" : s >= 45 ? "Uncommon" : s >= 20 ? "Fairly common" : "Common";
   return (
-    <div className="mt-4 rounded-2xl bg-white/[0.03] p-4">
+    <div className="mt-4 rounded-2xl bg-foreground/[0.03] p-4">
       <div className="flex items-baseline justify-between">
         <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Rarity</span>
         <span className="text-sm font-bold">
@@ -184,7 +184,7 @@ function ValueChart({ points }: { points: { year: string; usd: number }[] }) {
   const trendUp = pts[pts.length - 1].usd >= pts[0].usd;
   const stroke = trendUp ? "#34d399" : "#f87171";
   return (
-    <div className="mt-4 rounded-2xl bg-white/[0.03] p-4">
+    <div className="mt-4 rounded-2xl bg-foreground/[0.03] p-4">
       <div className="flex items-baseline justify-between">
         <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
           Market value over time
@@ -276,7 +276,7 @@ function InlineListings({ make, model, goodDealUsd }: { make: string; model: str
       {loading ? (
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="h-24 animate-pulse rounded-xl bg-white/[0.04]" />
+            <div key={i} className="h-24 animate-pulse rounded-xl bg-foreground/[0.04]" />
           ))}
         </div>
       ) : items.length > 0 ? (
@@ -289,13 +289,13 @@ function InlineListings({ make, model, goodDealUsd }: { make: string; model: str
                 href={it.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex gap-3 overflow-hidden rounded-xl bg-white/[0.03] p-2 ring-1 ring-white/[0.06] transition hover:bg-white/[0.06]"
+                className="group flex gap-3 overflow-hidden rounded-xl bg-foreground/[0.03] p-2 ring-1 ring-foreground/[0.06] transition hover:bg-foreground/[0.06]"
               >
                 {it.image ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={it.image} alt="" className="h-20 w-20 shrink-0 rounded-lg object-cover" />
                 ) : (
-                  <div className="h-20 w-20 shrink-0 rounded-lg bg-white/[0.05]" />
+                  <div className="h-20 w-20 shrink-0 rounded-lg bg-foreground/[0.05]" />
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="line-clamp-2 text-sm font-medium">{it.title}</p>
@@ -327,7 +327,7 @@ function InlineListings({ make, model, goodDealUsd }: { make: string; model: str
                 href={s.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-lg bg-white/[0.04] px-3 py-1.5 text-sm font-medium hover:bg-white/[0.08]"
+                className="rounded-lg bg-foreground/[0.04] px-3 py-1.5 text-sm font-medium hover:bg-foreground/[0.08]"
               >
                 {s.name} ↗
               </a>
@@ -595,7 +595,7 @@ export default function SpotPage() {
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               className={cn(
-                "flex h-64 cursor-pointer flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-white/15 bg-white/[0.02] transition-colors hover:bg-white/[0.04]",
+                "flex h-64 cursor-pointer flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-foreground/15 bg-foreground/[0.02] transition-colors hover:bg-foreground/[0.04]",
                 isDragging && "border-sky-400/60 bg-sky-400/5",
               )}
             >
@@ -690,7 +690,7 @@ export default function SpotPage() {
 
         {/* Result */}
         {car && !limitHit && (
-          <section className="mt-6 rounded-3xl border border-white/[0.05] bg-card p-6 backdrop-blur-xl">
+          <section className="mt-6 rounded-3xl border border-foreground/[0.05] bg-card p-6 backdrop-blur-xl">
             {car.isCar ? (
               <>
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -713,7 +713,7 @@ export default function SpotPage() {
                 {car.notes && <p className="mt-1 text-sm text-muted-foreground">{car.notes}</p>}
 
                 {/* Post to community feed */}
-                <div className="mt-4 rounded-2xl border border-white/[0.06] bg-white/[0.03] p-3">
+                <div className="mt-4 rounded-2xl border border-foreground/[0.06] bg-foreground/[0.03] p-3">
                   <input
                     value={caption}
                     onChange={(e) => setCaption(e.target.value)}
@@ -755,7 +755,7 @@ export default function SpotPage() {
                 <InlineListings make={car.make} model={car.model} goodDealUsd={car.goodDealUsd} />
 
                 {premium && (car.valuation || car.reliability || car.collectibility) && (
-                  <div className="mt-6 border-t border-white/10 pt-5">
+                  <div className="mt-6 border-t border-foreground/10 pt-5">
                     {car.valuation && (
                       <>
                         <h3 className="text-xs font-bold uppercase tracking-wide text-violet-300">
@@ -810,13 +810,13 @@ export default function SpotPage() {
 
         {/* History (Pro/Max) */}
         {status?.saveHistory && status.history && status.history.length > 0 && (
-          <section className="mt-6 rounded-3xl border border-white/[0.05] bg-card p-6 backdrop-blur-xl">
+          <section className="mt-6 rounded-3xl border border-foreground/[0.05] bg-card p-6 backdrop-blur-xl">
             <h3 className="font-bold">Your spotting history</h3>
             <div className="mt-3 space-y-2">
               {status.history.map((h, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between rounded-xl bg-white/[0.03] px-3 py-2 text-sm"
+                  className="flex items-center justify-between rounded-xl bg-foreground/[0.03] px-3 py-2 text-sm"
                 >
                   <span className="font-semibold">
                     {h.make} {h.model}{" "}

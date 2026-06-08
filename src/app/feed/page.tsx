@@ -92,7 +92,7 @@ export default function FeedPage() {
         {loading ? (
           <div className="mt-6 space-y-6">
             {[0, 1].map((i) => (
-              <div key={i} className="h-[440px] animate-pulse bg-white/[0.04] sm:rounded-2xl" />
+              <div key={i} className="h-[440px] animate-pulse bg-foreground/[0.04] sm:rounded-2xl" />
             ))}
           </div>
         ) : !configured ? (
@@ -103,7 +103,7 @@ export default function FeedPage() {
             </p>
           </div>
         ) : posts.length === 0 ? (
-          <div className="mx-4 mt-6 rounded-3xl border border-white/[0.06] bg-card p-8 text-center backdrop-blur-xl sm:mx-0">
+          <div className="mx-4 mt-6 rounded-3xl border border-foreground/[0.06] bg-card p-8 text-center backdrop-blur-xl sm:mx-0">
             <div className="text-4xl">📷</div>
             <h3 className="mt-3 text-lg font-bold">No spots yet</h3>
             <p className="mt-1 text-sm text-muted-foreground">Be the first — identify a car and post it.</p>
@@ -117,7 +117,7 @@ export default function FeedPage() {
         ) : (
           <div className="mt-4 space-y-6">
             {posts.map((p) => (
-              <article key={p.id} className="border-y border-white/[0.06] bg-card sm:rounded-2xl sm:border">
+              <article key={p.id} className="border-y border-foreground/[0.06] bg-card sm:rounded-2xl sm:border">
                 {/* header */}
                 <div className="flex items-center gap-3 px-3 py-2.5">
                   <Avatar post={p} />
@@ -144,7 +144,7 @@ export default function FeedPage() {
                   <motion.button
                     onClick={() => like(p.id)}
                     whileTap={{ scale: 0.9 }}
-                    className="rounded-full p-1.5 transition-colors hover:bg-white/[0.06]"
+                    className="rounded-full p-1.5 transition-colors hover:bg-foreground/[0.06]"
                     aria-label="like"
                   >
                     <motion.div

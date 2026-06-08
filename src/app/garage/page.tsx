@@ -52,7 +52,7 @@ export default function GaragePage() {
         {loading ? (
           <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {[0, 1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="aspect-square animate-pulse rounded-2xl bg-white/[0.04]" />
+              <div key={i} className="aspect-square animate-pulse rounded-2xl bg-foreground/[0.04]" />
             ))}
           </div>
         ) : !configured ? (
@@ -63,7 +63,7 @@ export default function GaragePage() {
             </p>
           </div>
         ) : !signedIn ? (
-          <div className="mt-6 rounded-3xl border border-white/[0.06] bg-card p-8 text-center backdrop-blur-xl">
+          <div className="mt-6 rounded-3xl border border-foreground/[0.06] bg-card p-8 text-center backdrop-blur-xl">
             <div className="text-4xl">🔑</div>
             <h3 className="mt-3 text-lg font-bold">Sign in to see your garage</h3>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -77,7 +77,7 @@ export default function GaragePage() {
             </button>
           </div>
         ) : cars.length === 0 ? (
-          <div className="mt-6 rounded-3xl border border-white/[0.06] bg-card p-8 text-center backdrop-blur-xl">
+          <div className="mt-6 rounded-3xl border border-foreground/[0.06] bg-card p-8 text-center backdrop-blur-xl">
             <div className="text-4xl">🚘</div>
             <h3 className="mt-3 text-lg font-bold">Your garage is empty</h3>
             <p className="mt-1 text-sm text-muted-foreground">Identify a car and it&apos;ll show up here automatically.</p>
@@ -92,15 +92,15 @@ export default function GaragePage() {
           <>
             {/* stats */}
             <div className="mt-6 grid grid-cols-3 gap-3">
-              <div className="rounded-2xl bg-white/[0.04] p-4 text-center">
+              <div className="rounded-2xl bg-foreground/[0.04] p-4 text-center">
                 <div className="text-2xl font-extrabold">{cars.length}</div>
                 <div className="text-[11px] uppercase tracking-wide text-muted-foreground">spotted</div>
               </div>
-              <div className="rounded-2xl bg-white/[0.04] p-4 text-center">
+              <div className="rounded-2xl bg-foreground/[0.04] p-4 text-center">
                 <div className="text-2xl font-extrabold">{uniqueModels}</div>
                 <div className="text-[11px] uppercase tracking-wide text-muted-foreground">unique models</div>
               </div>
-              <div className="rounded-2xl bg-white/[0.04] p-4 text-center">
+              <div className="rounded-2xl bg-foreground/[0.04] p-4 text-center">
                 <div className="truncate text-sm font-bold">
                   {rarest && rarest.rarityScore > 0 ? `${rarest.make} ${rarest.model}` : "—"}
                 </div>
@@ -111,8 +111,8 @@ export default function GaragePage() {
             {/* grid */}
             <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
               {cars.map((c) => (
-                <div key={c.id} className="overflow-hidden rounded-2xl border border-white/[0.06] bg-card">
-                  <div className="relative aspect-square w-full bg-white/[0.04]">
+                <div key={c.id} className="overflow-hidden rounded-2xl border border-foreground/[0.06] bg-card">
+                  <div className="relative aspect-square w-full bg-foreground/[0.04]">
                     {c.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={c.image} alt={`${c.make} ${c.model}`} className="h-full w-full object-cover" />

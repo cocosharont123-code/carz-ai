@@ -110,7 +110,7 @@ export default function PricingPage() {
                 className={`relative flex flex-col rounded-3xl border p-7 backdrop-blur-xl transition-colors ${
                   highlight
                     ? "border-violet-500/40 bg-gradient-to-b from-violet-500/15 to-card shadow-xl shadow-violet-500/10"
-                    : "border-white/[0.06] bg-card"
+                    : "border-foreground/[0.06] bg-card"
                 }`}
               >
                 {highlight && (
@@ -158,7 +158,7 @@ export default function PricingPage() {
           })}
         </div>
 
-        <div className="mx-auto mt-12 max-w-md rounded-3xl border border-white/[0.06] bg-card p-6 text-center backdrop-blur-xl">
+        <div className="mx-auto mt-12 max-w-md rounded-3xl border border-foreground/[0.06] bg-card p-6 text-center backdrop-blur-xl">
           <h3 className="font-bold">Have a promo code?</h3>
           <p className="mt-1 text-sm text-muted-foreground">Redeem it for free access.</p>
           <div className="mt-4 flex gap-2">
@@ -167,7 +167,7 @@ export default function PricingPage() {
               onChange={(e) => setPromo(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && redeem()}
               placeholder="Enter code"
-              className="flex-1 rounded-xl border border-white/10 bg-background px-3 py-2 text-sm outline-none transition focus:border-white/25"
+              className="flex-1 rounded-xl border border-foreground/10 bg-background px-3 py-2 text-sm outline-none transition focus:border-foreground/25"
             />
             <button
               onClick={redeem}

@@ -39,7 +39,7 @@ export function SiteHeader() {
         : "border-border bg-card text-muted-foreground";
 
   return (
-    <header className="sticky top-0 z-50 flex items-center justify-between border-b border-white/[0.04] bg-background/30 px-5 py-3 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 flex items-center justify-between border-b border-foreground/[0.04] bg-background/30 px-5 py-3 backdrop-blur-xl">
       <Link href="/" className="flex items-center gap-2 font-extrabold tracking-tight">
         <span className="inline-block h-3 w-3 rounded-full bg-gradient-to-br from-sky-400 to-violet-500" />
         Car Spotter
@@ -69,7 +69,7 @@ export function SiteHeader() {
         </Link>
         <Link
           href="/assistant"
-          className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.06] px-3.5 py-1.5 font-semibold text-foreground transition hover:border-white/25 hover:bg-white/[0.12]"
+          className="inline-flex items-center gap-1.5 rounded-full border border-foreground/15 bg-foreground/[0.06] px-3.5 py-1.5 font-semibold text-foreground transition hover:border-foreground/25 hover:bg-foreground/[0.12]"
         >
           <Sparkles className="h-3.5 w-3.5 text-violet-300" />
           Assistant

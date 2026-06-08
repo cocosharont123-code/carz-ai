@@ -55,13 +55,13 @@ function SignInInner() {
         <button
           disabled
           title="Apple sign-in is coming soon"
-          className="flex w-full cursor-not-allowed items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 font-semibold text-muted-foreground"
+          className="flex w-full cursor-not-allowed items-center justify-center gap-3 rounded-xl border border-foreground/10 bg-foreground/[0.04] px-4 py-3 font-semibold text-muted-foreground"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
             <path d="M16.37 12.6c-.02-2.27 1.85-3.36 1.94-3.41-1.06-1.55-2.71-1.76-3.29-1.78-1.4-.14-2.73.82-3.44.82-.71 0-1.8-.8-2.96-.78-1.52.02-2.93.88-3.71 2.24-1.58 2.74-.4 6.8 1.13 9.02.75 1.09 1.64 2.31 2.81 2.27 1.13-.05 1.55-.73 2.92-.73 1.36 0 1.75.73 2.94.71 1.21-.02 1.98-1.11 2.72-2.21.86-1.27 1.21-2.5 1.23-2.56-.03-.01-2.36-.91-2.38-3.6ZM14.1 5.62c.62-.76 1.04-1.8.93-2.85-.9.04-1.99.6-2.63 1.35-.57.67-1.08 1.74-.94 2.76.99.08 2.01-.5 2.64-1.26Z" />
           </svg>
           Continue with Apple
-          <span className="ml-1 rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold">SOON</span>
+          <span className="ml-1 rounded-full bg-foreground/10 px-2 py-0.5 text-[10px] font-bold">SOON</span>
         </button>
       </div>
 

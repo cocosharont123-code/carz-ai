@@ -69,7 +69,7 @@ export default function LeaderboardPage() {
         {loading ? (
           <div className="mt-6 space-y-2">
             {[0, 1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-14 animate-pulse rounded-2xl bg-white/[0.04]" />
+              <div key={i} className="h-14 animate-pulse rounded-2xl bg-foreground/[0.04]" />
             ))}
           </div>
         ) : !configured ? (
@@ -80,7 +80,7 @@ export default function LeaderboardPage() {
             </p>
           </div>
         ) : entries.length === 0 ? (
-          <div className="mt-6 rounded-3xl border border-white/[0.06] bg-card p-6 text-center backdrop-blur-xl">
+          <div className="mt-6 rounded-3xl border border-foreground/[0.06] bg-card p-6 text-center backdrop-blur-xl">
             <h3 className="text-lg font-bold">No spotters yet 🏁</h3>
             <p className="mt-1 text-sm text-muted-foreground">
               Sign in and start identifying cars to claim the #1 spot.

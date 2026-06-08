@@ -61,7 +61,7 @@ function ProfileInner() {
       <p className="mt-1 text-muted-foreground">Pick a username and display name for the feed.</p>
 
       {loading ? (
-        <div className="mt-8 h-40 animate-pulse rounded-3xl bg-white/[0.04]" />
+        <div className="mt-8 h-40 animate-pulse rounded-3xl bg-foreground/[0.04]" />
       ) : !configured ? (
         <div className="mt-6 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-200">
           Profiles aren&apos;t enabled yet (the database isn&apos;t connected). Check back soon.
@@ -82,7 +82,7 @@ function ProfileInner() {
             <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Username
             </label>
-            <div className="mt-1 flex items-center rounded-xl border border-white/10 bg-background px-3">
+            <div className="mt-1 flex items-center rounded-xl border border-foreground/10 bg-background px-3">
               <span className="text-muted-foreground">@</span>
               <input
                 value={username}
@@ -104,7 +104,7 @@ function ProfileInner() {
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Alex Rivera"
               maxLength={40}
-              className="mt-1 w-full rounded-xl border border-white/10 bg-background px-3 py-2.5 text-sm outline-none"
+              className="mt-1 w-full rounded-xl border border-foreground/10 bg-background px-3 py-2.5 text-sm outline-none"
             />
           </div>
 

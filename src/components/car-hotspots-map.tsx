@@ -169,7 +169,7 @@ export function CarHotspotsMap() {
 
   return (
     <div>
-      <div className="h-[440px] w-full overflow-hidden rounded-2xl border border-white/[0.06]">
+      <div className="h-[440px] w-full overflow-hidden rounded-2xl border border-foreground/[0.06]">
         <Map ref={mapRef} center={DEFAULT_CENTER} zoom={4} onViewportChange={handleViewport}>
           {spots.map((s) => (
             <MapMarker key={s.id} longitude={s.lng} latitude={s.lat}>
@@ -203,7 +203,7 @@ export function CarHotspotsMap() {
       <div className="mt-3">
         <button
           onClick={locate}
-          className="rounded-xl bg-white/[0.06] px-4 py-2 text-sm font-medium hover:bg-white/[0.12]"
+          className="rounded-xl bg-foreground/[0.06] px-4 py-2 text-sm font-medium hover:bg-foreground/[0.12]"
         >
           📍 Find spots near me
         </button>
