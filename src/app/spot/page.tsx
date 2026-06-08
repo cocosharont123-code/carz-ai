@@ -9,6 +9,7 @@ import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useImageUpload } from "@/components/hooks/use-image-upload";
+import { StreakBadge } from "@/components/ui/streak-badge";
 import { CarHotspotsMap } from "@/components/car-hotspots-map";
 import { cn } from "@/lib/utils";
 import type { CarReport } from "@/lib/identify";
@@ -355,6 +356,16 @@ export default function SpotPage() {
   const [sharing, setSharing] = useState(false);
   const [shareMsg, setShareMsg] = useState("");
   const [postToken, setPostToken] = useState<string | null>(null);
+  const [streak, setStreak] = useState(0);
+
+  async function fetchStreak() {
+    try {
+      const d = await fetch("/api/streak").then((r) => r.json());
+      setStreak(d.streak || 0);
+    } catch {
+      /* ignore */
+    }
+  }
   const router = useRouter();
   const { status: authStatus } = useSession();
 
@@ -375,6 +386,7 @@ export default function SpotPage() {
 
   useEffect(() => {
     refresh().catch(() => {});
+    fetchStreak();
   }, []);
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -439,6 +451,7 @@ export default function SpotPage() {
       setStatus((prev) => ({ ...(prev as Status), ...data.status }));
       // keep the photo on screen after identifying
       await refresh();
+      fetchStreak();
     } catch {
       setError("Network error — please try again.");
     } finally {
@@ -555,6 +568,12 @@ export default function SpotPage() {
           <div className="mt-4 rounded-xl border border-amber-500/50 bg-amber-500/10 p-3 text-sm text-amber-200">
             Server has no <code>ANTHROPIC_API_KEY</code> set — identification will fail until it&apos;s
             configured in <code>.env.local</code>. See the README.
+          </div>
+        )}
+
+        {streak > 0 && (
+          <div className="mt-5 flex justify-center">
+            <StreakBadge size="sm" length={streak} frequency="daily" subtitle="don't break it!" />
           </div>
         )}
 

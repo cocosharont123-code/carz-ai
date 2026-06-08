@@ -8,7 +8,9 @@ type Entry = {
   rank: number;
   name: string;
   image: string;
+  points: number;
   spots: number;
+  streak: number;
   bestCar: string;
   bestValue: number;
 };
@@ -49,7 +51,9 @@ export default function LeaderboardPage() {
       <SiteHeader />
       <main className="mx-auto w-full max-w-2xl px-5 py-14">
         <h1 className="text-3xl font-extrabold tracking-tight">🏆 Leaderboard</h1>
-        <p className="mt-1 text-muted-foreground">Top spotters worldwide — ranked by cars spotted.</p>
+        <p className="mt-1 text-muted-foreground">
+          Ranked by points 🔥 — keep a daily streak to earn bonus points per spot.
+        </p>
 
         {bestCar && (
           <div className="mt-6 rounded-3xl border border-amber-400/40 bg-gradient-to-b from-amber-400/10 to-card p-5 backdrop-blur-xl">
@@ -90,10 +94,14 @@ export default function LeaderboardPage() {
               userId: `${e.rank}-${e.name}`,
               userName: `${badgeFor(e.spots)} ${e.name}`,
               rank: e.rank,
-              value: e.spots,
-              byline: e.bestCar
-                ? `Best: ${e.bestCar}${e.bestValue > 0 ? ` · ${fmtUsd(e.bestValue)}` : ""}`
-                : null,
+              value: e.points,
+              byline: [
+                e.streak > 0 ? `🔥 ${e.streak}d streak` : null,
+                `${e.spots} spots`,
+                e.bestCar ? `Best: ${e.bestCar}` : null,
+              ]
+                .filter(Boolean)
+                .join(" · "),
               avatarUrl: e.image || null,
             }))}
           />
