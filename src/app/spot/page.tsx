@@ -435,6 +435,7 @@ export default function SpotPage() {
       }
       setCar(data.car);
       setPostToken(data.postToken ?? null);
+      void saveToGarage(data.car);
       setStatus((prev) => ({ ...(prev as Status), ...data.status }));
       // keep the photo on screen after identifying
       await refresh();
@@ -454,6 +455,29 @@ export default function SpotPage() {
     setCaption("");
     setShareMsg("");
     setPostToken(null);
+  }
+
+  async function saveToGarage(c: CarReport) {
+    if (authStatus !== "authenticated" || !previewUrl || !c?.isCar) return;
+    try {
+      const raw = await objectUrlToDataUrl(previewUrl);
+      const thumb = await downscale(raw, 480, 0.6);
+      await fetch("/api/garage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          image: thumb,
+          make: c.make,
+          model: c.model,
+          yearRange: c.yearRange,
+          confidence: c.confidence,
+          rarityScore: c.rarityScore,
+          priceRange: c.priceRangeUsed,
+        }),
+      });
+    } catch {
+      /* garage save is best-effort */
+    }
   }
 
   async function shareToFeed() {
