@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Sparkles } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 type Status = { planName: string; plan: string };
 
@@ -44,6 +45,7 @@ export function SiteHeader() {
         Car Spotter
       </Link>
       <nav className="flex items-center gap-3 text-sm">
+        <ThemeToggle />
         {status && (
           <span className={`hidden rounded-full border px-3 py-1 text-xs font-semibold sm:inline ${badgeClass}`}>
             {status.planName}
