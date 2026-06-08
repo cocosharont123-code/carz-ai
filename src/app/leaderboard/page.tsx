@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { SiteHeader } from "@/components/site-header";
+import { LeaderboardRankings } from "@/components/ui/leaderboard-rankings";
 
 type Entry = {
   rank: number;
@@ -82,39 +83,20 @@ export default function LeaderboardPage() {
             </p>
           </div>
         ) : (
-          <div className="mt-6 space-y-2">
-            {entries.map((e) => (
-              <div
-                key={e.rank}
-                className="flex items-center gap-3 rounded-2xl border border-white/[0.05] bg-card p-3 backdrop-blur-xl"
-              >
-                <div className="w-7 text-center text-lg font-extrabold text-muted-foreground">{e.rank}</div>
-                {e.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={e.image} alt="" className="h-9 w-9 rounded-full" />
-                ) : (
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.08] text-sm font-bold">
-                    {(e.name || "?").charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <div className="min-w-0 flex-1">
-                  <div className="truncate font-semibold">
-                    {badgeFor(e.spots)} {e.name}
-                  </div>
-                  {e.bestCar && (
-                    <div className="truncate text-xs text-muted-foreground">
-                      Best: {e.bestCar}
-                      {e.bestValue > 0 ? ` · ${fmtUsd(e.bestValue)}` : ""}
-                    </div>
-                  )}
-                </div>
-                <div className="text-right">
-                  <div className="font-extrabold">{e.spots}</div>
-                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground">spots</div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <LeaderboardRankings
+            className="mt-6"
+            showPagination={entries.length > 10}
+            rankings={entries.map((e) => ({
+              userId: `${e.rank}-${e.name}`,
+              userName: `${badgeFor(e.spots)} ${e.name}`,
+              rank: e.rank,
+              value: e.spots,
+              byline: e.bestCar
+                ? `Best: ${e.bestCar}${e.bestValue > 0 ? ` · ${fmtUsd(e.bestValue)}` : ""}`
+                : null,
+              avatarUrl: e.image || null,
+            }))}
+          />
         )}
       </main>
     </>

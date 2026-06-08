@@ -4,6 +4,14 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Leaderboard crown + trend colors used by leaderboard-rankings.tsx */
+@theme {
+  --color-rank-1: #fbbf24;
+  --color-rank-2: #cbd5e1;
+  --color-rank-3: #d28a4a;
+  --color-success-600: #16a34a;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
