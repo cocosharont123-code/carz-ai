@@ -58,6 +58,9 @@ export function SiteHeader() {
         <Link href="/feed" className="text-foreground/80 hover:text-foreground">
           Feed
         </Link>
+        <Link href="/auctions" className="text-foreground/80 hover:text-foreground">
+          Auctions
+        </Link>
         <Link href="/garage" className="hidden text-foreground/80 hover:text-foreground sm:inline">
           Garage
         </Link>
