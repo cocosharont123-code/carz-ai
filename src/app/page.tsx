@@ -19,7 +19,7 @@ export default function Home() {
         {/* Hero over the shader */}
         <section className="flex min-h-screen flex-col items-center justify-center px-4 text-center">
           <h1 className="text-6xl font-extrabold tracking-tighter text-white sm:text-7xl md:text-8xl">
-            Car Spotter
+            Carz AI
           </h1>
           <p className="mt-4 max-w-xl text-sm text-white/60 md:text-lg">
             Snap any car and instantly know the make, model, year, value, rarity and where to
@@ -103,7 +103,7 @@ export default function Home() {
           </section>
 
           <footer className="px-5 py-12 text-center text-sm text-muted-foreground">
-            Car Spotter · Free, Pro &amp; Max plans ·{" "}
+            Carz AI · Free, Pro &amp; Max plans ·{" "}
             <Link href="/pricing" className="underline">
               Upgrade
             </Link>
