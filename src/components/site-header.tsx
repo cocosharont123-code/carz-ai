@@ -10,18 +10,6 @@ type Status = { planName: string; plan: string };
 export function SiteHeader() {
   const { data: session } = useSession();
   const [status, setStatus] = useState<Status | null>(null);
-  const [username, setUsername] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!session?.user) {
-      setUsername(null);
-      return;
-    }
-    fetch("/api/profile")
-      .then((r) => r.json())
-      .then((d) => setUsername(d.profile?.username ?? ""))
-      .catch(() => {});
-  }, [session]);
 
   useEffect(() => {
     fetch("/api/me")
@@ -53,17 +41,8 @@ export function SiteHeader() {
         <Link href="/spot" className="text-foreground/80 hover:text-foreground">
           Spot
         </Link>
-        <Link href="/feed" className="text-foreground/80 hover:text-foreground">
-          Feed
-        </Link>
         <Link href="/auctions" className="text-foreground/80 hover:text-foreground">
           Auctions
-        </Link>
-        <Link href="/garage" className="hidden text-foreground/80 hover:text-foreground sm:inline">
-          Garage
-        </Link>
-        <Link href="/leaderboard" className="hidden text-foreground/80 hover:text-foreground sm:inline">
-          Ranks
         </Link>
         <Link href="/pricing" className="text-foreground/80 hover:text-foreground">
           Plans
@@ -76,21 +55,12 @@ export function SiteHeader() {
           Assistant
         </Link>
         {session?.user ? (
-          <>
-            <Link
-              href="/profile"
-              className="font-semibold text-foreground/90 hover:text-foreground"
-              title="Edit profile"
-            >
-              {username ? `@${username}` : "Set username"}
-            </Link>
-            <button
-              onClick={() => signOut()}
-              className="hidden text-foreground/60 hover:text-foreground sm:inline"
-            >
-              Sign out
-            </button>
-          </>
+          <button
+            onClick={() => signOut()}
+            className="text-foreground/60 hover:text-foreground"
+          >
+            Sign out
+          </button>
         ) : (
           <Link href="/signin" className="text-foreground/80 hover:text-foreground">
             Sign in

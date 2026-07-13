@@ -2,14 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { ImagePlus, Upload, Trash2, X } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useImageUpload } from "@/components/hooks/use-image-upload";
-import { StreakBadge } from "@/components/ui/streak-badge";
 import { CarHotspotsMap } from "@/components/car-hotspots-map";
 import { cn } from "@/lib/utils";
 import type { CarReport } from "@/lib/identify";
@@ -352,22 +349,6 @@ export default function SpotPage() {
   const [limitHit, setLimitHit] = useState(false);
   const [note, setNote] = useState("");
   const [isDragging, setIsDragging] = useState(false);
-  const [caption, setCaption] = useState("");
-  const [sharing, setSharing] = useState(false);
-  const [shareMsg, setShareMsg] = useState("");
-  const [postToken, setPostToken] = useState<string | null>(null);
-  const [streak, setStreak] = useState(0);
-
-  async function fetchStreak() {
-    try {
-      const d = await fetch("/api/streak").then((r) => r.json());
-      setStreak(d.streak || 0);
-    } catch {
-      /* ignore */
-    }
-  }
-  const router = useRouter();
-  const { status: authStatus } = useSession();
 
   const {
     previewUrl,
@@ -386,7 +367,6 @@ export default function SpotPage() {
 
   useEffect(() => {
     refresh().catch(() => {});
-    fetchStreak();
   }, []);
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -446,12 +426,9 @@ export default function SpotPage() {
         return;
       }
       setCar(data.car);
-      setPostToken(data.postToken ?? null);
-      void saveToGarage(data.car);
       setStatus((prev) => ({ ...(prev as Status), ...data.status }));
       // keep the photo on screen after identifying
       await refresh();
-      fetchStreak();
     } catch {
       setError("Network error — please try again.");
     } finally {
@@ -465,71 +442,6 @@ export default function SpotPage() {
     setCar(null);
     setError("");
     setLimitHit(false);
-    setCaption("");
-    setShareMsg("");
-    setPostToken(null);
-  }
-
-  async function saveToGarage(c: CarReport) {
-    if (authStatus !== "authenticated" || !previewUrl || !c?.isCar) return;
-    try {
-      const raw = await objectUrlToDataUrl(previewUrl);
-      const thumb = await downscale(raw, 480, 0.6);
-      await fetch("/api/garage", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          image: thumb,
-          make: c.make,
-          model: c.model,
-          yearRange: c.yearRange,
-          confidence: c.confidence,
-          rarityScore: c.rarityScore,
-          priceRange: c.priceRangeUsed,
-        }),
-      });
-    } catch {
-      /* garage save is best-effort */
-    }
-  }
-
-  async function shareToFeed() {
-    if (authStatus !== "authenticated") {
-      router.push("/signin?callbackUrl=/spot");
-      return;
-    }
-    if (!previewUrl || !car) return;
-    setSharing(true);
-    setShareMsg("");
-    try {
-      const raw = await objectUrlToDataUrl(previewUrl);
-      const thumb = await downscale(raw, 720, 0.7);
-      const res = await fetch("/api/feed", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          image: thumb,
-          make: car.make,
-          model: car.model,
-          yearRange: car.yearRange,
-          caption,
-          token: postToken,
-        }),
-      });
-      const data = await res.json();
-      if (data.ok) {
-        setShareMsg("Posted to the feed! 🎉");
-        setTimeout(() => router.push("/feed"), 900);
-      } else if (data.needUsername) {
-        router.push("/profile?next=/spot");
-      } else {
-        setShareMsg(data.error || "Couldn't post.");
-      }
-    } catch {
-      setShareMsg("Network error — try again.");
-    } finally {
-      setSharing(false);
-    }
   }
 
   const premium = status?.premiumReport;
@@ -571,11 +483,6 @@ export default function SpotPage() {
           </div>
         )}
 
-        {streak > 0 && (
-          <div className="mt-5 flex justify-center">
-            <StreakBadge size="sm" length={streak} frequency="daily" subtitle="don't break it!" />
-          </div>
-        )}
 
         {/* Upload card */}
         <div className="mt-6 space-y-4">
@@ -711,21 +618,6 @@ export default function SpotPage() {
                   </span>
                 </div>
                 {car.notes && <p className="mt-1 text-sm text-muted-foreground">{car.notes}</p>}
-
-                {/* Post to community feed */}
-                <div className="mt-4 rounded-2xl border border-foreground/[0.06] bg-foreground/[0.03] p-3">
-                  <input
-                    value={caption}
-                    onChange={(e) => setCaption(e.target.value)}
-                    placeholder="Add a caption…"
-                    maxLength={280}
-                    className="w-full rounded-lg bg-transparent px-1 py-1.5 text-sm outline-none placeholder:text-muted-foreground"
-                  />
-                  <Button onClick={shareToFeed} disabled={sharing} className="mt-1 w-full">
-                    {sharing ? "Posting…" : "📤 Post this spot to the feed"}
-                  </Button>
-                  {shareMsg && <p className="mt-2 text-center text-sm text-emerald-300">{shareMsg}</p>}
-                </div>
 
                 <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <Spec k="Body style" v={car.bodyStyle} />

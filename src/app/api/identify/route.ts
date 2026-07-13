@@ -13,9 +13,6 @@ import {
 import { PLANS } from "@/lib/plans";
 import { identifyCar, IdentifyError } from "@/lib/identify";
 import { goalsForDate, evaluateGoals } from "@/lib/gamification";
-import { auth } from "@/auth";
-import { recordSpot } from "@/lib/leaderboard";
-import { signPostToken } from "@/lib/posttoken";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -71,16 +68,7 @@ export async function POST(req: Request) {
       completedGoals,
       effectivePlan,
     );
-    // Record to the global leaderboard for signed-in users.
-    const session = await auth();
-    if (session?.user?.email) {
-      await recordSpot(
-        { id: session.user.email, name: session.user.name, image: session.user.image },
-        car,
-      );
-    }
-    const postToken = car.isCar ? signPostToken(car.make, car.model) : null;
-    return NextResponse.json({ car, status, completedGoals, postToken });
+    return NextResponse.json({ car, status, completedGoals });
   } catch (e) {
     const message = e instanceof IdentifyError ? e.message : "Identification failed.";
     return NextResponse.json({ error: "identify_failed", message }, { status: 502 });
