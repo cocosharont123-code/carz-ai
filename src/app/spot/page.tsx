@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useImageUpload } from "@/components/hooks/use-image-upload";
 import { CarHotspotsMap } from "@/components/car-hotspots-map";
+import { addToGarage } from "@/lib/garage-local";
 import { cn } from "@/lib/utils";
 import type { CarReport } from "@/lib/identify";
 
@@ -427,6 +428,23 @@ export default function SpotPage() {
       }
       setCar(data.car);
       setStatus((prev) => ({ ...(prev as Status), ...data.status }));
+      // Save this spot to the on-device garage history.
+      if (data.car?.isCar) {
+        try {
+          const thumb = await downscale(raw, 360, 0.55);
+          addToGarage({
+            image: thumb,
+            make: data.car.make,
+            model: data.car.model,
+            yearRange: data.car.yearRange,
+            confidence: data.car.confidence,
+            rarityScore: data.car.rarityScore,
+            priceRange: data.car.priceRangeUsed,
+          });
+        } catch {
+          /* garage save is best-effort */
+        }
+      }
       // keep the photo on screen after identifying
       await refresh();
     } catch {
