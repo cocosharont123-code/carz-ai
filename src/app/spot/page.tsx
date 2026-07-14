@@ -428,7 +428,7 @@ export default function SpotPage() {
       }
       setCar(data.car);
       setStatus((prev) => ({ ...(prev as Status), ...data.status }));
-      // Save this spot to the on-device garage history.
+      // Save this spot to the on-device garage history + global leaderboard.
       if (data.car?.isCar) {
         try {
           const thumb = await downscale(raw, 360, 0.55);
@@ -441,8 +441,25 @@ export default function SpotPage() {
             rarityScore: data.car.rarityScore,
             priceRange: data.car.priceRangeUsed,
           });
+          // Submit to the global rarest-cars leaderboard (best-effort).
+          if (data.car.rarityScore > 0) {
+            const lbThumb = await downscale(raw, 200, 0.5);
+            void fetch("/api/leaderboard", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                image: lbThumb,
+                make: data.car.make,
+                model: data.car.model,
+                yearRange: data.car.yearRange,
+                rarityScore: data.car.rarityScore,
+                rarityReason: data.car.rarityReason,
+                priceRange: data.car.priceRangeUsed,
+              }),
+            }).catch(() => {});
+          }
         } catch {
-          /* garage save is best-effort */
+          /* garage / leaderboard save is best-effort */
         }
       }
       // keep the photo on screen after identifying

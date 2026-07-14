@@ -47,6 +47,9 @@ export function SiteHeader() {
         <Link href="/garage" className="text-foreground/80 hover:text-foreground">
           Garage
         </Link>
+        <Link href="/leaderboard" className="text-foreground/80 hover:text-foreground">
+          Ranks
+        </Link>
         <Link href="/pricing" className="text-foreground/80 hover:text-foreground">
           Plans
         </Link>
