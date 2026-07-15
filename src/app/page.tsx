@@ -8,16 +8,18 @@ import { HeroCTA } from "@/components/hero-cta";
 
 export default function Home() {
   return (
-    <>
-      {/* Full-screen WebGL shader background (fixed) */}
-      <WebGLShader />
+    <div className="relative z-10 w-full overflow-x-clip">
+      <SiteHeader />
 
-      {/* All content sits above the shader */}
-      <div className="relative z-10">
-        <SiteHeader />
+      {/* Hero — the RGB shader is clipped to this section so it never bleeds
+          to the page edges. */}
+      <section className="relative isolate flex min-h-screen w-full flex-col items-center justify-center overflow-hidden px-4 text-center">
+        {/* Contained WebGL shader background */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <WebGLShader />
+        </div>
 
-        {/* Hero over the shader */}
-        <section className="flex min-h-screen flex-col items-center justify-center px-4 text-center">
+        <div className="relative z-10 flex w-full flex-col items-center">
           <h1 className="text-6xl font-extrabold tracking-tighter text-white sm:text-7xl md:text-8xl">
             Carz AI
           </h1>
@@ -33,10 +35,11 @@ export default function Home() {
             <p className="text-xs text-green-500">AI vision online</p>
           </div>
           <HeroCTA />
-        </section>
+        </div>
+      </section>
 
-        {/* Below-hero content: same flat black as everything else */}
-        <div className="relative bg-background">
+      {/* Below-hero content: same flat black as everything else */}
+      <div className="relative w-full bg-background">
           {/* Scroll-animation showcase */}
           <section>
             <ContainerScroll
@@ -96,11 +99,10 @@ export default function Home() {
             </div>
           </section>
 
-          <footer className="px-5 py-12 text-center text-sm text-muted-foreground">
-            Carz AI · Everything free, no limits
-          </footer>
-        </div>
+        <footer className="px-5 py-12 text-center text-sm text-muted-foreground">
+          Carz AI · Everything free, no limits
+        </footer>
       </div>
-    </>
+    </div>
   );
 }

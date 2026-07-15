@@ -131,6 +131,13 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html,
+  body {
+    /* Lock the page to the viewport width — no sideways scrolling on mobile.
+       `clip` (not `hidden`) keeps the sticky header working. */
+    overflow-x: clip;
+    max-width: 100%;
+  }
   body {
     @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
