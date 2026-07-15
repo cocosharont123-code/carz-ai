@@ -56,7 +56,7 @@ const CAR_TOOL = {
       zeroToSixty: { type: "string", description: "0-60 mph time, approx" },
       topSpeed: { type: "string" },
       priceRangeUsed: { type: "string", description: "Approx used market price range (USD)" },
-      funFacts: { type: "array", items: { type: "string" }, description: "2-4 interesting facts." },
+      funFacts: { type: "array", items: { type: "string" }, description: "Exactly 2 short interesting facts." },
       confidence: { type: "string", enum: ["high", "medium", "low"] },
       notes: { type: "string", description: "Caveats, ambiguity, or '' if none." },
       parentCompany: { type: "string", description: "Corporate parent/group that owns the brand, e.g. 'Volkswagen Group' for Porsche." },
@@ -64,7 +64,7 @@ const CAR_TOOL = {
       rarityReason: { type: "string", description: "One short sentence explaining the rarity score." },
       valueTimeline: {
         type: "array",
-        description: "Approximate used-market value (USD) at 4-6 points from when new to today. Ordered oldest to newest.",
+        description: "Approximate used-market value (USD) at exactly 4 points from when new to today. Ordered oldest to newest.",
         items: {
           type: "object",
           properties: {
@@ -75,18 +75,18 @@ const CAR_TOOL = {
         },
       },
       goodDealUsd: { type: "number", description: "USD price at or below which this car is clearly a good deal on the used market today." },
-      valuation: { type: "string", description: "MAX-tier: detailed valuation incl. depreciation outlook." },
-      reliability: { type: "string", description: "MAX-tier: known reliability + common issues." },
-      collectibility: { type: "string", description: "MAX-tier: collector/appreciation potential." },
+      valuation: { type: "string", description: "One concise sentence: valuation + depreciation outlook." },
+      reliability: { type: "string", description: "One concise sentence: reliability + the main common issue." },
+      collectibility: { type: "string", description: "One concise sentence: collector/appreciation potential." },
     },
     required: ["isCar", "make", "model", "confidence"],
   },
 } as const;
 
 const PROMPT_BASE =
-  "You are an expert automotive identifier. Look at the photo and identify the car as precisely as you can, then call report_car with your best assessment. If unsure of the exact model, give your single best guess and set confidence accordingly. Fill every field you reasonably can; use '' for fields you truly cannot estimate. Always fill parentCompany, rarityScore (with a one-line rarityReason), a valueTimeline of 4-6 points from new to today, and goodDealUsd (a realistic bargain price on the used market).";
+  "You are an expert automotive identifier. Look at the photo and identify the car as precisely as you can, then call report_car with your best assessment. If unsure of the exact model, give your single best guess and set confidence accordingly. Keep every text field brief — short phrases, not paragraphs. Fill fields you reasonably can; use '' for fields you truly cannot estimate. Always fill parentCompany, rarityScore (with a one-line rarityReason), a valueTimeline of exactly 4 points from new to today, and goodDealUsd (a realistic bargain price on the used market).";
 const PROMPT_PREMIUM =
-  " This is a MAX-tier request: also fill valuation, reliability, and collectibility with thorough, specific paragraphs.";
+  " Also fill valuation, reliability, and collectibility — ONE concise sentence each, not paragraphs.";
 const PROMPT_BASIC =
   " This is a standard request: leave valuation, reliability, and collectibility as ''.";
 
