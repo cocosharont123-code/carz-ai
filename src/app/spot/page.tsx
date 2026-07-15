@@ -147,20 +147,42 @@ function fmtUsd(n: number): string {
 
 function RarityMeter({ score, reason }: { score: number; reason?: string }) {
   if (!score || score <= 0) return null;
-  const s = Math.max(0, Math.min(100, score));
-  const label = s >= 85 ? "Extremely rare" : s >= 70 ? "Rare" : s >= 45 ? "Uncommon" : s >= 20 ? "Fairly common" : "Common";
+  const raw = Math.max(0, Math.round(score));
+  const ultra = raw >= 100;
+  const bar = Math.min(100, raw); // meter fills to 100
+  const label = ultra
+    ? "Ultra rare"
+    : raw >= 85
+      ? "Extremely rare"
+      : raw >= 70
+        ? "Rare"
+        : raw >= 45
+          ? "Uncommon"
+          : raw >= 20
+            ? "Fairly common"
+            : "Common";
   return (
-    <div className="mt-4 rounded-2xl bg-foreground/[0.03] p-4">
+    <div
+      className={`mt-4 rounded-2xl p-4 ${
+        ultra
+          ? "bg-gradient-to-r from-fuchsia-500/15 via-violet-500/10 to-sky-500/15 shadow-[0_0_25px_-8px_rgba(217,70,239,0.7)]"
+          : "bg-foreground/[0.03]"
+      }`}
+    >
       <div className="flex items-baseline justify-between">
         <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Rarity</span>
         <span className="text-sm font-bold">
-          {s}/100 · <span className="text-amber-400">{label}</span>
+          {raw}/100 · <span className={ultra ? "text-fuchsia-300" : "text-amber-400"}>{ultra ? "💎 " : ""}{label}</span>
         </span>
       </div>
       <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-background">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-amber-400 to-rose-500"
-          style={{ width: `${s}%` }}
+          className={`h-full rounded-full ${
+            ultra
+              ? "bg-gradient-to-r from-fuchsia-400 via-violet-400 to-sky-400"
+              : "bg-gradient-to-r from-emerald-400 via-amber-400 to-rose-500"
+          }`}
+          style={{ width: `${bar}%` }}
         />
       </div>
       {reason && <p className="mt-2 text-sm text-muted-foreground">{reason}</p>}

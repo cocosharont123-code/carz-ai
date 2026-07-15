@@ -58,7 +58,7 @@ const CAR_TOOL = {
       confidence: { type: "string", enum: ["high", "medium", "low"] },
       notes: { type: "string", description: "Caveats, ambiguity, or '' if none." },
       parentCompany: { type: "string", description: "Corporate parent/group that owns the brand, e.g. 'Volkswagen Group' for Porsche." },
-      rarityScore: { type: "number", description: "How rare this car is on a 0 (extremely common) to 100 (extremely rare) scale." },
+      rarityScore: { type: "number", description: "How rare this car is: 0 (extremely common) to 100 (extremely rare). Reserve scores of 100 or above (up to 120) ONLY for the very rarest cars — genuine one-offs, prototypes, and sub-100-production hypercars/coachbuilt specials. These are 'ultra rare'." },
       rarityReason: { type: "string", description: "One short sentence explaining the rarity score." },
       valueTimeline: {
         type: "array",

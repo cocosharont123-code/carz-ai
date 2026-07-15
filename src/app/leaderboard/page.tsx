@@ -22,7 +22,19 @@ type RareCar = {
 const MEDALS = ["🥇", "🥈", "🥉"];
 
 function rarityLabel(s: number): string {
-  return s >= 85 ? "Extremely rare" : s >= 70 ? "Rare" : s >= 45 ? "Uncommon" : "Common";
+  return s >= 100
+    ? "Ultra rare"
+    : s >= 85
+      ? "Extremely rare"
+      : s >= 70
+        ? "Rare"
+        : s >= 45
+          ? "Uncommon"
+          : "Common";
+}
+
+function isUltra(s: number): boolean {
+  return s >= 100;
 }
 
 export default function LeaderboardPage() {
@@ -77,13 +89,17 @@ export default function LeaderboardPage() {
           </div>
         ) : (
           <div className="mt-6 space-y-2.5">
-            {cars.map((c, i) => (
+            {cars.map((c, i) => {
+              const ultra = isUltra(c.rarityScore);
+              return (
               <div
                 key={c.id}
                 className={`flex items-center gap-3 rounded-2xl border p-3 backdrop-blur-xl ${
-                  i === 0
-                    ? "border-amber-400/40 bg-amber-400/[0.06]"
-                    : "border-foreground/[0.06] bg-card"
+                  ultra
+                    ? "border-fuchsia-500/60 bg-gradient-to-r from-fuchsia-500/15 via-violet-500/10 to-sky-500/15 shadow-[0_0_25px_-6px_rgba(217,70,239,0.6)]"
+                    : i === 0
+                      ? "border-amber-400/40 bg-amber-400/[0.06]"
+                      : "border-foreground/[0.06] bg-card"
                 }`}
               >
                 <div className="w-8 shrink-0 text-center text-lg font-extrabold">
@@ -98,6 +114,11 @@ export default function LeaderboardPage() {
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
+                  {ultra && (
+                    <span className="mb-0.5 inline-block rounded-full bg-gradient-to-r from-fuchsia-500 to-sky-500 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-white">
+                      💎 Ultra rare
+                    </span>
+                  )}
                   <p className="truncate font-bold">
                     {c.make} {c.model}
                     {c.yearRange ? <span className="font-normal text-muted-foreground"> · {c.yearRange}</span> : null}
@@ -114,13 +135,20 @@ export default function LeaderboardPage() {
                   ) : null}
                 </div>
                 <div className="shrink-0 text-right">
-                  <div className="text-lg font-extrabold text-amber-300">{Math.round(c.rarityScore)}</div>
-                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  <div className={`text-lg font-extrabold ${ultra ? "text-fuchsia-300" : "text-amber-300"}`}>
+                    {Math.round(c.rarityScore)}
+                  </div>
+                  <div
+                    className={`text-[10px] uppercase tracking-wide ${
+                      ultra ? "font-bold text-fuchsia-300" : "text-muted-foreground"
+                    }`}
+                  >
                     {rarityLabel(c.rarityScore)}
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </main>

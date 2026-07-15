@@ -62,7 +62,7 @@ export async function POST(req: Request) {
       make,
       model,
       yearRange: (body.yearRange || "").trim(),
-      rarityScore: Math.max(0, Math.min(100, rarityScore)),
+      rarityScore: Math.max(0, Math.min(120, rarityScore)),
       rarityReason: (body.rarityReason || "").trim(),
       priceRange: (body.priceRange || "").trim(),
       image,
