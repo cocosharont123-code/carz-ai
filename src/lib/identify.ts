@@ -56,7 +56,7 @@ const CAR_TOOL = {
       zeroToSixty: { type: "string", description: "0-60 mph time, approx" },
       topSpeed: { type: "string" },
       priceRangeUsed: { type: "string", description: "Approx used market price range (USD)" },
-      funFacts: { type: "array", items: { type: "string" }, description: "Exactly 2 short interesting facts." },
+      funFacts: { type: "array", items: { type: "string" }, description: "Exactly 2 fun facts, each ONE short punchy sentence (max ~12 words). No preamble." },
       confidence: { type: "string", enum: ["high", "medium", "low"] },
       notes: { type: "string", description: "Caveats, ambiguity, or '' if none." },
       parentCompany: { type: "string", description: "Corporate parent/group that owns the brand, e.g. 'Volkswagen Group' for Porsche." },
