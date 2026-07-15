@@ -430,7 +430,9 @@ export default function SpotPage() {
     setLoading(true);
     try {
       const raw = await objectUrlToDataUrl(previewUrl);
-      const image = await downscale(raw);
+      // Smaller upload = faster network + faster model prefill. 1024px is plenty
+      // to identify a car and well within Claude's image budget.
+      const image = await downscale(raw, 1024, 0.72);
       const res = await fetch("/api/identify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

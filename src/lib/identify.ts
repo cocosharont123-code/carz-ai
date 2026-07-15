@@ -31,7 +31,9 @@ export type CarReport = {
   collectibility: string;
 };
 
-const MODEL = process.env.CAR_SPOTTER_MODEL || "claude-sonnet-4-6";
+// Haiku 4.5 identifies cars nearly as well as Sonnet but generates the report
+// several times faster. Override with CAR_SPOTTER_MODEL to trade speed for depth.
+const MODEL = process.env.CAR_SPOTTER_MODEL || "claude-haiku-4-5-20251001";
 
 const CAR_TOOL = {
   name: "report_car",
