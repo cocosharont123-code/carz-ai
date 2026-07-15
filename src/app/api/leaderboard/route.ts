@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { readBoard, recordRareSpot, leaderboardConfigured } from "@/lib/leaderboard-blob";
+import { getProfile } from "@/lib/profile-blob";
 
 export const runtime = "nodejs";
 
@@ -39,9 +40,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "missing fields" }, { status: 400 });
   }
 
-  // Spotter identity comes from the server session, not the client (no spoofing).
+  // Spotter identity comes from the server-side profile, not the client (no spoofing).
   const session = await auth();
-  const spotter = session?.user?.name?.split(" ")[0] || "Anonymous";
+  let spotter = "Anonymous";
+  let spotterImage = "";
+  if (session?.user?.email) {
+    const profile = await getProfile(session.user.email);
+    if (profile?.username) {
+      spotter = `@${profile.username}`;
+      spotterImage = profile.image || "";
+    } else {
+      spotter = session.user.name?.split(" ")[0] || "Anonymous";
+    }
+  }
 
   // Keep the stored thumbnail small so the JSON stays lean.
   const image = typeof body.image === "string" && body.image.startsWith("data:") ? body.image.slice(0, 60_000) : "";
@@ -56,6 +67,7 @@ export async function POST(req: Request) {
       priceRange: (body.priceRange || "").trim(),
       image,
       spotter,
+      spotterImage,
     });
     return NextResponse.json({ ok: true });
   } catch {

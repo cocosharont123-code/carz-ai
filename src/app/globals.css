@@ -147,3 +147,25 @@
   max-height: 100vh;
   box-sizing: border-box;
 }
+/* --- Default profile avatar: black car on shifting neon bg --- */
+.carz-neon-bg {
+  background:
+    radial-gradient(circle at 20% 30%, rgba(0, 255, 128, 0.55), transparent 45%),
+    radial-gradient(circle at 80% 25%, rgba(0, 102, 255, 0.55), transparent 45%),
+    radial-gradient(circle at 50% 85%, rgba(255, 0, 51, 0.55), transparent 50%),
+    linear-gradient(120deg, #03140d, #041127, #150406);
+  background-size: 200% 200%, 200% 200%, 200% 200%, 200% 200%;
+  animation: carzNeon 5.5s ease-in-out infinite;
+}
+@keyframes carzNeon {
+  0%   { background-position: 0% 50%, 100% 50%, 50% 0%, 0% 50%; }
+  50%  { background-position: 100% 50%, 0% 50%, 50% 100%, 100% 50%; }
+  100% { background-position: 0% 50%, 100% 50%, 50% 0%, 0% 50%; }
+}
+.carz-car { animation: carzBob 1.8s ease-in-out infinite; }
+@keyframes carzBob {
+  0%, 100% { transform: translateY(3%); }
+  50%      { transform: translateY(-6%); }
+}
+.carz-wheel { transform-box: fill-box; transform-origin: center; animation: carzWheel 0.9s linear infinite; }
+@keyframes carzWheel { to { transform: rotate(360deg); } }

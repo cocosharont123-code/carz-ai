@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
+import { Avatar } from "@/components/default-avatar";
 
 type RareCar = {
   id: string;
@@ -14,6 +15,7 @@ type RareCar = {
   priceRange?: string;
   image?: string;
   spotter: string;
+  spotterImage?: string;
   ts: number;
 };
 
@@ -100,9 +102,12 @@ export default function LeaderboardPage() {
                     {c.make} {c.model}
                     {c.yearRange ? <span className="font-normal text-muted-foreground"> · {c.yearRange}</span> : null}
                   </p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    Spotted by {c.spotter}
-                    {c.priceRange ? ` · ${c.priceRange}` : ""}
+                  <p className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
+                    <Avatar src={c.spotterImage} size={16} />
+                    <span className="truncate">
+                      {c.spotter}
+                      {c.priceRange ? ` · ${c.priceRange}` : ""}
+                    </span>
                   </p>
                   {c.rarityReason ? (
                     <p className="mt-0.5 truncate text-[11px] text-muted-foreground/80">{c.rarityReason}</p>

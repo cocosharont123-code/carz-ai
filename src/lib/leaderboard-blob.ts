@@ -12,8 +12,9 @@ export type RareCar = {
   rarityScore: number;
   rarityReason?: string;
   priceRange?: string;
-  image?: string; // small base64 thumbnail
-  spotter: string; // display name, or "Anonymous"
+  image?: string; // small base64 thumbnail of the car
+  spotter: string; // @username, or "Anonymous"
+  spotterImage?: string; // profile picture thumbnail, or "" for the animated default
   ts: number;
 };
 
