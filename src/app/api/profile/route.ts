@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { auth } from "@/auth";
 import { getProfile, setProfile, profilesConfigured } from "@/lib/profile-blob";
 
 export const runtime = "nodejs";
+
+const UNAME_COOKIE = "cs_uname";
 
 export async function GET() {
   const session = await auth();
@@ -13,8 +16,33 @@ export async function GET() {
   if (!profilesConfigured()) {
     return NextResponse.json({ signedIn: true, configured: false, profile: null });
   }
+
+  const jar = await cookies();
   const profile = await getProfile(email);
-  return NextResponse.json({ signedIn: true, configured: true, profile });
+
+  if (profile?.username) {
+    // Keep the fast-path cookie fresh so future reads never loop.
+    jar.set(UNAME_COOKIE, profile.username, {
+      path: "/",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 365,
+    });
+    return NextResponse.json({ signedIn: true, configured: true, profile });
+  }
+
+  // Blob write may not have propagated yet (eventual consistency). If we just
+  // saved a username, trust the cookie so the user isn't bounced back.
+  const cookieName = jar.get(UNAME_COOKIE)?.value;
+  if (cookieName) {
+    return NextResponse.json({
+      signedIn: true,
+      configured: true,
+      pending: true,
+      profile: { username: cookieName, displayName: cookieName, image: "", ts: 0 },
+    });
+  }
+
+  return NextResponse.json({ signedIn: true, configured: true, profile: null });
 }
 
 export async function POST(req: Request) {
@@ -42,5 +70,15 @@ export async function POST(req: Request) {
   if (!res.ok) {
     return NextResponse.json({ ok: false, error: res.error }, { status: 400 });
   }
+
+  // Set an instant, strongly-consistent cookie so the profile gate accepts the
+  // new username immediately, before the Blob write finishes propagating.
+  const jar = await cookies();
+  jar.set(UNAME_COOKIE, res.profile!.username, {
+    path: "/",
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 365,
+  });
+
   return NextResponse.json({ ok: true, profile: res.profile });
 }

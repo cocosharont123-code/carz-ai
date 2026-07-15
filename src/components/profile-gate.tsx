@@ -15,11 +15,12 @@ export function ProfileGate() {
     // Don't redirect away from the pages needed to complete setup.
     if (pathname === "/profile" || pathname === "/signin") return;
     let cancelled = false;
-    fetch("/api/profile")
+    fetch("/api/profile", { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => {
         if (cancelled) return;
-        if (d.signedIn && d.configured !== false && !d.profile?.username) {
+        // Only bounce a signed-in user who has no username yet.
+        if (d.signedIn && d.configured !== false && !d.pending && !d.profile?.username) {
           router.replace(`/profile?next=${encodeURIComponent(pathname || "/spot")}`);
         }
       })
