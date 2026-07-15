@@ -347,7 +347,6 @@ export default function SpotPage() {
   const [car, setCar] = useState<CarReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [limitHit, setLimitHit] = useState(false);
   const [note, setNote] = useState("");
   const [isDragging, setIsDragging] = useState(false);
 
@@ -406,7 +405,6 @@ export default function SpotPage() {
       return;
     }
     setError("");
-    setLimitHit(false);
     setLoading(true);
     try {
       const raw = await objectUrlToDataUrl(previewUrl);
@@ -417,11 +415,6 @@ export default function SpotPage() {
         body: JSON.stringify({ image, note }),
       });
       const data = await res.json();
-      if (res.status === 402) {
-        setLimitHit(true);
-        setStatus(data.status);
-        return;
-      }
       if (!res.ok) {
         setError(data.message || "Something went wrong.");
         return;
@@ -476,10 +469,8 @@ export default function SpotPage() {
     setNote("");
     setCar(null);
     setError("");
-    setLimitHit(false);
   }
 
-  const premium = status?.premiumReport;
 
   return (
     <>
@@ -492,22 +483,8 @@ export default function SpotPage() {
 
         {status && (
           <p className="mt-3 text-sm text-muted-foreground">
-            {status.dailyLimit === null ? (
-              <>
-                <span className="font-semibold text-foreground">Unlimited</span> identifications ·{" "}
-                {status.usedToday} today
-              </>
-            ) : (
-              <>
-                <span className="font-semibold text-foreground">{status.remainingToday}</span> of{" "}
-                {status.dailyLimit} left today{" "}
-                {status.remainingToday === 0 && (
-                  <Link href="/pricing" className="text-sky-400 underline">
-                    upgrade for more
-                  </Link>
-                )}
-              </>
-            )}
+            <span className="font-semibold text-foreground">Unlimited</span> identifications ·{" "}
+            {status.usedToday} today · free
           </p>
         )}
 
@@ -617,21 +594,8 @@ export default function SpotPage() {
           </div>
         )}
 
-        {limitHit && (
-          <div className="mt-4 rounded-2xl border border-sky-500/40 bg-sky-500/10 p-5 text-center">
-            <h3 className="text-lg font-bold">Out of spots for today 🚦</h3>
-            <p className="mt-1 text-sm text-muted-foreground">Upgrade to keep identifying cars.</p>
-            <Link
-              href="/pricing"
-              className="mt-3 inline-block rounded-xl bg-gradient-to-br from-sky-400 to-violet-500 px-5 py-2 font-semibold text-white"
-            >
-              See plans
-            </Link>
-          </div>
-        )}
-
         {/* Result */}
-        {car && !limitHit && (
+        {car && (
           <section className="mt-6 rounded-3xl border border-foreground/[0.05] bg-card p-6 backdrop-blur-xl">
             {car.isCar ? (
               <>
@@ -689,7 +653,7 @@ export default function SpotPage() {
                   <span className="text-muted-foreground">→</span>
                 </Link>
 
-                {premium && (car.valuation || car.reliability || car.collectibility) && (
+                {(car.valuation || car.reliability || car.collectibility) && (
                   <div className="mt-6 border-t border-foreground/10 pt-5">
                     {car.valuation && (
                       <>
@@ -715,20 +679,6 @@ export default function SpotPage() {
                         <p className="mt-1 text-sm">{car.collectibility}</p>
                       </>
                     )}
-                  </div>
-                )}
-                {!premium && (
-                  <div className="mt-5 rounded-xl border border-violet-500/40 bg-violet-500/10 p-4 text-center">
-                    <h3 className="font-bold">🔓 Max-only insights</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Detailed valuation, reliability & collectibility reports.
-                    </p>
-                    <Link
-                      href="/pricing"
-                      className="mt-3 inline-block rounded-xl bg-gradient-to-br from-sky-400 to-violet-500 px-4 py-2 text-sm font-semibold text-white"
-                    >
-                      Upgrade to Max
-                    </Link>
                   </div>
                 )}
               </>
@@ -764,33 +714,12 @@ export default function SpotPage() {
           </section>
         )}
 
-        {/* Hotspots map (Max) */}
+        {/* Hotspots map */}
         <section className="mt-8">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold">🗺️ Car hotspots near you</h3>
-            <span className="rounded-full border border-violet-500/50 bg-violet-500/10 px-2.5 py-1 text-xs font-semibold text-violet-300">
-              Max
-            </span>
+          <h3 className="text-xl font-bold">🗺️ Car hotspots near you</h3>
+          <div className="mt-3">
+            <CarHotspotsMap />
           </div>
-          {status?.hotspotsMap ? (
-            <div className="mt-3">
-              <CarHotspotsMap />
-            </div>
-          ) : (
-            <div className="mt-3 rounded-2xl border border-violet-500/40 bg-gradient-to-b from-violet-500/10 to-card p-6 text-center">
-              <h4 className="text-lg font-bold">Find where the cars are</h4>
-              <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-                Max members get a live map of nearby dealerships, car washes, auto shops and parking
-                — the places cars gather.
-              </p>
-              <Link
-                href="/pricing"
-                className="mt-4 inline-block rounded-xl bg-gradient-to-br from-sky-400 to-violet-500 px-5 py-2.5 font-semibold text-white"
-              >
-                Unlock with Max
-              </Link>
-            </div>
-          )}
         </section>
       </main>
     </>

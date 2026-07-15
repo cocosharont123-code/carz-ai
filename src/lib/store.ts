@@ -17,7 +17,7 @@ export const UID_COOKIE = "cs_uid";
 export const PLAN_COOKIE = "cs_plan";
 
 export function isPlanId(s: string | null | undefined): s is PlanId {
-  return s === "free" || s === "pro" || s === "max";
+  return s === "free";
 }
 
 let memory: Store | null = null;
@@ -166,14 +166,6 @@ export function recordIdentification(
   }
   saveStore(store);
   return planStatusFor(planOverride ?? user.plan, user);
-}
-
-export function setPlan(id: string, plan: PlanId): PlanStatus {
-  const store = loadStore();
-  const user = ensureUser(store, id);
-  user.plan = plan;
-  saveStore(store);
-  return planStatus(user);
 }
 
 export function recentHistory(user: UserRecord, n = 20): HistoryItem[] {

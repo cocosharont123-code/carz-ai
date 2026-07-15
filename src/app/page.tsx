@@ -82,8 +82,8 @@ export default function Home() {
                 Ready to start spotting?
               </h2>
               <p className="mx-auto mt-3 max-w-md text-muted-foreground">
-                Snap any car and get the make, model, year, specs and more — free for your first
-                two a day.
+                Snap any car and get the make, model, year, specs, value and more — unlimited and
+                completely free.
               </p>
               <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
                 <Link
@@ -92,21 +92,12 @@ export default function Home() {
                 >
                   Start spotting — free
                 </Link>
-                <Link
-                  href="/pricing"
-                  className="rounded-xl border border-border bg-card px-6 py-3 font-semibold text-foreground transition hover:bg-accent"
-                >
-                  See plans
-                </Link>
               </div>
             </div>
           </section>
 
           <footer className="px-5 py-12 text-center text-sm text-muted-foreground">
-            Carz AI · Free, Pro &amp; Max plans ·{" "}
-            <Link href="/pricing" className="underline">
-              Upgrade
-            </Link>
+            Carz AI · Everything free, no limits
           </footer>
         </div>
       </div>

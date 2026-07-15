@@ -18,7 +18,7 @@ function GoogleIcon() {
 
 function SignInInner() {
   const params = useSearchParams();
-  const callbackUrl = params.get("callbackUrl") || "/pricing";
+  const callbackUrl = params.get("callbackUrl") || "/spot";
   const [authEnabled, setAuthEnabled] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -33,7 +33,7 @@ function SignInInner() {
       <span className="inline-block h-12 w-12 rounded-full bg-gradient-to-br from-sky-400 to-violet-500" />
       <h1 className="mt-6 text-3xl font-extrabold tracking-tight">Sign in to Car Spotter</h1>
       <p className="mt-2 text-muted-foreground">
-        Sign in or create an account to subscribe and unlock Pro & Max.
+        Sign in so your spots show up on the global leaderboard under your name.
       </p>
 
       {authEnabled === false && (

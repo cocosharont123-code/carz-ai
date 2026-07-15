@@ -1,29 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { Sparkles } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 
-type Status = { planName: string; plan: string };
-
 export function SiteHeader() {
   const { data: session } = useSession();
-  const [status, setStatus] = useState<Status | null>(null);
-
-  useEffect(() => {
-    fetch("/api/me")
-      .then((r) => r.json())
-      .then(setStatus)
-      .catch(() => {});
-  }, []);
-
-  const badgeClass =
-    status?.plan === "max"
-      ? "border-violet-500/50 bg-violet-500/10 text-violet-300"
-      : status?.plan === "pro"
-        ? "border-sky-500/50 bg-sky-500/10 text-sky-300"
-        : "border-border bg-card text-muted-foreground";
 
   return (
     <header className="sticky top-0 z-50 flex items-center justify-between border-b border-foreground/[0.04] bg-background/30 px-5 py-3 backdrop-blur-xl">
@@ -32,12 +14,6 @@ export function SiteHeader() {
         Car Spotter
       </Link>
       <nav className="flex items-center gap-3 text-sm">
-        {status && (
-          <span className={`hidden rounded-full border px-3 py-1 text-xs font-semibold sm:inline ${badgeClass}`}>
-            {status.planName}
-            {status.plan === "max" ? " ⚡" : ""}
-          </span>
-        )}
         <Link href="/spot" className="text-foreground/80 hover:text-foreground">
           Spot
         </Link>
@@ -49,9 +25,6 @@ export function SiteHeader() {
         </Link>
         <Link href="/leaderboard" className="text-foreground/80 hover:text-foreground">
           Ranks
-        </Link>
-        <Link href="/pricing" className="text-foreground/80 hover:text-foreground">
-          Plans
         </Link>
         <Link
           href="/assistant"
