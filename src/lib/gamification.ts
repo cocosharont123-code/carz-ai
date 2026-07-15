@@ -10,10 +10,10 @@ export type Badge = {
 };
 
 export const BADGES: Badge[] = [
-  { id: "b5", threshold: 5, name: "Rookie Spotter", emoji: "🥉", blurb: "Spot 5 cars" },
-  { id: "b15", threshold: 15, name: "Seasoned Spotter", emoji: "🥈", blurb: "Spot 15 cars" },
-  { id: "b30", threshold: 30, name: "Veteran Spotter", emoji: "🥇", blurb: "Spot 30 cars" },
-  { id: "b100", threshold: 100, name: "Legendary Spotter", emoji: "🏆", blurb: "Spot 100 cars" },
+  { id: "b5", threshold: 5, name: "Rookie", emoji: "🥉", blurb: "Spot 5 cars" },
+  { id: "b15", threshold: 15, name: "Elite", emoji: "🥈", blurb: "Spot 15 cars" },
+  { id: "b30", threshold: 30, name: "Legendary", emoji: "🥇", blurb: "Spot 30 cars" },
+  { id: "b100", threshold: 100, name: "Diamond", emoji: "💎", blurb: "Spot 100 cars" },
 ];
 
 export function badgesFor(total: number) {
