@@ -44,7 +44,7 @@ type CarLike = {
 
 // Turn an AI car report into a ready-to-post listing description.
 function buildDescription(c: CarLike): string {
-  const headline = `${[c.yearRange, c.make, c.model].filter(Boolean).join(" ")}${c.color ? `, ${c.color}` : ""}.`;
+  const headline = `${[c.make, c.model].filter(Boolean).join(" ")}${c.color ? `, ${c.color}` : ""}.`;
   const specs = [
     c.bodyStyle && `Body: ${c.bodyStyle}`,
     c.engine && `Engine: ${c.engine}`,
@@ -69,6 +69,7 @@ function NewAuctionInner() {
   const [title, setTitle] = useState("");
   const [make, setMake] = useState(params.get("make") || "");
   const [model, setModel] = useState(params.get("model") || "");
+  const [year, setYear] = useState("");
   const [description, setDescription] = useState("");
   const [image, setImage] = useState("");
   const [startingBid, setStartingBid] = useState("");
@@ -132,16 +133,15 @@ function NewAuctionInner() {
         setError("That doesn't look like a car — try another photo.");
         return;
       }
-      const t = [c.yearRange, c.make, c.model].filter(Boolean).join(" ").trim();
-      setTitle(t || `${c.make ?? ""} ${c.model ?? ""}`.trim());
+      setTitle(`${c.make ?? ""} ${c.model ?? ""}`.trim());
       setMake(c.make || "");
       setModel(c.model || "");
       setDescription(buildDescription(c));
-      if (!startingBid && c.goodDealUsd) setStartingBid(String(Math.round(c.goodDealUsd)));
+      // Year and starting price are always entered by the seller — never auto-filled.
       setAiMsg(
         c.goodDealUsd
-          ? `✨ Auto-filled! AI suggests starting around $${Math.round(c.goodDealUsd).toLocaleString()}. Review, then add your contact info.`
-          : "✨ Auto-filled! Review the details, then add your contact info.",
+          ? `✨ Auto-filled the details! Now enter the exact year and your starting price (AI estimates similar sell for ~$${Math.round(c.goodDealUsd).toLocaleString()}), then your contact info.`
+          : "✨ Auto-filled the details! Now enter the exact year and your starting price, then your contact info.",
       );
     } catch {
       setError("Network error — try again.");
@@ -154,6 +154,8 @@ function NewAuctionInner() {
     setError("");
     if (!title.trim()) return setError("Give your listing a title.");
     if (!image) return setError("Add a photo of the car.");
+    if (!year.trim()) return setError("Enter the car's year.");
+    if (startingBid.trim() === "") return setError("Enter a starting price.");
     if (!contact.trim()) return setError("Add contact info (revealed only to the winner).");
     const days = durationDays();
     if (lengthChoice === "custom" && !(days > 0)) return setError("Enter a custom auction length.");
@@ -166,6 +168,7 @@ function NewAuctionInner() {
           title,
           make,
           model,
+          year,
           description,
           image,
           startingBid: Number(startingBid) || 0,
@@ -258,14 +261,26 @@ function NewAuctionInner() {
               />
             </Field>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <Field label="Make">
                 <input value={make} onChange={(e) => setMake(e.target.value)} placeholder="BMW" className="input" />
               </Field>
               <Field label="Model">
                 <input value={model} onChange={(e) => setModel(e.target.value)} placeholder="M4" className="input" />
               </Field>
+              <Field label="Year *">
+                <input
+                  value={year}
+                  onChange={(e) => setYear(e.target.value.replace(/[^0-9]/g, "").slice(0, 4))}
+                  inputMode="numeric"
+                  placeholder="2018"
+                  className="input"
+                />
+              </Field>
             </div>
+            <p className="-mt-3 text-xs text-muted-foreground">
+              Enter the car&apos;s exact year yourself — the AI won&apos;t guess this for a real sale.
+            </p>
 
             <Field label="Description">
               <textarea
@@ -279,7 +294,7 @@ function NewAuctionInner() {
             </Field>
 
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Starting bid (USD)">
+              <Field label="Starting price (USD) *">
                 <input
                   value={startingBid}
                   onChange={(e) => setStartingBid(e.target.value.replace(/[^0-9]/g, ""))}

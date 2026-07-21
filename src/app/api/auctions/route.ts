@@ -47,6 +47,7 @@ export async function POST(req: Request) {
     title?: string;
     make?: string;
     model?: string;
+    year?: string;
     description?: string;
     image?: string;
     startingBid?: number;
@@ -60,9 +61,14 @@ export async function POST(req: Request) {
   }
 
   const title = (b.title || "").trim();
+  const year = (b.year || "").trim();
   const contact = (b.contact || "").trim();
   const image = typeof b.image === "string" && b.image.startsWith("data:") ? b.image.slice(0, 90_000) : "";
+  const startingBid = Number(b.startingBid);
   if (!title) return NextResponse.json({ ok: false, error: "Give your listing a title." }, { status: 400 });
+  if (!year) return NextResponse.json({ ok: false, error: "Enter the car's year." }, { status: 400 });
+  if (!Number.isFinite(startingBid) || startingBid < 0)
+    return NextResponse.json({ ok: false, error: "Enter a starting price." }, { status: 400 });
   if (!contact) return NextResponse.json({ ok: false, error: "Add contact info for the winner." }, { status: 400 });
   if (!image) return NextResponse.json({ ok: false, error: "Add a photo of the car." }, { status: 400 });
 
@@ -72,9 +78,10 @@ export async function POST(req: Request) {
     title,
     make: b.make || "",
     model: b.model || "",
+    year,
     description: b.description || "",
     image,
-    startingBid: Number(b.startingBid) || 0,
+    startingBid,
     contact,
     durationDays: Number(b.durationDays) || 7,
   });

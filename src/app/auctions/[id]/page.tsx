@@ -11,6 +11,7 @@ type Auction = {
   title: string;
   make: string;
   model: string;
+  year: string;
   description: string;
   image: string;
   startingBid: number;
@@ -172,7 +173,7 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
             <h1 className="text-2xl font-extrabold tracking-tight">{a.title}</h1>
             <p className="mt-0.5 text-sm text-muted-foreground">
               Listed by {a.sellerName}
-              {a.make || a.model ? ` · ${a.make} ${a.model}`.replace(/\s+/g, " ") : ""}
+              {a.year || a.make || a.model ? ` · ${[a.year, a.make, a.model].filter(Boolean).join(" ")}` : ""}
             </p>
 
             <div className="mt-4 flex items-end justify-between rounded-2xl bg-foreground/[0.04] p-4">

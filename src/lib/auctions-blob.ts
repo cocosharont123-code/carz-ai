@@ -18,6 +18,7 @@ export type Auction = {
   title: string;
   make: string;
   model: string;
+  year: string;
   description: string;
   image: string; // base64 thumbnail
   startingBid: number;
@@ -128,6 +129,7 @@ export async function createAuction(input: {
   title: string;
   make: string;
   model: string;
+  year: string;
   description: string;
   image: string;
   startingBid: number;
@@ -144,6 +146,7 @@ export async function createAuction(input: {
     title: input.title.trim().slice(0, 100),
     make: input.make.trim().slice(0, 40),
     model: input.model.trim().slice(0, 40),
+    year: input.year.trim().slice(0, 12),
     description: input.description.trim().slice(0, 1500),
     image: input.image,
     startingBid: Math.max(0, Math.round(input.startingBid)),
