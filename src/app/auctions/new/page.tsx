@@ -73,7 +73,15 @@ function NewAuctionInner() {
   const [image, setImage] = useState("");
   const [startingBid, setStartingBid] = useState("");
   const [contact, setContact] = useState("");
-  const [durationDays, setDurationDays] = useState(7);
+  const [lengthChoice, setLengthChoice] = useState("7"); // "1" | "3" | "7" | "14" | "custom"
+  const [customValue, setCustomValue] = useState("");
+  const [customUnit, setCustomUnit] = useState<"hours" | "days">("days");
+
+  function durationDays(): number {
+    if (lengthChoice !== "custom") return Number(lengthChoice);
+    const v = Number(customValue) || 0;
+    return customUnit === "hours" ? v / 24 : v;
+  }
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -147,6 +155,8 @@ function NewAuctionInner() {
     if (!title.trim()) return setError("Give your listing a title.");
     if (!image) return setError("Add a photo of the car.");
     if (!contact.trim()) return setError("Add contact info (revealed only to the winner).");
+    const days = durationDays();
+    if (lengthChoice === "custom" && !(days > 0)) return setError("Enter a custom auction length.");
     setSaving(true);
     try {
       const res = await fetch("/api/auctions", {
@@ -160,7 +170,7 @@ function NewAuctionInner() {
           image,
           startingBid: Number(startingBid) || 0,
           contact,
-          durationDays,
+          durationDays: days,
         }),
       });
       const d = await res.json();
@@ -280,17 +290,43 @@ function NewAuctionInner() {
               </Field>
               <Field label="Auction length">
                 <select
-                  value={durationDays}
-                  onChange={(e) => setDurationDays(Number(e.target.value))}
+                  value={lengthChoice}
+                  onChange={(e) => setLengthChoice(e.target.value)}
                   className="input"
                 >
-                  <option value={1}>1 day</option>
-                  <option value={3}>3 days</option>
-                  <option value={7}>7 days</option>
-                  <option value={14}>14 days</option>
+                  <option value="1">1 day</option>
+                  <option value="3">3 days</option>
+                  <option value="7">7 days</option>
+                  <option value="14">14 days</option>
+                  <option value="custom">Custom…</option>
                 </select>
               </Field>
             </div>
+
+            {lengthChoice === "custom" && (
+              <Field label="Custom length">
+                <div className="flex gap-2">
+                  <input
+                    value={customValue}
+                    onChange={(e) => setCustomValue(e.target.value.replace(/[^0-9.]/g, ""))}
+                    inputMode="decimal"
+                    placeholder="e.g. 36"
+                    className="input flex-1"
+                  />
+                  <select
+                    value={customUnit}
+                    onChange={(e) => setCustomUnit(e.target.value as "hours" | "days")}
+                    className="input w-28"
+                  >
+                    <option value="hours">hours</option>
+                    <option value="days">days</option>
+                  </select>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Anywhere from 1 hour to 30 days.
+                </p>
+              </Field>
+            )}
 
             <Field label="Contact info for the winner">
               <input

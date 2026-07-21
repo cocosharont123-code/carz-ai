@@ -135,7 +135,8 @@ export async function createAuction(input: {
   durationDays: number;
 }): Promise<Auction> {
   const now = Date.now();
-  const days = Math.max(1, Math.min(14, Math.round(input.durationDays)));
+  // Allow custom lengths from 1 hour up to 30 days (fractional days = hours).
+  const days = Math.max(1 / 24, Math.min(30, input.durationDays || 7));
   const auction: Auction = {
     id: randomUUID().slice(0, 12),
     sellerHash: hashEmail(input.sellerEmail),
