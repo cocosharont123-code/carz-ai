@@ -133,9 +133,12 @@ function NewAuctionInner() {
         setError("That doesn't look like a car — try another photo.");
         return;
       }
-      setTitle(`${c.make ?? ""} ${c.model ?? ""}`.trim());
-      setMake(c.make || "");
-      setModel(c.model || "");
+      // Never let a year end up in the AI title — the seller owns the year field.
+      const stripYear = (s: string) =>
+        s.replace(/\b(19|20)\d{2}(\s*[-–]\s*(19|20)?\d{2})?\b/g, "").replace(/\(\s*\)/g, "").replace(/\s{2,}/g, " ").trim();
+      setTitle(stripYear(`${c.make ?? ""} ${c.model ?? ""}`));
+      setMake(stripYear(c.make || ""));
+      setModel(stripYear(c.model || ""));
       setDescription(buildDescription(c));
       // Year and starting price are always entered by the seller — never auto-filled.
       setAiMsg(
@@ -255,7 +258,7 @@ function NewAuctionInner() {
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. 2015 BMW M4 — low miles"
+                placeholder="e.g. BMW M4 — low miles (no year — that's a separate field)"
                 maxLength={100}
                 className="input"
               />
