@@ -23,6 +23,44 @@ function downscale(dataUrl: string, max = 900, quality = 0.7): Promise<string> {
   });
 }
 
+type CarLike = {
+  isCar?: boolean;
+  make?: string;
+  model?: string;
+  yearRange?: string;
+  color?: string;
+  bodyStyle?: string;
+  engine?: string;
+  horsepower?: string;
+  drivetrain?: string;
+  zeroToSixty?: string;
+  topSpeed?: string;
+  priceRangeUsed?: string;
+  goodDealUsd?: number;
+  rarityScore?: number;
+  rarityReason?: string;
+  funFacts?: string[];
+};
+
+// Turn an AI car report into a ready-to-post listing description.
+function buildDescription(c: CarLike): string {
+  const headline = `${[c.yearRange, c.make, c.model].filter(Boolean).join(" ")}${c.color ? `, ${c.color}` : ""}.`;
+  const specs = [
+    c.bodyStyle && `Body: ${c.bodyStyle}`,
+    c.engine && `Engine: ${c.engine}`,
+    c.horsepower && `Power: ${c.horsepower}`,
+    c.drivetrain && `Drive: ${c.drivetrain}`,
+    c.zeroToSixty && `0–60: ${c.zeroToSixty}`,
+    c.topSpeed && `Top speed: ${c.topSpeed}`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const rarity = c.rarityScore && c.rarityScore >= 45 ? `Rarity ${Math.round(c.rarityScore)}/100 — ${c.rarityReason || "a rarer find"}.` : "";
+  const facts = (c.funFacts || []).filter(Boolean).join(" ");
+  const value = c.priceRangeUsed ? `Typical market value: ${c.priceRangeUsed}.` : "";
+  return [headline, specs, rarity, facts, value].filter(Boolean).join("\n\n");
+}
+
 function NewAuctionInner() {
   const { status } = useSession();
   const router = useRouter();
@@ -38,6 +76,8 @@ function NewAuctionInner() {
   const [durationDays, setDurationDays] = useState(7);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiMsg, setAiMsg] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -56,6 +96,50 @@ function NewAuctionInner() {
       fr.readAsDataURL(file);
     });
     setImage(await downscale(raw));
+    setAiMsg("");
+  }
+
+  // Run the uploaded photo through the Car Spotter AI and auto-fill the listing.
+  async function generateWithAI() {
+    if (!image) {
+      setError("Upload a photo first, then let AI write the listing.");
+      return;
+    }
+    setError("");
+    setAiMsg("");
+    setAiLoading(true);
+    try {
+      const res = await fetch("/api/identify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image, note: "This photo is for a car auction listing." }),
+      });
+      const d = await res.json();
+      if (!res.ok || !d.car) {
+        setError(d.message || "AI couldn't read that photo — try a clearer one.");
+        return;
+      }
+      const c = d.car as CarLike;
+      if (!c.isCar) {
+        setError("That doesn't look like a car — try another photo.");
+        return;
+      }
+      const t = [c.yearRange, c.make, c.model].filter(Boolean).join(" ").trim();
+      setTitle(t || `${c.make ?? ""} ${c.model ?? ""}`.trim());
+      setMake(c.make || "");
+      setModel(c.model || "");
+      setDescription(buildDescription(c));
+      if (!startingBid && c.goodDealUsd) setStartingBid(String(Math.round(c.goodDealUsd)));
+      setAiMsg(
+        c.goodDealUsd
+          ? `✨ Auto-filled! AI suggests starting around $${Math.round(c.goodDealUsd).toLocaleString()}. Review, then add your contact info.`
+          : "✨ Auto-filled! Review the details, then add your contact info.",
+      );
+    } catch {
+      setError("Network error — try again.");
+    } finally {
+      setAiLoading(false);
+    }
   }
 
   async function submit() {
@@ -138,6 +222,20 @@ function NewAuctionInner() {
                 </button>
                 <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickFile} />
               </div>
+
+              {/* AI auto-fill using the Car Spotter feature */}
+              <button
+                onClick={generateWithAI}
+                disabled={aiLoading || !image}
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-violet-500/40 bg-gradient-to-r from-violet-500/15 to-sky-500/15 py-2.5 text-sm font-bold text-violet-200 transition hover:from-violet-500/25 hover:to-sky-500/25 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {aiLoading ? "🔎 AI is reading your photo…" : "✨ Auto-fill listing with AI"}
+              </button>
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                Upload a photo and let Car Spotter identify the car and write the title, make, model &
+                description for you.
+              </p>
+              {aiMsg && <p className="mt-2 text-sm text-emerald-300">{aiMsg}</p>}
             </div>
 
             <Field label="Title">
