@@ -32,7 +32,7 @@ function SignInInner() {
     <main className="flex min-h-screen w-full flex-col items-center justify-center px-5 text-center">
       <Link href="/" className="flex items-center gap-3">
         <span className="inline-block h-5 w-5 bg-carz" />
-        <span className="display text-4xl">Carz AI</span>
+        <span className="wordmark text-4xl">Carz AI</span>
       </Link>
 
       {authEnabled === false && (

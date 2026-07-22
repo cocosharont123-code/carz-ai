@@ -35,7 +35,7 @@ export function SiteHeader() {
       <div className="flex shrink-0 flex-col gap-1.5">
         <Link href="/" className="flex items-center gap-2">
           <span className="inline-block h-3.5 w-3.5 bg-carz" />
-          <span className="display text-xl leading-none">Carz AI</span>
+          <span className="wordmark text-xl leading-none">Carz AI</span>
         </Link>
 
         {/* Mobile-only account under the wordmark */}

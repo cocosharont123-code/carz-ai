@@ -27,7 +27,7 @@ const GLASS =
 
 export function Button({ href, variant = "solid", size = "md", className, children, target, ...rest }: ButtonProps) {
   const base =
-    "inline-flex items-center justify-center gap-2 rounded-full font-display uppercase tracking-widest transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-40";
+    "press inline-flex items-center justify-center gap-2 rounded-full text-[13px] font-semibold tracking-tight transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-40";
   const variants = {
     solid: GLASS,
     outline: GLASS,
@@ -89,7 +89,7 @@ export function PageMasthead({
     <header className="border-b border-white/10 pb-5">
       {eyebrow && <Eyebrow className="mb-3">{eyebrow}</Eyebrow>}
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="display text-6xl leading-[0.9] sm:text-7xl md:text-8xl">{title}</h1>
+        <h1 className="display text-4xl">{title}</h1>
         <div className="flex items-center gap-4 pb-1">
           {count != null && <span className="util-label ">{count}</span>}
           {action}
@@ -213,7 +213,7 @@ export function CarPhoto({
     <img
       src={src}
       alt={alt}
-      className={cn(color ? "h-full w-full object-cover" : "car-photo h-full w-full object-cover", className)}
+      className={cn("img-settle h-full w-full object-cover", color ? "" : "car-photo", className)}
       draggable={false}
     />
   );

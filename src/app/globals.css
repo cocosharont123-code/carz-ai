@@ -26,10 +26,11 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  --font-serif: ui-serif, "New York", Georgia, "Times New Roman", serif;
   --font-heading: var(--font-sans);
-  --font-display: var(--font-oswald);
+  --font-display: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -224,23 +225,48 @@
    ========================================================================== */
 
 /* Condensed uppercase display type for mastheads & headlines. */
+/* Apple large title — big bold headings. Size comes from Tailwind text-*;
+   tracking tightens automatically as size grows. */
 .display {
-  font-family: var(--font-display), var(--font-sans), sans-serif;
-  text-transform: uppercase;
-  letter-spacing: -0.01em;
-  line-height: 0.92;
+  font-family: var(--font-sans);
   font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+.display.text-3xl,
+.display.text-4xl,
+.display.text-5xl,
+.display.text-6xl,
+.display.text-7xl,
+.display.text-8xl {
+  letter-spacing: -0.03em;
 }
 
-/* Small uppercase letterspaced utility labels (eyebrows, captions, headers). */
+/* Captions / eyebrows — 11px, 600, uppercase, Apple 0.08em tracking. */
 .util-label {
-  font-family: var(--font-display), var(--font-sans), sans-serif;
+  font-family: var(--font-sans);
   text-transform: uppercase;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.08em;
   font-size: 11px;
   font-weight: 600;
-  opacity: 0.7;
+  line-height: 1.3;
 }
+
+/* The "Carz AI" wordmark keeps a serif. */
+.wordmark {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* All numeric readouts (prices, bids, timers, stats) align + don't jitter. */
+.tabnum {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+h1, h2, h3, h4 { letter-spacing: -0.02em; line-height: 1.2; }
 
 /* All car photography stays black & white. */
 .car-photo {
@@ -260,4 +286,35 @@
   .car-photo { transition: none; }
   .carz-live-dot { animation: none; }
   * { scroll-behavior: auto !important; }
+}
+
+/* ==========================================================================
+   Apple motion — one curve, transform/opacity only.
+   ========================================================================== */
+:root { --ease-apple: cubic-bezier(0.22, 1, 0.36, 1); }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* One easing curve for every transition. */
+  *, ::before, ::after { transition-timing-function: var(--ease-apple); }
+
+  /* Screen/page change: fade in + rise 10px. */
+  @keyframes pageIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  .page-in { animation: pageIn 400ms var(--ease-apple) both; }
+
+  /* Hero/detail images settle from 1.06 -> 1 on load. */
+  @keyframes imgSettle { from { transform: scale(1.06); } to { transform: scale(1); } }
+  .img-settle { animation: imgSettle 1200ms var(--ease-apple) both; }
+
+  /* Scroll reveal (JS adds .in when 12% visible). */
+  .reveal { opacity: 0; transform: translateY(20px); }
+  .reveal.in { opacity: 1; transform: none; transition: opacity 700ms var(--ease-apple), transform 700ms var(--ease-apple); }
+
+  /* Press feedback on controls. */
+  .press { transition: transform 250ms var(--ease-apple); }
+  .press:active { transform: scale(0.96); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; }
+  .img-settle, .page-in { animation: none; }
 }

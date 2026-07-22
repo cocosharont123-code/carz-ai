@@ -47,7 +47,7 @@ function timeLeft(endsAt: number, now: number): { text: string; ending: boolean;
 function AuctionCard({ a, now }: { a: Auction; now: number }) {
   const tl = timeLeft(a.endsAt, now);
   return (
-    <Link href={`/auctions/${a.id}`} className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-card text-card-foreground transition-colors hover:border-white/25">
+    <Link href={`/auctions/${a.id}`} className="reveal group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-card text-card-foreground transition-colors hover:border-white/25">
       <div className="relative aspect-[4/3] w-full overflow-hidden">
         <CarPhoto src={a.image} alt={a.title} />
         <span className="absolute left-3 top-3 flex items-center gap-1.5 bg-black/70 text-white px-2 py-1">
