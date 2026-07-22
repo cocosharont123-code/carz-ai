@@ -2,9 +2,18 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Sparkles } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { Avatar } from "@/components/default-avatar";
+import { cn } from "@/lib/utils";
+
+const NAV = [
+  { href: "/spot", label: "Spot" },
+  { href: "/auctions", label: "Auctions" },
+  { href: "/hunt", label: "Hunt", accent: true },
+  { href: "/garage", label: "Garage" },
+  { href: "/leaderboard", label: "Ranks" },
+  { href: "/assistant", label: "Assistant" },
+];
 
 export function SiteHeader() {
   const { data: session } = useSession();
@@ -22,87 +31,61 @@ export function SiteHeader() {
   }, [session]);
 
   return (
-    <header className="sticky top-0 z-50 flex items-start justify-between gap-3 border-b border-foreground/[0.04] bg-background/30 px-5 py-3 backdrop-blur-xl">
-      {/* Logo + (mobile-only) account line beneath it */}
-      <div className="flex shrink-0 flex-col gap-1">
-        <Link href="/" className="flex items-center gap-2 font-extrabold tracking-tight">
-          <span className="inline-block h-3 w-3 rounded-full bg-gradient-to-br from-sky-400 to-violet-500" />
-          Carz AI
+    <header className="sticky top-0 z-50 flex items-start justify-between gap-3 border-b border-white/10 bg-black/80 px-5 py-3.5 backdrop-blur-xl">
+      <div className="flex shrink-0 flex-col gap-1.5">
+        <Link href="/" className="flex items-center gap-2">
+          <span className="inline-block h-3.5 w-3.5 bg-carz" />
+          <span className="display text-xl leading-none">Carz AI</span>
         </Link>
 
-        {/* Account / username setup — shown under the logo on mobile only */}
+        {/* Mobile-only account under the wordmark */}
         {session?.user ? (
-          <div className="flex items-center gap-2 text-xs sm:hidden">
-            <Link
-              href="/profile"
-              className="flex items-center gap-1.5 font-semibold text-foreground/90 hover:text-foreground"
-            >
+          <div className="flex items-center gap-2 sm:hidden">
+            <Link href="/profile" className="flex items-center gap-1.5">
               <Avatar src={profile?.image} size={20} />
-              {profile?.username ? `@${profile.username}` : "Set username →"}
+              <span className="util-label text-white/80">
+                {profile?.username ? `@${profile.username}` : "Set username →"}
+              </span>
             </Link>
-            <button
-              onClick={() => signOut()}
-              className="text-foreground/50 hover:text-foreground"
-            >
-              · Sign out
+            <button onClick={() => signOut()} className="util-label text-white/40 hover:text-carz">
+              · Out
             </button>
           </div>
         ) : (
-          <Link
-            href="/signin"
-            className="text-xs font-semibold text-foreground/80 hover:text-foreground sm:hidden"
-          >
-            Sign in / create account →
+          <Link href="/signin" className="util-label text-white/70 hover:text-carz sm:hidden">
+            Sign in →
           </Link>
         )}
       </div>
 
-      <nav className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1.5 text-sm">
-        <Link href="/spot" className="text-foreground/80 hover:text-foreground">
-          Spot
-        </Link>
-        <Link href="/auctions" className="text-foreground/80 hover:text-foreground">
-          Auctions
-        </Link>
-        <Link href="/hunt" className="font-semibold text-fuchsia-300 hover:text-fuchsia-200">
-          Hunt
-        </Link>
-        <Link href="/garage" className="text-foreground/80 hover:text-foreground">
-          Garage
-        </Link>
-        <Link href="/leaderboard" className="text-foreground/80 hover:text-foreground">
-          Ranks
-        </Link>
-        <Link
-          href="/assistant"
-          className="inline-flex items-center gap-1.5 rounded-full border border-foreground/15 bg-foreground/[0.06] px-3.5 py-1.5 font-semibold text-foreground transition hover:border-foreground/25 hover:bg-foreground/[0.12]"
-        >
-          <Sparkles className="h-3.5 w-3.5 text-violet-300" />
-          Assistant
-        </Link>
+      <nav className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
+        {NAV.map((n) => (
+          <Link
+            key={n.href}
+            href={n.href}
+            className={cn(
+              "util-label transition-colors",
+              n.accent ? "text-carz hover:brightness-110" : "text-white/60 hover:text-white",
+            )}
+          >
+            {n.label}
+          </Link>
+        ))}
 
-        {/* Account — shown in the nav on desktop only (it's under the logo on mobile) */}
         {session?.user ? (
           <div className="hidden items-center gap-3 sm:flex">
-            <Link
-              href="/profile"
-              title={profile?.username ? `@${profile.username} — edit profile` : "Set up your profile"}
-              className="flex items-center gap-2 hover:opacity-90"
-            >
-              <Avatar src={profile?.image} size={30} />
-              <span className="font-semibold text-foreground/90">
+            <Link href="/profile" className="flex items-center gap-2 hover:opacity-90">
+              <Avatar src={profile?.image} size={26} />
+              <span className="util-label text-white/80">
                 {profile?.username ? `@${profile.username}` : "Set username"}
               </span>
             </Link>
-            <button
-              onClick={() => signOut()}
-              className="text-foreground/60 hover:text-foreground"
-            >
-              Sign out
+            <button onClick={() => signOut()} className="util-label text-white/40 hover:text-carz">
+              Out
             </button>
           </div>
         ) : (
-          <Link href="/signin" className="hidden text-foreground/80 hover:text-foreground sm:inline">
+          <Link href="/signin" className="util-label hidden text-white/70 hover:text-carz sm:inline">
             Sign in
           </Link>
         )}
