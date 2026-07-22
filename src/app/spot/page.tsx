@@ -31,7 +31,7 @@ type Status = {
 function DailyGoals({ goals }: { goals?: { id: string; label: string; done: boolean }[] }) {
   if (!goals || goals.length === 0) return null;
   return (
-    <div className="mt-6 rounded-3xl border border-foreground/[0.05] bg-card p-5 backdrop-blur-xl">
+    <div className="mt-6 rounded-3xl border border-foreground/[0.05] bg-card p-5">
       <div className="flex items-center justify-between">
         <h3 className="font-bold">🎯 Today&apos;s goals</h3>
         <span className="text-xs text-muted-foreground">Resets daily</span>
@@ -59,7 +59,7 @@ function Badges({
   const t = total ?? 0;
   const next = badges.find((b) => !b.earned);
   return (
-    <div className="mt-6 rounded-3xl border border-foreground/[0.05] bg-card p-5 backdrop-blur-xl">
+    <div className="mt-6 rounded-3xl border border-foreground/[0.05] bg-card p-5">
       <div className="flex items-center justify-between">
         <h3 className="font-bold">🏅 Badges</h3>
         <span className="text-xs text-muted-foreground">
@@ -620,7 +620,7 @@ export default function SpotPage() {
 
         {/* Result */}
         {car && (
-          <section className="mt-6 rounded-3xl border border-foreground/[0.05] bg-card p-6 backdrop-blur-xl">
+          <section className="mt-6 rounded-3xl border border-foreground/[0.05] bg-card p-6">
             {car.isCar ? (
               <>
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -719,7 +719,7 @@ export default function SpotPage() {
 
         {/* History (Pro/Max) */}
         {status?.saveHistory && status.history && status.history.length > 0 && (
-          <section className="mt-6 rounded-3xl border border-foreground/[0.05] bg-card p-6 backdrop-blur-xl">
+          <section className="mt-6 rounded-3xl border border-foreground/[0.05] bg-card p-6">
             <h3 className="font-bold">Your spotting history</h3>
             <div className="mt-3 space-y-2">
               {status.history.map((h, i) => (

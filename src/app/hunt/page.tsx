@@ -1,16 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { WANTED, HUNT_RULE, getHunt, joinHunt, totalEarned, type HuntState } from "@/lib/hunt";
+import { Button, LiveDot } from "@/components/ui/editorial";
 
 const money = (n: number) => "$" + n.toLocaleString("en-US");
 
-function tier(bounty: number) {
-  if (bounty >= 800) return { cls: "hunt-legendary", pill: "from-neon-red to-neon-red", label: "🔥 LEGENDARY", text: "text-neon-red" };
-  if (bounty >= 400) return { cls: "hunt-epic", pill: "from-neon-red to-neon-green", label: "💜 EPIC", text: "text-neon-red" };
-  return { cls: "hunt-rare", pill: "from-neon-blue to-neon-blue", label: "💎 RARE", text: "text-neon-blue" };
+function tierLabel(bounty: number) {
+  if (bounty >= 800) return { cls: "hunt-legendary", label: "Legendary" };
+  if (bounty >= 400) return { cls: "hunt-epic", label: "Epic" };
+  return { cls: "hunt-rare", label: "Rare" };
 }
 
 export default function HuntPage() {
@@ -29,125 +29,96 @@ export default function HuntPage() {
     <>
       <SiteHeader />
       <main className="mx-auto w-full max-w-2xl px-5 py-8">
-        {/* Animated Miami banner */}
-        <div className="hunt-banner relative overflow-hidden rounded-3xl p-[2px]">
-          <div className="rounded-[calc(1.5rem-2px)] bg-background/55 px-6 py-7 text-center backdrop-blur-xl">
-            <div className="text-5xl drop-shadow-[0_0_12px_rgba(57,255,20,0.6)]">🌴🏁🌆</div>
-            <h1 className="mt-2 bg-gradient-to-r from-neon-red via-neon-red to-neon-blue bg-clip-text text-4xl font-black tracking-tight text-transparent sm:text-5xl">
-              CAR HUNT MIAMI
-            </h1>
-            <p className="mx-auto mt-2 max-w-md text-sm font-medium text-foreground/90">
-              Hit the streets and spot the world&apos;s rarest cars. Find one on the wanted board and
-              <span className="font-bold text-neon-red"> cash the bounty.</span>
+        {/* Hero */}
+        <div className="hunt-banner rounded-3xl p-[1.5px]">
+          <div className="rounded-[calc(1.5rem-1.5px)] bg-black px-6 py-8 text-center">
+            <div className="text-4xl">🏁</div>
+            <h1 className="display mt-2 text-6xl sm:text-7xl">Car Hunt Miami</h1>
+            <p className="mx-auto mt-3 max-w-md text-sm text-white/60">
+              Hit the streets and spot the world&apos;s rarest cars. Find one on the wanted board and cash
+              the bounty.
             </p>
 
-            <div className="mx-auto mt-3 inline-flex items-center gap-2 rounded-full border border-neon-red/50 bg-neon-red/15 px-4 py-1.5 text-sm font-black text-neon-red">
-              🗓️ Starts August 25 · 11:00 AM ET
+            <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/25 px-4 py-1.5 util-label text-white">
+              Starts August 25 · 11:00 AM ET
             </div>
-            <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-sm font-bold">
-              <span className="rounded-full bg-black/40 px-4 py-1">
-                💰 Total pot: <span className="text-neon-red">{money(totalPot)}</span>
+
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+              <span className="rounded-full border border-white/10 px-4 py-1 util-label text-white/70">
+                Pot {money(totalPot)}
               </span>
-              <span className="rounded-full bg-black/40 px-4 py-1">📍 On the road only</span>
+              <span className="rounded-full border border-white/10 px-4 py-1 util-label text-white/70">
+                On the road only
+              </span>
             </div>
 
             {joined ? (
-              <div className="mt-5 flex flex-col items-center gap-3">
-                <div className="flex gap-3 text-sm">
-                  <span className="rounded-full bg-neon-green/20 px-3 py-1 font-bold text-neon-green">
-                    💵 {money(earned)} earned
+              <div className="mt-6 flex flex-col items-center gap-3">
+                <div className="flex gap-2">
+                  <span className="flex items-center gap-1.5 rounded-full border border-white/15 px-3 py-1 util-label text-white/80">
+                    <LiveDot /> {money(earned)} earned
                   </span>
-                  <span className="rounded-full bg-neon-blue/20 px-3 py-1 font-bold text-neon-blue">
-                    🎯 {found}/{WANTED.length}
+                  <span className="rounded-full border border-white/15 px-3 py-1 util-label text-white/80">
+                    {found}/{WANTED.length} found
                   </span>
                 </div>
-                <Link
-                  href="/hunt/spot"
-                  className="hunt-glow rounded-2xl bg-gradient-to-r from-neon-red via-neon-red to-neon-red px-8 py-3.5 text-lg font-black text-white transition hover:scale-[1.03]"
-                >
-                  📸 START HUNTING
-                </Link>
+                <Button href="/hunt/spot" size="lg" className="hunt-glow">
+                  Start hunting
+                </Button>
               </div>
             ) : (
               <div className="mt-6 flex flex-col items-center gap-2">
-                <button
-                  onClick={() => setHunt(joinHunt())}
-                  className="hunt-glow rounded-2xl bg-white px-10 py-3.5 text-lg font-black text-[#1f1f1f] transition hover:scale-[1.03]"
-                >
-                  🏁 JOIN HUNT
-                </button>
-                <p className="text-xs font-medium text-foreground/80">
-                  You must join the hunt to earn rewards.
-                </p>
+                <Button onClick={() => setHunt(joinHunt())} size="lg" className="hunt-glow">
+                  Join hunt
+                </Button>
+                <p className="util-label text-white/50">Join the hunt to earn rewards.</p>
               </div>
             )}
           </div>
         </div>
 
         {/* Wanted board */}
-        <div className="mt-7 flex items-center gap-2">
-          <span className="text-2xl">⭐</span>
-          <h2 className="bg-gradient-to-r from-neon-red to-neon-red bg-clip-text text-lg font-black uppercase tracking-widest text-transparent">
-            Wanted Board
-          </h2>
-          <span className="text-2xl">⭐</span>
-        </div>
-
+        <h2 className="display mt-8 text-2xl">Wanted board</h2>
         <div className="mt-3 space-y-2.5">
           {WANTED.map((w, i) => {
-            const t = tier(w.bounty);
+            const t = tierLabel(w.bounty);
             const claimed = !!hunt?.claimed[w.id];
             return (
               <div
                 key={w.id}
-                className={`relative flex items-center gap-3 overflow-hidden rounded-2xl border p-3.5 transition hover:scale-[1.01] ${
-                  claimed ? "border-neon-green/50 bg-neon-green/10" : t.cls
+                className={`flex items-center gap-3 rounded-2xl border p-3.5 ${
+                  claimed ? "border-white/40 bg-white/10" : t.cls
                 }`}
               >
-                {/* rank medallion */}
                 <div
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-black ${
-                    i === 0
-                      ? "bg-gradient-to-br from-neon-red to-neon-red text-black"
-                      : i === 1
-                        ? "bg-gradient-to-br from-slate-200 to-slate-400 text-black"
-                        : i === 2
-                          ? "bg-gradient-to-br from-neon-red to-neon-red text-black"
-                          : "bg-foreground/10 text-foreground/70"
+                    i < 3 ? "bg-white text-black" : "border border-white/20 text-white/70"
                   }`}
                 >
                   {i + 1}
                 </div>
-                <div className="text-3xl drop-shadow">{w.emoji}</div>
+                <div className="text-3xl grayscale">{w.emoji}</div>
                 <div className="min-w-0 flex-1">
-                  <p className={`truncate font-black ${claimed ? "text-neon-green line-through" : ""}`}>
+                  <p className={`truncate font-bold text-white ${claimed ? "line-through opacity-60" : ""}`}>
                     {w.name}
                   </p>
                   <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                    <span className={`text-[11px] font-bold uppercase tracking-wide ${claimed ? "text-neon-green" : t.text}`}>
-                      {claimed ? "✓ Claimed" : t.label}
-                    </span>
-                    <span className="rounded bg-foreground/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-foreground/80">
-                      🎨 {w.colorLabel}
+                    <span className="util-label text-white/45">{claimed ? "✓ Claimed" : t.label}</span>
+                    <span className="rounded border border-white/10 px-1.5 py-0.5 util-label text-white/60">
+                      {w.colorLabel}
                     </span>
                   </div>
                 </div>
-                <div
-                  className={`shrink-0 rounded-xl bg-gradient-to-r px-3 py-1.5 text-base font-black text-white shadow-lg ${
-                    claimed ? "from-neon-green to-neon-green" : t.pill
-                  }`}
-                >
-                  {money(w.bounty)}
-                </div>
+                <div className="display shrink-0 text-2xl text-white">{money(w.bounty)}</div>
               </div>
             );
           })}
         </div>
 
-        <div className="mt-5 space-y-1 text-center text-xs text-muted-foreground">
-          <p>📍 <span className="font-semibold">{HUNT_RULE}</span></p>
-          <p>🎨 Each car must be the exact color shown (except &quot;any color&quot;).</p>
-          <p>🔒 Spot the car <span className="font-semibold">live</span> in the Hunt camera — camera-roll photos don&apos;t count.</p>
+        <div className="mt-6 space-y-1 text-center">
+          <p className="util-label text-white/45">{HUNT_RULE}</p>
+          <p className="util-label text-white/45">Each car must be the exact color shown (except any-color).</p>
+          <p className="util-label text-white/45">Spot it live in the Hunt camera — camera roll doesn&apos;t count.</p>
         </div>
       </main>
     </>

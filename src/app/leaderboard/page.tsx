@@ -66,7 +66,7 @@ export default function LeaderboardPage() {
             <Button href="/spot" className="mt-6">Spot a car</Button>
           </div>
         ) : (
-          <div className="mt-6 border border-white/10">
+          <div className="mt-6 overflow-hidden rounded-2xl border border-white/10">
             {/* header */}
             <div className="hidden grid-cols-[3rem_5rem_1fr_5rem] items-center gap-3 border-b border-white/15 px-4 py-2.5 sm:grid">
               <span className="util-label text-white/40">#</span>

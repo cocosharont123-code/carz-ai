@@ -31,7 +31,7 @@ export function SiteHeader() {
   }, [session]);
 
   return (
-    <header className="sticky top-0 z-50 flex items-start justify-between gap-3 border-b border-white/10 bg-black/80 px-5 py-3.5 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 flex items-start justify-between gap-3 border-b border-white/10 bg-black/80 px-5 py-3.5">
       <div className="flex shrink-0 flex-col gap-1.5">
         <Link href="/" className="flex items-center gap-2">
           <span className="inline-block h-3.5 w-3.5 bg-carz" />

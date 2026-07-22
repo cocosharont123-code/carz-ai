@@ -55,7 +55,8 @@ export function WebGLShader() {
         float g = 0.05 / abs(p.y + sin((gx + time) * xScale) * yScale);
         float b = 0.05 / abs(p.y + sin((bx + time) * xScale) * yScale);
 
-        gl_FragColor = vec4(r, g, b, 1.0);
+        float v = (r + g + b) / 3.0;
+        gl_FragColor = vec4(v, v, v, 1.0);
       }
     `
 

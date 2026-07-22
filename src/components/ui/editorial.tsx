@@ -21,18 +21,22 @@ type ButtonProps = {
   target?: string;
 };
 
+// Liquid-glass pill — translucent white glass, rounded, no backdrop blur.
+const GLASS =
+  "border border-white/20 bg-white/[0.06] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25),inset_0_-2px_5px_rgba(0,0,0,0.45),0_6px_18px_rgba(0,0,0,0.5)] hover:bg-white/[0.12] hover:scale-[1.03]";
+
 export function Button({ href, variant = "solid", size = "md", className, children, target, ...rest }: ButtonProps) {
   const base =
-    "inline-flex items-center justify-center gap-2 font-display uppercase tracking-widest transition-colors disabled:cursor-not-allowed disabled:opacity-40";
+    "inline-flex items-center justify-center gap-2 rounded-full font-display uppercase tracking-widest transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-40";
   const variants = {
-    solid: "bg-carz text-carz-ink hover:brightness-95",
-    outline: "border border-white/70 text-white hover:bg-carz hover:border-carz hover:text-carz-ink",
-    ghost: "text-white/70 hover:text-carz",
+    solid: GLASS,
+    outline: GLASS,
+    ghost: "text-white/70 hover:text-white",
   };
   const sizes = {
-    sm: "px-3 py-1.5 text-[11px]",
-    md: "px-5 py-2.5 text-xs",
-    lg: "px-7 py-3.5 text-sm",
+    sm: "px-5 py-2 text-[11px]",
+    md: "px-6 py-2.5 text-xs",
+    lg: "px-8 py-3.5 text-sm",
   };
   const cls = cn(base, variants[variant], sizes[size], className);
   if (href) {
@@ -59,7 +63,7 @@ export function Card({ children, className, hover }: { children: ReactNode; clas
   return (
     <div
       className={cn(
-        "border border-white/10 bg-card",
+        "rounded-2xl border border-white/10 bg-card",
         hover && "transition-colors hover:border-white/25",
         className,
       )}
@@ -119,7 +123,7 @@ export function StatRow({
   return (
     <div
       className={cn(
-        "flex flex-col justify-center border border-white/10 p-6",
+        "flex flex-col justify-center rounded-2xl border border-white/10 p-6",
         yellow ? "bg-carz text-carz-ink" : "bg-card",
         className,
       )}
@@ -210,7 +214,7 @@ export function CarPhoto({
 
 /* --- Skeleton --------------------------------------------------------------- */
 export function Skeleton({ className }: { className?: string }) {
-  return <div className={cn("animate-pulse bg-white/[0.06]", className)} />;
+  return <div className={cn("animate-pulse rounded-xl bg-white/[0.06]", className)} />;
 }
 
 /* --- LiveDot: the single yellow live indicator ------------------------------ */

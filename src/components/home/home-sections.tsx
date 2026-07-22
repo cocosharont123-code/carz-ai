@@ -58,7 +58,7 @@ export function LiveAuctions() {
 
   if (items === null) {
     return (
-      <div className="grid grid-cols-2 gap-px border border-white/10 bg-white/10 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (
           <div key={i} className="bg-black p-4">
             <Skeleton className="aspect-[4/3] w-full" />
@@ -83,7 +83,7 @@ export function LiveAuctions() {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-px border border-white/10 bg-white/10 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
       {items.map((a) => (
         <Link key={a.id} href={`/auctions/${a.id}`} className="group flex flex-col bg-black p-4">
           <div className="aspect-[4/3] w-full overflow-hidden">

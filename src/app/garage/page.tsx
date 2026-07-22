@@ -50,9 +50,9 @@ export default function GaragePage() {
         />
 
         {loading ? (
-          <div className="mt-6 grid grid-cols-2 gap-px border border-white/10 bg-white/10 sm:grid-cols-3">
+          <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
             {[0, 1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="bg-black">
+              <div key={i} className="overflow-hidden rounded-2xl border border-white/10 bg-card">
                 <Skeleton className="aspect-square w-full" />
               </div>
             ))}
@@ -67,10 +67,10 @@ export default function GaragePage() {
           </div>
         ) : (
           <>
-            <div className="mt-6 grid grid-cols-3 gap-px border border-white/10 bg-white/10">
+            <div className="mt-6 grid grid-cols-3 gap-4">
               <StatRow value={cars.length} label="Spotted" className="p-4 sm:p-6" />
               <StatRow value={uniqueModels} label="Unique models" yellow className="p-4 sm:p-6" />
-              <div className="flex flex-col justify-center bg-card p-4 sm:p-6">
+              <div className="flex flex-col justify-center rounded-2xl border border-white/10 bg-card p-4 sm:p-6">
                 <div className="display truncate text-2xl sm:text-3xl">
                   {rarest && rarest.rarityScore > 0 ? `${rarest.make} ${rarest.model}` : "—"}
                 </div>
@@ -78,9 +78,9 @@ export default function GaragePage() {
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-px border border-white/10 bg-white/10 sm:grid-cols-3">
+            <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
               {cars.map((c) => (
-                <div key={c.id} className="group relative bg-black">
+                <div key={c.id} className="group relative overflow-hidden rounded-2xl border border-white/10 bg-card">
                   <button
                     onClick={() => remove(c.id)}
                     title="Remove"
