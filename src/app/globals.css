@@ -176,3 +176,31 @@
 }
 .carz-wheel { transform-box: fill-box; transform-origin: center; animation: carzWheel 0.9s linear infinite; }
 @keyframes carzWheel { to { transform: rotate(360deg); } }
+
+/* --- Car Hunt Miami: animated neon --- */
+.hunt-banner {
+  background: linear-gradient(120deg, #ff006e, #fb5607, #ffbe0b, #8338ec, #3a86ff, #ff006e);
+  background-size: 300% 300%;
+  animation: huntShimmer 9s ease infinite;
+}
+@keyframes huntShimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.hunt-glow { animation: huntGlow 2.6s ease-in-out infinite; }
+@keyframes huntGlow {
+  0%, 100% { box-shadow: 0 0 22px -6px rgba(255, 0, 110, 0.7); }
+  50% { box-shadow: 0 0 44px -4px rgba(131, 56, 236, 0.9); }
+}
+.hunt-legendary {
+  background: linear-gradient(100deg, rgba(255,190,11,0.14), rgba(251,86,7,0.10));
+  border-color: rgba(255, 190, 11, 0.45);
+}
+.hunt-epic {
+  background: linear-gradient(100deg, rgba(131,56,236,0.14), rgba(255,0,110,0.10));
+  border-color: rgba(131, 56, 236, 0.45);
+}
+.hunt-rare {
+  background: linear-gradient(100deg, rgba(58,134,255,0.13), rgba(6,182,212,0.10));
+  border-color: rgba(58, 134, 255, 0.4);
+}
