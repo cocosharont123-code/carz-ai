@@ -15,7 +15,7 @@ const SwitchToggleThemeDemo = () => {
         id={`${id}-light`}
         className={cn(
           "cursor-pointer text-left text-sm font-medium",
-          isDark && "text-nblue",
+          isDark && "",
         )}
         aria-controls={id}
         onClick={() => setIsDark(false)}
@@ -35,7 +35,7 @@ const SwitchToggleThemeDemo = () => {
         id={`${id}-dark`}
         className={cn(
           "cursor-pointer text-right text-sm font-medium",
-          isDark || "text-nblue",
+          isDark || "",
         )}
         aria-controls={id}
         onClick={() => setIsDark(true)}

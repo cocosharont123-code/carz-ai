@@ -17,9 +17,9 @@ export function HomeHero() {
         </div>
 
         <div className="relative z-10 mx-auto w-full max-w-3xl rounded-3xl border border-white/15 p-2">
-          <main className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/45 py-12">
+          <main className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/45 text-white py-12">
             <h1 className="display mb-3 text-center text-7xl md:text-[clamp(3rem,10vw,8rem)]">Carz AI</h1>
-            <p className="px-6 text-center text-xs text-nred md:text-sm lg:text-lg">
+            <p className="px-6 text-center text-xs  md:text-sm lg:text-lg">
               Snap any car and instantly know the make, model, year, value and rarity — then list it, bid on
               it, or hunt it for a bounty.
             </p>
@@ -28,13 +28,13 @@ export function HomeHero() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
               </span>
-              <p className="util-label text-nred">AI vision online</p>
+              <p className="util-label ">AI vision online</p>
             </div>
             <div className="flex justify-center">
               <LiquidButton
                 size="xl"
                 onClick={() => router.push("/spot")}
-                className="rounded-full border border-white/30 text-nblue"
+                className="rounded-full border border-white/30 "
               >
                 Start spotting →
               </LiquidButton>

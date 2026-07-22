@@ -41,14 +41,14 @@ export default function ClaimsPage() {
       <SiteHeader />
       <main className="mx-auto w-full max-w-2xl px-5 py-8">
         <h1 className="text-2xl font-black tracking-tight">💵 Prize claims</h1>
-        <p className="mt-1 text-sm text-ngreen">Review verified spots and pay out via CashApp.</p>
+        <p className="mt-1 text-sm ">Review verified spots and pay out via CashApp.</p>
 
         {loading ? (
           <div className="mt-6 h-40 animate-pulse rounded-3xl bg-foreground/[0.04]" />
         ) : status !== "authenticated" ? (
-          <div className="mt-8 rounded-3xl border border-foreground/[0.06] bg-card p-8 text-center">
+          <div className="mt-8 rounded-3xl border border-foreground/[0.06] bg-card text-card-foreground p-8 text-center">
             <h3 className="text-lg font-bold">Owner only</h3>
-            <p className="mt-1 text-sm text-ngreen">Sign in with the owner account to see claims.</p>
+            <p className="mt-1 text-sm ">Sign in with the owner account to see claims.</p>
             <button
               onClick={() => signIn("google", { callbackUrl: "/hunt/claims" })}
               className="mt-4 rounded-xl bg-white px-5 py-2.5 font-semibold text-[#1f1f1f]"
@@ -61,14 +61,14 @@ export default function ClaimsPage() {
             This page is only visible to the hunt owner.
           </div>
         ) : claims.length === 0 ? (
-          <div className="mt-8 rounded-3xl border border-foreground/[0.06] bg-card p-8 text-center">
+          <div className="mt-8 rounded-3xl border border-foreground/[0.06] bg-card text-card-foreground p-8 text-center">
             <div className="text-4xl">📭</div>
             <h3 className="mt-2 font-bold">No claims yet</h3>
           </div>
         ) : (
           <div className="mt-6 space-y-3">
             {claims.map((c) => (
-              <div key={c.id} className="flex gap-3 rounded-2xl border border-foreground/[0.07] bg-card p-3">
+              <div key={c.id} className="flex gap-3 rounded-2xl border border-foreground/[0.07] bg-card text-card-foreground p-3">
                 <div className="h-20 w-24 shrink-0 overflow-hidden rounded-xl bg-foreground/[0.04]">
                   {c.image ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -84,7 +84,7 @@ export default function ClaimsPage() {
                   <p className="mt-0.5 text-sm">
                     Pay: <span className="select-all font-mono font-bold">{c.cashapp}</span>
                   </p>
-                  <p className="text-xs text-ngreen">
+                  <p className="text-xs ">
                     by {c.spotter} · {fmt(c.ts)} · {c.status}
                   </p>
                 </div>

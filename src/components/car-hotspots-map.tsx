@@ -179,7 +179,7 @@ export function CarHotspotsMap() {
                   style={{ background: s.color }}
                 />
                 {s.luxury && (
-                  <MarkerLabel position="bottom" className="rounded bg-black/70 px-1 text-neon-red">
+                  <MarkerLabel position="bottom" className="rounded bg-black/70 text-white px-1 text-neon-red">
                     {s.name}
                   </MarkerLabel>
                 )}
@@ -192,7 +192,7 @@ export function CarHotspotsMap() {
         </Map>
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ngreen">
+      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs ">
         {Object.values(CATS).map((c) => (
           <span key={c.label} className="inline-flex items-center gap-1.5">
             <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: c.color }} />
@@ -208,7 +208,7 @@ export function CarHotspotsMap() {
           📍 Find spots near me
         </button>
       </div>
-      <p className="mt-2 text-sm text-ngreen">{statusText}</p>
+      <p className="mt-2 text-sm ">{statusText}</p>
     </div>
   );
 }

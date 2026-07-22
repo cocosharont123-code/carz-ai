@@ -200,14 +200,14 @@ function NewAuctionInner() {
     <>
       <SiteHeader />
       <main className="mx-auto w-full max-w-lg px-5 py-10">
-        <div className="util-label text-ngreen">Sell — powered by AI</div>
+        <div className="util-label ">Sell — powered by AI</div>
         <h1 className="display mt-3 text-6xl">List your car</h1>
-        <p className="mt-3 text-sm text-nred">
+        <p className="mt-3 text-sm ">
           Start a bidding war. When the timer ends, the highest bidder gets your contact to close the deal.
         </p>
 
         {status === "unauthenticated" ? (
-          <div className="mt-8 rounded-3xl border border-foreground/[0.06] bg-card p-8 text-center">
+          <div className="mt-8 rounded-3xl border border-foreground/[0.06] bg-card text-card-foreground p-8 text-center">
             <div className="text-4xl">🔑</div>
             <h3 className="mt-3 text-lg font-bold">Sign in to list a car</h3>
             <button
@@ -244,11 +244,11 @@ function NewAuctionInner() {
               <button
                 onClick={generateWithAI}
                 disabled={aiLoading || !image}
-                className="util-label mt-3 flex w-full items-center justify-center gap-2 border border-carz/50 bg-carz/10 py-3 text-carz transition hover:bg-carz hover:text-carz-ink disabled:cursor-not-allowed disabled:opacity-40"
+                className="util-label mt-3 flex w-full items-center justify-center gap-2 border border-carz/50 bg-carz/10 py-3  transition hover:bg-carz  disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {aiLoading ? "🔎 AI is reading your photo…" : "✨ Auto-fill listing with AI"}
               </button>
-              <p className="mt-1.5 text-xs text-ngreen">
+              <p className="mt-1.5 text-xs ">
                 Upload a photo and let Car Spotter identify the car and write the title, make, model &
                 description for you.
               </p>
@@ -282,7 +282,7 @@ function NewAuctionInner() {
                 />
               </Field>
             </div>
-            <p className="-mt-3 text-xs text-ngreen">
+            <p className="-mt-3 text-xs ">
               Enter the car&apos;s exact year yourself — the AI won&apos;t guess this for a real sale.
             </p>
 
@@ -341,7 +341,7 @@ function NewAuctionInner() {
                     <option value="days">days</option>
                   </select>
                 </div>
-                <p className="mt-1 text-xs text-ngreen">
+                <p className="mt-1 text-xs ">
                   Anywhere from 1 hour to 30 days.
                 </p>
               </Field>
@@ -355,7 +355,7 @@ function NewAuctionInner() {
                 maxLength={300}
                 className="input"
               />
-              <p className="mt-1 text-xs text-ngreen">
+              <p className="mt-1 text-xs ">
                 🔒 Encrypted and hidden. Only the winning bidder sees this after the auction ends.
               </p>
             </Field>
@@ -367,7 +367,7 @@ function NewAuctionInner() {
             <button
               onClick={submit}
               disabled={saving}
-              className="util-label w-full bg-carz py-4 text-carz-ink transition hover:brightness-95 disabled:opacity-40"
+              className="util-label w-full bg-carz py-4  transition hover:brightness-95 disabled:opacity-40"
             >
               {saving ? "Publishing…" : "Publish listing"}
             </button>

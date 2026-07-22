@@ -31,7 +31,7 @@ export function FilterBar({
             onClick={() => setTab(t)}
             className={cn(
               "util-label flex-1 whitespace-nowrap px-4 py-3 transition-colors sm:flex-none",
-              t === tab ? "bg-carz text-carz-ink" : "text-nred hover:text-nblue",
+              t === tab ? "bg-carz " : " ",
             )}
           >
             {t}
@@ -44,12 +44,12 @@ export function FilterBar({
         onChange={(e) => setQ(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && onSubmit?.(tab, q.trim())}
         placeholder={placeholder}
-        className="min-w-0 flex-1 bg-transparent px-4 py-3 text-sm text-nblue outline-none placeholder:text-ngreen"
+        className="min-w-0 flex-1 bg-transparent px-4 py-3 text-sm  outline-none "
       />
       {/* submit */}
       <button
         onClick={() => onSubmit?.(tab, q.trim())}
-        className="util-label bg-carz px-6 py-3 text-carz-ink transition hover:brightness-95"
+        className="util-label bg-carz px-6 py-3  transition hover:brightness-95"
       >
         {submitLabel}
       </button>

@@ -21,9 +21,9 @@ type ButtonProps = {
   target?: string;
 };
 
-// Plain liquid-glass pill — translucent glass, glossy edges, no border color.
+// Milky white glass bubble — near-black text.
 const GLASS =
-  "border border-white/20 bg-white/[0.06] text-nblue shadow-[inset_0_1px_0_rgba(255,255,255,0.25),inset_0_-2px_5px_rgba(0,0,0,0.45),0_6px_18px_rgba(0,0,0,0.5)] hover:bg-white/[0.12] hover:scale-[1.03]";
+  "border border-white/50 bg-white/90 text-neutral-900 shadow-[0_2px_12px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.95),inset_0_-2px_4px_rgba(0,0,0,0.12)] hover:bg-white hover:scale-[1.03]";
 
 export function Button({ href, variant = "solid", size = "md", className, children, target, ...rest }: ButtonProps) {
   const base =
@@ -31,7 +31,7 @@ export function Button({ href, variant = "solid", size = "md", className, childr
   const variants = {
     solid: GLASS,
     outline: GLASS,
-    ghost: "text-nred hover:text-nblue",
+    ghost: " ",
   };
   const sizes = {
     sm: "px-5 py-2 text-[11px]",
@@ -55,7 +55,7 @@ export function Button({ href, variant = "solid", size = "md", className, childr
 
 /* --- Eyebrow / utility label ------------------------------------------------ */
 export function Eyebrow({ children, className, yellow }: { children: ReactNode; className?: string; yellow?: boolean }) {
-  return <div className={cn("util-label", yellow ? "text-carz" : "text-ngreen", className)}>{children}</div>;
+  return <div className={cn("util-label", yellow ? "" : "", className)}>{children}</div>;
 }
 
 /* --- Card: dark surface, hairline border, sharp corners --------------------- */
@@ -63,7 +63,7 @@ export function Card({ children, className, hover }: { children: ReactNode; clas
   return (
     <div
       className={cn(
-        "rounded-2xl border border-white/10 bg-card",
+        "rounded-2xl border border-white/10 bg-card text-card-foreground",
         hover && "transition-colors hover:border-white/25",
         className,
       )}
@@ -91,7 +91,7 @@ export function PageMasthead({
       <div className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="display text-6xl leading-[0.9] sm:text-7xl md:text-8xl">{title}</h1>
         <div className="flex items-center gap-4 pb-1">
-          {count != null && <span className="util-label text-ngreen">{count}</span>}
+          {count != null && <span className="util-label ">{count}</span>}
           {action}
         </div>
       </div>
@@ -103,7 +103,7 @@ export function PageMasthead({
 export function SectionDivider({ children }: { children: ReactNode }) {
   return (
     <div className="my-8 border-y border-white/10 py-3 text-center">
-      <span className="util-label text-ngreen">{children}</span>
+      <span className="util-label ">{children}</span>
     </div>
   );
 }
@@ -124,12 +124,12 @@ export function StatRow({
     <div
       className={cn(
         "flex flex-col justify-center rounded-2xl border border-white/10 p-6",
-        yellow ? "bg-carz text-carz-ink" : "bg-card",
+        yellow ? "bg-carz " : "bg-card text-card-foreground",
         className,
       )}
     >
       <div className="display text-5xl sm:text-6xl">{value}</div>
-      <div className={cn("util-label mt-2", yellow ? "text-carz-ink/70" : "text-ngreen")}>{label}</div>
+      <div className={cn("util-label mt-2", yellow ? "" : "")}>{label}</div>
     </div>
   );
 }
@@ -152,7 +152,7 @@ export function DataTable({
         <thead>
           <tr className="border-b border-white/15">
             {head.map((h, i) => (
-              <th key={i} className="util-label px-3 py-2.5 text-ngreen first:pl-0 last:pr-0 last:text-right">
+              <th key={i} className="util-label px-3 py-2.5  first:pl-0 last:pr-0 last:text-right">
                 {h}
               </th>
             ))}
@@ -165,7 +165,7 @@ export function DataTable({
             key={i}
             className={cn(
               "border-b border-white/10",
-              r.highlight ? "bg-carz text-carz-ink" : "text-nblue",
+              r.highlight ? "bg-carz " : "",
             )}
           >
             {r.cells.map((c, j) => (

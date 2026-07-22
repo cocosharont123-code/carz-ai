@@ -31,7 +31,7 @@ export function SiteHeader() {
   }, [session]);
 
   return (
-    <header className="sticky top-0 z-50 flex items-start justify-between gap-3 border-b border-white/10 bg-black/80 px-5 py-3.5">
+    <header className="sticky top-0 z-50 flex items-start justify-between gap-3 border-b border-white/10 bg-black/80 text-white px-5 py-3.5">
       <div className="flex shrink-0 flex-col gap-1.5">
         <Link href="/" className="flex items-center gap-2">
           <span className="inline-block h-3.5 w-3.5 bg-carz" />
@@ -43,16 +43,16 @@ export function SiteHeader() {
           <div className="flex items-center gap-2 sm:hidden">
             <Link href="/profile" className="flex items-center gap-1.5">
               <Avatar src={profile?.image} size={20} />
-              <span className="util-label text-nblue">
+              <span className="util-label ">
                 {profile?.username ? `@${profile.username}` : "Set username →"}
               </span>
             </Link>
-            <button onClick={() => signOut()} className="util-label text-ngreen hover:text-carz">
+            <button onClick={() => signOut()} className="util-label  ">
               · Out
             </button>
           </div>
         ) : (
-          <Link href="/signin" className="util-label text-nred hover:text-carz sm:hidden">
+          <Link href="/signin" className="util-label   sm:hidden">
             Sign in →
           </Link>
         )}
@@ -65,7 +65,7 @@ export function SiteHeader() {
             href={n.href}
             className={cn(
               "util-label transition-colors",
-              n.accent ? "text-carz hover:brightness-110" : "text-nred hover:text-nblue",
+              n.accent ? " hover:brightness-110" : " ",
             )}
           >
             {n.label}
@@ -76,16 +76,16 @@ export function SiteHeader() {
           <div className="hidden items-center gap-3 sm:flex">
             <Link href="/profile" className="flex items-center gap-2 hover:opacity-90">
               <Avatar src={profile?.image} size={26} />
-              <span className="util-label text-nblue">
+              <span className="util-label ">
                 {profile?.username ? `@${profile.username}` : "Set username"}
               </span>
             </Link>
-            <button onClick={() => signOut()} className="util-label text-ngreen hover:text-carz">
+            <button onClick={() => signOut()} className="util-label  ">
               Out
             </button>
           </div>
         ) : (
-          <Link href="/signin" className="util-label hidden text-nred hover:text-carz sm:inline">
+          <Link href="/signin" className="util-label hidden   sm:inline">
             Sign in
           </Link>
         )}

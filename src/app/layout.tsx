@@ -55,7 +55,7 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`dark ${geistSans.variable} ${geistMono.variable} ${oswald.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-background text-nblue">
+      <body className="min-h-full flex flex-col bg-background ">
         <script
           dangerouslySetInnerHTML={{
             __html: `try{localStorage.removeItem('theme');document.documentElement.classList.remove('light');document.documentElement.classList.add('dark');}catch(e){}`,

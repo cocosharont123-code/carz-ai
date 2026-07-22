@@ -36,7 +36,7 @@ function SignInInner() {
       </Link>
 
       {authEnabled === false && (
-        <div className="mt-8 max-w-xs border border-carz/40 bg-carz/10 p-3 text-sm text-carz">
+        <div className="mt-8 max-w-xs border border-carz/40 bg-carz/10 p-3 text-sm ">
           Sign-in is being set up and isn&apos;t available just yet. Check back soon.
         </div>
       )}

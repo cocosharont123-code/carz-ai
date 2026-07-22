@@ -47,27 +47,27 @@ function timeLeft(endsAt: number, now: number): { text: string; ending: boolean;
 function AuctionCard({ a, now }: { a: Auction; now: number }) {
   const tl = timeLeft(a.endsAt, now);
   return (
-    <Link href={`/auctions/${a.id}`} className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-card transition-colors hover:border-white/25">
+    <Link href={`/auctions/${a.id}`} className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-card text-card-foreground transition-colors hover:border-white/25">
       <div className="relative aspect-[4/3] w-full overflow-hidden">
         <CarPhoto src={a.image} alt={a.title} />
-        <span className="absolute left-3 top-3 flex items-center gap-1.5 bg-black/70 px-2 py-1">
+        <span className="absolute left-3 top-3 flex items-center gap-1.5 bg-black/70 text-white px-2 py-1">
           {!tl.ended && <LiveDot />}
-          <span className="util-label text-nblue">{tl.text}</span>
+          <span className="util-label ">{tl.text}</span>
         </span>
       </div>
       <div className="flex flex-1 flex-col p-4">
-        <p className="line-clamp-2 min-h-[2.5rem] text-sm font-semibold leading-snug text-nblue">{a.title}</p>
+        <p className="line-clamp-2 min-h-[2.5rem] text-sm font-semibold leading-snug ">{a.title}</p>
         <div className="mt-2 flex items-end justify-between">
           <div>
-            <div className="util-label text-ngreen">{a.bidCount > 0 ? "Current bid" : "Starting"}</div>
-            <div className="display text-3xl text-carz">{money(a.currentBid)}</div>
+            <div className="util-label ">{a.bidCount > 0 ? "Current bid" : "Starting"}</div>
+            <div className="display text-3xl ">{money(a.currentBid)}</div>
           </div>
           <div className="text-right">
-            <div className="util-label text-ngreen">{a.bidCount} bids</div>
-            <div className="util-label max-w-[8rem] truncate text-ngreen">{a.sellerName}</div>
+            <div className="util-label ">{a.bidCount} bids</div>
+            <div className="util-label max-w-[8rem] truncate ">{a.sellerName}</div>
           </div>
         </div>
-        <span className="mt-4 inline-flex justify-center border border-white/40 px-4 py-2.5 util-label text-nblue transition-colors group-hover:border-carz group-hover:bg-carz group-hover:text-carz-ink">
+        <span className="mt-4 inline-flex justify-center border border-white/40 px-4 py-2.5 util-label  transition-colors group-hover:border-carz group-hover:bg-carz ">
           {tl.ended ? "View result" : "Bid now →"}
         </span>
       </div>
@@ -115,7 +115,7 @@ export default function AuctionsPage() {
         {loading ? (
           <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
             {[0, 1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="rounded-2xl border border-white/10 bg-card p-4">
+              <div key={i} className="rounded-2xl border border-white/10 bg-card text-card-foreground p-4">
                 <Skeleton className="aspect-[4/3] w-full" />
                 <Skeleton className="mt-3 h-4 w-2/3" />
                 <Skeleton className="mt-2 h-8 w-1/2" />
@@ -123,9 +123,9 @@ export default function AuctionsPage() {
             ))}
           </div>
         ) : items.length === 0 ? (
-          <div className="mt-10 border border-white/10 bg-card p-12 text-center">
+          <div className="mt-10 border border-white/10 bg-card text-card-foreground p-12 text-center">
             <h3 className="display text-4xl">No auctions live</h3>
-            <p className="mx-auto mt-2 max-w-sm text-sm text-nred">Be the first — list a car and start a bidding war.</p>
+            <p className="mx-auto mt-2 max-w-sm text-sm ">Be the first — list a car and start a bidding war.</p>
             <Button href="/auctions/new" className="mt-6">List your car</Button>
           </div>
         ) : (

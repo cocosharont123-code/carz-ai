@@ -60,7 +60,7 @@ export function LiveAuctions() {
     return (
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="bg-black p-4">
+          <div key={i} className="bg-black text-white p-4">
             <Skeleton className="aspect-[4/3] w-full" />
             <Skeleton className="mt-3 h-4 w-2/3" />
             <Skeleton className="mt-2 h-6 w-1/2" />
@@ -72,9 +72,9 @@ export function LiveAuctions() {
 
   if (items.length === 0) {
     return (
-      <div className="border border-white/10 bg-card p-10 text-center">
-        <p className="util-label text-ngreen">No live auctions right now</p>
-        <p className="mt-2 text-sm text-nred">Be the first — list a car and start a bidding war.</p>
+      <div className="border border-white/10 bg-card text-card-foreground p-10 text-center">
+        <p className="util-label ">No live auctions right now</p>
+        <p className="mt-2 text-sm ">Be the first — list a car and start a bidding war.</p>
         <Button href="/auctions/new" className="mt-5">
           List your car
         </Button>
@@ -85,20 +85,20 @@ export function LiveAuctions() {
   return (
     <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
       {items.map((a) => (
-        <Link key={a.id} href={`/auctions/${a.id}`} className="group flex flex-col bg-black p-4">
+        <Link key={a.id} href={`/auctions/${a.id}`} className="group flex flex-col bg-black text-white p-4">
           <div className="aspect-[4/3] w-full overflow-hidden">
             <CarPhoto src={a.image} alt={a.title} />
           </div>
           <div className="mt-3 flex items-center gap-2">
             <LiveDot />
-            <span className="util-label text-ngreen">{left(a.endsAt)}</span>
+            <span className="util-label ">{left(a.endsAt)}</span>
           </div>
-          <p className="mt-1 truncate text-sm font-semibold text-nblue">{a.title}</p>
+          <p className="mt-1 truncate text-sm font-semibold ">{a.title}</p>
           <div className="mt-1 flex items-end justify-between">
-            <span className="display text-2xl text-carz">{money(a.currentBid)}</span>
-            <span className="util-label text-ngreen">{a.bidCount} bids</span>
+            <span className="display text-2xl ">{money(a.currentBid)}</span>
+            <span className="util-label ">{a.bidCount} bids</span>
           </div>
-          <span className="mt-3 inline-flex justify-center border border-white/40 px-4 py-2 util-label text-nblue transition-colors group-hover:border-carz group-hover:bg-carz group-hover:text-carz-ink">
+          <span className="mt-3 inline-flex justify-center border border-white/40 px-4 py-2 util-label  transition-colors group-hover:border-carz group-hover:bg-carz ">
             Bid now
           </span>
         </Link>

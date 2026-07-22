@@ -146,10 +146,10 @@ export default function HuntSpotPage() {
         <main className="mx-auto w-full max-w-lg px-5 py-16 text-center">
           <div className="text-4xl">🏁</div>
           <h1 className="mt-3 text-2xl font-black">Join the hunt first</h1>
-          <p className="mt-1 text-ngreen">You need to join Car Hunt Miami before you can earn rewards.</p>
+          <p className="mt-1 ">You need to join Car Hunt Miami before you can earn rewards.</p>
           <Link
             href="/hunt"
-            className="mt-5 inline-block rounded-xl bg-gradient-to-br from-neon-red to-neon-red px-6 py-3 font-black text-nblue"
+            className="mt-5 inline-block rounded-xl bg-gradient-to-br from-neon-red to-neon-red px-6 py-3 font-black "
           >
             Go join the hunt
           </Link>
@@ -165,15 +165,15 @@ export default function HuntSpotPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-black tracking-tight">📸 Hunt camera</h1>
-            <p className="text-sm text-ngreen">Live photos only — no camera roll.</p>
+            <p className="text-sm ">Live photos only — no camera roll.</p>
           </div>
           <div className="text-right">
-            <div className="text-xs uppercase tracking-wide text-ngreen">Earned</div>
+            <div className="text-xs uppercase tracking-wide ">Earned</div>
             <div className="text-xl font-black text-neon-green">{money(earned)}</div>
           </div>
         </div>
 
-        <div className="mt-4 overflow-hidden rounded-3xl border border-foreground/[0.08] bg-black">
+        <div className="mt-4 overflow-hidden rounded-3xl border border-foreground/[0.08] bg-black text-white">
           <div className="relative aspect-[3/4] w-full">
             {/* Live viewfinder */}
             <video
@@ -192,7 +192,7 @@ export default function HuntSpotPage() {
             {!camOn && !result && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
                 <div className="text-5xl">🎥</div>
-                <p className="text-sm text-nred">
+                <p className="text-sm ">
                   {camError || "Turn on the camera to start hunting. You can only use live photos."}
                 </p>
                 <button
@@ -204,7 +204,7 @@ export default function HuntSpotPage() {
               </div>
             )}
             {busy && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-sm font-semibold text-nblue">
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white text-sm font-semibold ">
                 🔎 Identifying…
               </div>
             )}
@@ -218,19 +218,19 @@ export default function HuntSpotPage() {
               <button
                 onClick={capture}
                 disabled={busy}
-                className="w-full rounded-xl bg-gradient-to-br from-neon-red to-neon-red py-3.5 font-black text-nblue transition hover:opacity-90 disabled:opacity-50"
+                className="w-full rounded-xl bg-gradient-to-br from-neon-red to-neon-red py-3.5 font-black  transition hover:opacity-90 disabled:opacity-50"
               >
                 {busy ? "Identifying…" : "📸 Snap & identify"}
               </button>
             ) : (
-              <p className="text-center text-xs text-ngreen">
+              <p className="text-center text-xs ">
                 Point at a wanted car and snap it live to claim the bounty.
               </p>
             )}
           </div>
         </div>
 
-        <Link href="/hunt" className="mt-4 block text-center text-sm text-ngreen hover:text-nblue">
+        <Link href="/hunt" className="mt-4 block text-center text-sm  ">
           ← Wanted board
         </Link>
       </main>
@@ -251,7 +251,7 @@ function ResultCard({ result, shot, onAgain }: { result: Result; shot: string; o
         <p className="mt-1 text-sm">
           <span className="font-bold">{result.match.name}</span> — <span className="font-black text-neon-green">{money(result.match.bounty)}</span>
         </p>
-        <p className="mt-1 text-xs text-ngreen">📍 Must be on a public road — verified from your photo.</p>
+        <p className="mt-1 text-xs ">📍 Must be on a public road — verified from your photo.</p>
         <ClaimPrize carId={result.match.id} bounty={result.match.bounty} shot={shot} />
       </div>
     );
@@ -272,7 +272,7 @@ function ResultCard({ result, shot, onAgain }: { result: Result; shot: string; o
       <div className="rounded-2xl border border-foreground/10 bg-foreground/[0.03] p-4 text-center">
         <div className="text-3xl">🚗</div>
         <h3 className="mt-1 font-bold">{car || "A car"} — not wanted</h3>
-        <p className="mt-1 text-sm text-ngreen">That one&apos;s not on the Miami board. Keep hunting!</p>
+        <p className="mt-1 text-sm ">That one&apos;s not on the Miami board. Keep hunting!</p>
       </div>
     );
   } else {
@@ -280,7 +280,7 @@ function ResultCard({ result, shot, onAgain }: { result: Result; shot: string; o
       <div className="rounded-2xl border border-foreground/10 bg-foreground/[0.03] p-4 text-center">
         <div className="text-3xl">🤔</div>
         <h3 className="mt-1 font-bold">No car detected</h3>
-        <p className="mt-1 text-sm text-ngreen">Get closer and make sure the car fills the frame.</p>
+        <p className="mt-1 text-sm ">Get closer and make sure the car fills the frame.</p>
       </div>
     );
   }
@@ -353,9 +353,9 @@ function ClaimPrize({ carId, bounty, shot }: { carId: string; bounty: number; sh
 
   return (
     <div className="mt-4 rounded-xl border border-foreground/15 bg-background/50 p-3 text-left">
-      <p className="text-xs text-ngreen">
-        Verification takes <span className="font-semibold text-nblue">up to 48 hours</span>. Once
-        verified, your {money(bounty)} prize is sent through <span className="font-semibold text-nblue">CashApp</span>.
+      <p className="text-xs ">
+        Verification takes <span className="font-semibold ">up to 48 hours</span>. Once
+        verified, your {money(bounty)} prize is sent through <span className="font-semibold ">CashApp</span>.
         Enter your CashApp name so we can send the money.
       </p>
       <input
@@ -369,7 +369,7 @@ function ClaimPrize({ carId, bounty, shot }: { carId: string; bounty: number; sh
       <button
         onClick={submit}
         disabled={submitting}
-        className="mt-2 w-full rounded-lg bg-gradient-to-br from-neon-green to-neon-blue py-2.5 text-sm font-bold text-nblue transition hover:opacity-90 disabled:opacity-50"
+        className="mt-2 w-full rounded-lg bg-gradient-to-br from-neon-green to-neon-blue py-2.5 text-sm font-bold  transition hover:opacity-90 disabled:opacity-50"
       >
         {submitting ? "Submitting…" : "Submit claim"}
       </button>

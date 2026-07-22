@@ -9,7 +9,7 @@ export function HeroCTA() {
     <LiquidButton
       size="xl"
       onClick={() => router.push("/spot")}
-      className="rounded-full border border-white/30 text-nblue"
+      className="rounded-full border border-white/30 "
     >
       Start spotting →
     </LiquidButton>

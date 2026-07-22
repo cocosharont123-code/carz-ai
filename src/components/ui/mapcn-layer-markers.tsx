@@ -479,7 +479,7 @@ function PopupCloseButton({ onClick }: { onClick: () => void }) {
       type="button"
       onClick={onClick}
       aria-label="Close popup"
-      className="focus-visible:ring-ring hover:bg-muted text-nblue absolute top-0.5 right-0.5 z-10 inline-flex size-5 cursor-pointer items-center justify-center rounded-sm transition-colors focus:outline-none focus-visible:ring-2"
+      className="focus-visible:ring-ring hover:bg-muted  absolute top-0.5 right-0.5 z-10 inline-flex size-5 cursor-pointer items-center justify-center rounded-sm transition-colors focus:outline-none focus-visible:ring-2"
     >
       <X className="size-3.5" />
     </button>
@@ -651,7 +651,7 @@ function MarkerLabel({
     <div
       className={cn(
         "absolute left-1/2 -translate-x-1/2 whitespace-nowrap",
-        "text-nblue text-[10px] font-medium",
+        " text-[10px] font-medium",
         labelPositionClasses[position],
         className,
       )}
@@ -1160,7 +1160,7 @@ function LayerMarkers() {
         <MapPopup longitude={selectedPoint.coordinates[0]} latitude={selectedPoint.coordinates[1]} onClose={() => setSelectedPoint(null)} closeOnClick={false} focusAfterOpen={false} offset={10} closeButton>
           <div className="min-w-24">
             <p className="font-medium">{selectedPoint.name}</p>
-            <p className="text-ngreen text-sm">{selectedPoint.category}</p>
+            <p className=" text-sm">{selectedPoint.category}</p>
           </div>
         </MapPopup>
       )}
