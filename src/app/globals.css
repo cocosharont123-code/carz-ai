@@ -11,9 +11,9 @@
   --color-rank-3: #d28a4a;
   --color-success-600: #16a34a;
 
-  /* Black & white base + neon accents. */
-  --color-carz: #ffffff; /* primary accent stays clean white */
-  --color-carz-ink: #000000;
+  /* Neon primary accent + neon trio. */
+  --color-carz: #00e5ff; /* primary accent = neon blue */
+  --color-carz-ink: #04121a;
   --color-neon-blue: #00e5ff;
   --color-neon-green: #39ff14;
   --color-neon-red: #ff3131;

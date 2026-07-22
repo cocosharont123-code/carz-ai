@@ -34,7 +34,7 @@ export function HomeHero() {
               <LiquidButton
                 size="xl"
                 onClick={() => router.push("/spot")}
-                className="rounded-full border border-white/30 text-white"
+                className="rounded-full border-2 border-transparent text-white [background:linear-gradient(rgba(255,255,255,0.05),rgba(255,255,255,0.05))_padding-box,linear-gradient(90deg,var(--color-neon-blue),var(--color-neon-green),var(--color-neon-red))_border-box] shadow-[0_0_26px_-6px_rgba(0,229,255,0.6)]"
               >
                 Start spotting →
               </LiquidButton>

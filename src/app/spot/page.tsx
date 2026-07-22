@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ImagePlus, Upload, Trash2, X } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
+import { Button as GlassButton } from "@/components/ui/editorial";
 import { Input } from "@/components/ui/input";
 import { useImageUpload } from "@/components/hooks/use-image-upload";
 import { CarHotspotsMap } from "@/components/car-hotspots-map";
@@ -587,17 +588,17 @@ export default function SpotPage() {
           />
 
           {!car ? (
-            <Button onClick={identify} disabled={!previewUrl || loading} className="util-label w-full rounded-none bg-carz py-6 text-carz-ink hover:bg-carz hover:brightness-95">
+            <GlassButton onClick={identify} disabled={!previewUrl || loading} size="lg" className="w-full py-5">
               {loading ? "Reading the car…" : "Identify car"}
-            </Button>
+            </GlassButton>
           ) : (
-            <div className="flex gap-2">
-              <Button variant="secondary" onClick={identify} disabled={loading} className="flex-1">
+            <div className="flex gap-3">
+              <GlassButton onClick={identify} disabled={loading} className="flex-1">
                 {loading ? "Reading…" : "Re-identify"}
-              </Button>
-              <Button onClick={startNew} className="flex-1">
+              </GlassButton>
+              <GlassButton onClick={startNew} className="flex-1">
                 New car
-              </Button>
+              </GlassButton>
             </div>
           )}
         </div>

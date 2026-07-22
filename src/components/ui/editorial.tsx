@@ -21,9 +21,9 @@ type ButtonProps = {
   target?: string;
 };
 
-// Liquid-glass pill — translucent white glass, rounded, no backdrop blur.
+// Liquid-glass pill with a neon (blue→green→red) gradient border + glow.
 const GLASS =
-  "border border-white/20 bg-white/[0.06] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25),inset_0_-2px_5px_rgba(0,0,0,0.45),0_6px_18px_rgba(0,0,0,0.5)] hover:bg-white/[0.12] hover:scale-[1.03]";
+  "border-2 border-transparent text-white [background:linear-gradient(rgba(255,255,255,0.07),rgba(255,255,255,0.07))_padding-box,linear-gradient(90deg,var(--color-neon-blue),var(--color-neon-green),var(--color-neon-red))_border-box] shadow-[0_0_20px_-6px_rgba(0,229,255,0.55)] hover:scale-[1.03] hover:shadow-[0_0_30px_-5px_rgba(57,255,20,0.6)]";
 
 export function Button({ href, variant = "solid", size = "md", className, children, target, ...rest }: ButtonProps) {
   const base =
