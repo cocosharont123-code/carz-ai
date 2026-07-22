@@ -197,7 +197,7 @@ export default function HuntSpotPage() {
           {/* Controls */}
           <div className="p-4">
             {result ? (
-              <ResultCard result={result} onAgain={huntAnother} />
+              <ResultCard result={result} shot={shot} onAgain={huntAnother} />
             ) : camOn ? (
               <button
                 onClick={capture}
@@ -222,25 +222,20 @@ export default function HuntSpotPage() {
   );
 }
 
-function ResultCard({ result, onAgain }: { result: Result; onAgain: () => void }) {
+function ResultCard({ result, shot, onAgain }: { result: Result; shot: string; onAgain: () => void }) {
   const car = `${result.make} ${result.model}`.trim();
   let body;
-  if (result.match && result.awarded > 0) {
+  if (result.match) {
     body = (
       <div className="rounded-2xl border border-emerald-500/50 bg-emerald-500/15 p-4 text-center">
         <div className="text-3xl">🎯💰</div>
-        <h3 className="mt-1 text-lg font-black text-emerald-300">Bounty claimed!</h3>
+        <h3 className="mt-1 text-lg font-black text-emerald-300">
+          {result.awarded > 0 ? "Bounty found!" : "You spotted a wanted car!"}
+        </h3>
         <p className="mt-1 text-sm">
-          You found the <span className="font-bold">{result.match.name}</span> — <span className="font-black text-emerald-300">+{money(result.match.bounty)}</span>
+          <span className="font-bold">{result.match.name}</span> — <span className="font-black text-emerald-300">{money(result.match.bounty)}</span>
         </p>
-      </div>
-    );
-  } else if (result.match) {
-    body = (
-      <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-center">
-        <div className="text-3xl">✅</div>
-        <h3 className="mt-1 font-bold">Already claimed</h3>
-        <p className="mt-1 text-sm text-muted-foreground">You&apos;ve already banked the {result.match.name} bounty.</p>
+        <ClaimPrize carId={result.match.id} bounty={result.match.bounty} shot={shot} />
       </div>
     );
   } else if (result.isCar) {
@@ -268,6 +263,86 @@ function ResultCard({ result, onAgain }: { result: Result; onAgain: () => void }
         className="mt-3 w-full rounded-xl border border-foreground/15 bg-foreground/[0.06] py-3 font-bold hover:bg-foreground/[0.12]"
       >
         📸 Hunt another
+      </button>
+    </div>
+  );
+}
+
+function ClaimPrize({ carId, bounty, shot }: { carId: string; bounty: number; shot: string }) {
+  const [open, setOpen] = useState(false);
+  const [cashapp, setCashapp] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState("");
+
+  async function submit() {
+    setError("");
+    if (!cashapp.trim()) {
+      setError("Enter your CashApp name.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/hunt/claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ carId, cashapp, image: shot }),
+      });
+      const d = await res.json();
+      if (!d.ok) {
+        setError(d.error || "Couldn't submit your claim.");
+        return;
+      }
+      setDone(true);
+    } catch {
+      setError("Network error — try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (done) {
+    return (
+      <div className="mt-4 rounded-xl border border-emerald-500/40 bg-background/50 p-3 text-left text-sm">
+        ✅ <span className="font-bold">Claim submitted!</span> Verification takes up to{" "}
+        <span className="font-bold">48 hours</span>. Once your spot is verified, {money(bounty)} will be
+        sent to <span className="font-bold">{cashapp}</span> on CashApp.
+      </div>
+    );
+  }
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="mt-4 w-full rounded-xl bg-white py-2.5 font-black text-[#1f1f1f] transition hover:opacity-90"
+      >
+        💵 Claim prize
+      </button>
+    );
+  }
+
+  return (
+    <div className="mt-4 rounded-xl border border-foreground/15 bg-background/50 p-3 text-left">
+      <p className="text-xs text-muted-foreground">
+        Verification takes <span className="font-semibold text-foreground">up to 48 hours</span>. Once
+        verified, your {money(bounty)} prize is sent through <span className="font-semibold text-foreground">CashApp</span>.
+        Enter your CashApp name so we can send the money.
+      </p>
+      <input
+        value={cashapp}
+        onChange={(e) => setCashapp(e.target.value)}
+        placeholder="$YourCashtag"
+        maxLength={60}
+        className="mt-2 w-full rounded-lg border border-foreground/15 bg-foreground/[0.04] px-3 py-2.5 text-sm outline-none focus:border-foreground/30"
+      />
+      {error && <p className="mt-1.5 text-xs text-rose-300">{error}</p>}
+      <button
+        onClick={submit}
+        disabled={submitting}
+        className="mt-2 w-full rounded-lg bg-gradient-to-br from-emerald-500 to-sky-500 py-2.5 text-sm font-bold text-white transition hover:opacity-90 disabled:opacity-50"
+      >
+        {submitting ? "Submitting…" : "Submit claim"}
       </button>
     </div>
   );
