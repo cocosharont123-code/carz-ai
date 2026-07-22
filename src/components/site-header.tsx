@@ -27,7 +27,7 @@ export function SiteHeader() {
       <div className="flex shrink-0 flex-col gap-1">
         <Link href="/" className="flex items-center gap-2 font-extrabold tracking-tight">
           <span className="inline-block h-3 w-3 rounded-full bg-gradient-to-br from-sky-400 to-violet-500" />
-          Car Spotter
+          Carz AI
         </Link>
 
         {/* Account / username setup — shown under the logo on mobile only */}
