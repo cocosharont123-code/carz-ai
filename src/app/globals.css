@@ -219,7 +219,7 @@
   letter-spacing: -0.01em;
   line-height: 0.92;
   font-weight: 700;
-  color: var(--color-nblue);
+  color: var(--color-nred);
 }
 
 /* Small uppercase letterspaced utility labels (eyebrows, captions, headers). */
