@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 /* ==========================================================================
    Carz editorial UI kit — the shared vocabulary every page composes from.
-   Black surface · scarce yellow (#FFD000) · condensed display type · sharp edges.
+   Black surface · neon accents (blue #00E5FF · green #39FF14 · red #FF3131) · white · sharp edges.
    ========================================================================== */
 
 /* --- Button: yellow solid, or white outline that fills yellow on hover ------ */
@@ -215,5 +215,5 @@ export function Skeleton({ className }: { className?: string }) {
 
 /* --- LiveDot: the single yellow live indicator ------------------------------ */
 export function LiveDot({ className }: { className?: string }) {
-  return <span className={cn("carz-live-dot inline-block h-2 w-2 rounded-full bg-carz", className)} />;
+  return <span className={cn("carz-live-dot inline-block h-2 w-2 rounded-full bg-neon-green", className)} />;
 }

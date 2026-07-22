@@ -8,9 +8,9 @@ import { WANTED, HUNT_RULE, getHunt, joinHunt, totalEarned, type HuntState } fro
 const money = (n: number) => "$" + n.toLocaleString("en-US");
 
 function tier(bounty: number) {
-  if (bounty >= 800) return { cls: "hunt-legendary", pill: "from-amber-400 to-orange-500", label: "🔥 LEGENDARY", text: "text-amber-300" };
-  if (bounty >= 400) return { cls: "hunt-epic", pill: "from-fuchsia-500 to-violet-600", label: "💜 EPIC", text: "text-fuchsia-300" };
-  return { cls: "hunt-rare", pill: "from-sky-400 to-cyan-500", label: "💎 RARE", text: "text-sky-300" };
+  if (bounty >= 800) return { cls: "hunt-legendary", pill: "from-neon-red to-neon-red", label: "🔥 LEGENDARY", text: "text-neon-red" };
+  if (bounty >= 400) return { cls: "hunt-epic", pill: "from-neon-red to-neon-green", label: "💜 EPIC", text: "text-neon-red" };
+  return { cls: "hunt-rare", pill: "from-neon-blue to-neon-blue", label: "💎 RARE", text: "text-neon-blue" };
 }
 
 export default function HuntPage() {
@@ -32,21 +32,21 @@ export default function HuntPage() {
         {/* Animated Miami banner */}
         <div className="hunt-banner relative overflow-hidden rounded-3xl p-[2px]">
           <div className="rounded-[calc(1.5rem-2px)] bg-background/55 px-6 py-7 text-center backdrop-blur-xl">
-            <div className="text-5xl drop-shadow-[0_0_12px_rgba(255,0,110,0.6)]">🌴🏁🌆</div>
-            <h1 className="mt-2 bg-gradient-to-r from-amber-300 via-fuchsia-400 to-sky-400 bg-clip-text text-4xl font-black tracking-tight text-transparent sm:text-5xl">
+            <div className="text-5xl drop-shadow-[0_0_12px_rgba(57,255,20,0.6)]">🌴🏁🌆</div>
+            <h1 className="mt-2 bg-gradient-to-r from-neon-red via-neon-red to-neon-blue bg-clip-text text-4xl font-black tracking-tight text-transparent sm:text-5xl">
               CAR HUNT MIAMI
             </h1>
             <p className="mx-auto mt-2 max-w-md text-sm font-medium text-foreground/90">
               Hit the streets and spot the world&apos;s rarest cars. Find one on the wanted board and
-              <span className="font-bold text-amber-300"> cash the bounty.</span>
+              <span className="font-bold text-neon-red"> cash the bounty.</span>
             </p>
 
-            <div className="mx-auto mt-3 inline-flex items-center gap-2 rounded-full border border-amber-300/50 bg-amber-400/15 px-4 py-1.5 text-sm font-black text-amber-200">
+            <div className="mx-auto mt-3 inline-flex items-center gap-2 rounded-full border border-neon-red/50 bg-neon-red/15 px-4 py-1.5 text-sm font-black text-neon-red">
               🗓️ Starts August 25 · 11:00 AM ET
             </div>
             <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-sm font-bold">
               <span className="rounded-full bg-black/40 px-4 py-1">
-                💰 Total pot: <span className="text-amber-300">{money(totalPot)}</span>
+                💰 Total pot: <span className="text-neon-red">{money(totalPot)}</span>
               </span>
               <span className="rounded-full bg-black/40 px-4 py-1">📍 On the road only</span>
             </div>
@@ -54,16 +54,16 @@ export default function HuntPage() {
             {joined ? (
               <div className="mt-5 flex flex-col items-center gap-3">
                 <div className="flex gap-3 text-sm">
-                  <span className="rounded-full bg-emerald-500/20 px-3 py-1 font-bold text-emerald-300">
+                  <span className="rounded-full bg-neon-green/20 px-3 py-1 font-bold text-neon-green">
                     💵 {money(earned)} earned
                   </span>
-                  <span className="rounded-full bg-sky-500/20 px-3 py-1 font-bold text-sky-300">
+                  <span className="rounded-full bg-neon-blue/20 px-3 py-1 font-bold text-neon-blue">
                     🎯 {found}/{WANTED.length}
                   </span>
                 </div>
                 <Link
                   href="/hunt/spot"
-                  className="hunt-glow rounded-2xl bg-gradient-to-r from-fuchsia-500 via-pink-500 to-orange-500 px-8 py-3.5 text-lg font-black text-white transition hover:scale-[1.03]"
+                  className="hunt-glow rounded-2xl bg-gradient-to-r from-neon-red via-neon-red to-neon-red px-8 py-3.5 text-lg font-black text-white transition hover:scale-[1.03]"
                 >
                   📸 START HUNTING
                 </Link>
@@ -87,7 +87,7 @@ export default function HuntPage() {
         {/* Wanted board */}
         <div className="mt-7 flex items-center gap-2">
           <span className="text-2xl">⭐</span>
-          <h2 className="bg-gradient-to-r from-fuchsia-400 to-amber-300 bg-clip-text text-lg font-black uppercase tracking-widest text-transparent">
+          <h2 className="bg-gradient-to-r from-neon-red to-neon-red bg-clip-text text-lg font-black uppercase tracking-widest text-transparent">
             Wanted Board
           </h2>
           <span className="text-2xl">⭐</span>
@@ -101,18 +101,18 @@ export default function HuntPage() {
               <div
                 key={w.id}
                 className={`relative flex items-center gap-3 overflow-hidden rounded-2xl border p-3.5 transition hover:scale-[1.01] ${
-                  claimed ? "border-emerald-500/50 bg-emerald-500/10" : t.cls
+                  claimed ? "border-neon-green/50 bg-neon-green/10" : t.cls
                 }`}
               >
                 {/* rank medallion */}
                 <div
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-black ${
                     i === 0
-                      ? "bg-gradient-to-br from-amber-300 to-orange-500 text-black"
+                      ? "bg-gradient-to-br from-neon-red to-neon-red text-black"
                       : i === 1
                         ? "bg-gradient-to-br from-slate-200 to-slate-400 text-black"
                         : i === 2
-                          ? "bg-gradient-to-br from-orange-300 to-amber-700 text-black"
+                          ? "bg-gradient-to-br from-neon-red to-neon-red text-black"
                           : "bg-foreground/10 text-foreground/70"
                   }`}
                 >
@@ -120,11 +120,11 @@ export default function HuntPage() {
                 </div>
                 <div className="text-3xl drop-shadow">{w.emoji}</div>
                 <div className="min-w-0 flex-1">
-                  <p className={`truncate font-black ${claimed ? "text-emerald-300 line-through" : ""}`}>
+                  <p className={`truncate font-black ${claimed ? "text-neon-green line-through" : ""}`}>
                     {w.name}
                   </p>
                   <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                    <span className={`text-[11px] font-bold uppercase tracking-wide ${claimed ? "text-emerald-400" : t.text}`}>
+                    <span className={`text-[11px] font-bold uppercase tracking-wide ${claimed ? "text-neon-green" : t.text}`}>
                       {claimed ? "✓ Claimed" : t.label}
                     </span>
                     <span className="rounded bg-foreground/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-foreground/80">
@@ -134,7 +134,7 @@ export default function HuntPage() {
                 </div>
                 <div
                   className={`shrink-0 rounded-xl bg-gradient-to-r px-3 py-1.5 text-base font-black text-white shadow-lg ${
-                    claimed ? "from-emerald-500 to-teal-500" : t.pill
+                    claimed ? "from-neon-green to-neon-green" : t.pill
                   }`}
                 >
                   {money(w.bounty)}

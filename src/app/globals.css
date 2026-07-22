@@ -11,9 +11,12 @@
   --color-rank-3: #d28a4a;
   --color-success-600: #16a34a;
 
-  /* Carz editorial system — the single accent. Yellow is scarce. */
-  --color-carz: #ffd000;
-  --color-carz-ink: #0a0a0a; /* text on yellow */
+  /* Neon palette on black — blue / green / red + white. */
+  --color-carz: #00e5ff; /* primary accent = neon blue */
+  --color-carz-ink: #04121a; /* dark text on neon */
+  --color-neon-blue: #00e5ff;
+  --color-neon-green: #39ff14;
+  --color-neon-red: #ff3131;
 }
 
 @theme inline {
@@ -182,9 +185,9 @@
 .carz-wheel { transform-box: fill-box; transform-origin: center; animation: carzWheel 0.9s linear infinite; }
 @keyframes carzWheel { to { transform: rotate(360deg); } }
 
-/* --- Car Hunt Miami: animated neon --- */
+/* --- Car Hunt Miami: animated neon (blue / green / red) --- */
 .hunt-banner {
-  background: linear-gradient(120deg, #ff006e, #fb5607, #ffbe0b, #8338ec, #3a86ff, #ff006e);
+  background: linear-gradient(120deg, #00e5ff, #39ff14, #ff3131, #00e5ff);
   background-size: 300% 300%;
   animation: huntShimmer 9s ease infinite;
 }
@@ -194,20 +197,20 @@
 }
 .hunt-glow { animation: huntGlow 2.6s ease-in-out infinite; }
 @keyframes huntGlow {
-  0%, 100% { box-shadow: 0 0 22px -6px rgba(255, 0, 110, 0.7); }
-  50% { box-shadow: 0 0 44px -4px rgba(131, 56, 236, 0.9); }
+  0%, 100% { box-shadow: 0 0 22px -6px rgba(0, 229, 255, 0.7); }
+  50% { box-shadow: 0 0 44px -4px rgba(57, 255, 20, 0.85); }
 }
 .hunt-legendary {
-  background: linear-gradient(100deg, rgba(255,190,11,0.14), rgba(251,86,7,0.10));
-  border-color: rgba(255, 190, 11, 0.45);
+  background: linear-gradient(100deg, rgba(255,49,49,0.14), rgba(255,49,49,0.06));
+  border-color: rgba(255, 49, 49, 0.5);
 }
 .hunt-epic {
-  background: linear-gradient(100deg, rgba(131,56,236,0.14), rgba(255,0,110,0.10));
-  border-color: rgba(131, 56, 236, 0.45);
+  background: linear-gradient(100deg, rgba(57,255,20,0.13), rgba(57,255,20,0.05));
+  border-color: rgba(57, 255, 20, 0.45);
 }
 .hunt-rare {
-  background: linear-gradient(100deg, rgba(58,134,255,0.13), rgba(6,182,212,0.10));
-  border-color: rgba(58, 134, 255, 0.4);
+  background: linear-gradient(100deg, rgba(0,229,255,0.13), rgba(0,229,255,0.05));
+  border-color: rgba(0, 229, 255, 0.45);
 }
 
 /* ==========================================================================
@@ -242,13 +245,13 @@
   filter: grayscale(0);
 }
 
-/* The one live indicator: a small yellow pulsing dot. */
+/* The live indicator: a small neon-green pulsing dot. */
 .carz-live-dot {
   animation: carzPulse 1.6s ease-in-out infinite;
 }
 @keyframes carzPulse {
-  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255, 208, 0, 0.5); }
-  50% { opacity: 0.6; box-shadow: 0 0 0 5px rgba(255, 208, 0, 0); }
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(57, 255, 20, 0.5); }
+  50% { opacity: 0.6; box-shadow: 0 0 0 5px rgba(57, 255, 20, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {

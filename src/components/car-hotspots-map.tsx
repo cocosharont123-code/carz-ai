@@ -15,11 +15,11 @@ type Spot = {
 };
 
 const CATS = {
-  luxury: { color: "#fbbf24", label: "Luxury dealer" },
-  dealer: { color: "#38bdf8", label: "Car dealer" },
-  shop: { color: "#a78bfa", label: "Tuner / auto shop" },
-  wash: { color: "#34d399", label: "Detailing / car wash" },
-  track: { color: "#fb7185", label: "Race track" },
+  luxury: { color: "#ff3131", label: "Luxury dealer" },
+  dealer: { color: "#00e5ff", label: "Car dealer" },
+  shop: { color: "#39ff14", label: "Tuner / auto shop" },
+  wash: { color: "#ffffff", label: "Detailing / car wash" },
+  track: { color: "#ff3131", label: "Race track" },
 };
 
 const LUX_RE =
@@ -179,7 +179,7 @@ export function CarHotspotsMap() {
                   style={{ background: s.color }}
                 />
                 {s.luxury && (
-                  <MarkerLabel position="bottom" className="rounded bg-black/70 px-1 text-amber-300">
+                  <MarkerLabel position="bottom" className="rounded bg-black/70 px-1 text-neon-red">
                     {s.name}
                   </MarkerLabel>
                 )}

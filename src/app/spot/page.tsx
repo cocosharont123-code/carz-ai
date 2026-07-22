@@ -40,7 +40,7 @@ function DailyGoals({ goals }: { goals?: { id: string; label: string; done: bool
         {goals.map((g) => (
           <div key={g.id} className="flex items-center gap-2.5 text-sm">
             <span>{g.done ? "✅" : "⚪"}</span>
-            <span className={g.done ? "text-emerald-300 line-through" : ""}>{g.label}</span>
+            <span className={g.done ? "text-neon-green line-through" : ""}>{g.label}</span>
           </div>
         ))}
       </div>
@@ -72,7 +72,7 @@ function Badges({
             key={b.id}
             className={cn(
               "flex flex-col items-center rounded-2xl p-3 text-center transition",
-              b.earned ? "bg-foreground/[0.06] ring-1 ring-amber-400/40" : "bg-foreground/[0.02] opacity-40",
+              b.earned ? "bg-foreground/[0.06] ring-1 ring-neon-red/40" : "bg-foreground/[0.02] opacity-40",
             )}
           >
             <span className="text-2xl">{b.emoji}</span>
@@ -91,13 +91,13 @@ function Badges({
           </div>
           <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-foreground/[0.06]">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-600"
+              className="h-full rounded-full bg-gradient-to-r from-neon-red to-neon-red"
               style={{ width: `${Math.min(100, (t / next.threshold) * 100)}%` }}
             />
           </div>
         </div>
       ) : (
-        <p className="mt-3 text-sm text-amber-300">🏆 All badges earned — you&apos;re a Legendary Spotter!</p>
+        <p className="mt-3 text-sm text-neon-red">🏆 All badges earned — you&apos;re a Legendary Spotter!</p>
       )}
     </div>
   );
@@ -165,22 +165,22 @@ function RarityMeter({ score, reason }: { score: number; reason?: string }) {
     <div
       className={`mt-4 rounded-2xl p-4 ${
         ultra
-          ? "bg-gradient-to-r from-fuchsia-500/15 via-violet-500/10 to-sky-500/15 shadow-[0_0_25px_-8px_rgba(217,70,239,0.7)]"
+          ? "bg-gradient-to-r from-neon-red/15 via-neon-green/10 to-neon-blue/15 shadow-[0_0_25px_-8px_rgba(57,255,20,0.7)]"
           : "bg-foreground/[0.03]"
       }`}
     >
       <div className="flex items-baseline justify-between">
         <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Rarity</span>
         <span className="text-sm font-bold">
-          {raw}/100 · <span className={ultra ? "text-fuchsia-300" : "text-amber-400"}>{ultra ? "💎 " : ""}{label}</span>
+          {raw}/100 · <span className={ultra ? "text-neon-red" : "text-neon-red"}>{ultra ? "💎 " : ""}{label}</span>
         </span>
       </div>
       <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-background">
         <div
           className={`h-full rounded-full ${
             ultra
-              ? "bg-gradient-to-r from-fuchsia-400 via-violet-400 to-sky-400"
-              : "bg-gradient-to-r from-emerald-400 via-amber-400 to-rose-500"
+              ? "bg-gradient-to-r from-neon-red via-neon-green to-neon-blue"
+              : "bg-gradient-to-r from-neon-green via-neon-red to-neon-red"
           }`}
           style={{ width: `${bar}%` }}
         />
@@ -283,12 +283,12 @@ function InlineListings({ make, model, goodDealUsd }: { make: string; model: str
   ];
 
   return (
-    <div className="mt-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.06] p-4">
+    <div className="mt-4 rounded-2xl border border-neon-green/30 bg-neon-green/[0.06] p-4">
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-xs font-bold uppercase tracking-wide text-emerald-400">🏷️ For sale now</span>
+        <span className="text-xs font-bold uppercase tracking-wide text-neon-green">🏷️ For sale now</span>
         {goodDealUsd > 0 && (
           <span className="text-sm font-semibold">
-            Good deal: <span className="text-emerald-400">under {fmtUsd(goodDealUsd)}</span>
+            Good deal: <span className="text-neon-green">under {fmtUsd(goodDealUsd)}</span>
           </span>
         )}
       </div>
@@ -322,7 +322,7 @@ function InlineListings({ make, model, goodDealUsd }: { make: string; model: str
                   <div className="mt-1 flex items-center gap-2">
                     <span className="font-bold">{fmtMoney(it.price, it.currency)}</span>
                     {isDeal && (
-                      <span className="rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold text-emerald-400">
+                      <span className="rounded-full bg-neon-green/20 px-1.5 py-0.5 text-[10px] font-bold text-neon-green">
                         DEAL
                       </span>
                     )}
@@ -513,7 +513,7 @@ export default function SpotPage() {
         )}
 
         {status && status.apiConfigured === false && (
-          <div className="mt-4 rounded-xl border border-amber-500/50 bg-amber-500/10 p-3 text-sm text-amber-200">
+          <div className="mt-4 rounded-xl border border-neon-red/50 bg-neon-red/10 p-3 text-sm text-neon-red">
             Server has no <code>ANTHROPIC_API_KEY</code> set — identification will fail until it&apos;s
             configured in <code>.env.local</code>. See the README.
           </div>
@@ -539,7 +539,7 @@ export default function SpotPage() {
               onDrop={handleDrop}
               className={cn(
                 "flex h-64 cursor-pointer flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-foreground/15 bg-foreground/[0.02] transition-colors hover:bg-foreground/[0.04]",
-                isDragging && "border-sky-400/60 bg-sky-400/5",
+                isDragging && "border-neon-blue/60 bg-neon-blue/5",
               )}
             >
               <div className="rounded-full bg-background p-3 shadow-sm">
@@ -607,13 +607,13 @@ export default function SpotPage() {
 
         {loading && (
           <div className="mt-4 flex items-center gap-3 text-muted-foreground">
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-border border-t-sky-400" />
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-border border-t-neon-blue" />
             Reading the car…
           </div>
         )}
 
         {error && (
-          <div className="mt-4 rounded-xl border border-red-500/50 bg-red-500/10 p-3 text-sm text-red-200">
+          <div className="mt-4 rounded-xl border border-neon-red/50 bg-neon-red/10 p-3 text-sm text-neon-red">
             {error}
           </div>
         )}
@@ -631,10 +631,10 @@ export default function SpotPage() {
                     className={cn(
                       "rounded-full px-2.5 py-1 text-xs font-bold",
                       car.confidence === "high"
-                        ? "bg-emerald-500/15 text-emerald-400"
+                        ? "bg-neon-green/15 text-neon-green"
                         : car.confidence === "medium"
-                          ? "bg-amber-500/15 text-amber-400"
-                          : "bg-red-500/15 text-red-400",
+                          ? "bg-neon-red/15 text-neon-red"
+                          : "bg-neon-red/15 text-neon-red",
                     )}
                   >
                     {car.confidence} confidence
@@ -681,7 +681,7 @@ export default function SpotPage() {
                   <div className="mt-6 border-t border-foreground/10 pt-5">
                     {car.valuation && (
                       <>
-                        <h3 className="text-xs font-bold uppercase tracking-wide text-violet-300">
+                        <h3 className="text-xs font-bold uppercase tracking-wide text-neon-green">
                           💰 Valuation
                         </h3>
                         <p className="mb-3 mt-1 text-sm">{car.valuation}</p>
@@ -689,7 +689,7 @@ export default function SpotPage() {
                     )}
                     {car.reliability && (
                       <>
-                        <h3 className="text-xs font-bold uppercase tracking-wide text-violet-300">
+                        <h3 className="text-xs font-bold uppercase tracking-wide text-neon-green">
                           🔧 Reliability
                         </h3>
                         <p className="mb-3 mt-1 text-sm">{car.reliability}</p>
@@ -697,7 +697,7 @@ export default function SpotPage() {
                     )}
                     {car.collectibility && (
                       <>
-                        <h3 className="text-xs font-bold uppercase tracking-wide text-violet-300">
+                        <h3 className="text-xs font-bold uppercase tracking-wide text-neon-green">
                           📈 Collectibility
                         </h3>
                         <p className="mt-1 text-sm">{car.collectibility}</p>

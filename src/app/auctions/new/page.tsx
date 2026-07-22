@@ -252,7 +252,7 @@ function NewAuctionInner() {
                 Upload a photo and let Car Spotter identify the car and write the title, make, model &
                 description for you.
               </p>
-              {aiMsg && <p className="mt-2 text-sm text-emerald-300">{aiMsg}</p>}
+              {aiMsg && <p className="mt-2 text-sm text-neon-green">{aiMsg}</p>}
             </div>
 
             <Field label="Title">
@@ -361,7 +361,7 @@ function NewAuctionInner() {
             </Field>
 
             {error && (
-              <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-300">{error}</div>
+              <div className="rounded-xl border border-neon-red/40 bg-neon-red/10 p-3 text-sm text-neon-red">{error}</div>
             )}
 
             <button

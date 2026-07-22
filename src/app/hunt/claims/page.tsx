@@ -57,7 +57,7 @@ export default function ClaimsPage() {
             </button>
           </div>
         ) : !isOwner ? (
-          <div className="mt-8 rounded-3xl border border-rose-500/30 bg-rose-500/10 p-6 text-center text-sm text-rose-200">
+          <div className="mt-8 rounded-3xl border border-neon-red/30 bg-neon-red/10 p-6 text-center text-sm text-neon-red">
             This page is only visible to the hunt owner.
           </div>
         ) : claims.length === 0 ? (
@@ -79,7 +79,7 @@ export default function ClaimsPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-bold">
-                    {c.carName} · <span className="text-emerald-300">{money(c.bounty)}</span>
+                    {c.carName} · <span className="text-neon-green">{money(c.bounty)}</span>
                   </p>
                   <p className="mt-0.5 text-sm">
                     Pay: <span className="select-all font-mono font-bold">{c.cashapp}</span>

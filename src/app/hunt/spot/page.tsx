@@ -149,7 +149,7 @@ export default function HuntSpotPage() {
           <p className="mt-1 text-muted-foreground">You need to join Car Hunt Miami before you can earn rewards.</p>
           <Link
             href="/hunt"
-            className="mt-5 inline-block rounded-xl bg-gradient-to-br from-fuchsia-500 to-orange-500 px-6 py-3 font-black text-white"
+            className="mt-5 inline-block rounded-xl bg-gradient-to-br from-neon-red to-neon-red px-6 py-3 font-black text-white"
           >
             Go join the hunt
           </Link>
@@ -169,7 +169,7 @@ export default function HuntSpotPage() {
           </div>
           <div className="text-right">
             <div className="text-xs uppercase tracking-wide text-muted-foreground">Earned</div>
-            <div className="text-xl font-black text-emerald-300">{money(earned)}</div>
+            <div className="text-xl font-black text-neon-green">{money(earned)}</div>
           </div>
         </div>
 
@@ -218,7 +218,7 @@ export default function HuntSpotPage() {
               <button
                 onClick={capture}
                 disabled={busy}
-                className="w-full rounded-xl bg-gradient-to-br from-fuchsia-500 to-orange-500 py-3.5 font-black text-white transition hover:opacity-90 disabled:opacity-50"
+                className="w-full rounded-xl bg-gradient-to-br from-neon-red to-neon-red py-3.5 font-black text-white transition hover:opacity-90 disabled:opacity-50"
               >
                 {busy ? "Identifying…" : "📸 Snap & identify"}
               </button>
@@ -243,13 +243,13 @@ function ResultCard({ result, shot, onAgain }: { result: Result; shot: string; o
   let body;
   if (result.match && result.colorOk) {
     body = (
-      <div className="rounded-2xl border border-emerald-500/50 bg-emerald-500/15 p-4 text-center">
+      <div className="rounded-2xl border border-neon-green/50 bg-neon-green/15 p-4 text-center">
         <div className="text-3xl">🎯💰</div>
-        <h3 className="mt-1 text-lg font-black text-emerald-300">
+        <h3 className="mt-1 text-lg font-black text-neon-green">
           {result.awarded > 0 ? "Bounty found!" : "You spotted a wanted car!"}
         </h3>
         <p className="mt-1 text-sm">
-          <span className="font-bold">{result.match.name}</span> — <span className="font-black text-emerald-300">{money(result.match.bounty)}</span>
+          <span className="font-bold">{result.match.name}</span> — <span className="font-black text-neon-green">{money(result.match.bounty)}</span>
         </p>
         <p className="mt-1 text-xs text-muted-foreground">📍 Must be on a public road — verified from your photo.</p>
         <ClaimPrize carId={result.match.id} bounty={result.match.bounty} shot={shot} />
@@ -257,9 +257,9 @@ function ResultCard({ result, shot, onAgain }: { result: Result; shot: string; o
     );
   } else if (result.match && !result.colorOk) {
     body = (
-      <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 text-center">
+      <div className="rounded-2xl border border-neon-red/40 bg-neon-red/10 p-4 text-center">
         <div className="text-3xl">🎨❌</div>
-        <h3 className="mt-1 font-black text-rose-300">Wrong color!</h3>
+        <h3 className="mt-1 font-black text-neon-red">Wrong color!</h3>
         <p className="mt-1 text-sm">
           That&apos;s a <span className="font-bold">{result.match.name}</span>, but only the{" "}
           <span className="font-bold">{result.colorLabel.replace(/\s*only$/i, "")}</span> one counts
@@ -332,7 +332,7 @@ function ClaimPrize({ carId, bounty, shot }: { carId: string; bounty: number; sh
 
   if (done) {
     return (
-      <div className="mt-4 rounded-xl border border-emerald-500/40 bg-background/50 p-3 text-left text-sm">
+      <div className="mt-4 rounded-xl border border-neon-green/40 bg-background/50 p-3 text-left text-sm">
         ✅ <span className="font-bold">Claim submitted!</span> Verification takes up to{" "}
         <span className="font-bold">48 hours</span>. Once your spot is verified, {money(bounty)} will be
         sent to <span className="font-bold">{cashapp}</span> on CashApp.
@@ -365,11 +365,11 @@ function ClaimPrize({ carId, bounty, shot }: { carId: string; bounty: number; sh
         maxLength={60}
         className="mt-2 w-full rounded-lg border border-foreground/15 bg-foreground/[0.04] px-3 py-2.5 text-sm outline-none focus:border-foreground/30"
       />
-      {error && <p className="mt-1.5 text-xs text-rose-300">{error}</p>}
+      {error && <p className="mt-1.5 text-xs text-neon-red">{error}</p>}
       <button
         onClick={submit}
         disabled={submitting}
-        className="mt-2 w-full rounded-lg bg-gradient-to-br from-emerald-500 to-sky-500 py-2.5 text-sm font-bold text-white transition hover:opacity-90 disabled:opacity-50"
+        className="mt-2 w-full rounded-lg bg-gradient-to-br from-neon-green to-neon-blue py-2.5 text-sm font-bold text-white transition hover:opacity-90 disabled:opacity-50"
       >
         {submitting ? "Submitting…" : "Submit claim"}
       </button>
