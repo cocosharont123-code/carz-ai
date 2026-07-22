@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
-import { WANTED, getHunt, joinHunt, totalEarned, type HuntState } from "@/lib/hunt";
+import { WANTED, HUNT_RULE, getHunt, joinHunt, totalEarned, type HuntState } from "@/lib/hunt";
 
 const money = (n: number) => "$" + n.toLocaleString("en-US");
 
@@ -40,8 +40,11 @@ export default function HuntPage() {
               Hit the streets and spot the world&apos;s rarest cars. Find one on the wanted board and
               <span className="font-bold text-amber-300"> cash the bounty.</span>
             </p>
-            <div className="mt-3 inline-block rounded-full bg-black/40 px-4 py-1 text-sm font-bold">
-              💰 Total pot: <span className="text-amber-300">{money(totalPot)}</span>
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-sm font-bold">
+              <span className="rounded-full bg-black/40 px-4 py-1">
+                💰 Total pot: <span className="text-amber-300">{money(totalPot)}</span>
+              </span>
+              <span className="rounded-full bg-black/40 px-4 py-1">📍 On the road only</span>
             </div>
 
             {joined ? (
@@ -116,9 +119,14 @@ export default function HuntPage() {
                   <p className={`truncate font-black ${claimed ? "text-emerald-300 line-through" : ""}`}>
                     {w.name}
                   </p>
-                  <p className={`text-[11px] font-bold uppercase tracking-wide ${claimed ? "text-emerald-400" : t.text}`}>
-                    {claimed ? "✓ Claimed" : t.label}
-                  </p>
+                  <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                    <span className={`text-[11px] font-bold uppercase tracking-wide ${claimed ? "text-emerald-400" : t.text}`}>
+                      {claimed ? "✓ Claimed" : t.label}
+                    </span>
+                    <span className="rounded bg-foreground/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-foreground/80">
+                      🎨 {w.colorLabel}
+                    </span>
+                  </div>
                 </div>
                 <div
                   className={`shrink-0 rounded-xl bg-gradient-to-r px-3 py-1.5 text-base font-black text-white shadow-lg ${
@@ -132,10 +140,11 @@ export default function HuntPage() {
           })}
         </div>
 
-        <p className="mt-5 text-center text-xs text-muted-foreground">
-          🔒 Rewards are claimed by spotting the car <span className="font-semibold">live</span> in the Hunt
-          camera — camera-roll photos don&apos;t count.
-        </p>
+        <div className="mt-5 space-y-1 text-center text-xs text-muted-foreground">
+          <p>📍 <span className="font-semibold">{HUNT_RULE}</span></p>
+          <p>🎨 Each car must be the exact color shown (except &quot;any color&quot;).</p>
+          <p>🔒 Spot the car <span className="font-semibold">live</span> in the Hunt camera — camera-roll photos don&apos;t count.</p>
+        </div>
       </main>
     </>
   );

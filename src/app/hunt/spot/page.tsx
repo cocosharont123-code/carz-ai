@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
-import { getHunt, claimCar, matchWanted, totalEarned } from "@/lib/hunt";
+import { getHunt, claimCar, matchWanted, colorOk, totalEarned } from "@/lib/hunt";
 
 const money = (n: number) => "$" + n.toLocaleString("en-US");
 
@@ -12,7 +12,10 @@ type Result = {
   make: string;
   model: string;
   yearRange: string;
+  color: string;
   match: { id: string; name: string; bounty: number } | null;
+  colorLabel: string;
+  colorOk: boolean;
   alreadyClaimed: boolean;
   awarded: number;
 };
@@ -82,24 +85,37 @@ export default function HuntSpotPage() {
       });
       const d = await res.json();
       const car = d.car || {};
+      const base = {
+        isCar: !!car.isCar,
+        make: car.make || "",
+        model: car.model || "",
+        yearRange: car.yearRange || "",
+        color: car.color || "",
+      };
       if (!res.ok || !car.isCar) {
-        setResult({ isCar: false, make: car.make || "", model: car.model || "", yearRange: car.yearRange || "", match: null, alreadyClaimed: false, awarded: 0 });
+        setResult({ ...base, isCar: false, match: null, colorLabel: "", colorOk: false, alreadyClaimed: false, awarded: 0 });
         return;
       }
       const w = matchWanted(car.make, car.model);
-      if (w) {
-        const before = getHunt();
-        const alreadyClaimed = !!before.claimed[w.id];
-        let awarded = 0;
-        if (!alreadyClaimed) {
-          const after = claimCar(w.id);
-          awarded = w.bounty;
-          setEarned(totalEarned(after));
-        }
-        setResult({ isCar: true, make: car.make, model: car.model, yearRange: car.yearRange, match: { id: w.id, name: w.name, bounty: w.bounty }, alreadyClaimed, awarded });
-      } else {
-        setResult({ isCar: true, make: car.make, model: car.model, yearRange: car.yearRange, match: null, alreadyClaimed: false, awarded: 0 });
+      if (!w) {
+        setResult({ ...base, match: null, colorLabel: "", colorOk: false, alreadyClaimed: false, awarded: 0 });
+        return;
       }
+      const colorMatches = colorOk(w, car.color);
+      if (!colorMatches) {
+        // Right car, wrong color — no bounty.
+        setResult({ ...base, match: { id: w.id, name: w.name, bounty: w.bounty }, colorLabel: w.colorLabel, colorOk: false, alreadyClaimed: false, awarded: 0 });
+        return;
+      }
+      const before = getHunt();
+      const alreadyClaimed = !!before.claimed[w.id];
+      let awarded = 0;
+      if (!alreadyClaimed) {
+        const after = claimCar(w.id);
+        awarded = w.bounty;
+        setEarned(totalEarned(after));
+      }
+      setResult({ ...base, match: { id: w.id, name: w.name, bounty: w.bounty }, colorLabel: w.colorLabel, colorOk: true, alreadyClaimed, awarded });
     } catch {
       setCamError("Something went wrong identifying that. Try again.");
     } finally {
@@ -225,7 +241,7 @@ export default function HuntSpotPage() {
 function ResultCard({ result, shot, onAgain }: { result: Result; shot: string; onAgain: () => void }) {
   const car = `${result.make} ${result.model}`.trim();
   let body;
-  if (result.match) {
+  if (result.match && result.colorOk) {
     body = (
       <div className="rounded-2xl border border-emerald-500/50 bg-emerald-500/15 p-4 text-center">
         <div className="text-3xl">🎯💰</div>
@@ -235,7 +251,20 @@ function ResultCard({ result, shot, onAgain }: { result: Result; shot: string; o
         <p className="mt-1 text-sm">
           <span className="font-bold">{result.match.name}</span> — <span className="font-black text-emerald-300">{money(result.match.bounty)}</span>
         </p>
+        <p className="mt-1 text-xs text-muted-foreground">📍 Must be on a public road — verified from your photo.</p>
         <ClaimPrize carId={result.match.id} bounty={result.match.bounty} shot={shot} />
+      </div>
+    );
+  } else if (result.match && !result.colorOk) {
+    body = (
+      <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 text-center">
+        <div className="text-3xl">🎨❌</div>
+        <h3 className="mt-1 font-black text-rose-300">Wrong color!</h3>
+        <p className="mt-1 text-sm">
+          That&apos;s a <span className="font-bold">{result.match.name}</span>, but only the{" "}
+          <span className="font-bold">{result.colorLabel.replace(/\s*only$/i, "")}</span> one counts
+          {result.color ? ` — yours looks ${result.color.toLowerCase()}.` : "."}
+        </p>
       </div>
     );
   } else if (result.isCar) {

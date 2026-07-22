@@ -7,27 +7,36 @@ export type WantedCar = {
   short: string;
   bounty: number;
   emoji: string;
+  colorLabel: string; // required color shown on the board
   test: (s: string) => boolean;
+  colorTest: (color: string) => boolean; // true = the spotted color qualifies
 };
 
 export const HUNT_CITY = "Miami";
 
+// Every hunt car must be spotted out on a public road.
+export const HUNT_RULE = "All cars must be spotted out on the road.";
+
 export const WANTED: WantedCar[] = [
-  { id: "laferrari", name: "Ferrari LaFerrari", short: "LaFerrari", bounty: 900, emoji: "🔴", test: (s) => /laferrari|la\s*ferrari/.test(s) },
-  { id: "chiron", name: "Bugatti Chiron", short: "Chiron", bounty: 800, emoji: "🔷", test: (s) => /chiron/.test(s) },
-  { id: "huayra", name: "Pagani Huayra", short: "Huayra", bounty: 800, emoji: "⚪", test: (s) => /huayra/.test(s) },
-  { id: "carreragt", name: "Porsche Carrera GT", short: "Carrera GT", bounty: 450, emoji: "🩶", test: (s) => /carrera\s*gt/.test(s) },
-  { id: "lfa", name: "Lexus LFA", short: "LFA", bounty: 450, emoji: "⚪", test: (s) => /\blfa\b|lexus\s*lfa/.test(s) },
-  { id: "senna", name: "McLaren Senna", short: "Senna", bounty: 450, emoji: "🟠", test: (s) => /\bsenna\b/.test(s) },
-  { id: "fordgt", name: "Ford GT", short: "Ford GT", bounty: 400, emoji: "🔵", test: (s) => /ford\s*gt/.test(s) },
-  { id: "r34", name: "Nissan Skyline R34 GT-R", short: "Skyline R34 GT-R", bounty: 250, emoji: "🔵", test: (s) => /\br34\b|skyline.*gt-?r|gt-?r.*r34/.test(s) },
-  { id: "supra", name: "Toyota Supra (MK4)", short: "MK4 Supra", bounty: 200, emoji: "🟠", test: (s) => /supra/.test(s) },
-  { id: "testarossa", name: "Ferrari Testarossa", short: "Testarossa", bounty: 250, emoji: "🔴", test: (s) => /testarossa/.test(s) },
+  { id: "laferrari", name: "Ferrari LaFerrari", short: "LaFerrari", bounty: 900, emoji: "🟢", colorLabel: "Green only", test: (s) => /laferrari|la\s*ferrari/.test(s), colorTest: (c) => /green|emerald|lime|british\s*racing/.test(c) },
+  { id: "chiron", name: "Bugatti Chiron", short: "Chiron", bounty: 800, emoji: "⚫", colorLabel: "Full carbon", test: (s) => /chiron/.test(s), colorTest: (c) => /carbon|black|exposed/.test(c) },
+  { id: "huayra", name: "Pagani Huayra", short: "Huayra", bounty: 800, emoji: "🟡", colorLabel: "Yellow only", test: (s) => /huayra/.test(s), colorTest: (c) => /yellow|gold/.test(c) },
+  { id: "carreragt", name: "Porsche Carrera GT", short: "Carrera GT", bounty: 450, emoji: "🩶", colorLabel: "Grey only", test: (s) => /carrera\s*gt/.test(s), colorTest: (c) => /gr[ae]y|silver|gunmetal|graphite/.test(c) },
+  { id: "lfa", name: "Lexus LFA", short: "LFA", bounty: 450, emoji: "⚪", colorLabel: "White only", test: (s) => /\blfa\b|lexus\s*lfa/.test(s), colorTest: (c) => /white|pearl|ivory/.test(c) },
+  { id: "senna", name: "McLaren Senna", short: "Senna", bounty: 450, emoji: "🟠", colorLabel: "Orange only", test: (s) => /\bsenna\b/.test(s), colorTest: (c) => /orange|amber/.test(c) },
+  { id: "fordgt", name: "Ford GT", short: "Ford GT", bounty: 400, emoji: "🔵", colorLabel: "Blue only", test: (s) => /ford\s*gt/.test(s), colorTest: (c) => /blue|navy|teal/.test(c) },
+  { id: "r34", name: "Nissan Skyline R34 GT-R", short: "Skyline R34 GT-R", bounty: 250, emoji: "🔴", colorLabel: "Red only", test: (s) => /\br34\b|skyline.*gt-?r|gt-?r.*r34/.test(s), colorTest: (c) => /red|crimson|scarlet/.test(c) },
+  { id: "supra", name: "Toyota Supra (MK4)", short: "MK4 Supra", bounty: 200, emoji: "🎨", colorLabel: "Any color", test: (s) => /supra/.test(s), colorTest: () => true },
+  { id: "testarossa", name: "Ferrari Testarossa", short: "Testarossa", bounty: 250, emoji: "🎨", colorLabel: "Any color", test: (s) => /testarossa/.test(s), colorTest: () => true },
 ];
 
 export function matchWanted(make: string, model: string): WantedCar | null {
   const s = `${make} ${model}`.toLowerCase();
   return WANTED.find((w) => w.test(s)) ?? null;
+}
+
+export function colorOk(car: WantedCar, color: string): boolean {
+  return car.colorTest((color || "").toLowerCase());
 }
 
 // --- On-device hunt progress (localStorage) ---
