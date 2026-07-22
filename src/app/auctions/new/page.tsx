@@ -200,9 +200,10 @@ function NewAuctionInner() {
     <>
       <SiteHeader />
       <main className="mx-auto w-full max-w-lg px-5 py-10">
-        <h1 className="text-3xl font-extrabold tracking-tight">List your car</h1>
-        <p className="mt-1 text-muted-foreground">
-          Start a bidding war. When the timer ends, the highest bidder gets your contact info to arrange the sale.
+        <div className="util-label text-white/50">Sell — powered by AI</div>
+        <h1 className="display mt-3 text-6xl">List your car</h1>
+        <p className="mt-3 text-sm text-white/55">
+          Start a bidding war. When the timer ends, the highest bidder gets your contact to close the deal.
         </p>
 
         {status === "unauthenticated" ? (
@@ -211,7 +212,7 @@ function NewAuctionInner() {
             <h3 className="mt-3 text-lg font-bold">Sign in to list a car</h3>
             <button
               onClick={() => signIn("google", { callbackUrl: "/auctions/new" })}
-              className="mt-4 rounded-xl bg-white px-5 py-2.5 font-semibold text-[#1f1f1f]"
+              className="mt-4 inline-flex bg-white px-5 py-2.5 font-semibold text-[#1f1f1f] transition hover:brightness-95"
             >
               Continue with Google
             </button>
@@ -243,7 +244,7 @@ function NewAuctionInner() {
               <button
                 onClick={generateWithAI}
                 disabled={aiLoading || !image}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-violet-500/40 bg-gradient-to-r from-violet-500/15 to-sky-500/15 py-2.5 text-sm font-bold text-violet-200 transition hover:from-violet-500/25 hover:to-sky-500/25 disabled:cursor-not-allowed disabled:opacity-50"
+                className="util-label mt-3 flex w-full items-center justify-center gap-2 border border-carz/50 bg-carz/10 py-3 text-carz transition hover:bg-carz hover:text-carz-ink disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {aiLoading ? "🔎 AI is reading your photo…" : "✨ Auto-fill listing with AI"}
               </button>
@@ -366,9 +367,9 @@ function NewAuctionInner() {
             <button
               onClick={submit}
               disabled={saving}
-              className="w-full rounded-xl bg-gradient-to-br from-sky-400 to-violet-500 py-3 font-bold text-white transition hover:opacity-90 disabled:opacity-50"
+              className="util-label w-full bg-carz py-4 text-carz-ink transition hover:brightness-95 disabled:opacity-40"
             >
-              {saving ? "Listing…" : "Start the auction"}
+              {saving ? "Publishing…" : "Publish listing"}
             </button>
           </div>
         )}
@@ -377,7 +378,7 @@ function NewAuctionInner() {
       <style jsx global>{`
         .input {
           width: 100%;
-          border-radius: 0.75rem;
+          border-radius: 0;
           border: 1px solid var(--border);
           background: color-mix(in oklab, var(--foreground) 4%, transparent);
           padding: 0.625rem 0.75rem;
@@ -385,7 +386,7 @@ function NewAuctionInner() {
           outline: none;
         }
         .input:focus {
-          border-color: color-mix(in oklab, var(--foreground) 25%, transparent);
+          border-color: var(--color-carz);
         }
       `}</style>
     </>

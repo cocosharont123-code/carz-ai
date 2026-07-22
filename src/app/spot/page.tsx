@@ -500,15 +500,15 @@ export default function SpotPage() {
     <>
       <SiteHeader />
       <main className="mx-auto w-full max-w-2xl px-5 py-14">
-        <h1 className="text-3xl font-extrabold tracking-tight">Spot a car</h1>
-        <p className="mt-1 text-muted-foreground">
-          Drop in a photo (and an optional note), then hit identify.
+        <div className="util-label text-white/50">Scan · identify · save</div>
+        <h1 className="display mt-3 text-7xl">Spot a car</h1>
+        <p className="mt-3 text-sm text-white/55">
+          Drop in a photo, then hit identify. Unlimited and free.
         </p>
 
         {status && (
-          <p className="mt-3 text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">Unlimited</span> identifications ·{" "}
-            {status.usedToday} today · free
+          <p className="util-label mt-3 text-white/40">
+            <span className="text-carz">Unlimited</span> · {status.usedToday} today
           </p>
         )}
 
@@ -587,7 +587,7 @@ export default function SpotPage() {
           />
 
           {!car ? (
-            <Button onClick={identify} disabled={!previewUrl || loading} className="w-full">
+            <Button onClick={identify} disabled={!previewUrl || loading} className="util-label w-full rounded-none bg-carz py-6 text-carz-ink hover:bg-carz hover:brightness-95">
               {loading ? "Reading the car…" : "Identify car"}
             </Button>
           ) : (
