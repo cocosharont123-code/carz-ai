@@ -52,22 +52,22 @@ function AuctionCard({ a, now }: { a: Auction; now: number }) {
         <CarPhoto src={a.image} alt={a.title} />
         <span className="absolute left-3 top-3 flex items-center gap-1.5 bg-black/70 px-2 py-1">
           {!tl.ended && <LiveDot />}
-          <span className="util-label text-white">{tl.text}</span>
+          <span className="util-label text-nblue">{tl.text}</span>
         </span>
       </div>
       <div className="flex flex-1 flex-col p-4">
-        <p className="line-clamp-2 min-h-[2.5rem] text-sm font-semibold leading-snug text-white">{a.title}</p>
+        <p className="line-clamp-2 min-h-[2.5rem] text-sm font-semibold leading-snug text-nblue">{a.title}</p>
         <div className="mt-2 flex items-end justify-between">
           <div>
-            <div className="util-label text-white/40">{a.bidCount > 0 ? "Current bid" : "Starting"}</div>
+            <div className="util-label text-ngreen">{a.bidCount > 0 ? "Current bid" : "Starting"}</div>
             <div className="display text-3xl text-carz">{money(a.currentBid)}</div>
           </div>
           <div className="text-right">
-            <div className="util-label text-white/50">{a.bidCount} bids</div>
-            <div className="util-label max-w-[8rem] truncate text-white/35">{a.sellerName}</div>
+            <div className="util-label text-ngreen">{a.bidCount} bids</div>
+            <div className="util-label max-w-[8rem] truncate text-ngreen">{a.sellerName}</div>
           </div>
         </div>
-        <span className="mt-4 inline-flex justify-center border border-white/40 px-4 py-2.5 util-label text-white transition-colors group-hover:border-carz group-hover:bg-carz group-hover:text-carz-ink">
+        <span className="mt-4 inline-flex justify-center border border-white/40 px-4 py-2.5 util-label text-nblue transition-colors group-hover:border-carz group-hover:bg-carz group-hover:text-carz-ink">
           {tl.ended ? "View result" : "Bid now →"}
         </span>
       </div>
@@ -125,7 +125,7 @@ export default function AuctionsPage() {
         ) : items.length === 0 ? (
           <div className="mt-10 border border-white/10 bg-card p-12 text-center">
             <h3 className="display text-4xl">No auctions live</h3>
-            <p className="mx-auto mt-2 max-w-sm text-sm text-white/55">Be the first — list a car and start a bidding war.</p>
+            <p className="mx-auto mt-2 max-w-sm text-sm text-nred">Be the first — list a car and start a bidding war.</p>
             <Button href="/auctions/new" className="mt-6">List your car</Button>
           </div>
         ) : (

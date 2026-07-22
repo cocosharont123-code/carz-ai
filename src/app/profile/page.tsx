@@ -105,7 +105,7 @@ function ProfileInner() {
         ) : authStatus === "unauthenticated" ? (
           <div className="mt-8 border border-white/10 bg-card p-10 text-center">
             <h3 className="display text-3xl">Sign in</h3>
-            <p className="mx-auto mt-2 max-w-sm text-sm text-white/55">Set up your profile to appear on the board.</p>
+            <p className="mx-auto mt-2 max-w-sm text-sm text-nred">Set up your profile to appear on the board.</p>
             <button
               onClick={() => signIn("google", { callbackUrl: "/profile" })}
               className="mt-6 inline-flex bg-white px-5 py-2.5 font-semibold text-[#1f1f1f] transition hover:brightness-95"
@@ -121,43 +121,43 @@ function ProfileInner() {
               <div>
                 <button
                   onClick={() => fileRef.current?.click()}
-                  className="util-label border border-white/20 px-4 py-2 text-white transition hover:border-carz hover:text-carz"
+                  className="util-label border border-white/20 px-4 py-2 text-nblue transition hover:border-carz hover:text-carz"
                 >
                   {image ? "Change" : "Upload"}
                 </button>
                 {image && (
-                  <button onClick={() => setImage("")} className="util-label ml-3 text-white/40 hover:text-carz">
+                  <button onClick={() => setImage("")} className="util-label ml-3 text-ngreen hover:text-carz">
                     Remove
                   </button>
                 )}
-                <p className="mt-2 text-xs text-white/45">Optional — empty gives the animated car avatar.</p>
+                <p className="mt-2 text-xs text-ngreen">Optional — empty gives the animated car avatar.</p>
               </div>
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickFile} />
             </div>
 
             <div>
-              <label className="util-label text-white/60">Username <span className="text-carz">*</span></label>
+              <label className="util-label text-nred">Username <span className="text-carz">*</span></label>
               <div className="mt-2 flex items-center border border-white/15 bg-white/[0.03] px-3">
-                <span className="text-white/40">@</span>
+                <span className="text-ngreen">@</span>
                 <input
                   value={username}
                   onChange={(e) => setUsername(e.target.value.toLowerCase())}
                   placeholder="yourname"
                   maxLength={20}
-                  className="w-full bg-transparent px-1 py-3 text-sm text-white outline-none placeholder:text-white/30"
+                  className="w-full bg-transparent px-1 py-3 text-sm text-nblue outline-none placeholder:text-ngreen"
                 />
               </div>
-              <p className="mt-1.5 text-xs text-white/40">3–20 chars · letters, numbers, underscores.</p>
+              <p className="mt-1.5 text-xs text-ngreen">3–20 chars · letters, numbers, underscores.</p>
             </div>
 
             <div>
-              <label className="util-label text-white/60">Display name</label>
+              <label className="util-label text-nred">Display name</label>
               <input
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="How your name shows (optional)"
                 maxLength={40}
-                className="mt-2 w-full border border-white/15 bg-white/[0.03] px-3 py-3 text-sm text-white outline-none placeholder:text-white/30"
+                className="mt-2 w-full border border-white/15 bg-white/[0.03] px-3 py-3 text-sm text-nblue outline-none placeholder:text-ngreen"
               />
             </div>
 

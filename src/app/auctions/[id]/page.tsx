@@ -133,7 +133,7 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
         <SiteHeader />
         <main className="mx-auto w-full max-w-3xl px-5 py-24 text-center">
           <h1 className="display text-5xl">Not found</h1>
-          <p className="mt-2 text-sm text-white/55">This auction doesn&apos;t exist or was removed.</p>
+          <p className="mt-2 text-sm text-nred">This auction doesn&apos;t exist or was removed.</p>
           <Link href="/auctions" className="util-label mt-6 inline-block text-carz hover:brightness-110">
             ← Back to auctions
           </Link>
@@ -149,7 +149,7 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
     <>
       <SiteHeader />
       <main className="mx-auto w-full max-w-3xl px-5 py-8">
-        <Link href="/auctions" className="util-label text-white/50 hover:text-carz">
+        <Link href="/auctions" className="util-label text-ngreen hover:text-carz">
           ← All auctions
         </Link>
 
@@ -158,13 +158,13 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
             <CarPhoto src={a.image} alt={a.title} />
             <span className="absolute left-3 top-3 flex items-center gap-1.5 bg-black/70 px-3 py-1.5">
               {!ended && <LiveDot />}
-              <span className="util-label text-white">{ended ? "Ended" : countdown(a.endsAt, now)}</span>
+              <span className="util-label text-nblue">{ended ? "Ended" : countdown(a.endsAt, now)}</span>
             </span>
           </div>
 
           <div className="p-6">
             <h1 className="display text-4xl">{a.title}</h1>
-            <p className="util-label mt-2 text-white/45">
+            <p className="util-label mt-2 text-ngreen">
               {a.sellerName}
               {a.year || a.make || a.model ? ` — ${[a.year, a.make, a.model].filter(Boolean).join(" ")}` : ""}
             </p>
@@ -172,15 +172,15 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
             {/* Current bid — giant display number */}
             <div className="mt-6 flex items-end justify-between border-y border-white/10 py-6">
               <div>
-                <div className="util-label text-white/40">{a.bidCount > 0 ? "Current bid" : "Starting bid"}</div>
+                <div className="util-label text-ngreen">{a.bidCount > 0 ? "Current bid" : "Starting bid"}</div>
                 <div className="display text-6xl text-carz sm:text-7xl">{money(a.currentBid)}</div>
-                <div className="util-label mt-1 text-white/45">
+                <div className="util-label mt-1 text-ngreen">
                   {a.bidCount} bids{a.topBidderName ? ` · top ${a.topBidderName}` : ""}
                 </div>
               </div>
               {!ended && (
                 <div className="text-right">
-                  <div className="util-label text-white/40">Ends in</div>
+                  <div className="util-label text-ngreen">Ends in</div>
                   <div className="display text-2xl">{countdown(a.endsAt, now)}</div>
                 </div>
               )}
@@ -192,41 +192,41 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
                 <ResultBox a={a} />
               </div>
             ) : a.youAreSeller ? (
-              <p className="mt-6 border border-white/10 bg-white/[0.03] p-4 text-sm text-white/60">
+              <p className="mt-6 border border-white/10 bg-white/[0.03] p-4 text-sm text-nred">
                 This is your listing — you can&apos;t bid on it. Share the link to start a bidding war.
               </p>
             ) : (
               <div className="mt-6">
                 <div className="flex gap-px border border-white/15 bg-white/10">
                   <div className="flex flex-1 items-center bg-black px-3">
-                    <span className="text-white/40">$</span>
+                    <span className="text-ngreen">$</span>
                     <input
                       value={amount}
                       onChange={(e) => setAmount(e.target.value.replace(/[^0-9]/g, ""))}
                       inputMode="numeric"
                       placeholder={`${minNext.toLocaleString()} or more`}
-                      className="w-full bg-transparent px-2 py-3.5 text-sm text-white outline-none placeholder:text-white/30"
+                      className="w-full bg-transparent px-2 py-3.5 text-sm text-nblue outline-none placeholder:text-ngreen"
                     />
                   </div>
                   <Button onClick={placeBid} disabled={bidding} className="px-6">
                     {bidding ? "Bidding…" : status !== "authenticated" ? "Sign in to bid" : "Place bid"}
                   </Button>
                 </div>
-                <p className="util-label mt-2 text-white/40">Minimum next bid: {money(minNext)}</p>
+                <p className="util-label mt-2 text-ngreen">Minimum next bid: {money(minNext)}</p>
                 {msg && <p className="mt-2 text-sm text-carz">{msg}</p>}
               </div>
             )}
 
             {a.description && (
               <div className="mt-8 border-t border-white/10 pt-6">
-                <div className="util-label text-white/40">Description</div>
-                <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-white/80">{a.description}</p>
+                <div className="util-label text-ngreen">Description</div>
+                <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-nblue">{a.description}</p>
               </div>
             )}
 
             {a.bids.length > 0 && (
               <div className="mt-8 border-t border-white/10 pt-6">
-                <div className="util-label mb-2 text-white/40">Bid history</div>
+                <div className="util-label mb-2 text-ngreen">Bid history</div>
                 <DataTable
                   head={["Bidder", "Bid"]}
                   rows={a.bids.map((b) => ({ cells: [<span key="n" className="font-semibold">{b.bidderName}</span>, money(b.amount)] }))}
@@ -243,7 +243,7 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
 function ResultBox({ a }: { a: Auction }) {
   if (a.bidCount === 0) {
     return (
-      <p className="border border-white/10 bg-white/[0.03] p-4 text-sm text-white/55">
+      <p className="border border-white/10 bg-white/[0.03] p-4 text-sm text-nred">
         This auction ended with no bids.
       </p>
     );
@@ -264,11 +264,11 @@ function ResultBox({ a }: { a: Auction }) {
       <div className="border border-white/15 bg-white/[0.03] p-5">
         <div className="util-label text-carz">Sold</div>
         <h3 className="display mt-1 text-2xl">Sold for {money(a.currentBid)}</h3>
-        <p className="mt-2 text-sm text-white/60">
-          Winner: <span className="font-semibold text-white">{a.topBidderName}</span> — they&apos;ve been shown your contact to reach out.
+        <p className="mt-2 text-sm text-nred">
+          Winner: <span className="font-semibold text-nblue">{a.topBidderName}</span> — they&apos;ve been shown your contact to reach out.
         </p>
         {a.contact && (
-          <p className="mt-2 select-all border border-white/10 bg-black px-3 py-2 font-mono text-sm text-white/80">
+          <p className="mt-2 select-all border border-white/10 bg-black px-3 py-2 font-mono text-sm text-nblue">
             Your contact: {a.contact}
           </p>
         )}
@@ -278,7 +278,7 @@ function ResultBox({ a }: { a: Auction }) {
   return (
     <div className="border border-white/10 bg-white/[0.03] p-5">
       <h3 className="display text-2xl">Won by {a.topBidderName}</h3>
-      <p className="mt-1 text-sm text-white/55">Final bid {money(a.currentBid)}. The winner gets the seller&apos;s contact.</p>
+      <p className="mt-1 text-sm text-nred">Final bid {money(a.currentBid)}. The winner gets the seller&apos;s contact.</p>
     </div>
   );
 }

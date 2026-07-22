@@ -43,16 +43,16 @@ export function SiteHeader() {
           <div className="flex items-center gap-2 sm:hidden">
             <Link href="/profile" className="flex items-center gap-1.5">
               <Avatar src={profile?.image} size={20} />
-              <span className="util-label text-white/80">
+              <span className="util-label text-nblue">
                 {profile?.username ? `@${profile.username}` : "Set username →"}
               </span>
             </Link>
-            <button onClick={() => signOut()} className="util-label text-white/40 hover:text-carz">
+            <button onClick={() => signOut()} className="util-label text-ngreen hover:text-carz">
               · Out
             </button>
           </div>
         ) : (
-          <Link href="/signin" className="util-label text-white/70 hover:text-carz sm:hidden">
+          <Link href="/signin" className="util-label text-nred hover:text-carz sm:hidden">
             Sign in →
           </Link>
         )}
@@ -65,7 +65,7 @@ export function SiteHeader() {
             href={n.href}
             className={cn(
               "util-label transition-colors",
-              n.accent ? "text-carz hover:brightness-110" : "text-white/60 hover:text-white",
+              n.accent ? "text-carz hover:brightness-110" : "text-nred hover:text-nblue",
             )}
           >
             {n.label}
@@ -76,16 +76,16 @@ export function SiteHeader() {
           <div className="hidden items-center gap-3 sm:flex">
             <Link href="/profile" className="flex items-center gap-2 hover:opacity-90">
               <Avatar src={profile?.image} size={26} />
-              <span className="util-label text-white/80">
+              <span className="util-label text-nblue">
                 {profile?.username ? `@${profile.username}` : "Set username"}
               </span>
             </Link>
-            <button onClick={() => signOut()} className="util-label text-white/40 hover:text-carz">
+            <button onClick={() => signOut()} className="util-label text-ngreen hover:text-carz">
               Out
             </button>
           </div>
         ) : (
-          <Link href="/signin" className="util-label hidden text-white/70 hover:text-carz sm:inline">
+          <Link href="/signin" className="util-label hidden text-nred hover:text-carz sm:inline">
             Sign in
           </Link>
         )}

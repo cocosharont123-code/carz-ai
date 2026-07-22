@@ -35,7 +35,7 @@ function DailyGoals({ goals }: { goals?: { id: string; label: string; done: bool
     <div className="mt-6 rounded-3xl border border-foreground/[0.05] bg-card p-5">
       <div className="flex items-center justify-between">
         <h3 className="font-bold">🎯 Today&apos;s goals</h3>
-        <span className="text-xs text-muted-foreground">Resets daily</span>
+        <span className="text-xs text-ngreen">Resets daily</span>
       </div>
       <div className="mt-3 space-y-2">
         {goals.map((g) => (
@@ -63,7 +63,7 @@ function Badges({
     <div className="mt-6 rounded-3xl border border-foreground/[0.05] bg-card p-5">
       <div className="flex items-center justify-between">
         <h3 className="font-bold">🏅 Badges</h3>
-        <span className="text-xs text-muted-foreground">
+        <span className="text-xs text-ngreen">
           {t} car{t === 1 ? "" : "s"} spotted
         </span>
       </div>
@@ -78,13 +78,13 @@ function Badges({
           >
             <span className="text-2xl">{b.emoji}</span>
             <span className="mt-1 text-[11px] font-semibold leading-tight">{b.name}</span>
-            <span className="text-[10px] text-muted-foreground">{b.threshold}+ cars</span>
+            <span className="text-[10px] text-ngreen">{b.threshold}+ cars</span>
           </div>
         ))}
       </div>
       {next ? (
         <div className="mt-4">
-          <div className="flex justify-between text-xs text-muted-foreground">
+          <div className="flex justify-between text-xs text-ngreen">
             <span>Next: {next.name}</span>
             <span>
               {t}/{next.threshold}
@@ -135,7 +135,7 @@ function Spec({ k, v }: { k: string; v?: string }) {
   if (!v) return null;
   return (
     <div className="rounded-xl bg-foreground/[0.04] p-3">
-      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{k}</div>
+      <div className="text-[11px] uppercase tracking-wide text-ngreen">{k}</div>
       <div className="mt-0.5 font-semibold">{v}</div>
     </div>
   );
@@ -171,7 +171,7 @@ function RarityMeter({ score, reason }: { score: number; reason?: string }) {
       }`}
     >
       <div className="flex items-baseline justify-between">
-        <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Rarity</span>
+        <span className="text-xs font-bold uppercase tracking-wide text-ngreen">Rarity</span>
         <span className="text-sm font-bold">
           {raw}/100 · <span className={ultra ? "text-neon-red" : "text-neon-red"}>{ultra ? "💎 " : ""}{label}</span>
         </span>
@@ -186,7 +186,7 @@ function RarityMeter({ score, reason }: { score: number; reason?: string }) {
           style={{ width: `${bar}%` }}
         />
       </div>
-      {reason && <p className="mt-2 text-sm text-muted-foreground">{reason}</p>}
+      {reason && <p className="mt-2 text-sm text-ngreen">{reason}</p>}
     </div>
   );
 }
@@ -207,7 +207,7 @@ function ValueChart({ points }: { points: { year: string; usd: number }[] }) {
   return (
     <div className="mt-4 rounded-2xl bg-foreground/[0.03] p-4">
       <div className="flex items-baseline justify-between">
-        <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+        <span className="text-xs font-bold uppercase tracking-wide text-ngreen">
           Market value over time
         </span>
         <span className="text-sm font-semibold">
@@ -328,7 +328,7 @@ function InlineListings({ make, model, goodDealUsd }: { make: string; model: str
                       </span>
                     )}
                   </div>
-                  {it.location && <p className="mt-0.5 text-xs text-muted-foreground">{it.location}</p>}
+                  {it.location && <p className="mt-0.5 text-xs text-ngreen">{it.location}</p>}
                 </div>
               </a>
             );
@@ -336,7 +336,7 @@ function InlineListings({ make, model, goodDealUsd }: { make: string; model: str
         </div>
       ) : (
         <div className="mt-3">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-ngreen">
             {configured
               ? "No live listings found right now — try these searches:"
               : "Live listings aren’t connected yet — searching these instead:"}
@@ -355,7 +355,7 @@ function InlineListings({ make, model, goodDealUsd }: { make: string; model: str
             ))}
           </div>
           {!configured && (
-            <p className="mt-2 text-[11px] text-muted-foreground">
+            <p className="mt-2 text-[11px] text-ngreen">
               Add a free eBay App ID (EBAY_APP_ID) to show real listings right here.
             </p>
           )}
@@ -501,14 +501,14 @@ export default function SpotPage() {
     <>
       <SiteHeader />
       <main className="mx-auto w-full max-w-2xl px-5 py-14">
-        <div className="util-label text-white/50">Scan · identify · save</div>
+        <div className="util-label text-ngreen">Scan · identify · save</div>
         <h1 className="display mt-3 text-7xl">Spot a car</h1>
-        <p className="mt-3 text-sm text-white/55">
+        <p className="mt-3 text-sm text-nred">
           Drop in a photo, then hit identify. Unlimited and free.
         </p>
 
         {status && (
-          <p className="util-label mt-3 text-white/40">
+          <p className="util-label mt-3 text-ngreen">
             <span className="text-carz">Unlimited</span> · {status.usedToday} today
           </p>
         )}
@@ -544,11 +544,11 @@ export default function SpotPage() {
               )}
             >
               <div className="rounded-full bg-background p-3 shadow-sm">
-                <ImagePlus className="h-6 w-6 text-muted-foreground" />
+                <ImagePlus className="h-6 w-6 text-ngreen" />
               </div>
               <div className="text-center">
                 <p className="text-sm font-medium">Click to select a car photo</p>
-                <p className="text-xs text-muted-foreground">or drag and drop it here</p>
+                <p className="text-xs text-ngreen">or drag and drop it here</p>
               </div>
             </div>
           ) : (
@@ -571,7 +571,7 @@ export default function SpotPage() {
                 </div>
               </div>
               {fileName && (
-                <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="mt-2 flex items-center gap-2 text-sm text-ngreen">
                   <span className="truncate">{fileName}</span>
                   <button onClick={handleRemove} className="ml-auto rounded-full p-1 hover:bg-muted">
                     <X className="h-4 w-4" />
@@ -607,7 +607,7 @@ export default function SpotPage() {
         <Badges badges={status?.badges} total={status?.totalSpots} />
 
         {loading && (
-          <div className="mt-4 flex items-center gap-3 text-muted-foreground">
+          <div className="mt-4 flex items-center gap-3 text-ngreen">
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-border border-t-neon-blue" />
             Reading the car…
           </div>
@@ -641,7 +641,7 @@ export default function SpotPage() {
                     {car.confidence} confidence
                   </span>
                 </div>
-                {car.notes && <p className="mt-1 text-sm text-muted-foreground">{car.notes}</p>}
+                {car.notes && <p className="mt-1 text-sm text-ngreen">{car.notes}</p>}
 
                 <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <Spec k="Body style" v={car.bodyStyle} />
@@ -675,7 +675,7 @@ export default function SpotPage() {
                   className="mt-3 flex items-center justify-between rounded-2xl border border-foreground/10 bg-foreground/[0.04] px-4 py-3 text-sm font-semibold transition hover:border-foreground/25 hover:bg-foreground/[0.08]"
                 >
                   <span>🔨 List this car for auction on Carz</span>
-                  <span className="text-muted-foreground">→</span>
+                  <span className="text-ngreen">→</span>
                 </Link>
 
                 {(car.valuation || car.reliability || car.collectibility) && (
@@ -710,7 +710,7 @@ export default function SpotPage() {
             ) : (
               <>
                 <h2 className="text-xl font-bold">No car detected 🤔</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="mt-1 text-sm text-ngreen">
                   {car.notes || "Try a clearer photo of the car."}
                 </p>
               </>
@@ -730,9 +730,9 @@ export default function SpotPage() {
                 >
                   <span className="font-semibold">
                     {h.make} {h.model}{" "}
-                    <span className="font-normal text-muted-foreground">{h.yearRange}</span>
+                    <span className="font-normal text-ngreen">{h.yearRange}</span>
                   </span>
-                  <span className="text-muted-foreground">{h.date}</span>
+                  <span className="text-ngreen">{h.date}</span>
                 </div>
               ))}
             </div>

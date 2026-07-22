@@ -73,8 +73,8 @@ export function LiveAuctions() {
   if (items.length === 0) {
     return (
       <div className="border border-white/10 bg-card p-10 text-center">
-        <p className="util-label text-white/50">No live auctions right now</p>
-        <p className="mt-2 text-sm text-white/70">Be the first — list a car and start a bidding war.</p>
+        <p className="util-label text-ngreen">No live auctions right now</p>
+        <p className="mt-2 text-sm text-nred">Be the first — list a car and start a bidding war.</p>
         <Button href="/auctions/new" className="mt-5">
           List your car
         </Button>
@@ -91,14 +91,14 @@ export function LiveAuctions() {
           </div>
           <div className="mt-3 flex items-center gap-2">
             <LiveDot />
-            <span className="util-label text-white/45">{left(a.endsAt)}</span>
+            <span className="util-label text-ngreen">{left(a.endsAt)}</span>
           </div>
-          <p className="mt-1 truncate text-sm font-semibold text-white">{a.title}</p>
+          <p className="mt-1 truncate text-sm font-semibold text-nblue">{a.title}</p>
           <div className="mt-1 flex items-end justify-between">
             <span className="display text-2xl text-carz">{money(a.currentBid)}</span>
-            <span className="util-label text-white/40">{a.bidCount} bids</span>
+            <span className="util-label text-ngreen">{a.bidCount} bids</span>
           </div>
-          <span className="mt-3 inline-flex justify-center border border-white/40 px-4 py-2 util-label text-white transition-colors group-hover:border-carz group-hover:bg-carz group-hover:text-carz-ink">
+          <span className="mt-3 inline-flex justify-center border border-white/40 px-4 py-2 util-label text-nblue transition-colors group-hover:border-carz group-hover:bg-carz group-hover:text-carz-ink">
             Bid now
           </span>
         </Link>

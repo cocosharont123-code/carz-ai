@@ -41,14 +41,14 @@ export default function ClaimsPage() {
       <SiteHeader />
       <main className="mx-auto w-full max-w-2xl px-5 py-8">
         <h1 className="text-2xl font-black tracking-tight">💵 Prize claims</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Review verified spots and pay out via CashApp.</p>
+        <p className="mt-1 text-sm text-ngreen">Review verified spots and pay out via CashApp.</p>
 
         {loading ? (
           <div className="mt-6 h-40 animate-pulse rounded-3xl bg-foreground/[0.04]" />
         ) : status !== "authenticated" ? (
           <div className="mt-8 rounded-3xl border border-foreground/[0.06] bg-card p-8 text-center">
             <h3 className="text-lg font-bold">Owner only</h3>
-            <p className="mt-1 text-sm text-muted-foreground">Sign in with the owner account to see claims.</p>
+            <p className="mt-1 text-sm text-ngreen">Sign in with the owner account to see claims.</p>
             <button
               onClick={() => signIn("google", { callbackUrl: "/hunt/claims" })}
               className="mt-4 rounded-xl bg-white px-5 py-2.5 font-semibold text-[#1f1f1f]"
@@ -84,7 +84,7 @@ export default function ClaimsPage() {
                   <p className="mt-0.5 text-sm">
                     Pay: <span className="select-all font-mono font-bold">{c.cashapp}</span>
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-ngreen">
                     by {c.spotter} · {fmt(c.ts)} · {c.status}
                   </p>
                 </div>

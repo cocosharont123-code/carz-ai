@@ -200,9 +200,9 @@ function NewAuctionInner() {
     <>
       <SiteHeader />
       <main className="mx-auto w-full max-w-lg px-5 py-10">
-        <div className="util-label text-white/50">Sell — powered by AI</div>
+        <div className="util-label text-ngreen">Sell — powered by AI</div>
         <h1 className="display mt-3 text-6xl">List your car</h1>
-        <p className="mt-3 text-sm text-white/55">
+        <p className="mt-3 text-sm text-nred">
           Start a bidding war. When the timer ends, the highest bidder gets your contact to close the deal.
         </p>
 
@@ -248,7 +248,7 @@ function NewAuctionInner() {
               >
                 {aiLoading ? "🔎 AI is reading your photo…" : "✨ Auto-fill listing with AI"}
               </button>
-              <p className="mt-1.5 text-xs text-muted-foreground">
+              <p className="mt-1.5 text-xs text-ngreen">
                 Upload a photo and let Car Spotter identify the car and write the title, make, model &
                 description for you.
               </p>
@@ -282,7 +282,7 @@ function NewAuctionInner() {
                 />
               </Field>
             </div>
-            <p className="-mt-3 text-xs text-muted-foreground">
+            <p className="-mt-3 text-xs text-ngreen">
               Enter the car&apos;s exact year yourself — the AI won&apos;t guess this for a real sale.
             </p>
 
@@ -341,7 +341,7 @@ function NewAuctionInner() {
                     <option value="days">days</option>
                   </select>
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="mt-1 text-xs text-ngreen">
                   Anywhere from 1 hour to 30 days.
                 </p>
               </Field>
@@ -355,7 +355,7 @@ function NewAuctionInner() {
                 maxLength={300}
                 className="input"
               />
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-1 text-xs text-ngreen">
                 🔒 Encrypted and hidden. Only the winning bidder sees this after the auction ends.
               </p>
             </Field>

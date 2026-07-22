@@ -21,9 +21,9 @@ type ButtonProps = {
   target?: string;
 };
 
-// Liquid-glass pill with a neon (blue→green→red) gradient border + glow.
+// Plain liquid-glass pill — translucent glass, glossy edges, no border color.
 const GLASS =
-  "border-2 border-transparent text-white [background:linear-gradient(rgba(255,255,255,0.07),rgba(255,255,255,0.07))_padding-box,linear-gradient(90deg,var(--color-neon-blue),var(--color-neon-green),var(--color-neon-red))_border-box] shadow-[0_0_20px_-6px_rgba(0,229,255,0.55)] hover:scale-[1.03] hover:shadow-[0_0_30px_-5px_rgba(57,255,20,0.6)]";
+  "border border-white/20 bg-white/[0.06] text-nblue shadow-[inset_0_1px_0_rgba(255,255,255,0.25),inset_0_-2px_5px_rgba(0,0,0,0.45),0_6px_18px_rgba(0,0,0,0.5)] hover:bg-white/[0.12] hover:scale-[1.03]";
 
 export function Button({ href, variant = "solid", size = "md", className, children, target, ...rest }: ButtonProps) {
   const base =
@@ -31,7 +31,7 @@ export function Button({ href, variant = "solid", size = "md", className, childr
   const variants = {
     solid: GLASS,
     outline: GLASS,
-    ghost: "text-white/70 hover:text-white",
+    ghost: "text-nred hover:text-nblue",
   };
   const sizes = {
     sm: "px-5 py-2 text-[11px]",
@@ -55,7 +55,7 @@ export function Button({ href, variant = "solid", size = "md", className, childr
 
 /* --- Eyebrow / utility label ------------------------------------------------ */
 export function Eyebrow({ children, className, yellow }: { children: ReactNode; className?: string; yellow?: boolean }) {
-  return <div className={cn("util-label", yellow ? "text-carz" : "text-white/50", className)}>{children}</div>;
+  return <div className={cn("util-label", yellow ? "text-carz" : "text-ngreen", className)}>{children}</div>;
 }
 
 /* --- Card: dark surface, hairline border, sharp corners --------------------- */
@@ -91,7 +91,7 @@ export function PageMasthead({
       <div className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="display text-6xl leading-[0.9] sm:text-7xl md:text-8xl">{title}</h1>
         <div className="flex items-center gap-4 pb-1">
-          {count != null && <span className="util-label text-white/50">{count}</span>}
+          {count != null && <span className="util-label text-ngreen">{count}</span>}
           {action}
         </div>
       </div>
@@ -103,7 +103,7 @@ export function PageMasthead({
 export function SectionDivider({ children }: { children: ReactNode }) {
   return (
     <div className="my-8 border-y border-white/10 py-3 text-center">
-      <span className="util-label text-white/40">{children}</span>
+      <span className="util-label text-ngreen">{children}</span>
     </div>
   );
 }
@@ -129,7 +129,7 @@ export function StatRow({
       )}
     >
       <div className="display text-5xl sm:text-6xl">{value}</div>
-      <div className={cn("util-label mt-2", yellow ? "text-carz-ink/70" : "text-white/50")}>{label}</div>
+      <div className={cn("util-label mt-2", yellow ? "text-carz-ink/70" : "text-ngreen")}>{label}</div>
     </div>
   );
 }
@@ -152,7 +152,7 @@ export function DataTable({
         <thead>
           <tr className="border-b border-white/15">
             {head.map((h, i) => (
-              <th key={i} className="util-label px-3 py-2.5 text-white/45 first:pl-0 last:pr-0 last:text-right">
+              <th key={i} className="util-label px-3 py-2.5 text-ngreen first:pl-0 last:pr-0 last:text-right">
                 {h}
               </th>
             ))}
@@ -165,7 +165,7 @@ export function DataTable({
             key={i}
             className={cn(
               "border-b border-white/10",
-              r.highlight ? "bg-carz text-carz-ink" : "text-white/85",
+              r.highlight ? "bg-carz text-carz-ink" : "text-nblue",
             )}
           >
             {r.cells.map((c, j) => (
@@ -193,22 +193,29 @@ export function CarPhoto({
   alt,
   className,
   fallback = "🚗",
+  color,
 }: {
   src?: string;
   alt: string;
   className?: string;
   fallback?: string;
+  color?: boolean; // true = show in full color (not black & white)
 }) {
   if (!src) {
     return (
-      <div className={cn("flex items-center justify-center bg-white/[0.04] text-4xl grayscale", className)}>
+      <div className={cn("flex items-center justify-center bg-white/[0.04] text-4xl", !color && "grayscale", className)}>
         {fallback}
       </div>
     );
   }
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt={alt} className={cn("car-photo h-full w-full object-cover", className)} draggable={false} />
+    <img
+      src={src}
+      alt={alt}
+      className={cn(color ? "h-full w-full object-cover" : "car-photo h-full w-full object-cover", className)}
+      draggable={false}
+    />
   );
 }
 
