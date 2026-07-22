@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
-import { SiteHeader } from "@/components/site-header";
+import Link from "next/link";
 
 function GoogleIcon() {
   return (
@@ -29,56 +29,34 @@ function SignInInner() {
   }, []);
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center px-5 py-20 text-center">
-      <span className="inline-block h-12 w-12 rounded-full bg-gradient-to-br from-sky-400 to-violet-500" />
-      <h1 className="mt-6 text-3xl font-extrabold tracking-tight">Sign in to Car Spotter</h1>
-      <p className="mt-2 text-muted-foreground">
-        Sign in so your spots show up on the global leaderboard under your name.
-      </p>
+    <main className="flex min-h-screen w-full flex-col items-center justify-center px-5 text-center">
+      <Link href="/" className="flex items-center gap-3">
+        <span className="inline-block h-5 w-5 bg-carz" />
+        <span className="display text-4xl">Carz AI</span>
+      </Link>
 
       {authEnabled === false && (
-        <div className="mt-6 w-full rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-200">
+        <div className="mt-8 max-w-xs border border-carz/40 bg-carz/10 p-3 text-sm text-carz">
           Sign-in is being set up and isn&apos;t available just yet. Check back soon.
         </div>
       )}
 
-      <div className="mt-8 w-full space-y-3">
-        <button
-          onClick={() => signIn("google", { callbackUrl })}
-          disabled={authEnabled !== true}
-          className="flex w-full items-center justify-center gap-3 rounded-xl bg-white px-4 py-3 font-semibold text-[#1f1f1f] transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <GoogleIcon />
-          Continue with Google
-        </button>
-
-        <button
-          disabled
-          title="Apple sign-in is coming soon"
-          className="flex w-full cursor-not-allowed items-center justify-center gap-3 rounded-xl border border-foreground/10 bg-foreground/[0.04] px-4 py-3 font-semibold text-muted-foreground"
-        >
-          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M16.37 12.6c-.02-2.27 1.85-3.36 1.94-3.41-1.06-1.55-2.71-1.76-3.29-1.78-1.4-.14-2.73.82-3.44.82-.71 0-1.8-.8-2.96-.78-1.52.02-2.93.88-3.71 2.24-1.58 2.74-.4 6.8 1.13 9.02.75 1.09 1.64 2.31 2.81 2.27 1.13-.05 1.55-.73 2.92-.73 1.36 0 1.75.73 2.94.71 1.21-.02 1.98-1.11 2.72-2.21.86-1.27 1.21-2.5 1.23-2.56-.03-.01-2.36-.91-2.38-3.6ZM14.1 5.62c.62-.76 1.04-1.8.93-2.85-.9.04-1.99.6-2.63 1.35-.57.67-1.08 1.74-.94 2.76.99.08 2.01-.5 2.64-1.26Z" />
-          </svg>
-          Continue with Apple
-          <span className="ml-1 rounded-full bg-foreground/10 px-2 py-0.5 text-[10px] font-bold">SOON</span>
-        </button>
-      </div>
-
-      <p className="mt-6 text-xs text-muted-foreground">
-        New here? Continuing with Google creates your account automatically.
-      </p>
+      <button
+        onClick={() => signIn("google", { callbackUrl })}
+        disabled={authEnabled !== true}
+        className="mt-10 flex w-full max-w-xs items-center justify-center gap-3 bg-white px-4 py-3.5 font-semibold text-[#1f1f1f] transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        <GoogleIcon />
+        Continue with Google
+      </button>
     </main>
   );
 }
 
 export default function SignInPage() {
   return (
-    <>
-      <SiteHeader />
-      <Suspense fallback={<div className="flex-1" />}>
-        <SignInInner />
-      </Suspense>
-    </>
+    <Suspense fallback={<div className="min-h-screen" />}>
+      <SignInInner />
+    </Suspense>
   );
 }

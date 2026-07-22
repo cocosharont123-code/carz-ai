@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { getGarage, removeFromGarage, clearGarage, type GarageCar } from "@/lib/garage-local";
+import { Button, PageMasthead, StatRow, CarPhoto, Skeleton } from "@/components/ui/editorial";
 
 function fmtDate(ts: number): string {
   return new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -30,113 +30,82 @@ export default function GaragePage() {
   }
 
   const uniqueModels = new Set(cars.map((c) => `${c.make} ${c.model}`.trim())).size;
-  const rarest = cars.reduce<GarageCar | null>(
-    (best, c) => (!best || c.rarityScore > best.rarityScore ? c : best),
-    null,
-  );
+  const rarest = cars.reduce<GarageCar | null>((best, c) => (!best || c.rarityScore > best.rarityScore ? c : best), null);
 
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto w-full max-w-3xl px-5 py-10">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h1 className="text-3xl font-extrabold tracking-tight">🏠 My Garage</h1>
-            <p className="mt-1 text-muted-foreground">
-              Every car you&apos;ve spotted, saved right here on your device.
-            </p>
-          </div>
-          {cars.length > 0 && (
-            <button
-              onClick={clearAll}
-              className="mt-1 shrink-0 rounded-lg border border-foreground/10 px-3 py-1.5 text-xs text-muted-foreground hover:border-rose-500/40 hover:text-rose-300"
-            >
-              Clear all
-            </button>
-          )}
-        </div>
+      <main className="mx-auto w-full max-w-4xl px-5 py-10">
+        <PageMasthead
+          eyebrow="Your history · on this device"
+          title="Garage"
+          count={loading ? "—" : `${cars.length} spotted`}
+          action={
+            cars.length > 0 ? (
+              <button onClick={clearAll} className="util-label text-white/40 hover:text-carz">
+                Clear all
+              </button>
+            ) : null
+          }
+        />
 
         {loading ? (
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="mt-6 grid grid-cols-2 gap-px border border-white/10 bg-white/10 sm:grid-cols-3">
             {[0, 1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="aspect-square animate-pulse rounded-2xl bg-foreground/[0.04]" />
+              <div key={i} className="bg-black">
+                <Skeleton className="aspect-square w-full" />
+              </div>
             ))}
           </div>
         ) : cars.length === 0 ? (
-          <div className="mt-6 rounded-3xl border border-foreground/[0.06] bg-card p-8 text-center backdrop-blur-xl">
-            <div className="text-4xl">🚘</div>
-            <h3 className="mt-3 text-lg font-bold">Your garage is empty</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Identify a car and it&apos;ll show up here automatically.
+          <div className="mt-8 border border-white/10 bg-card p-10 text-center">
+            <h3 className="display text-3xl">Garage empty</h3>
+            <p className="mx-auto mt-2 max-w-sm text-sm text-white/55">
+              No spots yet. Identify a car and it lands here automatically.
             </p>
-            <Link
-              href="/spot"
-              className="mt-4 inline-block rounded-xl bg-gradient-to-br from-sky-400 to-violet-500 px-5 py-2.5 font-semibold text-white"
-            >
-              Spot a car
-            </Link>
+            <Button href="/spot" className="mt-6">Spot a car</Button>
           </div>
         ) : (
           <>
-            {/* stats */}
-            <div className="mt-6 grid grid-cols-3 gap-3">
-              <div className="rounded-2xl bg-foreground/[0.04] p-4 text-center">
-                <div className="text-2xl font-extrabold">{cars.length}</div>
-                <div className="text-[11px] uppercase tracking-wide text-muted-foreground">spotted</div>
-              </div>
-              <div className="rounded-2xl bg-foreground/[0.04] p-4 text-center">
-                <div className="text-2xl font-extrabold">{uniqueModels}</div>
-                <div className="text-[11px] uppercase tracking-wide text-muted-foreground">unique models</div>
-              </div>
-              <div className="rounded-2xl bg-foreground/[0.04] p-4 text-center">
-                <div className="truncate text-sm font-bold">
+            <div className="mt-6 grid grid-cols-3 gap-px border border-white/10 bg-white/10">
+              <StatRow value={cars.length} label="Spotted" className="p-4 sm:p-6" />
+              <StatRow value={uniqueModels} label="Unique models" yellow className="p-4 sm:p-6" />
+              <div className="flex flex-col justify-center bg-card p-4 sm:p-6">
+                <div className="display truncate text-2xl sm:text-3xl">
                   {rarest && rarest.rarityScore > 0 ? `${rarest.make} ${rarest.model}` : "—"}
                 </div>
-                <div className="text-[11px] uppercase tracking-wide text-muted-foreground">rarest find</div>
+                <div className="util-label mt-2 text-white/50">Rarest find</div>
               </div>
             </div>
 
-            {/* grid */}
-            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="mt-6 grid grid-cols-2 gap-px border border-white/10 bg-white/10 sm:grid-cols-3">
               {cars.map((c) => (
-                <div key={c.id} className="group relative overflow-hidden rounded-2xl border border-foreground/[0.06] bg-card">
+                <div key={c.id} className="group relative bg-black">
                   <button
                     onClick={() => remove(c.id)}
                     title="Remove"
-                    className="absolute right-1.5 top-1.5 z-10 hidden h-6 w-6 items-center justify-center rounded-full bg-black/60 text-xs text-white group-hover:flex hover:bg-rose-500/80"
+                    className="absolute right-2 top-2 z-10 hidden h-6 w-6 items-center justify-center bg-black/70 text-xs text-white group-hover:flex hover:bg-carz hover:text-carz-ink"
                   >
                     ✕
                   </button>
-                  <div className="relative aspect-square w-full bg-foreground/[0.04]">
-                    {c.image ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={c.image} alt={`${c.make} ${c.model}`} className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-3xl">🚗</div>
-                    )}
+                  <div className="relative aspect-square w-full overflow-hidden">
+                    <CarPhoto src={c.image} alt={`${c.make} ${c.model}`} />
                     {c.rarityScore >= 70 && (
-                      <span className="absolute left-1.5 top-1.5 rounded-full bg-amber-400/90 px-1.5 py-0.5 text-[10px] font-bold text-black">
-                        RARE
-                      </span>
+                      <span className="absolute left-2 top-2 bg-carz px-1.5 py-0.5 util-label text-carz-ink">Rare</span>
                     )}
                   </div>
-                  <div className="p-2.5">
-                    <p className="truncate text-sm font-bold">
-                      {c.make} {c.model}
-                    </p>
-                    <p className="truncate text-xs text-muted-foreground">
+                  <div className="p-3">
+                    <p className="truncate text-sm font-semibold text-white">{c.make} {c.model}</p>
+                    <p className="util-label mt-1 truncate text-white/40">
                       {c.yearRange}
                       {c.priceRange ? ` · ${c.priceRange}` : ""}
                     </p>
-                    <p className="mt-0.5 text-[11px] text-muted-foreground">{fmtDate(c.ts)}</p>
+                    <p className="mt-1 text-[11px] text-white/35">{fmtDate(c.ts)}</p>
                   </div>
                 </div>
               ))}
             </div>
-
-            <p className="mt-6 text-center text-xs text-muted-foreground">
-              Saved on this device only — not uploaded anywhere.
-            </p>
+            <p className="mt-6 util-label text-center text-white/35">Saved on this device only — not uploaded.</p>
           </>
         )}
       </main>
