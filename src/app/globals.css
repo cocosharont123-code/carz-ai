@@ -318,3 +318,50 @@ h1, h2, h3, h4 { letter-spacing: -0.02em; line-height: 1.2; }
   .reveal { opacity: 1; transform: none; }
   .img-settle, .page-in { animation: none; }
 }
+
+/* ==========================================================================
+   Feel & finish — tactility, weight, no flimsy micro-interactions.
+   ========================================================================== */
+* { -webkit-tap-highlight-color: transparent; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body {
+  overscroll-behavior-y: none;              /* no rubber-band bounce revealing edges */
+  font-feature-settings: "kern", "liga";
+}
+::selection { background: rgba(255, 255, 255, 0.18); color: #fff; }
+
+/* Keyboard-only focus: a crisp, contained ring — never the chunky default. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #000, 0 0 0 4px rgba(255, 255, 255, 0.9);
+}
+
+/* Slim, intentional scrollbar (not default chrome). */
+* { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.22) transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.16); border-radius: 999px; }
+*::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+  /* Everything interactive eases on the single curve — nothing snaps. */
+  a, button, [role="button"], input, select, textarea, summary, label, .press {
+    transition:
+      transform 280ms var(--ease-apple),
+      background-color 280ms var(--ease-apple),
+      border-color 280ms var(--ease-apple),
+      color 220ms var(--ease-apple),
+      box-shadow 280ms var(--ease-apple),
+      opacity 280ms var(--ease-apple),
+      filter 280ms var(--ease-apple);
+  }
+  /* Deliberate tactile press. */
+  button:not(:disabled):active,
+  [role="button"]:active,
+  .press:not(:disabled):active {
+    transform: scale(0.97);
+  }
+  /* Cards lift slightly on hover for weight. */
+  .lift { transition: transform 300ms var(--ease-apple), box-shadow 300ms var(--ease-apple); }
+  .lift:hover { transform: translateY(-2px); }
+}

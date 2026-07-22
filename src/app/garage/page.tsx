@@ -80,7 +80,7 @@ export default function GaragePage() {
 
             <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
               {cars.map((c) => (
-                <div key={c.id} className="reveal group relative overflow-hidden rounded-2xl border border-white/10 bg-card text-card-foreground">
+                <div key={c.id} className="reveal press lift group relative overflow-hidden rounded-2xl border border-white/10 bg-card text-card-foreground">
                   <button
                     onClick={() => remove(c.id)}
                     title="Remove"
