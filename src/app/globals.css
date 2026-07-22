@@ -11,12 +11,12 @@
   --color-rank-3: #d28a4a;
   --color-success-600: #16a34a;
 
-  /* Black & white only. Accent = white; "ink" = black text on white. */
-  --color-carz: #ffffff;
+  /* Black & white base + neon accents. */
+  --color-carz: #ffffff; /* primary accent stays clean white */
   --color-carz-ink: #000000;
-  --color-neon-blue: #ffffff;
-  --color-neon-green: #ffffff;
-  --color-neon-red: #ffffff;
+  --color-neon-blue: #00e5ff;
+  --color-neon-green: #39ff14;
+  --color-neon-red: #ff3131;
 }
 
 @theme inline {
