@@ -40,6 +40,10 @@ export default function HuntPage() {
               Hit the streets and spot the world&apos;s rarest cars. Find one on the wanted board and
               <span className="font-bold text-amber-300"> cash the bounty.</span>
             </p>
+
+            <div className="mx-auto mt-3 inline-flex items-center gap-2 rounded-full border border-amber-300/50 bg-amber-400/15 px-4 py-1.5 text-sm font-black text-amber-200">
+              🗓️ Starts August 25 · 11:00 AM ET
+            </div>
             <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-sm font-bold">
               <span className="rounded-full bg-black/40 px-4 py-1">
                 💰 Total pot: <span className="text-amber-300">{money(totalPot)}</span>
