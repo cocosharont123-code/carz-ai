@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import { SiteHeader } from "@/components/site-header";
 import { Avatar } from "@/components/default-avatar";
+import { Button, PageMasthead, Skeleton } from "@/components/ui/editorial";
 
 function downscale(dataUrl: string, max = 256, quality = 0.7): Promise<string> {
   return new Promise((resolve) => {
@@ -96,97 +97,75 @@ function ProfileInner() {
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto w-full max-w-md px-5 py-12">
-        <h1 className="text-3xl font-extrabold tracking-tight">
-          {existing ? "Edit your profile" : "Create your profile"}
-        </h1>
-        <p className="mt-1 text-muted-foreground">
-          {existing ? "Update your username and picture." : "Pick a username to start spotting. A profile picture is optional."}
-        </p>
+      <main className="mx-auto w-full max-w-lg px-5 py-10">
+        <PageMasthead eyebrow="Your account" title={existing ? "Edit" : "Profile"} />
 
         {loading ? (
-          <div className="mt-8 h-64 animate-pulse rounded-3xl bg-foreground/[0.04]" />
+          <Skeleton className="mt-8 h-64 w-full" />
         ) : authStatus === "unauthenticated" ? (
-          <div className="mt-8 rounded-3xl border border-foreground/[0.06] bg-card p-8 text-center">
-            <div className="text-4xl">🔑</div>
-            <h3 className="mt-3 text-lg font-bold">Sign in to set up your profile</h3>
+          <div className="mt-8 border border-white/10 bg-card p-10 text-center">
+            <h3 className="display text-3xl">Sign in</h3>
+            <p className="mx-auto mt-2 max-w-sm text-sm text-white/55">Set up your profile to appear on the board.</p>
             <button
               onClick={() => signIn("google", { callbackUrl: "/profile" })}
-              className="mt-4 rounded-xl bg-white px-5 py-2.5 font-semibold text-[#1f1f1f]"
+              className="mt-6 inline-flex bg-white px-5 py-2.5 font-semibold text-[#1f1f1f] transition hover:brightness-95"
             >
               Continue with Google
             </button>
           </div>
         ) : (
-          <div className="mt-8 space-y-6">
+          <div className="mt-8 space-y-7">
             {/* picture + preview */}
             <div className="flex items-center gap-4">
-              <Avatar src={image} size={80} rounded="1.25rem" />
-              <div className="space-y-2">
+              <Avatar src={image} size={80} rounded="0" />
+              <div>
                 <button
                   onClick={() => fileRef.current?.click()}
-                  className="rounded-xl border border-foreground/15 bg-foreground/[0.06] px-4 py-2 text-sm font-semibold hover:bg-foreground/[0.12]"
+                  className="util-label border border-white/20 px-4 py-2 text-white transition hover:border-carz hover:text-carz"
                 >
-                  {image ? "Change picture" : "Upload picture"}
+                  {image ? "Change" : "Upload"}
                 </button>
                 {image && (
-                  <button
-                    onClick={() => setImage("")}
-                    className="ml-2 text-sm text-muted-foreground hover:text-foreground"
-                  >
+                  <button onClick={() => setImage("")} className="util-label ml-3 text-white/40 hover:text-carz">
                     Remove
                   </button>
                 )}
-                <p className="text-xs text-muted-foreground">
-                  Optional — leave empty for the animated car avatar.
-                </p>
+                <p className="mt-2 text-xs text-white/45">Optional — empty gives the animated car avatar.</p>
               </div>
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickFile} />
             </div>
 
-            {/* username */}
             <div>
-              <label className="text-sm font-semibold">
-                Username <span className="text-rose-400">*</span>
-              </label>
-              <div className="mt-1 flex items-center rounded-xl border border-foreground/15 bg-foreground/[0.04] px-3">
-                <span className="text-muted-foreground">@</span>
+              <label className="util-label text-white/60">Username <span className="text-carz">*</span></label>
+              <div className="mt-2 flex items-center border border-white/15 bg-white/[0.03] px-3">
+                <span className="text-white/40">@</span>
                 <input
                   value={username}
                   onChange={(e) => setUsername(e.target.value.toLowerCase())}
                   placeholder="yourname"
                   maxLength={20}
-                  className="w-full bg-transparent px-1 py-2.5 text-sm outline-none"
+                  className="w-full bg-transparent px-1 py-3 text-sm text-white outline-none placeholder:text-white/30"
                 />
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">3–20 chars · letters, numbers, underscores.</p>
+              <p className="mt-1.5 text-xs text-white/40">3–20 chars · letters, numbers, underscores.</p>
             </div>
 
-            {/* display name */}
             <div>
-              <label className="text-sm font-semibold">Display name</label>
+              <label className="util-label text-white/60">Display name</label>
               <input
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="How your name shows (optional)"
                 maxLength={40}
-                className="mt-1 w-full rounded-xl border border-foreground/15 bg-foreground/[0.04] px-3 py-2.5 text-sm outline-none"
+                className="mt-2 w-full border border-white/15 bg-white/[0.03] px-3 py-3 text-sm text-white outline-none placeholder:text-white/30"
               />
             </div>
 
-            {error && (
-              <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-300">
-                {error}
-              </div>
-            )}
+            {error && <div className="border border-carz/40 bg-carz/10 p-3 text-sm text-carz">{error}</div>}
 
-            <button
-              onClick={save}
-              disabled={saving || username.trim().length < 3}
-              className="w-full rounded-xl bg-gradient-to-br from-sky-400 to-violet-500 py-3 font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-            >
+            <Button onClick={save} disabled={saving || username.trim().length < 3} size="lg" className="w-full">
               {saving ? "Saving…" : existing ? "Save changes" : "Create profile"}
-            </button>
+            </Button>
           </div>
         )}
       </main>
