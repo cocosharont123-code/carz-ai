@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { SiteHeader } from "@/components/site-header";
 import { WANTED, HUNT_RULE, getHunt, joinHunt, totalEarned, type HuntState } from "@/lib/hunt";
 import { Button, LiveDot } from "@/components/ui/editorial";
+import { MemberGate } from "@/components/member-gate";
 
 const money = (n: number) => "$" + n.toLocaleString("en-US");
 
@@ -28,7 +29,11 @@ export default function HuntPage() {
   const totalPot = WANTED.reduce((t, w) => t + w.bounty, 0);
 
   return (
-    <>
+    <MemberGate
+      icon="🏁"
+      title="Car Hunt is members-only"
+      blurb="Car Hunt Miami and its cash bounties are a Carz+ perk. Join to hit the neon streets and cash in."
+    >
       <SiteHeader />
       <main className="mx-auto w-full max-w-2xl px-5 py-8">
         {/* Neon Miami hero */}
@@ -138,6 +143,6 @@ export default function HuntPage() {
           <p className="util-label text-amber-300/80">Spot it live in the Hunt camera — camera roll doesn&apos;t count.</p>
         </div>
       </main>
-    </>
+    </MemberGate>
   );
 }

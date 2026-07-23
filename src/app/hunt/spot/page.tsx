@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
+import { MemberGate } from "@/components/member-gate";
 import { getHunt, claimCar, matchWanted, colorOk, totalEarned } from "@/lib/hunt";
 
 const money = (n: number) => "$" + n.toLocaleString("en-US");
@@ -21,6 +22,18 @@ type Result = {
 };
 
 export default function HuntSpotPage() {
+  return (
+    <MemberGate
+      icon="📸"
+      title="Hunt camera is members-only"
+      blurb="The live Hunt camera is a Carz+ perk. Join to snap wanted cars and claim their bounties."
+    >
+      <HuntSpotInner />
+    </MemberGate>
+  );
+}
+
+function HuntSpotInner() {
   const [joined, setJoined] = useState<boolean | null>(null);
   const [camOn, setCamOn] = useState(false);
   const [camError, setCamError] = useState("");
