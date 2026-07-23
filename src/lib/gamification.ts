@@ -37,34 +37,26 @@ function startYear(c: CarReport): number {
   const m = (c.yearRange || "").match(/\d{4}/g);
   return m ? Math.min(...m.map(Number)) : 0;
 }
+function zeroToSixty(c: CarReport): number {
+  const m = (c.zeroToSixty || "").match(/\d+(\.\d+)?/);
+  return m ? parseFloat(m[0]) : 0;
+}
 
+// Hard, aspirational daily goals — hypercars, exotic engines, extreme numbers.
 const GOAL_POOL: GoalDef[] = [
-  { id: "v175k", label: "Spot a car worth over $175,000", check: (c) => carValue(c) >= 175000 },
-  {
-    id: "suvv8",
-    label: "Spot an SUV with a V8 engine",
-    check: (c) => /suv|crossover/i.test(c.bodyStyle) && /v[\s-]?8|8[\s-]?cyl/i.test(c.engine),
-  },
-  { id: "hp500", label: "Spot a car with over 500 hp", check: (c) => bigNum(c.horsepower) >= 500 },
-  {
-    id: "conv",
-    label: "Spot a convertible",
-    check: (c) => /convertible|cabriolet|roadster|spider|spyder|drop[\s-]?top/i.test(c.bodyStyle),
-  },
-  {
-    id: "ev",
-    label: "Spot an electric car",
-    check: (c) => /electric|battery|\bev\b/i.test(c.engine) || /electric/i.test(c.drivetrain),
-  },
-  { id: "classic", label: "Spot a car older than 1995", check: (c) => startYear(c) > 0 && startYear(c) < 1995 },
-  { id: "german", label: "Spot a German car", check: (c) => /german|germany/i.test(c.countryOfOrigin) },
+  { id: "v1m", label: "Spot a car worth over $1,000,000", check: (c) => carValue(c) >= 1_000_000 },
+  { id: "v500k", label: "Spot a car worth over $500,000", check: (c) => carValue(c) >= 500_000 },
+  { id: "hyper2m", label: "Spot a hypercar worth $2,000,000+", check: (c) => carValue(c) >= 2_000_000 },
   { id: "v12", label: "Spot a car with a V12 engine", check: (c) => /v[\s-]?12|12[\s-]?cyl/i.test(c.engine) },
-  { id: "rare70", label: "Spot a rare car (rarity 70+)", check: (c) => (c.rarityScore || 0) >= 70 },
-  { id: "red", label: "Spot a red car", check: (c) => /\bred\b|crimson|scarlet|burgundy/i.test(c.color) },
-  { id: "truck", label: "Spot a pickup truck", check: (c) => /pick[\s-]?up|truck/i.test(c.bodyStyle) },
-  { id: "jdm", label: "Spot a Japanese car", check: (c) => /japan/i.test(c.countryOfOrigin) },
-  { id: "italian", label: "Spot an Italian car", check: (c) => /ital/i.test(c.countryOfOrigin) },
-  { id: "awd", label: "Spot an all-wheel-drive car", check: (c) => /awd|all[\s-]?wheel|4wd|quattro/i.test(c.drivetrain) },
+  { id: "v10", label: "Spot a car with a V10 engine", check: (c) => /v[\s-]?10|10[\s-]?cyl/i.test(c.engine) },
+  { id: "w16", label: "Spot a car with a W16 engine", check: (c) => /w[\s-]?16/i.test(c.engine) },
+  { id: "hp700", label: "Spot a car with over 700 hp", check: (c) => bigNum(c.horsepower) >= 700 },
+  { id: "hp1000", label: "Spot a car with over 1,000 hp", check: (c) => bigNum(c.horsepower) >= 1000 },
+  { id: "rare85", label: "Spot an extremely rare car (rarity 85+)", check: (c) => (c.rarityScore || 0) >= 85 },
+  { id: "ultra", label: "Spot an ultra-rare car (rarity 100+)", check: (c) => (c.rarityScore || 0) >= 100 },
+  { id: "sub3", label: "Spot a car that does 0–60 under 3.0s", check: (c) => { const z = zeroToSixty(c); return z > 0 && z <= 3.0; } },
+  { id: "top200", label: "Spot a car with a top speed over 200 mph", check: (c) => bigNum(c.topSpeed) >= 200 },
+  { id: "prewar70", label: "Spot a classic older than 1970", check: (c) => startYear(c) > 0 && startYear(c) < 1970 },
 ];
 
 // Deterministic per-day pick of two distinct goals.
