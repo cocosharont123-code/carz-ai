@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { WebGLShader } from "@/components/ui/web-gl-shader";
 import { LiquidButton } from "@/components/ui/liquid-glass-button";
 import { SiteHeader } from "@/components/site-header";
 
@@ -11,11 +10,7 @@ export function HomeHero() {
     <div className="relative w-full overflow-x-clip">
       <SiteHeader />
       <section className="relative isolate flex min-h-[88vh] w-full items-center justify-center overflow-hidden px-4">
-        {/* Black & white WebGL shader, contained so it never bleeds to the edges */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <WebGLShader />
-        </div>
-
+        {/* Neon shader is now the global page background (see layout). */}
         <div className="relative z-10 mx-auto w-full max-w-3xl rounded-3xl border border-white/15 p-2">
           <main className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/45 text-white py-12">
             <h1 className="wordmark mb-3 text-center text-7xl md:text-[clamp(3rem,10vw,8rem)]">Carz AI</h1>

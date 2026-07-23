@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "@/components/providers";
+import { GlobalShaderBg } from "@/components/global-shader-bg";
 
 // UI type is the Apple system font stack (no downloaded Google Fonts).
 
@@ -41,7 +42,10 @@ export default function RootLayout({
             __html: `try{localStorage.removeItem('theme');document.documentElement.classList.remove('light');document.documentElement.classList.add('dark');}catch(e){}`,
           }}
         />
-        <Providers>{children}</Providers>
+        <GlobalShaderBg />
+        <div className="relative z-10 flex min-h-full flex-1 flex-col">
+          <Providers>{children}</Providers>
+        </div>
       </body>
     </html>
   );
