@@ -9,6 +9,10 @@ export type Profile = {
   displayName: string;
   image: string; // base64 thumbnail, or "" for the animated default
   ts: number;
+  member?: boolean; // Carz+ membership
+  memberSince?: number;
+  streak?: number; // consecutive days active (members)
+  streakDay?: string; // YYYY-MM-DD of last streak increment
 };
 
 const PATH = "profiles.json";
@@ -89,6 +93,7 @@ export async function setProfile(
     typeof data.image === "string" && data.image.startsWith("data:") ? data.image.slice(0, 80_000) : all[myKey]?.image ?? "";
 
   const profile: Profile = {
+    ...all[myKey], // preserve membership + streak
     username: v.value,
     displayName: (data.displayName || "").trim().slice(0, 40) || v.value,
     image,
@@ -97,4 +102,50 @@ export async function setProfile(
   all[myKey] = profile;
   await writeAll(all);
   return { ok: true, profile };
+}
+
+// --- Carz+ membership + streaks ---
+
+export async function setMembership(email: string, on: boolean): Promise<Profile | null> {
+  const all = await readAll();
+  const key = keyFor(email);
+  const p = all[key];
+  if (!p) return null; // must have a profile (username) first
+  p.member = on;
+  if (on && !p.memberSince) p.memberSince = Date.now();
+  all[key] = p;
+  await writeAll(all);
+  return p;
+}
+
+function dayStr(offsetMs = 0): string {
+  return new Date(Date.now() - offsetMs).toISOString().slice(0, 10);
+}
+
+// Increment the member's day-streak once per day.
+export async function touchStreak(email: string): Promise<Profile | null> {
+  const all = await readAll();
+  const key = keyFor(email);
+  const p = all[key];
+  if (!p || !p.member) return p ?? null;
+  const today = dayStr();
+  if (p.streakDay === today) return p;
+  p.streak = p.streakDay === dayStr(86_400_000) ? (p.streak ?? 0) + 1 : 1;
+  p.streakDay = today;
+  all[key] = p;
+  await writeAll(all);
+  return p;
+}
+
+// Restore a lost streak (paid $0.99 — payment handled elsewhere).
+export async function restoreStreak(email: string, toValue: number): Promise<Profile | null> {
+  const all = await readAll();
+  const key = keyFor(email);
+  const p = all[key];
+  if (!p) return null;
+  p.streak = Math.max(p.streak ?? 0, Math.max(0, Math.round(toValue)));
+  p.streakDay = dayStr();
+  all[key] = p;
+  await writeAll(all);
+  return p;
 }

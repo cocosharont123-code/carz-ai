@@ -9,10 +9,12 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { href: "/spot", label: "Spot" },
   { href: "/auctions", label: "Auctions" },
+  { href: "/wishlist", label: "Wishlist" },
   { href: "/hunt", label: "Hunt", accent: true },
   { href: "/garage", label: "Garage" },
   { href: "/leaderboard", label: "Ranks" },
   { href: "/assistant", label: "Assistant" },
+  { href: "/membership", label: "Carz+", accent: true },
 ];
 
 export function SiteHeader() {

@@ -12,10 +12,15 @@ function fmtDate(ts: number): string {
 export default function GaragePage() {
   const [loading, setLoading] = useState(true);
   const [cars, setCars] = useState<GarageCar[]>([]);
+  const [member, setMember] = useState<boolean | null>(null);
 
   useEffect(() => {
     setCars(getGarage());
     setLoading(false);
+    fetch("/api/membership", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => setMember(!!d.member))
+      .catch(() => setMember(false));
   }, []);
 
   function remove(id: string) {
@@ -32,12 +37,31 @@ export default function GaragePage() {
   const uniqueModels = new Set(cars.map((c) => `${c.make} ${c.model}`.trim())).size;
   const rarest = cars.reduce<GarageCar | null>((best, c) => (!best || c.rarityScore > best.rarityScore ? c : best), null);
 
+  // Garage is a Carz+ member perk.
+  if (member === false) {
+    return (
+      <>
+        <SiteHeader />
+        <main className="mx-auto w-full max-w-lg px-5 py-16 text-center">
+          <div className="rounded-3xl border border-white/12 bg-card text-card-foreground p-10">
+            <div className="text-4xl">🏠</div>
+            <h1 className="display mt-3 text-3xl">Garage is members-only</h1>
+            <p className="mx-auto mt-2 max-w-sm text-[13px] opacity-70">
+              Your full spotting history lives in the Garage — a Carz+ perk. Join to unlock it.
+            </p>
+            <Button href="/membership" className="mt-6">Get Carz+ · $10/mo</Button>
+          </div>
+        </main>
+      </>
+    );
+  }
+
   return (
     <>
       <SiteHeader />
       <main className="mx-auto w-full max-w-4xl px-5 py-10">
         <PageMasthead
-          eyebrow="Your history · on this device"
+          eyebrow="Your history · members only"
           title="Garage"
           count={loading ? "—" : `${cars.length} spotted`}
           action={
@@ -49,7 +73,7 @@ export default function GaragePage() {
           }
         />
 
-        {loading ? (
+        {loading || member === null ? (
           <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
             {[0, 1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="overflow-hidden rounded-2xl border border-white/10 bg-card text-card-foreground">

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { Button, PageMasthead, CarPhoto, LiveDot, Skeleton } from "@/components/ui/editorial";
+import { WishlistButton } from "@/components/wishlist-button";
 
 type Auction = {
   id: string;
@@ -54,6 +55,7 @@ function AuctionCard({ a, now }: { a: Auction; now: number }) {
           {!tl.ended && <LiveDot />}
           <span className="util-label ">{tl.text}</span>
         </span>
+        <WishlistButton item={{ id: a.id, title: a.title, image: a.image, ts: 0 }} className="absolute right-3 top-3 z-10" />
       </div>
       <div className="flex flex-1 flex-col p-4">
         <p className="line-clamp-2 min-h-[2.5rem] text-sm font-semibold leading-snug ">{a.title}</p>
