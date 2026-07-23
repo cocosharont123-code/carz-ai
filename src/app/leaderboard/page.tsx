@@ -53,12 +53,12 @@ export default function LeaderboardPage() {
             ))}
           </div>
         ) : !configured ? (
-          <div className="mt-8 border border-white/10 bg-card text-card-foreground p-8 text-center">
+          <div className="mt-8 rounded-2xl border border-white/10 bg-card text-card-foreground p-8 text-center">
             <Eyebrow yellow className="justify-center">Warming up</Eyebrow>
             <p className="mt-2 text-sm ">The board is connecting its database. Check back in a moment.</p>
           </div>
         ) : cars.length === 0 ? (
-          <div className="mt-8 border border-white/10 bg-card text-card-foreground p-10 text-center">
+          <div className="mt-8 rounded-2xl border border-white/10 bg-card text-card-foreground p-10 text-center">
             <h3 className="display text-3xl">No cars yet</h3>
             <p className="mx-auto mt-2 max-w-sm text-sm ">
               The board is empty. Spot a rare car and claim the top slot.

@@ -72,7 +72,7 @@ export function LiveAuctions() {
 
   if (items.length === 0) {
     return (
-      <div className="border border-white/10 bg-card text-card-foreground p-10 text-center">
+      <div className="rounded-2xl border border-white/10 bg-card text-card-foreground p-10 text-center">
         <p className="util-label ">No live auctions right now</p>
         <p className="mt-2 text-sm ">Be the first — list a car and start a bidding war.</p>
         <Button href="/auctions/new" className="mt-5">

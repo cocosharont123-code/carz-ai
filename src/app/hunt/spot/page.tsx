@@ -204,7 +204,7 @@ export default function HuntSpotPage() {
               </div>
             )}
             {busy && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white text-sm font-semibold ">
+              <div className="absolute rounded-lg inset-0 flex items-center justify-center bg-black/50 text-white text-sm font-semibold ">
                 🔎 Identifying…
               </div>
             )}

@@ -58,7 +58,7 @@ export default function GaragePage() {
             ))}
           </div>
         ) : cars.length === 0 ? (
-          <div className="mt-8 border border-white/10 bg-card text-card-foreground p-10 text-center">
+          <div className="mt-8 rounded-2xl border border-white/10 bg-card text-card-foreground p-10 text-center">
             <h3 className="display text-3xl">Garage empty</h3>
             <p className="mx-auto mt-2 max-w-sm text-sm ">
               No spots yet. Identify a car and it lands here automatically.
@@ -84,14 +84,14 @@ export default function GaragePage() {
                   <button
                     onClick={() => remove(c.id)}
                     title="Remove"
-                    className="absolute right-2 top-2 z-10 hidden h-6 w-6 items-center justify-center bg-black/70 text-white text-xs  group-hover:flex hover:bg-carz "
+                    className="absolute rounded-lg right-2 top-2 z-10 hidden h-6 w-6 items-center justify-center bg-black/70 text-white text-xs  group-hover:flex hover:bg-carz "
                   >
                     ✕
                   </button>
                   <div className="relative aspect-square w-full overflow-hidden">
                     <CarPhoto src={c.image} alt={`${c.make} ${c.model}`} />
                     {c.rarityScore >= 70 && (
-                      <span className="absolute left-2 top-2 bg-carz px-1.5 py-0.5 util-label ">Rare</span>
+                      <span className="absolute left-2 top-2 rounded-md bg-carz px-1.5 py-0.5 util-label ">Rare</span>
                     )}
                   </div>
                   <div className="p-3">

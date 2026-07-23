@@ -50,7 +50,7 @@ function AuctionCard({ a, now }: { a: Auction; now: number }) {
     <Link href={`/auctions/${a.id}`} className="reveal press lift group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-card text-card-foreground transition-colors hover:border-white/25">
       <div className="relative aspect-[4/3] w-full overflow-hidden">
         <CarPhoto src={a.image} alt={a.title} />
-        <span className="absolute left-3 top-3 flex items-center gap-1.5 bg-black/70 text-white px-2 py-1">
+        <span className="absolute rounded-lg left-3 top-3 flex items-center gap-1.5 bg-black/70 text-white px-2 py-1">
           {!tl.ended && <LiveDot />}
           <span className="util-label ">{tl.text}</span>
         </span>
@@ -123,7 +123,7 @@ export default function AuctionsPage() {
             ))}
           </div>
         ) : items.length === 0 ? (
-          <div className="mt-10 border border-white/10 bg-card text-card-foreground p-12 text-center">
+          <div className="mt-10 rounded-2xl border border-white/10 bg-card text-card-foreground p-12 text-center">
             <h3 className="display text-4xl">No auctions live</h3>
             <p className="mx-auto mt-2 max-w-sm text-sm ">Be the first — list a car and start a bidding war.</p>
             <Button href="/auctions/new" className="mt-6">List your car</Button>
