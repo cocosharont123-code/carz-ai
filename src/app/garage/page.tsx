@@ -49,7 +49,7 @@ export default function GaragePage() {
             <p className="mx-auto mt-2 max-w-sm text-[13px] opacity-70">
               Your full spotting history lives in the Garage — a Carz+ perk. Join to unlock it.
             </p>
-            <Button href="/membership" className="mt-6">Get Carz+ · $10/mo</Button>
+            <Button href="/membership" className="mt-6">Get Carz+ · $9.99/mo</Button>
           </div>
         </main>
       </>

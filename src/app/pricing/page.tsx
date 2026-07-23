@@ -50,7 +50,7 @@ export default function PricingPage() {
     {
       planName: "Carz+",
       description: "The membership for serious spotters.",
-      price: "10",
+      price: "9.99",
       features: [
         "Unlimited car scans",
         "Wishlist auctions + car alerts",

@@ -29,7 +29,7 @@ export default function WishlistPage() {
             <p className="mx-auto mt-2 max-w-sm text-[13px] opacity-70">
               Save cars you love and get alerted when they&apos;re listed or sold — a Carz+ perk.
             </p>
-            <Button href="/pricing" className="mt-6">Get Carz+ · $10/mo</Button>
+            <Button href="/pricing" className="mt-6">Get Carz+ · $9.99/mo</Button>
           </div>
         </main>
       </>

@@ -95,7 +95,7 @@ export default function MembershipPage() {
             <>
               <p className="mt-2 text-sm">🔥 {s?.streak ?? 0}-day streak</p>
               <div className="mt-5 flex flex-col items-center gap-2">
-                <span className="rounded-full border border-white/15 px-4 py-1.5 text-xs">Active · $10/mo</span>
+                <span className="rounded-full border border-white/15 px-4 py-1.5 text-xs">Active · $9.99/mo</span>
                 <button onClick={restore} disabled={busy} className="press text-xs underline underline-offset-4 opacity-70 hover:opacity-100">
                   Lost your streak? Restore it for $0.99
                 </button>
@@ -104,7 +104,7 @@ export default function MembershipPage() {
           ) : (
             <>
               <p className="mx-auto mt-3 max-w-md text-sm">
-                <span className="display text-3xl">$10</span>
+                <span className="display text-3xl">$9.99</span>
                 <span className="opacity-70"> / month.</span> Cancel anytime.
               </p>
               <Button onClick={join} disabled={busy} size="lg" className="mt-5">
@@ -132,7 +132,7 @@ export default function MembershipPage() {
         {!member && (
           <div className="mt-8 flex flex-col items-center gap-3">
             <Button onClick={join} disabled={busy} size="lg">
-              {authStatus === "authenticated" ? "Join Carz+ · $10/mo" : "Sign in to join"}
+              {authStatus === "authenticated" ? "Join Carz+ · $9.99/mo" : "Sign in to join"}
             </Button>
             <Link href="/pricing" className="press util-label opacity-60 hover:opacity-100">
               See the full plan comparison →

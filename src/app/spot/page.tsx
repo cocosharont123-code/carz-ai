@@ -642,7 +642,7 @@ export default function SpotPage() {
             <p className="mx-auto mt-1 max-w-sm text-[13px] opacity-70">
               You&apos;ve used all 3 of today&apos;s free scans. Get Carz+ for unlimited scanning.
             </p>
-            <GlassButton href="/pricing" className="mt-4">Get Carz+ · $10/mo</GlassButton>
+            <GlassButton href="/pricing" className="mt-4">Get Carz+ · $9.99/mo</GlassButton>
           </div>
         )}
 
