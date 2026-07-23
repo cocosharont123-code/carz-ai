@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
+import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { Button, Card } from "@/components/ui/editorial";
 
@@ -129,10 +130,13 @@ export default function MembershipPage() {
         </div>
 
         {!member && (
-          <div className="mt-8 flex justify-center">
+          <div className="mt-8 flex flex-col items-center gap-3">
             <Button onClick={join} disabled={busy} size="lg">
               {authStatus === "authenticated" ? "Join Carz+ · $10/mo" : "Sign in to join"}
             </Button>
+            <Link href="/pricing" className="press util-label opacity-60 hover:opacity-100">
+              See the full plan comparison →
+            </Link>
           </div>
         )}
       </main>
