@@ -233,6 +233,7 @@
   letter-spacing: -0.02em;
   line-height: 1.15;
   font-variant-numeric: tabular-nums;
+  text-transform: uppercase;
 }
 .display.text-3xl,
 .display.text-4xl,
