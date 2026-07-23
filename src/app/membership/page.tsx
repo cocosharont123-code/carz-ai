@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
-import { Button, Card } from "@/components/ui/editorial";
+import { Button } from "@/components/ui/editorial";
 
 type Status = { signedIn: boolean; hasUsername?: boolean; member: boolean; memberSince?: number | null; streak: number };
 
@@ -119,13 +119,13 @@ export default function MembershipPage() {
         <h2 className="display mt-8 text-2xl">What you get</h2>
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           {PERKS.map((p) => (
-            <Card key={p.title} className="reveal press lift flex items-start gap-3 p-4">
+            <div key={p.title} className="glass-card reveal press lift flex items-start gap-3 rounded-2xl p-4">
               <div className="text-2xl">{p.icon}</div>
               <div>
                 <p className="text-[15px] font-semibold">{p.title}</p>
                 <p className="mt-0.5 text-[13px] opacity-70">{p.desc}</p>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
 
