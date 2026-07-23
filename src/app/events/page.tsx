@@ -23,9 +23,13 @@ const searchUrl = (e: Ev) =>
 export default function EventsPage() {
   return (
     <MemberGate
-      icon="📍"
-      title="Events are members-only"
-      blurb="Nearby luxury & sports car events are a Carz+ perk. Join to see what's happening around you."
+      title="Events"
+      blurb="Luxury and sports car events happening near you."
+      points={[
+        "Finds Cars & Coffee, concours, auctions, track days and meets around your location.",
+        "Automatically uses your city, or search any other city.",
+        "Each listing links straight to the details so you can plan to go.",
+      ]}
     >
       <EventsInner />
     </MemberGate>

@@ -24,9 +24,13 @@ type Result = {
 export default function HuntSpotPage() {
   return (
     <MemberGate
-      icon="📸"
-      title="Hunt camera is members-only"
-      blurb="The live Hunt camera is a Carz+ perk. Join to snap wanted cars and claim their bounties."
+      title="Hunt camera"
+      blurb="The live camera that turns a real spot into a paid bounty."
+      points={[
+        "Snap a wanted car live — camera-roll photos don't count.",
+        "The AI checks the car, its color, and that it's on a public road.",
+        "Match a bounty and claim your cash prize on the spot.",
+      ]}
     >
       <HuntSpotInner />
     </MemberGate>

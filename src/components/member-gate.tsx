@@ -6,18 +6,20 @@ import { Button } from "@/components/ui/editorial";
 
 /**
  * Wraps members-only content. Renders the children only for Carz+ members;
- * everyone else gets an upsell card. Mirrors the gate used on Garage/Wishlist.
+ * everyone else gets an explanation of the locked feature plus an upsell.
  */
 export function MemberGate({
   children,
-  icon = "🔒",
   title = "Members only",
   blurb,
+  points,
 }: {
   children: ReactNode;
-  icon?: string;
   title?: string;
+  /** One-line summary of what the feature is. */
   blurb: string;
+  /** What this locked feature actually does — explained for non-members. */
+  points?: string[];
 }) {
   const [member, setMember] = useState<boolean | null>(null);
 
@@ -43,11 +45,23 @@ export function MemberGate({
     return (
       <>
         <SiteHeader />
-        <main className="mx-auto w-full max-w-lg px-5 py-16 text-center">
-          <div className="glass-card rounded-3xl p-10">
-            <div className="text-4xl">{icon}</div>
-            <h1 className="display mt-3 text-3xl">{title}</h1>
+        <main className="mx-auto w-full max-w-lg px-5 py-16">
+          <div className="glass-card rounded-3xl p-8 text-center">
+            <div className="util-label text-carz">Carz+ members only</div>
+            <h1 className="display mt-2 text-3xl">{title}</h1>
             <p className="mx-auto mt-2 max-w-sm text-[13px] opacity-70">{blurb}</p>
+
+            {points && points.length > 0 && (
+              <ul className="mx-auto mt-5 max-w-sm space-y-2 text-left">
+                {points.map((p) => (
+                  <li key={p} className="flex items-start gap-2.5 text-[13px]">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-carz" />
+                    <span className="opacity-90">{p}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+
             <Button href="/pricing" className="mt-6">Get Carz+ · $9.99/mo</Button>
           </div>
         </main>

@@ -30,9 +30,13 @@ export default function HuntPage() {
 
   return (
     <MemberGate
-      icon="🏁"
-      title="Car Hunt is members-only"
-      blurb="Car Hunt Miami and its cash bounties are a Carz+ perk. Join to hit the neon streets and cash in."
+      title="Car Hunt"
+      blurb="A real-money scavenger hunt for the world's rarest cars."
+      points={[
+        "A wanted board of rare cars, each with a cash bounty.",
+        "Spot a wanted car in the wild and claim its bounty — the biggest are worth hundreds.",
+        "Verified winners get paid out through CashApp.",
+      ]}
     >
       <SiteHeader />
       <main className="mx-auto w-full max-w-2xl px-5 py-8">

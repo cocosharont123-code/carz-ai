@@ -7,20 +7,17 @@ import { Avatar } from "@/components/default-avatar";
 import { cn } from "@/lib/utils";
 
 // Split nav: Hunt / Assistant / Carz+ on the left, everything else on the right.
-// `memberOnly` links are hidden from non-members (Hunt, Events, Wishlist, Garage).
-type NavItem = { href: string; label: string; accent?: boolean; memberOnly?: boolean };
-
-const LEFT_NAV: NavItem[] = [
-  { href: "/hunt", label: "Hunt", accent: true, memberOnly: true },
+const LEFT_NAV = [
+  { href: "/hunt", label: "Hunt", accent: true },
   { href: "/assistant", label: "Assistant" },
   { href: "/pricing", label: "Carz+", accent: true },
 ];
-const RIGHT_NAV: NavItem[] = [
+const RIGHT_NAV = [
   { href: "/spot", label: "Spot" },
   { href: "/auctions", label: "Auctions" },
-  { href: "/events", label: "Events", memberOnly: true },
-  { href: "/wishlist", label: "Wishlist", memberOnly: true },
-  { href: "/garage", label: "Garage", memberOnly: true },
+  { href: "/events", label: "Events" },
+  { href: "/wishlist", label: "Wishlist" },
+  { href: "/garage", label: "Garage" },
   { href: "/leaderboard", label: "Ranks" },
 ];
 
@@ -38,33 +35,23 @@ function NavLink({ href, label, accent }: { href: string; label: string; accent?
 export function SiteHeader() {
   const { data: session } = useSession();
   const [profile, setProfile] = useState<{ username: string; image: string } | null>(null);
-  const [member, setMember] = useState(false);
 
   useEffect(() => {
     if (!session?.user) {
       setProfile(null);
-      setMember(false);
       return;
     }
     fetch("/api/profile")
       .then((r) => r.json())
       .then((d) => setProfile(d.profile ?? null))
       .catch(() => {});
-    fetch("/api/membership", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((d) => setMember(!!d.member))
-      .catch(() => {});
   }, [session]);
-
-  const canSee = (n: NavItem) => !n.memberOnly || member;
-  const leftNav = LEFT_NAV.filter(canSee);
-  const rightNav = RIGHT_NAV.filter(canSee);
 
   return (
     <header className="sticky top-0 z-50 grid grid-cols-[1fr_auto_1fr] items-center gap-3 border-b border-white/10 bg-black text-white px-4 py-3.5 shadow-[0_1px_0_rgba(255,255,255,0.06),0_12px_30px_-12px_rgba(0,0,0,0.9)]">
       {/* Left group */}
       <nav className="flex flex-wrap items-center justify-start gap-x-4 gap-y-1.5">
-        {leftNav.map((n) => (
+        {LEFT_NAV.map((n) => (
           <NavLink key={n.href} {...n} />
         ))}
       </nav>
@@ -77,7 +64,7 @@ export function SiteHeader() {
 
       {/* Right group + account */}
       <nav className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1.5">
-        {rightNav.map((n) => (
+        {RIGHT_NAV.map((n) => (
           <NavLink key={n.href} {...n} />
         ))}
         {session?.user ? (
