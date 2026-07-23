@@ -13,6 +13,8 @@ import {
 import { PLANS } from "@/lib/plans";
 import { identifyCar, IdentifyError } from "@/lib/identify";
 import { goalsForDate, evaluateGoals } from "@/lib/gamification";
+import { auth } from "@/auth";
+import { getProfile } from "@/lib/profile-blob";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -47,11 +49,19 @@ export async function POST(req: Request) {
   const effectivePlan = isPlanId(cookiePlan) ? cookiePlan : user.plan;
   const plan = PLANS[effectivePlan] ?? PLANS.free;
 
-  if (atLimitFor(effectivePlan, user)) {
+  // Carz+ members get unlimited scans; free is capped at the plan's daily limit.
+  const session = await auth();
+  let isMember = false;
+  if (session?.user?.email) {
+    const profile = await getProfile(session.user.email);
+    isMember = !!profile?.member;
+  }
+
+  if (!isMember && atLimitFor(effectivePlan, user)) {
     return NextResponse.json(
       {
         error: "limit_reached",
-        message: `You've hit your daily limit of ${plan.dailyLimit} on the ${plan.name} plan.`,
+        message: `You've used all ${plan.dailyLimit} free scans today. Get Carz+ for unlimited.`,
         status: planStatusFor(effectivePlan, user),
       },
       { status: 402 },

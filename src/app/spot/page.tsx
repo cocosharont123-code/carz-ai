@@ -16,6 +16,7 @@ import type { CarReport } from "@/lib/identify";
 type Status = {
   plan: string;
   planName: string;
+  member?: boolean;
   dailyLimit: number | null;
   usedToday: number;
   remainingToday: number | null;
@@ -370,6 +371,7 @@ export default function SpotPage() {
   const [car, setCar] = useState<CarReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [limitHit, setLimitHit] = useState(false);
   const [note, setNote] = useState("");
   const [isDragging, setIsDragging] = useState(false);
 
@@ -428,6 +430,7 @@ export default function SpotPage() {
       return;
     }
     setError("");
+    setLimitHit(false);
     setLoading(true);
     try {
       const raw = await objectUrlToDataUrl(previewUrl);
@@ -440,6 +443,11 @@ export default function SpotPage() {
         body: JSON.stringify({ image, note }),
       });
       const data = await res.json();
+      if (res.status === 402) {
+        setLimitHit(true);
+        if (data.status) setStatus((prev) => ({ ...(prev as Status), ...data.status }));
+        return;
+      }
       if (!res.ok) {
         setError(data.message || "Something went wrong.");
         return;
@@ -503,13 +511,21 @@ export default function SpotPage() {
       <main className="mx-auto w-full max-w-2xl px-5 py-14">
         <div className="util-label ">Scan · identify · save</div>
         <h1 className="display mt-3 text-7xl">Spot a car</h1>
-        <p className="mt-3 text-sm ">
-          Drop in a photo, then hit identify. Unlimited and free.
-        </p>
+        <p className="mt-3 text-sm ">Drop in a photo, then hit identify.</p>
 
         {status && (
           <p className="util-label mt-3 ">
-            <span className="">Unlimited</span> · {status.usedToday} today
+            {status.member ? (
+              <>Unlimited scans · {status.usedToday} today</>
+            ) : (
+              <>
+                {Math.max(0, (status.dailyLimit ?? 3) - status.usedToday)} of {status.dailyLimit ?? 3} free scans
+                left today ·{" "}
+                <Link href="/pricing" className="underline underline-offset-2">
+                  Get Carz+
+                </Link>
+              </>
+            )}
           </p>
         )}
 
@@ -619,8 +635,19 @@ export default function SpotPage() {
           </div>
         )}
 
+        {limitHit && (
+          <div className="mt-4 rounded-2xl border border-white/12 bg-card text-card-foreground p-6 text-center">
+            <div className="text-3xl">🚦</div>
+            <h3 className="display mt-2 text-2xl">Out of free scans</h3>
+            <p className="mx-auto mt-1 max-w-sm text-[13px] opacity-70">
+              You&apos;ve used all 3 of today&apos;s free scans. Get Carz+ for unlimited scanning.
+            </p>
+            <GlassButton href="/pricing" className="mt-4">Get Carz+ · $10/mo</GlassButton>
+          </div>
+        )}
+
         {/* Result */}
-        {car && (
+        {car && !limitHit && (
           <section className="mt-6 rounded-3xl border border-foreground/[0.05] bg-card text-card-foreground p-6">
             {car.isCar ? (
               <>

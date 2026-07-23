@@ -8,10 +8,33 @@ import { getWishlist, removeWish, type WishItem } from "@/lib/wishlist";
 
 export default function WishlistPage() {
   const [items, setItems] = useState<WishItem[] | null>(null);
+  const [member, setMember] = useState<boolean | null>(null);
 
   useEffect(() => {
     setItems(getWishlist());
+    fetch("/api/membership", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => setMember(!!d.member))
+      .catch(() => setMember(false));
   }, []);
+
+  if (member === false) {
+    return (
+      <>
+        <SiteHeader />
+        <main className="mx-auto w-full max-w-lg px-5 py-16 text-center">
+          <div className="rounded-3xl border border-white/12 bg-card text-card-foreground p-10">
+            <div className="text-4xl">🔒</div>
+            <h1 className="display mt-3 text-3xl">Wishlist is members-only</h1>
+            <p className="mx-auto mt-2 max-w-sm text-[13px] opacity-70">
+              Save cars you love and get alerted when they&apos;re listed or sold — a Carz+ perk.
+            </p>
+            <Button href="/pricing" className="mt-6">Get Carz+ · $10/mo</Button>
+          </div>
+        </main>
+      </>
+    );
+  }
 
   return (
     <>

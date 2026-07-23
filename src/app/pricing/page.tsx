@@ -40,9 +40,9 @@ export default function PricingPage() {
   const plans: PricingCardProps[] = [
     {
       planName: "Free",
-      description: "Everything you need to spot, identify and bid.",
+      description: "Get started spotting and bidding.",
       price: "0",
-      features: ["Unlimited AI car scans", "Wishlist any auction", "Live leaderboard", "Car Hunt events"],
+      features: ["3 car scans per day", "Bid on auctions", "Live leaderboard", "Car Hunt events"],
       buttonText: "Start spotting",
       buttonVariant: "secondary",
       onSelect: () => router.push("/spot"),
@@ -52,11 +52,11 @@ export default function PricingPage() {
       description: "The membership for serious spotters.",
       price: "10",
       features: [
+        "Unlimited car scans",
+        "Wishlist auctions + car alerts",
         "Auctions 24h early",
         "Members-only Garage",
         "Auto-bid + market-value insight",
-        "Car alerts & radius pings",
-        "Day streaks",
         "48h early access to new features",
       ],
       buttonText: busy ? "Joining…" : "Get Carz+",
