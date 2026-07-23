@@ -10,6 +10,9 @@ import {
 
 export const runtime = "nodejs";
 
+// Promo codes that unlock Carz+ for free. Matched case-insensitively.
+const PROMO_CODES = new Set(["carz+100"]);
+
 // GET → current membership + streak status.
 export async function GET() {
   const session = await auth();
@@ -41,7 +44,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "Set a username first.", needUsername: true }, { status: 400 });
   }
 
-  let body: { action?: string; restoreTo?: number };
+  let body: { action?: string; restoreTo?: number; code?: string };
   try {
     body = await req.json();
   } catch {
@@ -51,6 +54,15 @@ export async function POST(req: Request) {
   if (body.action === "restore") {
     const p = await restoreStreak(email, Number(body.restoreTo) || 0);
     return NextResponse.json({ ok: true, streak: p?.streak ?? 0 });
+  }
+
+  if (body.action === "redeem") {
+    const code = (body.code ?? "").trim().toLowerCase();
+    if (!PROMO_CODES.has(code)) {
+      return NextResponse.json({ ok: false, error: "That promo code isn't valid." }, { status: 400 });
+    }
+    const p = await setMembership(email, true);
+    return NextResponse.json({ ok: true, member: !!p?.member, promo: true, streak: p?.streak ?? 0 });
   }
 
   // Default: join Carz+.

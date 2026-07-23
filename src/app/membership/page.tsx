@@ -29,6 +29,8 @@ export default function MembershipPage() {
   const [s, setS] = useState<Status | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [code, setCode] = useState("");
+  const [promoError, setPromoError] = useState("");
 
   async function load() {
     const d = await fetch("/api/membership", { cache: "no-store" }).then((r) => r.json());
@@ -59,6 +61,38 @@ export default function MembershipPage() {
         setError(d.error || "Couldn't join.");
         return;
       }
+      await load();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function redeem() {
+    if (authStatus !== "authenticated") {
+      signIn("google", { callbackUrl: "/membership" });
+      return;
+    }
+    setPromoError("");
+    if (!code.trim()) {
+      setPromoError("Enter a promo code.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const d = await fetch("/api/membership", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "redeem", code }),
+      }).then((r) => r.json());
+      if (!d.ok) {
+        if (d.needUsername) {
+          router.push("/profile?next=/membership");
+          return;
+        }
+        setPromoError(d.error || "That promo code isn't valid.");
+        return;
+      }
+      setCode("");
       await load();
     } finally {
       setBusy(false);
@@ -111,6 +145,29 @@ export default function MembershipPage() {
                 {busy ? "…" : authStatus === "authenticated" ? "Join Carz+" : "Sign in to join"}
               </Button>
               {error && <p className="mt-2 text-sm text-nred">{error}</p>}
+
+              {/* Promo code */}
+              <div className="mx-auto mt-6 max-w-xs">
+                <div className="util-label opacity-60">Have a promo code?</div>
+                <div className="mt-2 flex gap-2">
+                  <input
+                    value={code}
+                    onChange={(e) => {
+                      setCode(e.target.value);
+                      setPromoError("");
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") redeem();
+                    }}
+                    placeholder="Enter code"
+                    className="w-full rounded-full border border-white/15 bg-white/[0.04] px-4 py-2.5 text-sm outline-none placeholder:opacity-40 focus:border-white/30"
+                  />
+                  <Button onClick={redeem} disabled={busy} size="md">
+                    Redeem
+                  </Button>
+                </div>
+                {promoError && <p className="mt-2 text-sm text-nred">{promoError}</p>}
+              </div>
             </>
           )}
         </div>
