@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { SiteHeader } from "@/components/site-header";
+import { MemberGate } from "@/components/member-gate";
 import { PageMasthead, Button, Skeleton } from "@/components/ui/editorial";
 
 type Ev = { name: string; type: string; venue?: string; city: string; when: string; note?: string };
@@ -20,6 +21,18 @@ const searchUrl = (e: Ev) =>
   `https://www.google.com/search?q=${encodeURIComponent(`${e.name} ${e.venue || ""} ${e.city} car event`)}`;
 
 export default function EventsPage() {
+  return (
+    <MemberGate
+      icon="📍"
+      title="Events are members-only"
+      blurb="Nearby luxury & sports car events are a Carz+ perk. Join to see what's happening around you."
+    >
+      <EventsInner />
+    </MemberGate>
+  );
+}
+
+function EventsInner() {
   const [events, setEvents] = useState<Ev[] | null>(null);
   const [place, setPlace] = useState("");
   const [query, setQuery] = useState("");
