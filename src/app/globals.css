@@ -365,3 +365,7 @@ body {
   .lift { transition: transform 300ms var(--ease-apple), box-shadow 300ms var(--ease-apple); }
   .lift:hover { transform: translateY(-2px); }
 }
+
+/* Token for RippleButton (multi-type-ripple-buttons). */
+:root { --button-ripple-color: oklch(0.145 0 0 / 0.3); }
+.dark { --button-ripple-color: oklch(0.985 0 0 / 0.5); }
