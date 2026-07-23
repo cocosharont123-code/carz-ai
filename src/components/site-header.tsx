@@ -15,6 +15,7 @@ const LEFT_NAV = [
 const RIGHT_NAV = [
   { href: "/spot", label: "Spot" },
   { href: "/auctions", label: "Auctions" },
+  { href: "/events", label: "Events" },
   { href: "/wishlist", label: "Wishlist" },
   { href: "/garage", label: "Garage" },
   { href: "/leaderboard", label: "Ranks" },
