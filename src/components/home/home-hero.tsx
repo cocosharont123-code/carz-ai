@@ -13,7 +13,7 @@ export function HomeHero() {
         {/* Neon shader is now the global page background (see layout). */}
         <div className="relative z-10 mx-auto w-full max-w-3xl rounded-3xl border border-white/15 p-2">
           <main className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/45 text-white py-12">
-            <h1 className="wordmark mb-3 text-center text-7xl md:text-[clamp(3rem,10vw,8rem)]">Carz AI</h1>
+            <h1 className="display mb-3 text-center text-7xl md:text-[clamp(3rem,10vw,8rem)]">Carz AI</h1>
             <p className="px-6 text-center text-xs  md:text-sm lg:text-lg">
               Snap any car and instantly know the make, model, year, value and rarity — then list it, bid on
               it, or hunt it for a bounty.
