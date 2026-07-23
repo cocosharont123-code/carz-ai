@@ -14,7 +14,7 @@ const NAV = [
   { href: "/garage", label: "Garage" },
   { href: "/leaderboard", label: "Ranks" },
   { href: "/assistant", label: "Assistant" },
-  { href: "/membership", label: "Carz+", accent: true },
+  { href: "/pricing", label: "Carz+", accent: true },
 ];
 
 export function SiteHeader() {
