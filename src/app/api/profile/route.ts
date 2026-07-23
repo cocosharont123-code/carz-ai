@@ -62,11 +62,22 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "invalid JSON" }, { status: 400 });
   }
 
-  const res = await setProfile(email, {
-    username: body.username || "",
-    displayName: body.displayName,
-    image: body.image,
-  });
+  let res;
+  try {
+    res = await setProfile(email, {
+      username: body.username || "",
+      displayName: body.displayName,
+      image: body.image,
+    });
+  } catch (e) {
+    // Never let a Blob/storage error surface as an opaque 500 (which the client
+    // reads as a generic "Network error"). Return the real reason instead.
+    console.error("profile save failed:", e);
+    return NextResponse.json(
+      { ok: false, error: "Couldn't save your profile right now. Please try again." },
+      { status: 500 },
+    );
+  }
   if (!res.ok) {
     return NextResponse.json({ ok: false, error: res.error }, { status: 400 });
   }

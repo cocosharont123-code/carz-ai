@@ -81,9 +81,9 @@ function ProfileInner() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, displayName, image }),
       });
-      const d = await res.json();
-      if (!d.ok) {
-        setError(d.error || "Couldn't save.");
+      const d = await res.json().catch(() => null);
+      if (!res.ok || !d?.ok) {
+        setError(d?.error || `Couldn't save (error ${res.status}). Please try again.`);
         return;
       }
       router.replace(next);

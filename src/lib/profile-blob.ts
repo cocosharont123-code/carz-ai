@@ -54,7 +54,9 @@ async function writeAll(map: Record<string, Profile>): Promise<void> {
     contentType: "application/json",
     allowOverwrite: true,
     addRandomSuffix: false,
-    cacheControlMaxAge: 0,
+    // Vercel Blob rejects a value below 60s. Reads already cache-bust with a
+    // `?t=` query + `no-store`, so the CDN TTL doesn't affect freshness.
+    cacheControlMaxAge: 60,
   });
 }
 

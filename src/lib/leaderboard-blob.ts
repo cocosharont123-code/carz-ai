@@ -54,7 +54,7 @@ async function writeBoard(cars: RareCar[]): Promise<void> {
     contentType: "application/json",
     allowOverwrite: true,
     addRandomSuffix: false,
-    cacheControlMaxAge: 0,
+    cacheControlMaxAge: 60,
   });
 }
 

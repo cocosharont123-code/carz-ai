@@ -57,7 +57,7 @@ async function writeClaims(claims: Claim[]): Promise<void> {
     contentType: "application/json",
     allowOverwrite: true,
     addRandomSuffix: false,
-    cacheControlMaxAge: 0,
+    cacheControlMaxAge: 60,
   });
 }
 
