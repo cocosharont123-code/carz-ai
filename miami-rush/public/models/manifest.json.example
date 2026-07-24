@@ -1,0 +1,8 @@
+{
+  "_comment": "Rename to manifest.json and drop the .glb files beside it to swap real glTF models in for the procedural cars. Missing entries fall back to procedural automatically. See ../../README.md for credited CC0/CC-BY sources.",
+  "player": { "url": "coupe.glb", "scale": 1.0, "credit": "e.g. Kenney Car Kit (CC0)" },
+  "sedan": { "url": "sedan.glb", "scale": 1.0, "credit": "" },
+  "suv": { "url": "suv.glb", "scale": 1.0, "credit": "" },
+  "taxi": { "url": "taxi.glb", "scale": 1.0, "credit": "" },
+  "van": { "url": "van.glb", "scale": 1.0, "credit": "" }
+}
