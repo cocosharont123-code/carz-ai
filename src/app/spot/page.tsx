@@ -643,6 +643,7 @@ export default function SpotPage() {
               You&apos;ve used all 3 of today&apos;s free scans. Get Carz+ for unlimited scanning.
             </p>
             <GlassButton href="/pricing" className="mt-4">Get Carz+ · $9.99/mo</GlassButton>
+            <p className="mt-3 text-xs opacity-60">or $80/year — save 33%</p>
           </div>
         )}
 
@@ -766,12 +767,38 @@ export default function SpotPage() {
           </section>
         )}
 
-        {/* Hotspots map */}
+        {/* Hotspots map — Carz+ members only */}
         <section className="mt-8">
           <h3 className="text-xl font-bold">🗺️ Car hotspots near you</h3>
-          <div className="mt-3">
-            <CarHotspotsMap />
-          </div>
+          {!status ? (
+            <div className="mt-3 h-40 animate-pulse rounded-3xl border border-white/10 bg-white/5" />
+          ) : status.member ? (
+            <div className="mt-3">
+              <CarHotspotsMap />
+            </div>
+          ) : (
+            <div className="glass-card mt-3 rounded-3xl p-8 text-center">
+              <div className="util-label text-carz">Carz+ members only</div>
+              <h4 className="display mt-2 text-2xl">The spotting map</h4>
+              <p className="mx-auto mt-2 max-w-sm text-[13px] opacity-70">
+                The live map of where to find cars near you — dealers, tuner shops, meets and tracks.
+              </p>
+              <ul className="mx-auto mt-5 max-w-sm space-y-2 text-left">
+                {[
+                  "See luxury dealers, tuner shops, car washes and race tracks around you.",
+                  "Auto-centers on your location and updates as you pan.",
+                  "Know exactly where to go to spot the rarest cars.",
+                ].map((p) => (
+                  <li key={p} className="flex items-start gap-2.5 text-[13px]">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-carz" />
+                    <span className="opacity-90">{p}</span>
+                  </li>
+                ))}
+              </ul>
+              <GlassButton href="/pricing" className="mt-6">Get Carz+ · $9.99/mo</GlassButton>
+              <p className="mt-3 text-xs opacity-60">or $80/year — save 33%</p>
+            </div>
+          )}
         </section>
       </main>
     </>

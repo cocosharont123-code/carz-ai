@@ -7,7 +7,16 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/editorial";
 
-type Status = { signedIn: boolean; hasUsername?: boolean; member: boolean; memberSince?: number | null; streak: number };
+type Status = {
+  signedIn: boolean;
+  hasUsername?: boolean;
+  member: boolean;
+  memberSince?: number | null;
+  billing?: "monthly" | "annual";
+  trialEndsAt?: number | null;
+  trialUsed?: boolean;
+  streak: number;
+};
 
 const PERKS: { icon: string; title: string; desc: string }[] = [
   { icon: "⏱", title: "Auctions 24h early", desc: "See and bid on every listing a full day before non-members." },
@@ -31,16 +40,18 @@ export default function MembershipPage() {
   const [error, setError] = useState("");
   const [code, setCode] = useState("");
   const [promoError, setPromoError] = useState("");
+  const [trialDaysLeft, setTrialDaysLeft] = useState(0);
 
   async function load() {
     const d = await fetch("/api/membership", { cache: "no-store" }).then((r) => r.json());
     setS(d);
+    setTrialDaysLeft(d?.trialEndsAt ? Math.max(0, Math.ceil((d.trialEndsAt - Date.now()) / 86_400_000)) : 0);
   }
   useEffect(() => {
     load();
   }, [authStatus]);
 
-  async function join() {
+  async function join(interval: "monthly" | "annual" = "monthly") {
     if (authStatus !== "authenticated") {
       signIn("google", { callbackUrl: "/membership" });
       return;
@@ -51,7 +62,7 @@ export default function MembershipPage() {
       const d = await fetch("/api/membership", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "join" }),
+        body: JSON.stringify({ action: "join", interval }),
       }).then((r) => r.json());
       if (!d.ok) {
         if (d.needUsername) {
@@ -59,6 +70,33 @@ export default function MembershipPage() {
           return;
         }
         setError(d.error || "Couldn't join.");
+        return;
+      }
+      await load();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function startTrial() {
+    if (authStatus !== "authenticated") {
+      signIn("google", { callbackUrl: "/membership" });
+      return;
+    }
+    setError("");
+    setBusy(true);
+    try {
+      const d = await fetch("/api/membership", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "trial" }),
+      }).then((r) => r.json());
+      if (!d.ok) {
+        if (d.needUsername) {
+          router.push("/profile?next=/membership");
+          return;
+        }
+        setError(d.error || "Couldn't start your trial.");
         return;
       }
       await load();
@@ -114,6 +152,8 @@ export default function MembershipPage() {
   }
 
   const member = !!s?.member;
+  const onTrial = member && !!s?.trialEndsAt;
+  const trialAvailable = !s?.trialUsed;
 
   return (
     <>
@@ -129,7 +169,15 @@ export default function MembershipPage() {
             <>
               <p className="mt-2 text-sm">🔥 {s?.streak ?? 0}-day streak</p>
               <div className="mt-5 flex flex-col items-center gap-2">
-                <span className="rounded-full border border-white/15 px-4 py-1.5 text-xs">Active · $9.99/mo</span>
+                {onTrial ? (
+                  <span className="rounded-full border border-carz/40 px-4 py-1.5 text-xs text-carz">
+                    Free trial · {trialDaysLeft} {trialDaysLeft === 1 ? "day" : "days"} left · then $9.99/mo
+                  </span>
+                ) : (
+                  <span className="rounded-full border border-white/15 px-4 py-1.5 text-xs">
+                    Active · {s?.billing === "annual" ? "$80/yr" : "$9.99/mo"}
+                  </span>
+                )}
                 <button onClick={restore} disabled={busy} className="press text-xs underline underline-offset-4 opacity-70 hover:opacity-100">
                   Lost your streak? Restore it for $0.99
                 </button>
@@ -137,13 +185,43 @@ export default function MembershipPage() {
             </>
           ) : (
             <>
-              <p className="mx-auto mt-3 max-w-md text-sm">
-                <span className="display text-3xl">$9.99</span>
-                <span className="opacity-70"> / month.</span> Cancel anytime.
-              </p>
-              <Button onClick={join} disabled={busy} size="lg" className="mt-5">
-                {busy ? "…" : authStatus === "authenticated" ? "Join Carz+" : "Sign in to join"}
-              </Button>
+              {trialAvailable ? (
+                <>
+                  <p className="mx-auto mt-3 max-w-md text-sm">
+                    <span className="display text-3xl">7 days free</span>
+                    <span className="opacity-70">, then $9.99 / month.</span> Cancel anytime.
+                  </p>
+                  <Button onClick={startTrial} disabled={busy} size="lg" className="mt-5">
+                    {busy ? "…" : authStatus === "authenticated" ? "Start 7-day free trial" : "Sign in to start free trial"}
+                  </Button>
+                  <button
+                    onClick={() => join("monthly")}
+                    disabled={busy}
+                    className="press mt-3 block text-xs underline underline-offset-4 opacity-60 hover:opacity-100"
+                  >
+                    Skip the trial — join now for $9.99/mo
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="mx-auto mt-3 max-w-md text-sm">
+                    <span className="display text-3xl">$9.99</span>
+                    <span className="opacity-70"> / month.</span> Cancel anytime.
+                  </p>
+                  <Button onClick={() => join("monthly")} disabled={busy} size="lg" className="mt-5">
+                    {busy ? "…" : authStatus === "authenticated" ? "Join Carz+" : "Sign in to join"}
+                  </Button>
+                </>
+              )}
+
+              {/* Annual option */}
+              <button
+                onClick={() => join("annual")}
+                disabled={busy}
+                className="press mt-3 block w-full text-xs opacity-70 hover:opacity-100"
+              >
+                Or get a year for <span className="font-semibold">$80</span> — save 33%
+              </button>
               {error && <p className="mt-2 text-sm text-nred">{error}</p>}
 
               {/* Promo code */}
@@ -188,8 +266,12 @@ export default function MembershipPage() {
 
         {!member && (
           <div className="mt-8 flex flex-col items-center gap-3">
-            <Button onClick={join} disabled={busy} size="lg">
-              {authStatus === "authenticated" ? "Join Carz+ · $9.99/mo" : "Sign in to join"}
+            <Button onClick={trialAvailable ? startTrial : () => join("monthly")} disabled={busy} size="lg">
+              {authStatus !== "authenticated"
+                ? "Sign in to join"
+                : trialAvailable
+                  ? "Start 7-day free trial"
+                  : "Join Carz+ · $9.99/mo"}
             </Button>
             <Link href="/pricing" className="press util-label opacity-60 hover:opacity-100">
               See the full plan comparison →

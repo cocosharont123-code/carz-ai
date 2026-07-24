@@ -11,9 +11,24 @@ export type Profile = {
   ts: number;
   member?: boolean; // Carz+ membership
   memberSince?: number;
+  billing?: "monthly" | "annual"; // paid billing interval (unset ≈ monthly)
+  trialEndsAt?: number; // set while on a free trial; membership lapses once passed
+  trialUsed?: boolean; // a free trial has been started before (one per account)
   streak?: number; // consecutive days active (members)
   streakDay?: string; // YYYY-MM-DD of last streak increment
 };
+
+// Length of the Carz+ free trial.
+export const TRIAL_DAYS = 7;
+const TRIAL_MS = TRIAL_DAYS * 86_400_000;
+
+// A profile counts as an active member if the flag is on and, when on a trial,
+// the trial hasn't lapsed. Paid membership has no trialEndsAt, so never expires.
+export function isActiveMember(p: Profile | null | undefined): boolean {
+  if (!p?.member) return false;
+  if (p.trialEndsAt && Date.now() >= p.trialEndsAt) return false;
+  return true;
+}
 
 const PATH = "profiles.json";
 
@@ -108,16 +123,54 @@ export async function setProfile(
 
 // --- Carz+ membership + streaks ---
 
-export async function setMembership(email: string, on: boolean): Promise<Profile | null> {
+export async function setMembership(
+  email: string,
+  on: boolean,
+  interval?: "monthly" | "annual",
+): Promise<Profile | null> {
   const all = await readAll();
   const key = keyFor(email);
   const p = all[key];
   if (!p) return null; // must have a profile (username) first
   p.member = on;
-  if (on && !p.memberSince) p.memberSince = Date.now();
+  if (on) {
+    if (!p.memberSince) p.memberSince = Date.now();
+    if (interval) p.billing = interval;
+    delete p.trialEndsAt; // paid membership never expires
+  }
   all[key] = p;
   await writeAll(all);
   return p;
+}
+
+// Usernames (lowercased) of everyone currently holding active Carz+ membership.
+// Used to badge spotters on the shared leaderboard.
+export async function memberUsernames(): Promise<Set<string>> {
+  const all = await readAll();
+  const set = new Set<string>();
+  for (const p of Object.values(all)) {
+    if (p.username && isActiveMember(p)) set.add(p.username.toLowerCase());
+  }
+  return set;
+}
+
+// Start the one-time 7-day free trial. Grants membership until trialEndsAt.
+export async function startTrial(
+  email: string,
+): Promise<{ ok: boolean; error?: string; profile?: Profile }> {
+  const all = await readAll();
+  const key = keyFor(email);
+  const p = all[key];
+  if (!p) return { ok: false, error: "Set a username first." };
+  if (isActiveMember(p)) return { ok: false, error: "You're already a Carz+ member." };
+  if (p.trialUsed) return { ok: false, error: "You've already used your free trial." };
+  p.member = true;
+  p.trialUsed = true;
+  p.trialEndsAt = Date.now() + TRIAL_MS;
+  if (!p.memberSince) p.memberSince = Date.now();
+  all[key] = p;
+  await writeAll(all);
+  return { ok: true, profile: p };
 }
 
 function dayStr(offsetMs = 0): string {
@@ -129,7 +182,7 @@ export async function touchStreak(email: string): Promise<Profile | null> {
   const all = await readAll();
   const key = keyFor(email);
   const p = all[key];
-  if (!p || !p.member) return p ?? null;
+  if (!p || !isActiveMember(p)) return p ?? null;
   const today = dayStr();
   if (p.streakDay === today) return p;
   p.streak = p.streakDay === dayStr(86_400_000) ? (p.streak ?? 0) + 1 : 1;

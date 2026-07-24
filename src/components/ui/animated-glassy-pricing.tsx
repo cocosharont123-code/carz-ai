@@ -155,6 +155,7 @@ export interface PricingCardProps {
   planName: string;
   description: string;
   price: string;
+  interval?: string;
   features: string[];
   buttonText: string;
   isPopular?: boolean;
@@ -163,7 +164,7 @@ export interface PricingCardProps {
 }
 
 export const PricingCard = ({
-  planName, description, price, features, buttonText, isPopular = false, buttonVariant = 'primary', onSelect
+  planName, description, price, interval = 'mo', features, buttonText, isPopular = false, buttonVariant = 'primary', onSelect
 }: PricingCardProps) => {
   const cardClasses = `
     backdrop-blur-[14px] bg-gradient-to-br rounded-2xl shadow-xl flex-1 max-w-xs px-7 py-8 flex flex-col transition-all duration-300
@@ -192,7 +193,7 @@ export const PricingCard = ({
       </div>
       <div className="my-6 flex items-baseline gap-2">
         <span className="text-[48px] font-extralight text-foreground font-display">${price}</span>
-        <span className="text-[14px] text-foreground/70 font-sans">/mo</span>
+        <span className="text-[14px] text-foreground/70 font-sans">/{interval}</span>
       </div>
       <div className="card-divider w-full mb-5 h-px bg-[linear-gradient(90deg,transparent,rgba(0,0,0,0.1)_50%,transparent)] dark:bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.09)_20%,rgba(255,255,255,0.22)_50%,rgba(255,255,255,0.09)_80%,transparent)]"></div>
       <ul className="flex flex-col gap-2 text-[14px] text-foreground/90 mb-6 font-sans">
@@ -214,6 +215,7 @@ interface ModernPricingPageProps {
   title: React.ReactNode;
   subtitle: React.ReactNode;
   plans: PricingCardProps[];
+  headerExtra?: React.ReactNode;
   showAnimatedBackground?: boolean;
 }
 
@@ -221,6 +223,7 @@ export const ModernPricingPage = ({
   title,
   subtitle,
   plans,
+  headerExtra,
   showAnimatedBackground = true,
 }: ModernPricingPageProps) => {
   return (
@@ -234,6 +237,7 @@ export const ModernPricingPage = ({
           <p className="mt-3 text-[16px] md:text-[20px] text-foreground/80 max-w-2xl mx-auto font-sans">
             {subtitle}
           </p>
+          {headerExtra && <div className="mt-6 flex justify-center">{headerExtra}</div>}
         </div>
         <div className="flex flex-col md:flex-row gap-8 md:gap-6 justify-center items-center w-full max-w-4xl">
           {plans.map((plan) => <PricingCard key={plan.planName} {...plan} />)}

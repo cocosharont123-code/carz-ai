@@ -17,6 +17,7 @@ type RareCar = {
   image?: string;
   spotter: string;
   spotterImage?: string;
+  spotterMember?: boolean; // spotter is a current Carz+ member
   ts: number;
 };
 
@@ -100,6 +101,11 @@ export default function LeaderboardPage() {
                     <p className="mt-0.5 flex items-center gap-1.5 truncate text-xs">
                       <Avatar src={c.spotterImage} size={15} />
                       <span className={cn("truncate", ultra ? "" : "")}>{c.spotter}</span>
+                      {c.spotterMember && (
+                        <span className="inline-flex shrink-0 items-center rounded-full bg-gradient-to-b from-amber-200 to-yellow-500 px-1.5 py-0.5 text-[9px] font-bold uppercase leading-none tracking-wide text-black shadow-[0_0_8px_rgba(250,204,21,0.35)] ring-1 ring-amber-300/60">
+                          Carz+
+                        </span>
+                      )}
                     </p>
                   </div>
                   <div className="text-right">

@@ -4,7 +4,7 @@ import { getUserId, getUser, planStatusFor, recentHistory, UID_COOKIE, PLAN_COOK
 import { PLANS } from "@/lib/plans";
 import { badgesFor, goalsForDate } from "@/lib/gamification";
 import { auth } from "@/auth";
-import { getProfile } from "@/lib/profile-blob";
+import { getProfile, isActiveMember } from "@/lib/profile-blob";
 
 export const runtime = "nodejs";
 
@@ -23,7 +23,7 @@ export async function GET() {
   let member = false;
   if (session?.user?.email) {
     const profile = await getProfile(session.user.email);
-    member = !!profile?.member;
+    member = isActiveMember(profile);
   }
 
   const today = new Date().toISOString().slice(0, 10);

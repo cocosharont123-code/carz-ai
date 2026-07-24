@@ -63,6 +63,7 @@ export function MemberGate({
             )}
 
             <Button href="/pricing" className="mt-6">Get Carz+ · $9.99/mo</Button>
+            <p className="mt-3 text-xs opacity-60">or $80/year — save 33%</p>
           </div>
         </main>
       </>

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { readBoard, recordRareSpot, leaderboardConfigured } from "@/lib/leaderboard-blob";
-import { getProfile } from "@/lib/profile-blob";
+import { getProfile, memberUsernames } from "@/lib/profile-blob";
 
 export const runtime = "nodejs";
 
@@ -10,7 +10,13 @@ export async function GET() {
     return NextResponse.json({ configured: false, cars: [] });
   }
   const cars = await readBoard();
-  return NextResponse.json({ configured: true, cars });
+  // Flag which spotters are current Carz+ members so the board can badge them.
+  const members = await memberUsernames();
+  const withMembership = cars.map((c) => ({
+    ...c,
+    spotterMember: c.spotter.startsWith("@") && members.has(c.spotter.slice(1).toLowerCase()),
+  }));
+  return NextResponse.json({ configured: true, cars: withMembership });
 }
 
 export async function POST(req: Request) {

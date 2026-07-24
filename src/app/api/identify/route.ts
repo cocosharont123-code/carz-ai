@@ -14,7 +14,7 @@ import { PLANS } from "@/lib/plans";
 import { identifyCar, IdentifyError } from "@/lib/identify";
 import { goalsForDate, evaluateGoals } from "@/lib/gamification";
 import { auth } from "@/auth";
-import { getProfile } from "@/lib/profile-blob";
+import { getProfile, isActiveMember } from "@/lib/profile-blob";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
   let isMember = false;
   if (session?.user?.email) {
     const profile = await getProfile(session.user.email);
-    isMember = !!profile?.member;
+    isMember = isActiveMember(profile);
   }
 
   if (!isMember && atLimitFor(effectivePlan, user)) {

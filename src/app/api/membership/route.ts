@@ -3,8 +3,10 @@ import { auth } from "@/auth";
 import {
   getProfile,
   setMembership,
+  startTrial,
   touchStreak,
   restoreStreak,
+  isActiveMember,
   profilesConfigured,
 } from "@/lib/profile-blob";
 
@@ -22,11 +24,15 @@ export async function GET() {
   }
   // Bump the streak on visit (members only), then report.
   const p = (await touchStreak(email)) ?? (await getProfile(email));
+  const active = isActiveMember(p);
   return NextResponse.json({
     signedIn: true,
     hasUsername: !!p?.username,
-    member: !!p?.member,
+    member: active,
     memberSince: p?.memberSince ?? null,
+    billing: p?.billing ?? "monthly",
+    trialEndsAt: active && p?.trialEndsAt ? p.trialEndsAt : null,
+    trialUsed: !!p?.trialUsed,
     streak: p?.streak ?? 0,
   });
 }
@@ -44,7 +50,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "Set a username first.", needUsername: true }, { status: 400 });
   }
 
-  let body: { action?: string; restoreTo?: number; code?: string };
+  let body: { action?: string; restoreTo?: number; code?: string; interval?: string };
   try {
     body = await req.json();
   } catch {
@@ -56,6 +62,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, streak: p?.streak ?? 0 });
   }
 
+  if (body.action === "trial") {
+    const r = await startTrial(email);
+    if (!r.ok) {
+      return NextResponse.json({ ok: false, error: r.error }, { status: 400 });
+    }
+    return NextResponse.json({
+      ok: true,
+      member: true,
+      trial: true,
+      trialEndsAt: r.profile?.trialEndsAt ?? null,
+      streak: r.profile?.streak ?? 0,
+    });
+  }
+
   if (body.action === "redeem") {
     const code = (body.code ?? "").trim().toLowerCase();
     if (!PROMO_CODES.has(code)) {
@@ -65,7 +85,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, member: !!p?.member, promo: true, streak: p?.streak ?? 0 });
   }
 
-  // Default: join Carz+.
-  const p = await setMembership(email, true);
-  return NextResponse.json({ ok: true, member: !!p?.member, streak: p?.streak ?? 0 });
+  // Default: join Carz+ on the chosen billing interval (monthly or annual).
+  const interval = body.interval === "annual" ? "annual" : "monthly";
+  const p = await setMembership(email, true, interval);
+  return NextResponse.json({ ok: true, member: !!p?.member, billing: p?.billing ?? "monthly", streak: p?.streak ?? 0 });
 }
