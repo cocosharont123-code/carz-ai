@@ -82,7 +82,9 @@ export function createPostFX(
   composer.addPass(vig);
 
   if (profile.postProcessing) {
-    const smaa = new SMAAPass(size.x, size.y);
+    // SMAAPass sizes itself from the composer in current three.js (no ctor args).
+    const smaa = new SMAAPass();
+    smaa.setSize(size.x, size.y);
     composer.addPass(smaa);
   }
 
