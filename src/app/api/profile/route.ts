@@ -70,11 +70,13 @@ export async function POST(req: Request) {
       image: body.image,
     });
   } catch (e) {
-    // Never let a Blob/storage error surface as an opaque 500 (which the client
-    // reads as a generic "Network error"). Return the real reason instead.
+    // Surface the real storage reason (e.g. missing/expired BLOB_READ_WRITE_TOKEN
+    // or a disconnected Blob store) so "account making" failures are diagnosable
+    // instead of hiding behind a generic message.
     console.error("profile save failed:", e);
+    const detail = e instanceof Error ? e.message : String(e);
     return NextResponse.json(
-      { ok: false, error: "Couldn't save your profile right now. Please try again." },
+      { ok: false, error: `Couldn't save your profile: ${detail}`, detail },
       { status: 500 },
     );
   }
