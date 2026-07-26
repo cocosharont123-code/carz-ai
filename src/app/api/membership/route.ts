@@ -9,11 +9,9 @@ import {
   isActiveMember,
   profilesConfigured,
 } from "@/lib/profile-blob";
+import { lookupPromo } from "@/lib/promos";
 
 export const runtime = "nodejs";
-
-// Promo codes that unlock Carz+ for free. Matched case-insensitively.
-const PROMO_CODES = new Set(["carz+100"]);
 
 // GET → current membership + streak status.
 export async function GET() {
@@ -77,12 +75,17 @@ export async function POST(req: Request) {
   }
 
   if (body.action === "redeem") {
-    const code = (body.code ?? "").trim().toLowerCase();
-    if (!PROMO_CODES.has(code)) {
+    const promo = lookupPromo(body.code ?? "");
+    if (!promo) {
       return NextResponse.json({ ok: false, error: "That promo code isn't valid." }, { status: 400 });
     }
-    const p = await setMembership(email, true);
-    return NextResponse.json({ ok: true, member: !!p?.member, promo: true, streak: p?.streak ?? 0 });
+    // 100%-off codes unlock Carz+ outright; partial codes only discount the
+    // price, so the member still joins (at the reduced rate) to activate.
+    if (promo.percentOff >= 100) {
+      const p = await setMembership(email, true);
+      return NextResponse.json({ ok: true, member: !!p?.member, promo: true, percentOff: 100, streak: p?.streak ?? 0 });
+    }
+    return NextResponse.json({ ok: true, member: false, promo: true, percentOff: promo.percentOff, discountOnly: true });
   }
 
   // Default: join Carz+ on the chosen billing interval (monthly or annual).

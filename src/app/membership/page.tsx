@@ -130,6 +130,15 @@ export default function MembershipPage() {
         setPromoError(d.error || "That promo code isn't valid.");
         return;
       }
+      // Partial-discount codes don't grant membership on their own — activate at
+      // the reduced rate by joining with the code applied.
+      if (d.discountOnly) {
+        await fetch("/api/membership", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "join", interval: s?.billing === "annual" ? "annual" : "monthly", code }),
+        });
+      }
       setCode("");
       await load();
     } finally {

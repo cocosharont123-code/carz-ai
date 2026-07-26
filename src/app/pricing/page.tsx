@@ -6,12 +6,16 @@ import { signIn, useSession } from "next-auth/react";
 import { SiteHeader } from "@/components/site-header";
 import { ModernPricingPage, type PricingCardProps } from "@/components/ui/animated-glassy-pricing";
 import { cn } from "@/lib/utils";
+import { applyDiscount, formatPrice, lookupPromo, type Promo } from "@/lib/promos";
 
 export default function PricingPage() {
   const router = useRouter();
   const { status } = useSession();
   const [busy, setBusy] = useState(false);
   const [annual, setAnnual] = useState(false);
+  const [promoInput, setPromoInput] = useState("");
+  const [promo, setPromo] = useState<Promo | null>(null);
+  const [promoError, setPromoError] = useState("");
 
   function post(body: Record<string, unknown>) {
     return fetch("/api/membership", {
@@ -20,6 +24,28 @@ export default function PricingPage() {
       body: JSON.stringify(body),
     }).then((r) => r.json());
   }
+
+  function applyPromo() {
+    const found = lookupPromo(promoInput);
+    if (!found) {
+      setPromo(null);
+      setPromoError("That promo code isn't valid.");
+      return;
+    }
+    setPromo(found);
+    setPromoError("");
+  }
+
+  function removePromo() {
+    setPromo(null);
+    setPromoInput("");
+    setPromoError("");
+  }
+
+  const basePrice = annual ? 80 : 9.99;
+  const finalPrice = promo ? applyDiscount(basePrice, promo.percentOff) : basePrice;
+  const priceStr = formatPrice(finalPrice);
+  const isFree = promo?.percentOff === 100;
 
   async function joinCarzPlus() {
     if (busy) return;
@@ -30,19 +56,22 @@ export default function PricingPage() {
     setBusy(true);
     try {
       let d;
-      if (annual) {
-        // Annual is a direct purchase.
-        d = await post({ action: "join", interval: "annual" });
+      if (isFree) {
+        // 100%-off code unlocks Carz+ outright.
+        d = await post({ action: "redeem", code: promo!.code });
+      } else if (annual) {
+        // Annual is a direct purchase (at the promo rate, if any).
+        d = await post({ action: "join", interval: "annual", code: promo?.code });
       } else {
         // Monthly starts the free trial; fall back to joining if already used.
         d = await post({ action: "trial" });
-        if (!d?.ok && !d?.needUsername) d = await post({ action: "join", interval: "monthly" });
+        if (!d?.ok && !d?.needUsername) d = await post({ action: "join", interval: "monthly", code: promo?.code });
       }
       if (d?.needUsername) {
         router.push("/profile?next=/pricing");
         return;
       }
-      // Started trial / joined — send them to their member area.
+      // Redeemed / started trial / joined — send them to their member area.
       router.push("/membership");
     } catch {
       /* ignore */
@@ -50,6 +79,16 @@ export default function PricingPage() {
       setBusy(false);
     }
   }
+
+  const carzButtonText = busy
+    ? "Starting…"
+    : isFree
+      ? "Redeem — Carz+ free"
+      : promo
+        ? `Get Carz+ · $${priceStr}${annual ? "/yr" : "/mo"}`
+        : annual
+          ? "Get annual · $80/yr"
+          : "Start free trial";
 
   const plans: PricingCardProps[] = [
     {
@@ -64,10 +103,14 @@ export default function PricingPage() {
     {
       planName: "Carz+",
       description: "The membership for serious spotters.",
-      price: annual ? "80" : "9.99",
+      price: priceStr,
       interval: annual ? "yr" : "mo",
       features: [
-        annual ? "Billed $80/year — save 33%" : "7-day free trial, then $9.99/mo",
+        promo
+          ? `${promo.code.toUpperCase()} applied — ${promo.percentOff}% off${isFree ? " (free)" : `, was $${formatPrice(basePrice)}`}`
+          : annual
+            ? "Billed $80/year — save 33%"
+            : "7-day free trial, then $9.99/mo",
         "Unlimited car scans",
         "Wishlist auctions + car alerts",
         "Auctions 24h early",
@@ -75,27 +118,64 @@ export default function PricingPage() {
         "Auto-bid + market-value insight",
         "48h early access to new features",
       ],
-      buttonText: busy ? "Starting…" : annual ? "Get annual · $80/yr" : "Start free trial",
+      buttonText: carzButtonText,
       isPopular: true,
       buttonVariant: "primary",
       onSelect: joinCarzPlus,
     },
   ];
 
-  const billingToggle = (
-    <div className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/5 p-1 text-sm backdrop-blur">
-      <button
-        onClick={() => setAnnual(false)}
-        className={cn("press rounded-full px-4 py-1.5 font-medium transition", !annual ? "bg-cyan-400 text-black" : "text-foreground/70 hover:text-foreground")}
-      >
-        Monthly
-      </button>
-      <button
-        onClick={() => setAnnual(true)}
-        className={cn("press rounded-full px-4 py-1.5 font-medium transition", annual ? "bg-cyan-400 text-black" : "text-foreground/70 hover:text-foreground")}
-      >
-        Annual <span className="opacity-70">· save 33%</span>
-      </button>
+  const header = (
+    <div className="flex flex-col items-center gap-4">
+      <div className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/5 p-1 text-sm backdrop-blur">
+        <button
+          onClick={() => setAnnual(false)}
+          className={cn("press rounded-full px-4 py-1.5 font-medium transition", !annual ? "bg-cyan-400 text-black" : "text-foreground/70 hover:text-foreground")}
+        >
+          Monthly
+        </button>
+        <button
+          onClick={() => setAnnual(true)}
+          className={cn("press rounded-full px-4 py-1.5 font-medium transition", annual ? "bg-cyan-400 text-black" : "text-foreground/70 hover:text-foreground")}
+        >
+          Annual <span className="opacity-70">· save 33%</span>
+        </button>
+      </div>
+
+      {/* Promo code slot */}
+      {promo ? (
+        <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/40 bg-cyan-400/10 px-3 py-1.5 text-sm text-cyan-300">
+          <span className="font-semibold uppercase tracking-wide">{promo.code}</span>
+          <span className="opacity-80">· {promo.percentOff}% off applied</span>
+          <button onClick={removePromo} className="press ml-1 opacity-70 hover:opacity-100" aria-label="Remove promo code">
+            &times;
+          </button>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center gap-1">
+          <div className="flex items-center gap-2">
+            <input
+              value={promoInput}
+              onChange={(e) => {
+                setPromoInput(e.target.value);
+                setPromoError("");
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") applyPromo();
+              }}
+              placeholder="Promo code"
+              className="w-40 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-sm outline-none placeholder:text-foreground/40 focus:border-white/40"
+            />
+            <button
+              onClick={applyPromo}
+              className="press rounded-full border border-white/20 px-4 py-1.5 text-sm font-medium text-foreground/80 transition hover:border-white/40 hover:text-foreground"
+            >
+              Apply
+            </button>
+          </div>
+          {promoError && <p className="text-xs text-[color:var(--coral,#ff5a5f)]">{promoError}</p>}
+        </div>
+      )}
     </div>
   );
 
@@ -110,7 +190,7 @@ export default function PricingPage() {
         }
         subtitle="Start free. Upgrade to Carz+ for early auctions, auto-bid, alerts and more."
         plans={plans}
-        headerExtra={billingToggle}
+        headerExtra={header}
         showAnimatedBackground
       />
     </>
