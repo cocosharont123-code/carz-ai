@@ -1,5 +1,6 @@
 import { put, list } from "@vercel/blob";
 import { createHash } from "crypto";
+import { blobToken, blobConfigured } from "./blob-token";
 
 // User profiles (username + display name + picture), stored in Vercel Blob.
 // Keyed by a hash of the email so raw emails never land in the public blob.
@@ -33,7 +34,7 @@ export function isActiveMember(p: Profile | null | undefined): boolean {
 const PATH = "profiles.json";
 
 export function profilesConfigured(): boolean {
-  return !!process.env.BLOB_READ_WRITE_TOKEN;
+  return blobConfigured();
 }
 
 function keyFor(email: string): string {
@@ -42,7 +43,7 @@ function keyFor(email: string): string {
 
 async function currentUrl(): Promise<string | null> {
   try {
-    const { blobs } = await list({ prefix: PATH });
+    const { blobs } = await list({ prefix: PATH, token: blobToken() });
     const hit = blobs.find((b) => b.pathname === PATH) ?? blobs[0];
     return hit?.url ?? null;
   } catch {
@@ -69,6 +70,7 @@ async function writeAll(map: Record<string, Profile>): Promise<void> {
     contentType: "application/json",
     allowOverwrite: true,
     addRandomSuffix: false,
+    token: blobToken(),
     // Vercel Blob rejects a value below 60s. Reads already cache-bust with a
     // `?t=` query + `no-store`, so the CDN TTL doesn't affect freshness.
     cacheControlMaxAge: 60,

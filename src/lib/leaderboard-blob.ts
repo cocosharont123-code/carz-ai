@@ -1,4 +1,5 @@
 import { put, list } from "@vercel/blob";
+import { blobToken, blobConfigured } from "./blob-token";
 
 // Global "rarest cars spotted" leaderboard, shared across ALL accounts.
 // Backed by a single JSON file in a Vercel Blob store (auto-provisioned).
@@ -22,12 +23,12 @@ const PATH = "leaderboard.json";
 const MAX = 50;
 
 export function leaderboardConfigured(): boolean {
-  return !!process.env.BLOB_READ_WRITE_TOKEN;
+  return blobConfigured();
 }
 
 async function currentUrl(): Promise<string | null> {
   try {
-    const { blobs } = await list({ prefix: PATH });
+    const { blobs } = await list({ prefix: PATH, token: blobToken() });
     const hit = blobs.find((b) => b.pathname === PATH) ?? blobs[0];
     return hit?.url ?? null;
   } catch {
@@ -55,6 +56,7 @@ async function writeBoard(cars: RareCar[]): Promise<void> {
     allowOverwrite: true,
     addRandomSuffix: false,
     cacheControlMaxAge: 60,
+    token: blobToken(),
   });
 }
 

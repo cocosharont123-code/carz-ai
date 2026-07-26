@@ -1,5 +1,6 @@
 import { put, list } from "@vercel/blob";
 import { createHash, createCipheriv, createDecipheriv, randomBytes, randomUUID } from "crypto";
+import { blobToken, blobConfigured } from "./blob-token";
 
 // Peer-to-peer car auctions, listed directly by users on Carz.
 // Bidders compete; the highest bidder when the timer ends wins and is shown the
@@ -43,7 +44,7 @@ export type PublicAuction = Omit<Auction, "sellerHash" | "topBidderHash" | "cont
 const PATH = "auctions.json";
 
 export function auctionsConfigured(): boolean {
-  return !!process.env.BLOB_READ_WRITE_TOKEN;
+  return blobConfigured();
 }
 
 export function hashEmail(email: string): string {
@@ -78,7 +79,7 @@ function decrypt(b64: string): string {
 
 async function currentUrl(): Promise<string | null> {
   try {
-    const { blobs } = await list({ prefix: PATH });
+    const { blobs } = await list({ prefix: PATH, token: blobToken() });
     const hit = blobs.find((b) => b.pathname === PATH) ?? blobs[0];
     return hit?.url ?? null;
   } catch {
@@ -106,6 +107,7 @@ async function writeAll(auctions: Auction[]): Promise<void> {
     allowOverwrite: true,
     addRandomSuffix: false,
     cacheControlMaxAge: 60,
+    token: blobToken(),
   });
 }
 

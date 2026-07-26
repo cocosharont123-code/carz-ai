@@ -1,6 +1,7 @@
 import { put, list } from "@vercel/blob";
 import { randomUUID } from "crypto";
 import { WANTED } from "./hunt";
+import { blobToken, blobConfigured } from "./blob-token";
 
 // Prize claims for Car Hunt Miami, stored in Vercel Blob so the owner can
 // review them (photo evidence + CashApp tag) and pay out the bounty.
@@ -20,7 +21,7 @@ export type Claim = {
 const PATH = "hunt-claims.json";
 
 export function claimsConfigured(): boolean {
-  return !!process.env.BLOB_READ_WRITE_TOKEN;
+  return blobConfigured();
 }
 
 // The account that receives claims and pays out. Override with HUNT_OWNER_EMAIL.
@@ -30,7 +31,7 @@ export function ownerEmail(): string {
 
 async function currentUrl(): Promise<string | null> {
   try {
-    const { blobs } = await list({ prefix: PATH });
+    const { blobs } = await list({ prefix: PATH, token: blobToken() });
     const hit = blobs.find((b) => b.pathname === PATH) ?? blobs[0];
     return hit?.url ?? null;
   } catch {
@@ -58,6 +59,7 @@ async function writeClaims(claims: Claim[]): Promise<void> {
     allowOverwrite: true,
     addRandomSuffix: false,
     cacheControlMaxAge: 60,
+    token: blobToken(),
   });
 }
 
