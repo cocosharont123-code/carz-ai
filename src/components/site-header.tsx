@@ -7,6 +7,8 @@ import { Avatar } from "@/components/default-avatar";
 import { cn } from "@/lib/utils";
 
 // Split nav: Hunt / Assistant / Carz+ on the left, everything else on the right.
+// Events lives as a tab on Hunt, Wishlist as a tab on Auctions, and Garage +
+// Ranks share a page — so they aren't separate top-level links.
 const LEFT_NAV = [
   { href: "/hunt", label: "Hunt", accent: true },
   { href: "/assistant", label: "Assistant" },
@@ -15,8 +17,6 @@ const LEFT_NAV = [
 const RIGHT_NAV = [
   { href: "/spot", label: "Spot" },
   { href: "/auctions", label: "Auctions" },
-  { href: "/events", label: "Events" },
-  { href: "/wishlist", label: "Wishlist" },
   { href: "/garage", label: "Garage" },
   { href: "/leaderboard", label: "Ranks" },
 ];

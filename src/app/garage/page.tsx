@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { SiteHeader } from "@/components/site-header";
+import { PageTabs } from "@/components/page-tabs";
 import { MemberGate } from "@/components/member-gate";
 import { getGarage, removeFromGarage, clearGarage, type GarageCar } from "@/lib/garage-local";
 import { Button, PageMasthead, StatRow, CarPhoto, Skeleton } from "@/components/ui/editorial";
@@ -52,6 +53,7 @@ function GarageInner() {
   return (
     <>
       <SiteHeader />
+      <PageTabs group="collection" />
       <main className="mx-auto w-full max-w-4xl px-5 py-10">
         <PageMasthead
           eyebrow="Your history · members only"

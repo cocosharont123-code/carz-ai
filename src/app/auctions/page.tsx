@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
+import { PageTabs } from "@/components/page-tabs";
 import { Button, PageMasthead, CarPhoto, LiveDot, Skeleton } from "@/components/ui/editorial";
 import { WishlistButton } from "@/components/wishlist-button";
 
@@ -106,6 +107,7 @@ export default function AuctionsPage() {
   return (
     <>
       <SiteHeader />
+      <PageTabs group="auctions" />
       <main className="mx-auto w-full max-w-6xl px-5 py-10">
         <PageMasthead
           eyebrow="Bidding wars · winner takes the deal"

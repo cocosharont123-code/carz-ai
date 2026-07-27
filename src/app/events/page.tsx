@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { SiteHeader } from "@/components/site-header";
+import { PageTabs } from "@/components/page-tabs";
 import { MemberGate } from "@/components/member-gate";
 import { PageMasthead, Button, Skeleton } from "@/components/ui/editorial";
 
@@ -89,6 +90,7 @@ function EventsInner() {
   return (
     <>
       <SiteHeader />
+      <PageTabs group="hunt" />
       <main className="mx-auto w-full max-w-2xl px-5 py-10">
         <PageMasthead
           eyebrow="Luxury & sports cars near you"
