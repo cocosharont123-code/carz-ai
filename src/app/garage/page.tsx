@@ -14,6 +14,7 @@ function fmtDate(ts: number): string {
 export default function GaragePage() {
   return (
     <MemberGate
+      tabs={<PageTabs group="collection" />}
       title="Garage"
       blurb="Your personal collection of every car you've ever spotted."
       points={[

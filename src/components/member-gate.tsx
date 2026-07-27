@@ -13,6 +13,7 @@ export function MemberGate({
   title = "Members only",
   blurb,
   points,
+  tabs,
 }: {
   children: ReactNode;
   title?: string;
@@ -20,6 +21,9 @@ export function MemberGate({
   blurb: string;
   /** What this locked feature actually does — explained for non-members. */
   points?: string[];
+  /** Optional section tab bar, shown under the header even while locked so
+   *  a sibling public tab (e.g. Ranks) stays reachable for non-members. */
+  tabs?: ReactNode;
 }) {
   const [member, setMember] = useState<boolean | null>(null);
 
@@ -34,6 +38,7 @@ export function MemberGate({
     return (
       <>
         <SiteHeader />
+        {tabs}
         <main className="mx-auto w-full max-w-lg px-5 py-16 text-center">
           <div className="util-label opacity-50">Loading…</div>
         </main>
@@ -45,6 +50,7 @@ export function MemberGate({
     return (
       <>
         <SiteHeader />
+        {tabs}
         <main className="mx-auto w-full max-w-lg px-5 py-16">
           <div className="glass-card rounded-3xl p-8 text-center">
             <div className="util-label text-carz">Carz+ members only</div>

@@ -11,6 +11,7 @@ import { getWishlist, removeWish, type WishItem } from "@/lib/wishlist";
 export default function WishlistPage() {
   return (
     <MemberGate
+      tabs={<PageTabs group="auctions" />}
       title="Wishlist"
       blurb="Save the cars you're chasing and get told the moment they appear."
       points={[

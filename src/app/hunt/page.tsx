@@ -31,6 +31,7 @@ export default function HuntPage() {
 
   return (
     <MemberGate
+      tabs={<PageTabs group="hunt" />}
       title="Car Hunt"
       blurb="A real-money scavenger hunt for the world's rarest cars."
       points={[

@@ -24,6 +24,7 @@ const searchUrl = (e: Ev) =>
 export default function EventsPage() {
   return (
     <MemberGate
+      tabs={<PageTabs group="hunt" />}
       title="Events"
       blurb="Luxury and sports car events happening near you."
       points={[
