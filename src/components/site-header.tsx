@@ -17,8 +17,8 @@ const LEFT_NAV = [
 const RIGHT_NAV = [
   { href: "/spot", label: "Spot" },
   { href: "/auctions", label: "Auctions" },
+  // Garage + Ranks share a page; it's named "Garage" and Ranks is a tab there.
   { href: "/garage", label: "Garage" },
-  { href: "/leaderboard", label: "Ranks" },
 ];
 
 function NavLink({ href, label, accent }: { href: string; label: string; accent?: boolean }) {
