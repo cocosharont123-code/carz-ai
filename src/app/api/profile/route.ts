@@ -11,7 +11,9 @@ export async function GET() {
   const session = await auth();
   const email = session?.user?.email;
   if (!email) {
-    return NextResponse.json({ signedIn: false, profile: null });
+    // `configured` here (no secrets) lets us confirm the profile route's own
+    // view of storage on a live deployment without needing to sign in.
+    return NextResponse.json({ signedIn: false, configured: profilesConfigured(), profile: null });
   }
   if (!profilesConfigured()) {
     return NextResponse.json({ signedIn: true, configured: false, profile: null });
