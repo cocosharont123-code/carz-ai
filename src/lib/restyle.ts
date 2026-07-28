@@ -28,11 +28,10 @@ export function buildRestylePrompt(o: RestyleOptions): string {
   if (o.rimColor) changes.push(`change the wheels/rims to ${o.rimColor}`);
   for (const f of o.features ?? []) if (f) changes.push(f);
   const changeText = changes.length ? changes.join("; ") : "subtly enhance the car";
+  // Kept short on purpose — a concise instruction prefills faster.
   return (
-    `Edit this photograph of a ${car}. Apply these modifications: ${changeText}. ` +
-    `Keep it the exact same car, same camera angle, same background, lighting and ` +
-    `reflections — change only the requested details and keep everything else identical. ` +
-    `Output a single photorealistic image with no added text, logos or watermarks.`
+    `Edit this photo of a ${car}: ${changeText}. Keep the same car, angle, ` +
+    `background and lighting; change only what's listed. Photorealistic, no text or watermarks.`
   );
 }
 

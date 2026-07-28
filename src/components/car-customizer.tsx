@@ -49,6 +49,27 @@ interface CarLike {
   yearRange: string;
 }
 
+// Shrink the source photo before sending: smaller upload + far fewer vision
+// tokens for the image model = noticeably faster generation. 640px keeps plenty
+// of detail for a car re-render.
+function shrink(dataUrl: string, max = 640, quality = 0.82): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, max / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return resolve(dataUrl);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
 export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
   const [bodyColor, setBodyColor] = useState<string>("");
   const [rimColor, setRimColor] = useState<string>("");
@@ -72,11 +93,12 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
     setBusy(true);
     setResult(null);
     try {
+      const src = await shrink(image);
       const res = await fetch("/api/customize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          image,
+          image: src,
           make: car.make,
           model: car.model,
           yearRange: car.yearRange,
