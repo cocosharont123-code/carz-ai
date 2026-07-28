@@ -9,14 +9,19 @@ const MODEL = process.env.RESTYLE_MODEL || "gemini-2.5-flash-image";
 
 /** Resolve the Gemini key across the common env-var names people use. */
 export function geminiKey(): string | undefined {
-  return (
+  const named =
     process.env.GEMINI_API_KEY ||
     process.env.GOOGLE_API_KEY ||
     process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
     process.env.GOOGLE_AI_API_KEY ||
-    process.env.GEMINI_KEY ||
-    undefined
-  );
+    process.env.GEMINI_KEY;
+  if (named) return named;
+  // Last resort: any env value that looks like a Google AI Studio key (they
+  // start with "AIza"), so a mis-named variable still works.
+  for (const v of Object.values(process.env)) {
+    if (v && v.startsWith("AIza") && v.length > 30) return v;
+  }
+  return undefined;
 }
 
 export function restyleConfigured(): boolean {
