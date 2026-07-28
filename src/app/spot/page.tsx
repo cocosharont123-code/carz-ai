@@ -9,6 +9,7 @@ import { Button as GlassButton } from "@/components/ui/editorial";
 import { Input } from "@/components/ui/input";
 import { useImageUpload } from "@/components/hooks/use-image-upload";
 import { CarHotspotsMap } from "@/components/car-hotspots-map";
+import { CarCustomizer } from "@/components/car-customizer";
 import { addToGarage } from "@/lib/garage-local";
 import { cn } from "@/lib/utils";
 import type { CarReport } from "@/lib/identify";
@@ -373,6 +374,7 @@ export default function SpotPage() {
   const [error, setError] = useState("");
   const [limitHit, setLimitHit] = useState(false);
   const [note, setNote] = useState("");
+  const [spottedImage, setSpottedImage] = useState("");
   const [isDragging, setIsDragging] = useState(false);
 
   const {
@@ -453,6 +455,7 @@ export default function SpotPage() {
         return;
       }
       setCar(data.car);
+      setSpottedImage(image); // keep the exact photo for the AI customizer
       setStatus((prev) => ({ ...(prev as Status), ...data.status }));
       // Save this spot to the on-device garage history + global leaderboard.
       if (data.car?.isCar) {
@@ -501,6 +504,7 @@ export default function SpotPage() {
     handleRemove();
     setNote("");
     setCar(null);
+    setSpottedImage("");
     setError("");
   }
 
@@ -734,6 +738,8 @@ export default function SpotPage() {
                     )}
                   </div>
                 )}
+
+                {spottedImage && <CarCustomizer image={spottedImage} car={car} />}
               </>
             ) : (
               <>
