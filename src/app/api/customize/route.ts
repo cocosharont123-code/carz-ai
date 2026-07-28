@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
 import { restyleCar, restyleConfigured } from "@/lib/restyle";
+import { getRestyleUsage, recordRestyle, RESTYLE_DAILY_CAP } from "@/lib/restyle-usage";
 
 export const runtime = "nodejs";
 export const maxDuration = 60; // image editing can take 15–40s
@@ -9,6 +11,20 @@ export async function POST(req: Request) {
     return NextResponse.json(
       { ok: false, error: "AI photo styling isn't set up yet (missing GEMINI_API_KEY)." },
       { status: 503 },
+    );
+  }
+
+  // Signed-in users only, capped at RESTYLE_DAILY_CAP generations per day.
+  const session = await auth();
+  const email = session?.user?.email;
+  if (!email) {
+    return NextResponse.json({ ok: false, error: "Sign in to customize cars.", needSignIn: true }, { status: 401 });
+  }
+  const usage = await getRestyleUsage(email);
+  if (usage.remaining <= 0) {
+    return NextResponse.json(
+      { ok: false, error: `You've used all ${RESTYLE_DAILY_CAP} customizations for today. Come back tomorrow.`, remaining: 0 },
+      { status: 429 },
     );
   }
 
@@ -51,7 +67,9 @@ export async function POST(req: Request) {
       rimColor: body.rimColor,
       features,
     });
-    return NextResponse.json({ ok: true, image: `data:${out.mediaType};base64,${out.base64}` });
+    // Charge a credit only on a successful generation.
+    const remaining = await recordRestyle(email);
+    return NextResponse.json({ ok: true, image: `data:${out.mediaType};base64,${out.base64}`, remaining });
   } catch (e) {
     console.error("customize failed:", e);
     const detail = e instanceof Error ? e.message : String(e);

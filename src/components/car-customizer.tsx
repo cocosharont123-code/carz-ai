@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { signIn } from "next-auth/react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -55,6 +56,8 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [needSignIn, setNeedSignIn] = useState(false);
+  const [remaining, setRemaining] = useState<number | null>(null);
 
   const anyChange = !!bodyColor || !!rimColor || features.length > 0;
 
@@ -65,6 +68,7 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
   async function generate() {
     if (!anyChange || busy) return;
     setError("");
+    setNeedSignIn(false);
     setBusy(true);
     setResult(null);
     try {
@@ -83,10 +87,12 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
       });
       const d = await res.json().catch(() => null);
       if (!res.ok || !d?.ok) {
+        if (res.status === 401 || d?.needSignIn) setNeedSignIn(true);
         setError(d?.error || `Couldn't restyle (error ${res.status}).`);
         return;
       }
       setResult(d.image);
+      if (typeof d.remaining === "number") setRemaining(d.remaining);
     } catch {
       setError("Network error — try again.");
     } finally {
@@ -168,6 +174,17 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
         {busy ? "Rendering your build…" : "Generate customized photo"}
       </button>
       {error && <p className="mt-2 text-sm text-nred">{error}</p>}
+      {needSignIn && (
+        <button
+          onClick={() => signIn("google")}
+          className="press mt-2 w-full rounded-xl border border-foreground/20 py-2.5 text-sm font-semibold transition hover:border-foreground/40"
+        >
+          Sign in with Google
+        </button>
+      )}
+      {remaining !== null && (
+        <p className="mt-2 text-center text-xs opacity-60">{remaining} of 3 customizations left today</p>
+      )}
 
       {result && (
         <div className="mt-4">
