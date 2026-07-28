@@ -7,8 +7,20 @@
 
 const MODEL = process.env.RESTYLE_MODEL || "gemini-2.5-flash-image";
 
+/** Resolve the Gemini key across the common env-var names people use. */
+export function geminiKey(): string | undefined {
+  return (
+    process.env.GEMINI_API_KEY ||
+    process.env.GOOGLE_API_KEY ||
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+    process.env.GOOGLE_AI_API_KEY ||
+    process.env.GEMINI_KEY ||
+    undefined
+  );
+}
+
 export function restyleConfigured(): boolean {
-  return !!process.env.GEMINI_API_KEY;
+  return !!geminiKey();
 }
 
 export interface RestyleOptions {
@@ -45,7 +57,7 @@ export async function restyleCar(
   base64Data: string,
   opts: RestyleOptions,
 ): Promise<RestyleResult> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = geminiKey();
   if (!apiKey) throw new Error("GEMINI_API_KEY is not set.");
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
