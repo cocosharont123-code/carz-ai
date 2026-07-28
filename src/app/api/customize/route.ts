@@ -6,6 +6,12 @@ import { getRestyleUsage, recordRestyle, RESTYLE_DAILY_CAP } from "@/lib/restyle
 export const runtime = "nodejs";
 export const maxDuration = 60; // image editing can take 15–40s
 
+// Lightweight status check (no secrets) so the UI/ops can tell if the image
+// model is configured without going through the signed-in generation flow.
+export async function GET() {
+  return NextResponse.json({ configured: restyleConfigured() });
+}
+
 export async function POST(req: Request) {
   // Signed-in users only, capped at RESTYLE_DAILY_CAP generations per day.
   const session = await auth();
