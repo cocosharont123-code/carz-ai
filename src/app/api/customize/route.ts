@@ -7,6 +7,13 @@ export const runtime = "nodejs";
 export const maxDuration = 60; // image editing can take 15–40s
 
 export async function POST(req: Request) {
+  // Signed-in users only, capped at RESTYLE_DAILY_CAP generations per day.
+  const session = await auth();
+  const email = session?.user?.email;
+  if (!email) {
+    return NextResponse.json({ ok: false, error: "Sign in to customize cars.", needSignIn: true }, { status: 401 });
+  }
+
   if (!restyleConfigured()) {
     return NextResponse.json(
       { ok: false, error: "AI photo styling isn't set up yet (missing GEMINI_API_KEY)." },
@@ -14,12 +21,6 @@ export async function POST(req: Request) {
     );
   }
 
-  // Signed-in users only, capped at RESTYLE_DAILY_CAP generations per day.
-  const session = await auth();
-  const email = session?.user?.email;
-  if (!email) {
-    return NextResponse.json({ ok: false, error: "Sign in to customize cars.", needSignIn: true }, { status: 401 });
-  }
   const usage = await getRestyleUsage(email);
   if (usage.remaining <= 0) {
     return NextResponse.json(
