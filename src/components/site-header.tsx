@@ -6,12 +6,11 @@ import { useSession, signOut } from "next-auth/react";
 import { Avatar } from "@/components/default-avatar";
 import { cn } from "@/lib/utils";
 
-// Split nav: Hunt / Assistant / Carz+ on the left, everything else on the right.
+// Split nav: Hunt / Carz+ on the left, everything else on the right.
 // Events lives as a tab on Hunt, Wishlist as a tab on Auctions, and Garage +
 // Ranks share a page — so they aren't separate top-level links.
 const LEFT_NAV = [
   { href: "/hunt", label: "Hunt", accent: true },
-  { href: "/assistant", label: "Assistant" },
   { href: "/pricing", label: "Carz+", accent: true },
 ];
 const RIGHT_NAV = [

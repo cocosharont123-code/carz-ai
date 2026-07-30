@@ -55,6 +55,9 @@ function ProfileInner() {
           setImage(d.profile.image || "");
           setExisting(!!d.profile.username);
         }
+        if (d.unavailable) {
+          setError("Profile storage is temporarily unavailable — saving is disabled right now.");
+        }
       })
       .catch(() => {})
       .finally(() => setLoading(false));

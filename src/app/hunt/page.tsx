@@ -32,7 +32,7 @@ export default function HuntPage() {
   return (
     <MemberGate
       tabs={<PageTabs group="hunt" />}
-      title="Car Hunt"
+      title="Events"
       blurb="A real-money scavenger hunt for the world's rarest cars."
       points={[
         "A wanted board of rare cars, each with a cash bounty.",
@@ -47,7 +47,7 @@ export default function HuntPage() {
         <div className="hunt-banner rounded-3xl p-[2px] shadow-[0_0_50px_-12px_rgba(255,0,110,0.6)]">
           <div className="rounded-[calc(1.5rem-2px)] bg-black/85 px-6 py-9 text-center text-white">
             <div className="text-5xl drop-shadow-[0_0_16px_rgba(255,0,110,0.7)]">🌴🏁🌆</div>
-            <h1 className="hunt-title display mt-3 text-6xl leading-none sm:text-7xl">Car Hunt Miami</h1>
+            <h1 className="hunt-title display mt-3 text-6xl leading-none sm:text-7xl">Events</h1>
             <p className="mx-auto mt-3 max-w-md text-sm font-medium text-white/85">
               Hit the neon streets and spot the world&apos;s rarest cars. Find one on the wanted board and
               <span className="font-bold text-amber-300"> cash the bounty.</span>

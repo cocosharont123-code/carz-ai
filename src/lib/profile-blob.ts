@@ -33,6 +33,15 @@ export function isActiveMember(p: Profile | null | undefined): boolean {
 
 const PATH = "profiles.json";
 
+// Storage is down/unreachable (suspended store, network, bad token). Distinct
+// from "no profiles yet" so writes can refuse to run on top of a failed read.
+export class ProfileStorageError extends Error {
+  constructor(message: string, options?: { cause?: unknown }) {
+    super(message, options);
+    this.name = "ProfileStorageError";
+  }
+}
+
 export function profilesConfigured(): boolean {
   return blobConfigured();
 }
@@ -46,35 +55,49 @@ async function currentUrl(): Promise<string | null> {
     const { blobs } = await list({ prefix: PATH, token: blobToken() });
     const hit = blobs.find((b) => b.pathname === PATH) ?? blobs[0];
     return hit?.url ?? null;
-  } catch {
-    return null;
+  } catch (e) {
+    throw new ProfileStorageError("Couldn't list the profiles blob.", { cause: e });
   }
 }
 
+// Throws ProfileStorageError if the store can't be read. Returning {} on a
+// failed read would make every profile look missing — and `writeAll` would then
+// persist that empty map, wiping everyone else's account.
 async function readAll(): Promise<Record<string, Profile>> {
   const url = await currentUrl();
-  if (!url) return {};
+  if (!url) return {}; // genuinely no profiles written yet
+  let res: Response;
   try {
-    const res = await fetch(`${url}?t=${Date.now()}`, { cache: "no-store" });
-    if (!res.ok) return {};
+    res = await fetch(`${url}?t=${Date.now()}`, { cache: "no-store" });
+  } catch (e) {
+    throw new ProfileStorageError("Couldn't reach the profiles blob.", { cause: e });
+  }
+  if (!res.ok) {
+    throw new ProfileStorageError(`Profiles blob read failed (HTTP ${res.status}).`);
+  }
+  try {
     const data = await res.json();
     return data && typeof data === "object" ? (data as Record<string, Profile>) : {};
-  } catch {
-    return {};
+  } catch (e) {
+    throw new ProfileStorageError("Profiles blob is not valid JSON.", { cause: e });
   }
 }
 
 async function writeAll(map: Record<string, Profile>): Promise<void> {
-  await put(PATH, JSON.stringify(map), {
-    access: "public",
-    contentType: "application/json",
-    allowOverwrite: true,
-    addRandomSuffix: false,
-    token: blobToken(),
-    // Vercel Blob rejects a value below 60s. Reads already cache-bust with a
-    // `?t=` query + `no-store`, so the CDN TTL doesn't affect freshness.
-    cacheControlMaxAge: 60,
-  });
+  try {
+    await put(PATH, JSON.stringify(map), {
+      access: "public",
+      contentType: "application/json",
+      allowOverwrite: true,
+      addRandomSuffix: false,
+      token: blobToken(),
+      // Vercel Blob rejects a value below 60s. Reads already cache-bust with a
+      // `?t=` query + `no-store`, so the CDN TTL doesn't affect freshness.
+      cacheControlMaxAge: 60,
+    });
+  } catch (e) {
+    throw new ProfileStorageError("Couldn't write the profiles blob.", { cause: e });
+  }
 }
 
 export function validateUsername(raw: string): { ok: boolean; error?: string; value: string } {
@@ -86,9 +109,19 @@ export function validateUsername(raw: string): { ok: boolean; error?: string; va
   return { ok: true, value };
 }
 
-export async function getProfile(email: string): Promise<Profile | null> {
-  const all = await readAll();
-  return all[keyFor(email)] ?? null;
+// `strict` surfaces a storage outage instead of reporting "no profile" — used by
+// the profile endpoint so the setup gate doesn't trap users while the store is down.
+export async function getProfile(
+  email: string,
+  opts: { strict?: boolean } = {},
+): Promise<Profile | null> {
+  try {
+    const all = await readAll();
+    return all[keyFor(email)] ?? null;
+  } catch (e) {
+    if (opts.strict) throw e;
+    return null;
+  }
 }
 
 export async function setProfile(

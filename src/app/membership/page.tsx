@@ -21,7 +21,6 @@ type Status = {
 const PERKS: { icon: string; title: string; desc: string }[] = [
   { icon: "⏱", title: "Auctions 24h early", desc: "See and bid on every listing a full day before non-members." },
   { icon: "♾️", title: "Unlimited AI scans", desc: "No caps on car identifications, ever." },
-  { icon: "🗺️", title: "Spotting map", desc: "The live map of where to find cars near you." },
   { icon: "🎥", title: "Spot cars in videos", desc: "Scan a video and identify every car in it, frame by frame." },
   { icon: "🔔", title: "Car alerts", desc: "Get notified the moment a wishlisted car is listed or sold." },
   { icon: "🤖", title: "Auto-bid", desc: "Set a max price and the AI bids for you — it knows market value." },

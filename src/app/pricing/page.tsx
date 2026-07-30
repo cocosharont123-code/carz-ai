@@ -95,7 +95,7 @@ export default function PricingPage() {
       planName: "Free",
       description: "Get started spotting and bidding.",
       price: "0",
-      features: ["3 car scans per day", "Bid on auctions", "Live leaderboard", "Car Hunt events"],
+      features: ["3 car scans per day", "Spotting map", "Bid on auctions", "Live leaderboard", "Car Hunt events"],
       buttonText: "Start spotting",
       buttonVariant: "secondary",
       onSelect: () => router.push("/spot"),

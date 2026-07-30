@@ -10,7 +10,6 @@ export type Plan = {
   premiumReport: boolean;
   saveHistory: boolean;
   hotspotsMap: boolean;
-  aiAssistant: boolean;
   blurb: string;
   features: string[];
 };
@@ -24,14 +23,12 @@ export const PLANS: Record<PlanId, Plan> = {
     premiumReport: true,
     saveHistory: true,
     hotspotsMap: true,
-    aiAssistant: true,
     blurb: "3 scans a day, free.",
     features: [
       "3 car scans per day",
       "Make, model, year & specs",
       "Deep valuation & reliability reports",
-      "Car hotspots map",
-      "AI car assistant chat",
+      "Spotting map — where to find rare cars",
     ],
   },
 };

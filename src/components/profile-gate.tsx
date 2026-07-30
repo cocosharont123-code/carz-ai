@@ -19,8 +19,9 @@ export function ProfileGate() {
       .then((r) => r.json())
       .then((d) => {
         if (cancelled) return;
-        // Only bounce a signed-in user who has no username yet.
-        if (d.signedIn && d.configured !== false && !d.pending && !d.profile?.username) {
+        // Only bounce a signed-in user who has no username yet. Never bounce
+        // when storage is down — the setup form couldn't save anyway.
+        if (d.signedIn && d.configured !== false && !d.unavailable && !d.pending && !d.profile?.username) {
           router.replace(`/profile?next=${encodeURIComponent(pathname || "/spot")}`);
         }
       })

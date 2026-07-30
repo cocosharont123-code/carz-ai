@@ -103,7 +103,6 @@ export type PlanStatus = {
   premiumReport: boolean;
   saveHistory: boolean;
   hotspotsMap: boolean;
-  aiAssistant: boolean;
 };
 
 export function planStatusFor(planId: PlanId, user: UserRecord): PlanStatus {
@@ -119,7 +118,6 @@ export function planStatusFor(planId: PlanId, user: UserRecord): PlanStatus {
     premiumReport: plan.premiumReport,
     saveHistory: plan.saveHistory,
     hotspotsMap: plan.hotspotsMap,
-    aiAssistant: plan.aiAssistant,
   };
 }
 

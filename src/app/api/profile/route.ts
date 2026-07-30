@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { auth } from "@/auth";
-import { getProfile, setProfile, profilesConfigured } from "@/lib/profile-blob";
+import { getProfile, setProfile, profilesConfigured, ProfileStorageError } from "@/lib/profile-blob";
 
 export const runtime = "nodejs";
 
@@ -20,7 +20,22 @@ export async function GET() {
   }
 
   const jar = await cookies();
-  const profile = await getProfile(email);
+
+  let profile;
+  try {
+    profile = await getProfile(email, { strict: true });
+  } catch (e) {
+    // Storage is down. Say so rather than reporting "no profile", which would
+    // make the gate bounce the user to a setup form that can't succeed.
+    console.error("profile read failed:", e);
+    const cached = jar.get(UNAME_COOKIE)?.value;
+    return NextResponse.json({
+      signedIn: true,
+      configured: true,
+      unavailable: true,
+      profile: cached ? { username: cached, displayName: cached, image: "", ts: 0 } : null,
+    });
+  }
 
   if (profile?.username) {
     // Keep the fast-path cookie fresh so future reads never loop.
@@ -76,10 +91,18 @@ export async function POST(req: Request) {
     // or a disconnected Blob store) so "account making" failures are diagnosable
     // instead of hiding behind a generic message.
     console.error("profile save failed:", e);
+    const down = e instanceof ProfileStorageError;
     const detail = e instanceof Error ? e.message : String(e);
     return NextResponse.json(
-      { ok: false, error: `Couldn't save your profile: ${detail}`, detail },
-      { status: 500 },
+      {
+        ok: false,
+        unavailable: down,
+        error: down
+          ? `Profile storage is unavailable: ${detail}`
+          : `Couldn't save your profile: ${detail}`,
+        detail,
+      },
+      { status: down ? 503 : 500 },
     );
   }
   if (!res.ok) {
