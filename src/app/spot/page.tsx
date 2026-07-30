@@ -436,9 +436,11 @@ export default function SpotPage() {
     setLoading(true);
     try {
       const raw = await objectUrlToDataUrl(previewUrl);
-      // Smaller upload = faster network + faster model prefill. 1024px is plenty
-      // to identify a car and well within Claude's image budget.
-      const image = await downscale(raw, 1024, 0.72);
+      // 2576px is the model's high-resolution limit — anything smaller throws
+      // away the badge text and headlight detail the identification leans on.
+      // At 1024/0.72 a Carrera 4S badge is a smudge; this is the single biggest
+      // lever on accuracy, so it's worth the extra upload.
+      const image = await downscale(raw, 2576, 0.85);
       const res = await fetch("/api/identify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -674,6 +676,27 @@ export default function SpotPage() {
                   </span>
                 </div>
                 {car.notes && <p className="mt-1 text-sm ">{car.notes}</p>}
+                {car.crossChecked && car.crossCheckNote && (
+                  <p className="mt-1.5 text-xs opacity-70">✓ {car.crossCheckNote}</p>
+                )}
+                {car.visualEvidence?.length > 0 && (
+                  <details className="mt-2">
+                    <summary className="cursor-pointer text-xs opacity-60 hover:opacity-100">
+                      What gave it away
+                    </summary>
+                    <ul className="mt-1.5 space-y-1">
+                      {car.visualEvidence.map((e) => (
+                        <li key={e} className="flex items-start gap-2 text-xs opacity-80">
+                          <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-carz" />
+                          <span>{e}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    {car.alsoConsidered && (
+                      <p className="mt-2 text-xs opacity-60">Ruled out: {car.alsoConsidered}</p>
+                    )}
+                  </details>
+                )}
 
                 <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <Spec k="Body style" v={car.bodyStyle} />

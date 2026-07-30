@@ -38,6 +38,7 @@ function ProfileInner() {
   const [existing, setExisting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [blocked, setBlocked] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -55,7 +56,12 @@ function ProfileInner() {
           setImage(d.profile.image || "");
           setExisting(!!d.profile.username);
         }
-        if (d.unavailable) {
+        if (d.configured === false) {
+          // No storage is wired up at all — saving can't succeed, so say so
+          // instead of letting people fill in a form that always 503s.
+          setBlocked(true);
+          setError("Profiles aren't set up on this server yet. Check back soon.");
+        } else if (d.unavailable) {
           setError("Profile storage is temporarily unavailable — saving is disabled right now.");
         }
       })
@@ -166,7 +172,7 @@ function ProfileInner() {
 
             {error && <div className="border border-carz/40 bg-carz/10 p-3 text-sm ">{error}</div>}
 
-            <Button onClick={save} disabled={saving || username.trim().length < 3} size="lg" className="w-full">
+            <Button onClick={save} disabled={blocked || saving || username.trim().length < 3} size="lg" className="w-full">
               {saving ? "Saving…" : existing ? "Save changes" : "Create profile"}
             </Button>
           </div>

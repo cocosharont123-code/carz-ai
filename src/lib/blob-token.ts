@@ -9,14 +9,27 @@
  * This resolves whichever token is present so storage works regardless of the
  * store's name. Pass the result explicitly to `put`/`list` as `{ token }`.
  */
+const PREFIX = "vercel_blob_rw_";
+
+// A real Blob token, or undefined. Applying the same check to the default name
+// as to the prefixed ones matters: a placeholder or half-pasted
+// `BLOB_READ_WRITE_TOKEN` would otherwise report as configured, and every read
+// would then fail as a storage *outage* ("temporarily unavailable") rather than
+// the accurate "not configured yet".
+function valid(value: string | undefined): string | undefined {
+  const token = value?.trim();
+  return token?.startsWith(PREFIX) ? token : undefined;
+}
+
 export function blobToken(): string | undefined {
-  const direct = process.env.BLOB_READ_WRITE_TOKEN;
+  const direct = valid(process.env.BLOB_READ_WRITE_TOKEN);
   if (direct) return direct;
-  for (const [key, value] of Object.entries(process.env)) {
-    // Vercel Blob tokens are `vercel_blob_rw_...`; match any *_READ_WRITE_TOKEN.
-    if (value && key.endsWith("_READ_WRITE_TOKEN") && value.startsWith("vercel_blob_rw_")) {
-      return value;
-    }
+  // Sorted so a project with several stores resolves the same token every time;
+  // `process.env` enumeration order is not guaranteed.
+  for (const key of Object.keys(process.env).sort()) {
+    if (!key.endsWith("_READ_WRITE_TOKEN")) continue;
+    const token = valid(process.env[key]);
+    if (token) return token;
   }
   return undefined;
 }
