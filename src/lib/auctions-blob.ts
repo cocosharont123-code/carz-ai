@@ -20,6 +20,7 @@ export type Auction = {
   make: string;
   model: string;
   year: string;
+  vin: string; // required on new listings; older listings predate the field
   description: string;
   image: string; // base64 thumbnail
   startingBid: number;
@@ -125,6 +126,33 @@ export function toPublic(a: Auction, viewerHash: string | null): PublicAuction {
   return out;
 }
 
+// VINs have been 17 characters since 1981 and never contain I, O or Q — those
+// were dropped because they're indistinguishable from 1 and 0. Pre-1981 cars
+// used shorter manufacturer schemes, and this site lists plenty of them, so
+// anything from 11 characters up is accepted rather than shutting classics out.
+const VIN_MIN = 11;
+const VIN_MAX = 17;
+
+export function validateVin(raw: string): { ok: boolean; error?: string; value: string } {
+  // Owners read VINs off a windscreen plate, so spaces and dashes get typed in.
+  const value = (raw || "").toUpperCase().replace(/[\s-]/g, "");
+  if (!value) return { ok: false, error: "Enter the car's VIN.", value };
+  if (!/^[A-Z0-9]+$/.test(value)) {
+    return { ok: false, error: "A VIN is letters and numbers only.", value };
+  }
+  if (/[IOQ]/.test(value)) {
+    return { ok: false, error: "A VIN never contains I, O or Q — those are 1s and 0s.", value };
+  }
+  if (value.length < VIN_MIN || value.length > VIN_MAX) {
+    return {
+      ok: false,
+      error: `A VIN is ${VIN_MIN}–${VIN_MAX} characters (17 on anything built since 1981).`,
+      value,
+    };
+  }
+  return { ok: true, value };
+}
+
 export async function createAuction(input: {
   sellerEmail: string;
   sellerName: string;
@@ -132,6 +160,7 @@ export async function createAuction(input: {
   make: string;
   model: string;
   year: string;
+  vin: string;
   description: string;
   image: string;
   startingBid: number;
@@ -149,6 +178,9 @@ export async function createAuction(input: {
     make: input.make.trim().slice(0, 40),
     model: input.model.trim().slice(0, 40),
     year: input.year.trim().slice(0, 12),
+    // Store the normalised form so listings are searchable and comparable even
+    // when sellers type it with spaces or in lower case.
+    vin: validateVin(input.vin).value,
     description: input.description.trim().slice(0, 1500),
     image: input.image,
     startingBid: Math.max(0, Math.round(input.startingBid)),

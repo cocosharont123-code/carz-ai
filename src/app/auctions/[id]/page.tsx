@@ -13,6 +13,7 @@ type Auction = {
   make: string;
   model: string;
   year: string;
+  vin?: string;
   description: string;
   image: string;
   startingBid: number;
@@ -168,6 +169,12 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
               {a.sellerName}
               {a.year || a.make || a.model ? ` — ${[a.year, a.make, a.model].filter(Boolean).join(" ")}` : ""}
             </p>
+            {/* Listings created before the VIN was required simply don't have one. */}
+            {a.vin && (
+              <p className="util-label mt-1 ">
+                VIN <span className="font-mono tracking-wider ">{a.vin}</span>
+              </p>
+            )}
 
             {/* Current bid — giant display number */}
             <div className="mt-6 flex items-end justify-between border-y border-white/10 py-6">

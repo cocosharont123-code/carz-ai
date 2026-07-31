@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { createAuction, readAll, toPublic, hashEmail, auctionsConfigured } from "@/lib/auctions-blob";
+import { createAuction, readAll, toPublic, hashEmail, auctionsConfigured, validateVin } from "@/lib/auctions-blob";
 import { ensureProfile } from "@/lib/profile-blob";
 
 export const runtime = "nodejs";
@@ -46,6 +46,7 @@ export async function POST(req: Request) {
     make?: string;
     model?: string;
     year?: string;
+    vin?: string;
     description?: string;
     image?: string;
     startingBid?: number;
@@ -65,6 +66,10 @@ export async function POST(req: Request) {
   const startingBid = Number(b.startingBid);
   if (!title) return NextResponse.json({ ok: false, error: "Give your listing a title." }, { status: 400 });
   if (!year) return NextResponse.json({ ok: false, error: "Enter the car's year." }, { status: 400 });
+  // Checked server-side too: the client can be bypassed, and a listing without a
+  // real VIN is the one thing a buyer can't verify after the fact.
+  const vin = validateVin(b.vin || "");
+  if (!vin.ok) return NextResponse.json({ ok: false, error: vin.error }, { status: 400 });
   if (!Number.isFinite(startingBid) || startingBid < 0)
     return NextResponse.json({ ok: false, error: "Enter a starting price." }, { status: 400 });
   if (!contact) return NextResponse.json({ ok: false, error: "Add contact info for the winner." }, { status: 400 });
@@ -77,6 +82,7 @@ export async function POST(req: Request) {
     make: b.make || "",
     model: b.model || "",
     year,
+    vin: vin.value,
     description: b.description || "",
     image,
     startingBid,

@@ -70,6 +70,7 @@ function NewAuctionInner() {
   const [make, setMake] = useState(params.get("make") || "");
   const [model, setModel] = useState(params.get("model") || "");
   const [year, setYear] = useState("");
+  const [vin, setVin] = useState("");
   const [description, setDescription] = useState("");
   const [image, setImage] = useState("");
   const [startingBid, setStartingBid] = useState("");
@@ -158,6 +159,12 @@ function NewAuctionInner() {
     if (!title.trim()) return setError("Give your listing a title.");
     if (!image) return setError("Add a photo of the car.");
     if (!year.trim()) return setError("Enter the car's year.");
+    const vinClean = vin.trim().toUpperCase();
+    if (!vinClean) return setError("Enter the car's VIN.");
+    if (/[IOQ]/.test(vinClean))
+      return setError("A VIN never contains I, O or Q — those are 1s and 0s.");
+    if (vinClean.length < 11)
+      return setError("That VIN looks too short — it should be 17 characters on a modern car.");
     if (startingBid.trim() === "") return setError("Enter a starting price.");
     if (!contact.trim()) return setError("Add contact info (revealed only to the winner).");
     const days = durationDays();
@@ -172,6 +179,7 @@ function NewAuctionInner() {
           make,
           model,
           year,
+          vin: vinClean,
           description,
           image,
           startingBid: Number(startingBid) || 0,
@@ -284,6 +292,26 @@ function NewAuctionInner() {
             </div>
             <p className="-mt-3 text-xs ">
               Enter the car&apos;s exact year yourself — the AI won&apos;t guess this for a real sale.
+            </p>
+
+            <Field label="VIN *">
+              <input
+                value={vin}
+                // Uppercase as they type and drop anything a VIN can't contain,
+                // so a plate read off a windscreen lands in the right shape.
+                onChange={(e) =>
+                  setVin(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 17))
+                }
+                placeholder="WBS8M9C50J5K12345"
+                autoCapitalize="characters"
+                autoCorrect="off"
+                spellCheck={false}
+                className="input font-mono tracking-wider"
+              />
+            </Field>
+            <p className="-mt-3 text-xs ">
+              17 characters on anything built since 1981 — it&apos;s on the windscreen base, the
+              driver&apos;s door jamb, or your registration. Buyers use it to run the car&apos;s history.
             </p>
 
             <Field label="Description">
