@@ -1,16 +1,23 @@
 // Server-side car identification via the Claude vision API.
 //
-// Accuracy comes from three things, in order of impact:
+// Accuracy comes from four things, in order of impact:
 //   1. A big enough image that badges and light signatures survive (the client
 //      sends ~2576px — the model's high-resolution limit).
-//   2. Forcing the model to write down what it can SEE before it commits to a
+//   2. Zooming in. A badge occupying 2% of a wide shot gets almost none of the
+//      vision encoder's attention; the same badge cropped and blown back up to
+//      full frame gets all of it. Each pass marks the detail it would zoom into
+//      to confirm its answer, and whenever the looks aren't already unanimous
+//      and certain we crop to that detail and read it properly. This buys more
+//      than thinking harder about the wide shot does.
+//   3. Forcing the model to write down what it can SEE before it commits to a
 //      name, so the answer is grounded in the photo instead of a vibe.
-//   3. A genuine second opinion: an independent pass identifies the car from
+//   4. A genuine second opinion: an independent pass identifies the car from
 //      scratch, and only an agreement between two separate looks is trusted.
 //      The two passes run concurrently, so the check costs no extra wall-clock
 //      unless they actually disagree.
 
 import Anthropic from "@anthropic-ai/sdk";
+import sharp from "sharp";
 
 export type CarReport = {
   isCar: boolean;
@@ -75,7 +82,11 @@ const FAST_CAPABLE = /^claude-opus-(5|4-8)$/;
 let fastMode = FAST_CAPABLE.test(MODEL) && process.env.CAR_SPOTTER_FAST !== "0";
 
 type Effort = "low" | "medium" | "high" | "xhigh" | "max";
-const REPORT_EFFORT = (process.env.CAR_SPOTTER_EFFORT as Effort) || "medium";
+
+// Telling a car apart from the one it is most often confused with is exactly the
+// "intelligence-sensitive" case the effort ladder exists for, so identification
+// runs at `high` rather than the cheaper setting that suits routine work.
+const REPORT_EFFORT = (process.env.CAR_SPOTTER_EFFORT as Effort) || "high";
 
 // `effort` is rejected outright by Haiku 4.5 and Sonnet 4.5, so a
 // CAR_SPOTTER_MODEL override pointing at one of those must not send it.
@@ -112,9 +123,23 @@ function objSchema(props: Record<string, unknown>) {
   };
 }
 
+// Fractions of the frame rather than pixels: the model never has to know what
+// the image was resized to, and a box can't be out by a scale factor.
+const REGION_PROP = {
+  ...objSchema({
+    x: { type: "number", description: "Left edge, 0-1 across the width." },
+    y: { type: "number", description: "Top edge, 0-1 down the height." },
+    w: { type: "number", description: "Width as a fraction of the image width." },
+    h: { type: "number", description: "Height as a fraction of the image height." },
+  }),
+  description:
+    "A tight box around the ONE detail you would zoom into to confirm this car against the car you nearly said instead — usually a badge, a taillight's internal pattern, a grille, or a wheel centre. Box the detail itself, not the whole car.",
+} as const;
+
 // Evidence is listed first so the model records what it sees before naming the car.
 const REPORT_SCHEMA = objSchema({
   visualEvidence: EVIDENCE_PROP,
+  zoomRegion: REGION_PROP,
   isCar: { type: "boolean", description: "True if a car/vehicle is clearly visible." },
   ...IDENTITY_PROPS,
   alsoConsidered: {
@@ -168,7 +193,22 @@ const REPORT_SCHEMA = objSchema({
 
 const SECOND_OPINION_SCHEMA = objSchema({
   visualEvidence: EVIDENCE_PROP,
+  zoomRegion: REGION_PROP,
   isCar: { type: "boolean" },
+  ...IDENTITY_PROPS,
+  confidence: { type: "string", enum: ["high", "medium", "low"] },
+});
+
+// The zoom pass reads one magnified detail. `legible` is separated out from the
+// general evidence so a transcription ("R/T on the grille badge") can't get
+// blurred together with an inference ("looks like a Charger").
+const ZOOM_SCHEMA = objSchema({
+  legible: {
+    type: "string",
+    description:
+      "Transcribe EXACTLY the badge text, emblem or lettering you can actually read in this crop, character for character. Use '' if nothing is genuinely legible — never guess at blurred text.",
+  },
+  visualEvidence: EVIDENCE_PROP,
   ...IDENTITY_PROPS,
   confidence: { type: "string", enum: ["high", "medium", "low"] },
 });
@@ -185,7 +225,7 @@ const ADJUDICATE_SCHEMA = objSchema({
 // --- Prompts -----------------------------------------------------------------
 
 const GROUNDING =
-  "Work from the photo, not from what is most common. Fill visualEvidence FIRST with details you can actually see, then let those details pick the car — a badge you can read outranks a silhouette that merely looks familiar. If a detail is too blurry or cropped to read, do not invent it.";
+  "Work from the photo, not from what is most common. Fill visualEvidence FIRST with details you can actually see, then let those details pick the car — a badge you can read outranks a silhouette that merely looks familiar. If a detail is too blurry or cropped to read, do not invent it. Then set zoomRegion to the one detail worth magnifying to confirm your answer; it will actually be cropped and re-read, so box the detail tightly rather than the whole car.";
 
 const REPORT_PROMPT =
   "You are an expert automotive identifier. Identify this car as precisely as you can — make, model, year range, generation, and trim. " +
@@ -204,6 +244,9 @@ const SECOND_OPINION_PROMPT =
   "Identify the car in this photo. You are a second, independent opinion — no prior guess is given to you and you must not assume one. " +
   GROUNDING +
   " Start from the parts owners cannot change: headlight and taillight internals, grille and intake shapes, glasshouse and roofline, panel gaps, badge text, exhaust exits. Aftermarket wheels, wraps and body kits are unreliable — weight them low. Give make, model, year range, generation and trim as precisely as the visible detail allows, and set confidence honestly.";
+
+const ZOOM_PROMPT =
+  "This is a magnified crop of one detail from a car photo — the detail a previous look flagged as the one worth confirming. Read it literally. Transcribe any badge text, emblem or lettering into `legible` exactly as it appears, and leave `legible` empty rather than guessing at something too soft to read. The crop has been enlarged, so it is soft by nature: do not read detail into upscaling blur or JPEG artefacts. Then give the most precise identification this detail alone supports, and set confidence on that basis.";
 
 const ADJUDICATE_PROMPT =
   "Two independent identifications of this same photo disagree. Look at the photo again yourself and settle it. Name the single visible detail that decides between them in decidingDetail, then give the identification you believe is correct — you may choose either candidate, or a third answer if both are wrong. Do not split the difference, and do not favour a candidate just because it sounds more confident.";
@@ -225,7 +268,7 @@ function getClient(): Anthropic {
 type ImageRef = { mediaType: string; base64Data: string };
 
 async function ask<T>(opts: {
-  image: ImageRef;
+  images: ImageRef[];
   prompt: string;
   schema: Record<string, unknown>;
   maxTokens: number;
@@ -244,14 +287,14 @@ async function ask<T>(opts: {
         {
           role: "user",
           content: [
-            {
-              type: "image",
+            ...opts.images.map((img) => ({
+              type: "image" as const,
               source: {
-                type: "base64",
-                media_type: opts.image.mediaType as "image/jpeg",
-                data: opts.image.base64Data,
+                type: "base64" as const,
+                media_type: img.mediaType as "image/jpeg",
+                data: img.base64Data,
               },
-            },
+            })),
             { type: "text", text: opts.prompt },
           ],
         },
@@ -296,6 +339,71 @@ async function ask<T>(opts: {
     return JSON.parse(text) as T;
   } catch {
     throw new IdentifyError("Model returned a malformed car report.");
+  }
+}
+
+// --- Zoom --------------------------------------------------------------------
+
+type Region = { x: number; y: number; w: number; h: number };
+
+// The model's high-resolution ceiling. Blowing the crop back up to it is the
+// whole point: the same badge pixels get the encoder's full attention instead of
+// a couple of tokens' worth in the corner of a wide shot.
+const ZOOM_TARGET_PX = 2576;
+// A box tighter than this is almost always a mis-placed point rather than a real
+// detail, and cropping to it yields mush. Widen it instead of trusting it.
+const MIN_REGION = 0.08;
+// Surrounding context — a badge is far easier to read with some bodywork around
+// it than floating in a tight rectangle.
+const REGION_PAD = 0.4;
+
+const finite = (n: unknown): n is number => typeof n === "number" && Number.isFinite(n);
+
+// Pad, enforce a floor, and clamp back inside the frame. Returns null if the
+// model gave us nothing usable — the caller then just skips the zoom.
+function normalizeRegion(r: Region | undefined | null): Region | null {
+  if (!r || !finite(r.x) || !finite(r.y) || !finite(r.w) || !finite(r.h)) return null;
+  if (r.w <= 0 || r.h <= 0) return null;
+
+  // Centre stays put while the box grows to its padded / minimum size.
+  const grow = (start: number, size: number): [number, number] => {
+    const centre = start + size / 2;
+    const wanted = Math.min(1, Math.max(size * (1 + REGION_PAD), MIN_REGION));
+    return [Math.min(Math.max(centre - wanted / 2, 0), 1 - wanted), wanted];
+  };
+
+  const [x, w] = grow(r.x, Math.min(r.w, 1));
+  const [y, h] = grow(r.y, Math.min(r.h, 1));
+  // A "zoom" covering nearly the whole frame is just the original image again.
+  if (w > 0.9 && h > 0.9) return null;
+  return { x, y, w, h };
+}
+
+// Crop the flagged detail out of the photo and enlarge it. Never throws: a
+// failed crop degrades to "no zoom pass", which is the previous behaviour.
+async function cropRegion(image: ImageRef, region: Region | undefined): Promise<ImageRef | null> {
+  const r = normalizeRegion(region ?? null);
+  if (!r) return null;
+  try {
+    const buf = Buffer.from(image.base64Data, "base64");
+    const { width, height } = await sharp(buf).metadata();
+    if (!width || !height) return null;
+
+    const left = Math.round(r.x * width);
+    const top = Math.round(r.y * height);
+    // Guard the right/bottom edges against rounding pushing us past the image.
+    const cw = Math.max(16, Math.min(Math.round(r.w * width), width - left));
+    const ch = Math.max(16, Math.min(Math.round(r.h * height), height - top));
+
+    const out = await sharp(buf)
+      .extract({ left, top, width: cw, height: ch })
+      .resize({ width: ZOOM_TARGET_PX, height: ZOOM_TARGET_PX, fit: "inside", withoutEnlargement: false, kernel: "lanczos3" })
+      .jpeg({ quality: 92 })
+      .toBuffer();
+
+    return { mediaType: "image/jpeg", base64Data: out.toString("base64") };
+  } catch {
+    return null;
   }
 }
 
@@ -349,6 +457,20 @@ const lower = (a: Conf, b: Conf): Conf => (RANK[a] <= RANK[b] ? a : b);
 // agreement doesn't throw away detail one of the two passes managed to read.
 const richer = (a: string, b: string) => (a.trim().length >= b.trim().length ? a : b);
 
+// Fold a corroborating look's detail into the running report. Only ever called
+// once that look has been found to agree on make and model, so this refines the
+// answer rather than changing it.
+function absorb(
+  out: CarReport,
+  other: { yearRange?: string; generation?: string; trimGuess?: string; confidence?: string },
+) {
+  out.crossChecked = true;
+  out.yearRange = richer(out.yearRange, other.yearRange ?? "");
+  out.generation = richer(out.generation, other.generation ?? "");
+  out.trimGuess = richer(out.trimGuess, other.trimGuess ?? "");
+  out.confidence = higher(out.confidence, (other.confidence as Conf) ?? "low");
+}
+
 export async function identifyCar(
   mediaType: string,
   base64Data: string,
@@ -365,18 +487,20 @@ export async function identifyCar(
   // two passes actually disagree.
   const [report, second] = await Promise.all([
     ask<RawReport>({
-      image,
+      images: [image],
       prompt: REPORT_PROMPT + (premium ? PROMPT_PREMIUM : PROMPT_BASIC) + note,
       schema: REPORT_SCHEMA,
-      maxTokens: 8000,
+      // Thinking and the answer share this budget, and the report pass is the
+      // long one — leave room so a careful look never truncates the write-up.
+      maxTokens: 12000,
       effort: REPORT_EFFORT,
     }),
     ask<RawSecond>({
-      image,
+      images: [image],
       prompt: SECOND_OPINION_PROMPT + note,
       schema: SECOND_OPINION_SCHEMA,
-      maxTokens: 2500,
-      effort: "low",
+      maxTokens: 4000,
+      effort: "medium",
     }),
   ]);
 
@@ -393,25 +517,69 @@ export async function identifyCar(
 
   const a: Identity = report;
   const b: Identity = second;
+  const unanimous = agrees(a, b);
+  const bothCertain = out.confidence === "high" && ((second.confidence as Conf) ?? "low") === "high";
 
-  if (agrees(a, b)) {
-    out.crossChecked = true;
-    out.confidence = higher(out.confidence, (second.confidence as Conf) ?? "low");
-    out.yearRange = richer(out.yearRange, second.yearRange ?? "");
-    out.generation = richer(out.generation, second.generation ?? "");
-    out.trimGuess = richer(out.trimGuess, second.trimGuess ?? "");
+  // Two independent looks that agree AND are both certain have already settled
+  // it; zooming would only confirm what a legible badge established twice.
+  if (unanimous && bothCertain) {
+    absorb(out, second);
     out.crossCheckNote = `Confirmed by a second independent look (${second.make} ${second.model}).`;
     return out;
   }
 
-  // Disagreement: pay for one more look, and only then commit.
+  // Everything else gets the close look. Prefer the report pass's chosen detail,
+  // falling back to the second opinion's if the first gave nothing usable.
+  const zoomImage =
+    (await cropRegion(image, report.zoomRegion)) ?? (await cropRegion(image, second.zoomRegion));
+  let zoom: RawZoom | null = null;
+  if (zoomImage) {
+    try {
+      zoom = await ask<RawZoom>({
+        images: [zoomImage],
+        prompt: ZOOM_PROMPT + note,
+        schema: ZOOM_SCHEMA,
+        maxTokens: 4000,
+        effort: "high",
+      });
+    } catch (e) {
+      // A failed zoom costs us the extra evidence, not the scan.
+      console.warn("zoom pass failed:", e);
+    }
+  }
+
+  const read = zoom?.legible?.trim() ? ` — “${zoom.legible.trim()}” was legible up close` : "";
+
+  if (unanimous) {
+    absorb(out, second);
+    if (!zoom || agrees(zoom, a)) {
+      // Nothing contradicts the pair, so let the close look raise the ceiling.
+      if (zoom) absorb(out, zoom);
+      out.crossCheckNote = zoom
+        ? `Two independent looks agreed, and zooming in confirmed it${read}.`
+        : `Confirmed by a second independent look (${second.make} ${second.model}).`;
+      return out;
+    }
+    // The magnified detail disagrees with both wide-shot looks — that is exactly
+    // the case worth adjudicating, so fall through rather than trusting the pair.
+  }
+
+  // Disagreement: one more look, with the crop alongside the full photo.
+  const images = zoomImage ? [image, zoomImage] : [image];
+  const framing = zoomImage
+    ? "\n\nYou are given two images: the full photo, then a magnified crop of the detail flagged as decisive."
+    : "";
+  const zoomLine = zoom
+    ? `\n\nA magnified read of that detail said: ${describe(zoom)}${zoom.legible?.trim() ? ` (legible text: "${zoom.legible.trim()}")` : " (no legible text)"}.`
+    : "";
+
   const verdict = await ask<Identity & { decidingDetail: string; confidence: Conf }>({
-    image,
+    images,
     prompt:
-      `${ADJUDICATE_PROMPT}\n\nCandidate A: ${describe(a)}\nA's evidence: ${(report.visualEvidence || []).join("; ")}\n\nCandidate B: ${describe(b)}\nB's evidence: ${(second.visualEvidence || []).join("; ")}${note}`,
+      `${ADJUDICATE_PROMPT}${framing}\n\nCandidate A: ${describe(a)}\nA's evidence: ${(report.visualEvidence || []).join("; ")}\n\nCandidate B: ${describe(b)}\nB's evidence: ${(second.visualEvidence || []).join("; ")}${zoomLine}${note}`,
     schema: ADJUDICATE_SCHEMA,
-    maxTokens: 2500,
-    effort: "medium",
+    maxTokens: 5000,
+    effort: "high",
   });
 
   const settled = agrees(verdict, a);
@@ -422,8 +590,8 @@ export async function identifyCar(
     "medium",
   );
   out.crossCheckNote = settled
-    ? `A second look suggested ${second.make} ${second.model}; a third confirmed this one — ${verdict.decidingDetail}`
-    : `The first look said ${a.make} ${a.model}; a third look settled on this — ${verdict.decidingDetail}`;
+    ? `A second look suggested ${second.make} ${second.model}; a closer look confirmed this one — ${verdict.decidingDetail}${read}`
+    : `The first look said ${a.make} ${a.model}; a closer look settled on this — ${verdict.decidingDetail}${read}`;
 
   if (!settled) {
     // The specs, facts and valuation in `out` describe the wrong car — the only
@@ -436,11 +604,11 @@ export async function identifyCar(
     out.alsoConsidered = `${a.make} ${a.model} — rejected on a second look.`;
 
     const redo = await ask<RawReport>({
-      image,
+      images: [image],
       prompt:
         `${REPORT_PROMPT}${premium ? PROMPT_PREMIUM : PROMPT_BASIC}${note}\n\nThe car has already been identified as: ${describe(verdict)}. Take that identification as settled and do not change it — fill in the specs, facts, rarity and values for that exact car.`,
       schema: REPORT_SCHEMA,
-      maxTokens: 8000,
+      maxTokens: 12000,
       effort: REPORT_EFFORT,
     });
     const fixed = normalize(redo);
@@ -466,8 +634,14 @@ const describe = (i: Identity) =>
     .filter(Boolean)
     .join(" ");
 
-type RawReport = Partial<CarReport> & Identity;
-type RawSecond = Identity & { isCar?: boolean; confidence?: string; visualEvidence?: string[] };
+type RawReport = Partial<CarReport> & Identity & { zoomRegion?: Region };
+type RawSecond = Identity & {
+  isCar?: boolean;
+  confidence?: string;
+  visualEvidence?: string[];
+  zoomRegion?: Region;
+};
+type RawZoom = Identity & { legible?: string; confidence?: string; visualEvidence?: string[] };
 
 function normalize(input: Partial<CarReport>): CarReport {
   return {

@@ -440,7 +440,10 @@ export default function SpotPage() {
       // away the badge text and headlight detail the identification leans on.
       // At 1024/0.72 a Carrera 4S badge is a smudge; this is the single biggest
       // lever on accuracy, so it's worth the extra upload.
-      const image = await downscale(raw, 2576, 0.85);
+      // Quality matters as much as size here: badge lettering is exactly the
+      // high-frequency detail JPEG throws away first, and the server may crop
+      // into this image and enlarge it, which magnifies any artefacts with it.
+      const image = await downscale(raw, 2576, 0.94);
       const res = await fetch("/api/identify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
