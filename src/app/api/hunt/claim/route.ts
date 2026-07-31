@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { addClaim, readClaims, claimsConfigured, ownerEmail } from "@/lib/hunt-claims";
-import { getProfile } from "@/lib/profile-blob";
+import { ensureProfile } from "@/lib/profile-blob";
 
 export const runtime = "nodejs";
 
@@ -34,8 +34,9 @@ export async function POST(req: Request) {
   let spotter = "Guest";
   const session = await auth();
   if (session?.user?.email) {
-    const profile = await getProfile(session.user.email);
-    spotter = profile?.username ? `@${profile.username}` : session.user.name?.split(" ")[0] || "Guest";
+    // Always a username — generated on first sight if they never picked one.
+    const { profile } = await ensureProfile(session.user.email);
+    spotter = `@${profile.username}`;
   }
 
   const res = await addClaim({

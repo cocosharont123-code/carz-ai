@@ -4,7 +4,7 @@ import { getUserId, getUser, planStatusFor, recentHistory, UID_COOKIE, PLAN_COOK
 import { PLANS } from "@/lib/plans";
 import { badgesFor, goalsForDate } from "@/lib/gamification";
 import { auth } from "@/auth";
-import { getProfile, isActiveMember } from "@/lib/profile-blob";
+import { ensureProfile, isActiveMember } from "@/lib/profile-blob";
 
 export const runtime = "nodejs";
 
@@ -21,9 +21,13 @@ export async function GET() {
 
   const session = await auth();
   let member = false;
+  let username: string | null = null;
   if (session?.user?.email) {
-    const profile = await getProfile(session.user.email);
+    // Provisions a generated-name profile on first sight. /api/me is hit from
+    // most pages, so an account is set up without anyone visiting /profile.
+    const { profile } = await ensureProfile(session.user.email);
     member = isActiveMember(profile);
+    username = profile.username;
   }
 
   const today = new Date().toISOString().slice(0, 10);
@@ -31,6 +35,7 @@ export async function GET() {
   return NextResponse.json({
     ...status,
     member,
+    username,
     plans: PLANS,
     apiConfigured: !!process.env.ANTHROPIC_API_KEY,
     authEnabled: !!process.env.AUTH_GOOGLE_ID,

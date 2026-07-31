@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { readBoard, recordRareSpot, leaderboardConfigured } from "@/lib/leaderboard-blob";
-import { getProfile, memberUsernames } from "@/lib/profile-blob";
+import { ensureProfile, memberUsernames } from "@/lib/profile-blob";
 
 export const runtime = "nodejs";
 
@@ -51,13 +51,10 @@ export async function POST(req: Request) {
   let spotter = "Anonymous";
   let spotterImage = "";
   if (session?.user?.email) {
-    const profile = await getProfile(session.user.email);
-    if (profile?.username) {
-      spotter = `@${profile.username}`;
-      spotterImage = profile.image || "";
-    } else {
-      spotter = session.user.name?.split(" ")[0] || "Anonymous";
-    }
+    // Always a username — generated on first sight if they never picked one.
+    const { profile } = await ensureProfile(session.user.email);
+    spotter = `@${profile.username}`;
+    spotterImage = profile.image || "";
   }
 
   // Keep the stored thumbnail small so the JSON stays lean.

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { placeBid, getAuction, toPublic, hashEmail, auctionsConfigured } from "@/lib/auctions-blob";
-import { getProfile } from "@/lib/profile-blob";
+import { ensureProfile } from "@/lib/profile-blob";
 
 export const runtime = "nodejs";
 
@@ -15,10 +15,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (!email) {
     return NextResponse.json({ ok: false, error: "Sign in to bid." }, { status: 401 });
   }
-  const profile = await getProfile(email);
-  if (!profile?.username) {
-    return NextResponse.json({ ok: false, error: "Set a username first.", needUsername: true }, { status: 400 });
-  }
+  // Everyone has a name the moment they sign in, so bidding is never gated.
+  const { profile } = await ensureProfile(email);
 
   let body: { amount?: number };
   try {

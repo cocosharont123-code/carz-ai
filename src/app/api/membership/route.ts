@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import {
   getProfile,
+  ensureProfile,
   setMembership,
   startTrial,
   touchStreak,
@@ -43,10 +44,8 @@ export async function POST(req: Request) {
   if (!email) {
     return NextResponse.json({ ok: false, error: "Sign in first." }, { status: 401 });
   }
-  const profile = await getProfile(email);
-  if (!profile?.username) {
-    return NextResponse.json({ ok: false, error: "Set a username first.", needUsername: true }, { status: 400 });
-  }
+  // Everyone has a name the moment they sign in, so joining is never gated.
+  await ensureProfile(email);
 
   let body: { action?: string; restoreTo?: number; code?: string; interval?: string };
   try {

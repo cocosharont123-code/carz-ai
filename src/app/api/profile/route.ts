@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { auth } from "@/auth";
-import { getProfile, setProfile, profilesConfigured, ProfileStorageError } from "@/lib/profile-blob";
+import { ensureProfile, setProfile, profilesConfigured, ProfileStorageError } from "@/lib/profile-blob";
 
 export const runtime = "nodejs";
 
@@ -15,51 +15,40 @@ export async function GET() {
     // view of storage on a live deployment without needing to sign in.
     return NextResponse.json({ signedIn: false, configured: profilesConfigured(), profile: null });
   }
-  if (!profilesConfigured()) {
-    return NextResponse.json({ signedIn: true, configured: false, profile: null });
-  }
-
   const jar = await cookies();
 
-  let profile;
-  try {
-    profile = await getProfile(email, { strict: true });
-  } catch (e) {
-    // Storage is down. Say so rather than reporting "no profile", which would
-    // make the gate bounce the user to a setup form that can't succeed.
-    console.error("profile read failed:", e);
-    const cached = jar.get(UNAME_COOKIE)?.value;
+  // Everyone gets a profile on first sight — no setup form, no gate. Falls back
+  // to a generated identity when storage is missing or down, so signing in
+  // still works and the app always has a name to show.
+  const { profile, stored } = await ensureProfile(email);
+
+  // A name the user chose themselves beats the generated one. If storage is
+  // unreachable, `ensureProfile` can only offer the generated name, so prefer
+  // the cookie from their last good read rather than appearing to rename them.
+  const cached = jar.get(UNAME_COOKIE)?.value;
+  if (!stored && cached && cached !== profile.username) {
     return NextResponse.json({
       signedIn: true,
-      configured: true,
+      configured: profilesConfigured(),
       unavailable: true,
-      profile: cached ? { username: cached, displayName: cached, image: "", ts: 0 } : null,
+      profile: { ...profile, username: cached, displayName: cached },
     });
   }
 
-  if (profile?.username) {
-    // Keep the fast-path cookie fresh so future reads never loop.
-    jar.set(UNAME_COOKIE, profile.username, {
-      path: "/",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 365,
-    });
-    return NextResponse.json({ signedIn: true, configured: true, profile });
-  }
+  // Keep the fast-path cookie fresh so future reads never loop.
+  jar.set(UNAME_COOKIE, profile.username, {
+    path: "/",
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 365,
+  });
 
-  // Blob write may not have propagated yet (eventual consistency). If we just
-  // saved a username, trust the cookie so the user isn't bounced back.
-  const cookieName = jar.get(UNAME_COOKIE)?.value;
-  if (cookieName) {
-    return NextResponse.json({
-      signedIn: true,
-      configured: true,
-      pending: true,
-      profile: { username: cookieName, displayName: cookieName, image: "", ts: 0 },
-    });
-  }
-
-  return NextResponse.json({ signedIn: true, configured: true, profile: null });
+  return NextResponse.json({
+    signedIn: true,
+    configured: profilesConfigured(),
+    // Storage didn't accept the write; the name is still usable, just not durable.
+    unavailable: !stored,
+    profile,
+  });
 }
 
 export async function POST(req: Request) {

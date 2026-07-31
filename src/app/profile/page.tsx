@@ -35,7 +35,6 @@ function ProfileInner() {
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [image, setImage] = useState("");
-  const [existing, setExisting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [blocked, setBlocked] = useState(false);
@@ -54,15 +53,12 @@ function ProfileInner() {
           setUsername(d.profile.username || "");
           setDisplayName(d.profile.displayName || "");
           setImage(d.profile.image || "");
-          setExisting(!!d.profile.username);
         }
-        if (d.configured === false) {
-          // No storage is wired up at all — saving can't succeed, so say so
-          // instead of letting people fill in a form that always 503s.
+        // A name always exists — it just can't be *changed* while storage is
+        // unreachable, so disable saving rather than letting every submit 503.
+        if (d.configured === false || d.unavailable) {
           setBlocked(true);
-          setError("Profiles aren't set up on this server yet. Check back soon.");
-        } else if (d.unavailable) {
-          setError("Profile storage is temporarily unavailable — saving is disabled right now.");
+          setError("Your name is set, but renaming isn't available right now. Try again later.");
         }
       })
       .catch(() => {})
@@ -107,7 +103,7 @@ function ProfileInner() {
     <>
       <SiteHeader />
       <main className="mx-auto w-full max-w-lg px-5 py-10">
-        <PageMasthead eyebrow="Your account" title={existing ? "Edit" : "Profile"} />
+        <PageMasthead eyebrow="Your account" title="Your profile" />
 
         {loading ? (
           <Skeleton className="mt-8 h-64 w-full" />
@@ -156,7 +152,9 @@ function ProfileInner() {
                   className="w-full bg-transparent px-1 py-3 text-sm  outline-none "
                 />
               </div>
-              <p className="mt-1.5 text-xs ">3–20 chars · letters, numbers, underscores.</p>
+              <p className="mt-1.5 text-xs ">
+                We picked this for you — change it if you like. 3–20 chars · letters, numbers, underscores.
+              </p>
             </div>
 
             <div>
@@ -173,7 +171,7 @@ function ProfileInner() {
             {error && <div className="border border-carz/40 bg-carz/10 p-3 text-sm ">{error}</div>}
 
             <Button onClick={save} disabled={blocked || saving || username.trim().length < 3} size="lg" className="w-full">
-              {saving ? "Saving…" : existing ? "Save changes" : "Create profile"}
+              {saving ? "Saving…" : "Save changes"}
             </Button>
           </div>
         )}

@@ -109,6 +109,105 @@ export function validateUsername(raw: string): { ok: boolean; error?: string; va
   return { ok: true, value };
 }
 
+// --- Auto-generated names ---------------------------------------------------
+// Nobody is asked to invent a username. Everyone gets one on first sight, and
+// can rename later on /profile if they care.
+
+// Whole words, <=6 chars each, so `adjective_noun9999` fits validateUsername's
+// 20-char limit and the display name never reads as a truncation.
+const ADJECTIVES = [
+  "swift", "turbo", "chrome", "nitro", "vivid", "amber", "cosmic", "drift",
+  "sleek", "atomic", "vapor", "lunar", "solar", "rapid", "onyx", "volt",
+];
+const NOUNS = [
+  "falcon", "piston", "coupe", "bolt", "rotor", "cobra", "spyder", "apex",
+  "camber", "diesel", "clutch", "fender", "grille", "hubcap", "torque", "wagon",
+];
+
+// Deterministic in `email`: the same person gets the same name every time, even
+// when storage is unreachable and nothing can be written down. A random name
+// would otherwise change on every request during an outage.
+export function generatedNameFor(email: string): { username: string; displayName: string } {
+  const h = createHash("sha256").update(`name:${email.toLowerCase().trim()}`).digest();
+  const adj = ADJECTIVES[h[0] % ADJECTIVES.length];
+  const noun = NOUNS[h[1] % NOUNS.length];
+  // 4 digits keeps the namespace at ~2.5M, so collisions stay rare enough that
+  // `freeUsername`'s numeric suffix is a genuine edge case rather than routine.
+  const num = (((h[2] << 16) | (h[3] << 8) | h[4]) >>> 0) % 10_000;
+  return {
+    username: `${adj}_${noun}${num}`,
+    displayName: `${adj[0].toUpperCase()}${adj.slice(1)} ${noun[0].toUpperCase()}${noun.slice(1)}`,
+  };
+}
+
+function generatedProfile(email: string): Profile {
+  const { username, displayName } = generatedNameFor(email);
+  return { username, displayName, image: "", ts: 0 };
+}
+
+// Append digits until the name is free, keeping inside the 20-char limit.
+function freeUsername(base: string, taken: Set<string>): string {
+  if (!taken.has(base)) return base;
+  for (let n = 2; n < 1000; n++) {
+    const suffix = String(n);
+    const candidate = `${base.slice(0, 20 - suffix.length)}${suffix}`;
+    if (!taken.has(candidate)) return candidate;
+  }
+  return base.slice(0, 16) + Math.floor(Date.now() % 10_000);
+}
+
+// The record for this account inside an already-loaded map, generating one if
+// the account has never been seen. Mutates `all`; the caller still writes it.
+function recordIn(all: Record<string, Profile>, email: string): Profile {
+  const key = keyFor(email);
+  const existing = all[key];
+  if (existing?.username) return existing;
+
+  const fallback = generatedProfile(email);
+  const taken = new Set<string>();
+  for (const [k, p] of Object.entries(all)) {
+    if (k !== key && p.username) taken.add(p.username.toLowerCase());
+  }
+  const created: Profile = {
+    ...existing, // keep membership/streak if a record exists without a username
+    ...fallback,
+    username: freeUsername(fallback.username, taken),
+    ts: Date.now(),
+  };
+  all[key] = created;
+  return created;
+}
+
+// The profile for this account, creating one with a generated name if there
+// isn't one yet. Never throws and never returns null: if storage is missing or
+// down we still hand back the generated identity (`stored: false`) so signing
+// in works and the rest of the app has a name to show. The write is retried
+// naturally on the next request.
+export async function ensureProfile(
+  email: string,
+): Promise<{ profile: Profile; stored: boolean }> {
+  const fallback = generatedProfile(email);
+  if (!profilesConfigured()) return { profile: fallback, stored: false };
+
+  let all: Record<string, Profile>;
+  try {
+    all = await readAll();
+  } catch {
+    return { profile: fallback, stored: false };
+  }
+
+  const existing = all[keyFor(email)];
+  if (existing?.username) return { profile: existing, stored: true };
+
+  const profile = recordIn(all, email);
+  try {
+    await writeAll(all);
+  } catch {
+    return { profile, stored: false };
+  }
+  return { profile, stored: true };
+}
+
 // `strict` surfaces a storage outage instead of reporting "no profile" — used by
 // the profile endpoint so the setup gate doesn't trap users while the store is down.
 export async function getProfile(
@@ -165,8 +264,7 @@ export async function setMembership(
 ): Promise<Profile | null> {
   const all = await readAll();
   const key = keyFor(email);
-  const p = all[key];
-  if (!p) return null; // must have a profile (username) first
+  const p = recordIn(all, email); // joining never waits on manual setup
   p.member = on;
   if (on) {
     if (!p.memberSince) p.memberSince = Date.now();
@@ -195,8 +293,7 @@ export async function startTrial(
 ): Promise<{ ok: boolean; error?: string; profile?: Profile }> {
   const all = await readAll();
   const key = keyFor(email);
-  const p = all[key];
-  if (!p) return { ok: false, error: "Set a username first." };
+  const p = recordIn(all, email); // starting a trial never waits on manual setup
   if (isActiveMember(p)) return { ok: false, error: "You're already a Carz+ member." };
   if (p.trialUsed) return { ok: false, error: "You've already used your free trial." };
   p.member = true;
