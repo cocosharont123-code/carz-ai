@@ -17,7 +17,11 @@ import { auth } from "@/auth";
 import { getProfile, isActiveMember } from "@/lib/profile-blob";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+// A confident scan is two concurrent looks and returns quickly. A contested one
+// can chain a zoom, an adjudication and a regenerated report on top of that, and
+// each of those now runs at high effort — 60s was tight enough that the hardest
+// cars, the ones the extra passes exist for, would have timed out instead.
+export const maxDuration = 300;
 
 export async function POST(req: Request) {
   const { id, isNew } = await getUserId();
