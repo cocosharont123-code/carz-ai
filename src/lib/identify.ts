@@ -536,17 +536,14 @@ export async function identifyCar(
     effort: "low",
   });
 
-  // The cheap look lands well before the report does. If it comes back anything
-  // short of certain, start the close look on its chosen detail *now*, so the
-  // zoom runs underneath the report instead of being tacked on after it. On a
-  // hard car that turns an extra round trip into free wall-clock; on an easy one
-  // the second opinion says "high" and no zoom is started or paid for.
+  // The cheap look lands well before the report does, so the close look on its
+  // chosen detail starts *now* and runs underneath the report. We can't yet know
+  // whether the report will contest it, and finding out first is what used to
+  // cost a serial round trip — so it always runs. The read is discarded unused
+  // on a car the two passes agree on, which buys the contested case its speed at
+  // the price of one small call on the easy ones.
   const earlyZoomP: Promise<Zoomed> = secondP
-    .then((s) =>
-      s.isCar && ((s.confidence as Conf) ?? "low") !== "high"
-        ? zoomOn(image, s.zoomRegion, note)
-        : NO_ZOOM,
-    )
+    .then((s) => (s.isCar ? zoomOn(image, s.zoomRegion, note) : NO_ZOOM))
     .catch(() => NO_ZOOM);
 
   const [report, second] = await Promise.all([
