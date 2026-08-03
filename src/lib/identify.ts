@@ -76,15 +76,18 @@ function pickModel(): string {
 
 const MODEL = pickModel();
 
-// The wide-shot looks are the whole wait, and they are the easy half of the job:
-// place a car, name it, mark the detail worth magnifying. The hard half — ruling
-// between two candidates on a magnified detail — stays on the flagship. Sonnet 5
-// is the first Sonnet with the same high-resolution vision, so it sees exactly
-// what Opus would; it just decides faster.
+// Measured, and it surprised me: putting the wide-shot looks on Sonnet 5 made
+// scans *slower* — median 19.6s against 10.0s — because the cheaper look
+// disagreed with the second opinion 8 times in 9 instead of 1, and every
+// disagreement buys an Opus adjudication that dwarfs what the faster look saved.
+// It also named cars less precisely ("911 Carrera" for a "911 Carrera S").
+// The same trap as low effort: on a pipeline whose accuracy comes from
+// agreement, anything that cheapens a look pays for it twice over.
+// Left as an override so the experiment is one env var away, not a deploy.
 const LOOK_MODEL = (() => {
   const override = process.env.CAR_SPOTTER_LOOK_MODEL?.trim();
   if (override && STRUCTURED_OUTPUT_CAPABLE.test(override)) return override;
-  return "claude-sonnet-5";
+  return MODEL;
 })();
 
 // Fast mode runs the same model at up to 2.5x output speed. Only Opus 5 / 4.8
