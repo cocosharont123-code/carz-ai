@@ -76,10 +76,21 @@ function pickModel(): string {
 
 const MODEL = pickModel();
 
+// The wide-shot looks are the whole wait, and they are the easy half of the job:
+// place a car, name it, mark the detail worth magnifying. The hard half — ruling
+// between two candidates on a magnified detail — stays on the flagship. Sonnet 5
+// is the first Sonnet with the same high-resolution vision, so it sees exactly
+// what Opus would; it just decides faster.
+const LOOK_MODEL = (() => {
+  const override = process.env.CAR_SPOTTER_LOOK_MODEL?.trim();
+  if (override && STRUCTURED_OUTPUT_CAPABLE.test(override)) return override;
+  return "claude-sonnet-5";
+})();
+
 // Fast mode runs the same model at up to 2.5x output speed. Only Opus 5 / 4.8
-// support it, so a CAR_SPOTTER_MODEL override silently drops back to standard.
+// support it, so any other model silently runs at standard speed.
 const FAST_CAPABLE = /^claude-opus-(5|4-8)$/;
-let fastMode = FAST_CAPABLE.test(MODEL) && process.env.CAR_SPOTTER_FAST !== "0";
+let fastMode = process.env.CAR_SPOTTER_FAST !== "0";
 
 type Effort = "low" | "medium" | "high" | "xhigh" | "max";
 
@@ -97,7 +108,6 @@ const LOOK_EFFORT = (process.env.CAR_SPOTTER_EFFORT as Effort) || "medium";
 // `effort` is rejected outright by Haiku 4.5 and Sonnet 4.5, so a
 // CAR_SPOTTER_MODEL override pointing at one of those must not send it.
 const EFFORT_CAPABLE = /^claude-(opus-(5|4-8|4-7|4-6|4-5)|sonnet-(5|4-6)|fable-5|mythos-5)$/;
-const supportsEffort = EFFORT_CAPABLE.test(MODEL);
 
 export class IdentifyError extends Error {}
 
@@ -293,10 +303,13 @@ async function ask<T>(opts: {
   schema: Record<string, unknown>;
   maxTokens: number;
   effort: Effort;
+  model?: string;
 }): Promise<T> {
+  const model = opts.model ?? MODEL;
+  const supportsEffort = EFFORT_CAPABLE.test(model);
   const send = (fast: boolean) =>
     getClient().beta.messages.create({
-      model: MODEL,
+      model,
       max_tokens: opts.maxTokens,
       ...(fast ? { speed: "fast" as const, betas: ["fast-mode-2026-02-01"] } : {}),
       output_config: {
@@ -324,7 +337,8 @@ async function ask<T>(opts: {
   // Capture the mode this request actually used: passes run concurrently, so by
   // the time this one fails another may already have flipped the global flag —
   // gating the retry on `fastMode` would make the second failure fatal.
-  const usedFast = fastMode;
+  // Fast mode is an Opus-only research preview; anything else runs standard.
+  const usedFast = fastMode && FAST_CAPABLE.test(model);
   let res;
   try {
     res = await send(usedFast);
@@ -462,6 +476,7 @@ async function zoomOn(image: ImageRef, region: Region | undefined, note: string)
   try {
     const read = await ask<RawZoom>({
       images: [crop],
+      model: LOOK_MODEL,
       prompt: ZOOM_PROMPT + note,
       schema: ZOOM_SCHEMA,
       maxTokens: 4000,
@@ -559,6 +574,7 @@ export async function identifyCar(
 
   const secondP = ask<RawSecond>({
     images: [wide],
+    model: LOOK_MODEL,
     prompt: SECOND_OPINION_PROMPT + note,
     schema: SECOND_OPINION_SCHEMA,
     maxTokens: 4000,
@@ -580,6 +596,7 @@ export async function identifyCar(
   const [report, second] = await Promise.all([
     ask<RawLook>({
       images: [wide],
+      model: LOOK_MODEL,
       prompt: LOOK_PROMPT + note,
       schema: LOOK_SCHEMA,
       maxTokens: 6000,
