@@ -83,10 +83,13 @@ let fastMode = FAST_CAPABLE.test(MODEL) && process.env.CAR_SPOTTER_FAST !== "0";
 
 type Effort = "low" | "medium" | "high" | "xhigh" | "max";
 
-// Telling a car apart from the one it is most often confused with is exactly the
-// "intelligence-sensitive" case the effort ladder exists for, so identification
-// runs at `high` rather than the cheaper setting that suits routine work.
-const REPORT_EFFORT = (process.env.CAR_SPOTTER_EFFORT as Effort) || "high";
+// Effort is the main thing standing between a spotter and their answer: it sets
+// how long the model deliberates before writing, and on the happy path this one
+// call is the whole wait. `medium` is the balance point — the zoom pass now
+// backstops the hard cars, so the wide-shot look doesn't have to carry them
+// alone. Raise it with CAR_SPOTTER_EFFORT if accuracy ever matters more than
+// the wait.
+const REPORT_EFFORT = (process.env.CAR_SPOTTER_EFFORT as Effort) || "medium";
 
 // `effort` is rejected outright by Haiku 4.5 and Sonnet 4.5, so a
 // CAR_SPOTTER_MODEL override pointing at one of those must not send it.
@@ -111,7 +114,7 @@ const EVIDENCE_PROP = {
   type: "array",
   items: { type: "string" },
   description:
-    "3-6 short notes on what is literally visible in THIS photo and led you to the answer: badge text, grille shape, headlight/taillight signature, wheel design, mirror and door-handle style, roofline, exhaust layout. Observations only — no conclusions.",
+    "3-4 short notes on what is literally visible in THIS photo and led you to the answer: badge text, grille shape, headlight/taillight signature, wheel design, mirror and door-handle style, roofline, exhaust layout. Observations only — no conclusions.",
 } as const;
 
 function objSchema(props: Record<string, unknown>) {
@@ -407,6 +410,33 @@ async function cropRegion(image: ImageRef, region: Region | undefined): Promise<
   }
 }
 
+// A magnified read plus the crop it was taken from — the crop is kept so the
+// adjudicator can be shown the same detail rather than a description of it.
+type Zoomed = { read: RawZoom | null; crop: ImageRef | null };
+const NO_ZOOM: Zoomed = { read: null, crop: null };
+
+// Never throws: a failed crop or a failed read costs the extra evidence, not the
+// scan, and the caller falls back to deciding on the wide shot alone.
+async function zoomOn(image: ImageRef, region: Region | undefined, note: string): Promise<Zoomed> {
+  const crop = await cropRegion(image, region);
+  if (!crop) return NO_ZOOM;
+  try {
+    const read = await ask<RawZoom>({
+      images: [crop],
+      prompt: ZOOM_PROMPT + note,
+      schema: ZOOM_SCHEMA,
+      maxTokens: 4000,
+      // The crop exists precisely so the detail is big and obvious; reading it
+      // does not need the deliberation that finding it in a wide shot did.
+      effort: "medium",
+    });
+    return { read, crop };
+  } catch (e) {
+    console.warn("zoom pass failed:", e);
+    return { read: null, crop };
+  }
+}
+
 function isFastModeProblem(e: unknown): boolean {
   if (!(e instanceof Anthropic.APIError)) return false;
   if (e.status === 429) return true; // fast mode has a separate rate-limit pool
@@ -483,8 +513,29 @@ export async function identifyCar(
       ? `\n\nThe spotter added a note: "${userText.trim()}". Treat it as a hint, not as fact — if the photo contradicts it, trust the photo.`
       : "";
 
-  // Both looks start at once: the check is free in wall-clock terms unless the
-  // two passes actually disagree.
+  const secondP = ask<RawSecond>({
+    images: [image],
+    prompt: SECOND_OPINION_PROMPT + note,
+    schema: SECOND_OPINION_SCHEMA,
+    maxTokens: 4000,
+    // Runs concurrently with the report, so it is free wall-clock only while it
+    // stays the shorter of the two. It reads one car from one photo — cheap.
+    effort: "low",
+  });
+
+  // The cheap look lands well before the report does. If it comes back anything
+  // short of certain, start the close look on its chosen detail *now*, so the
+  // zoom runs underneath the report instead of being tacked on after it. On a
+  // hard car that turns an extra round trip into free wall-clock; on an easy one
+  // the second opinion says "high" and no zoom is started or paid for.
+  const earlyZoomP: Promise<Zoomed> = secondP
+    .then((s) =>
+      s.isCar && ((s.confidence as Conf) ?? "low") !== "high"
+        ? zoomOn(image, s.zoomRegion, note)
+        : NO_ZOOM,
+    )
+    .catch(() => NO_ZOOM);
+
   const [report, second] = await Promise.all([
     ask<RawReport>({
       images: [image],
@@ -495,13 +546,7 @@ export async function identifyCar(
       maxTokens: 12000,
       effort: REPORT_EFFORT,
     }),
-    ask<RawSecond>({
-      images: [image],
-      prompt: SECOND_OPINION_PROMPT + note,
-      schema: SECOND_OPINION_SCHEMA,
-      maxTokens: 4000,
-      effort: "medium",
-    }),
+    secondP,
   ]);
 
   const out = normalize(report);
@@ -528,25 +573,13 @@ export async function identifyCar(
     return out;
   }
 
-  // Everything else gets the close look. Prefer the report pass's chosen detail,
-  // falling back to the second opinion's if the first gave nothing usable.
-  const zoomImage =
-    (await cropRegion(image, report.zoomRegion)) ?? (await cropRegion(image, second.zoomRegion));
-  let zoom: RawZoom | null = null;
-  if (zoomImage) {
-    try {
-      zoom = await ask<RawZoom>({
-        images: [zoomImage],
-        prompt: ZOOM_PROMPT + note,
-        schema: ZOOM_SCHEMA,
-        maxTokens: 4000,
-        effort: "high",
-      });
-    } catch (e) {
-      // A failed zoom costs us the extra evidence, not the scan.
-      console.warn("zoom pass failed:", e);
-    }
-  }
+  // Usually already finished, having run alongside the report. Only when the
+  // second opinion was certain but the report still left this contested do we
+  // pay for a zoom here, on the report's own chosen detail.
+  let zoomed = await earlyZoomP;
+  if (!zoomed.read) zoomed = await zoomOn(image, report.zoomRegion ?? second.zoomRegion, note);
+  const zoom = zoomed.read;
+  const zoomImage = zoomed.crop;
 
   const read = zoom?.legible?.trim() ? ` — “${zoom.legible.trim()}” was legible up close` : "";
 
@@ -579,7 +612,7 @@ export async function identifyCar(
       `${ADJUDICATE_PROMPT}${framing}\n\nCandidate A: ${describe(a)}\nA's evidence: ${(report.visualEvidence || []).join("; ")}\n\nCandidate B: ${describe(b)}\nB's evidence: ${(second.visualEvidence || []).join("; ")}${zoomLine}${note}`,
     schema: ADJUDICATE_SCHEMA,
     maxTokens: 5000,
-    effort: "high",
+    effort: "medium",
   });
 
   const settled = agrees(verdict, a);
