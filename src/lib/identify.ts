@@ -90,6 +90,17 @@ const LOOK_MODEL = (() => {
   return MODEL;
 })();
 
+// The spec sheet is pure recall — no photo, no second opinion, no adjudicator.
+// That matters: the reason a cheaper model backfired on the wide looks was the
+// disagreement it caused and the Opus ruling that followed, and none of that
+// machinery exists on this call. There is nothing here for a smaller model to
+// destabilise, so it takes the quicker one.
+const SPECS_MODEL = (() => {
+  const override = process.env.CAR_SPOTTER_SPECS_MODEL?.trim();
+  if (override && STRUCTURED_OUTPUT_CAPABLE.test(override)) return override;
+  return "claude-sonnet-5";
+})();
+
 // Fast mode runs the same model at up to 2.5x output speed. Only Opus 5 / 4.8
 // support it, so any other model silently runs at standard speed.
 const FAST_CAPABLE = /^claude-opus-(5|4-8)$/;
@@ -720,9 +731,11 @@ export async function describeCar(
     images: [],
     prompt: `${SPECS_PROMPT}${premium ? PROMPT_PREMIUM : PROMPT_BASIC}\n\nThe car is: ${describe(identity)}.`,
     schema: SPECS_SCHEMA,
+    model: SPECS_MODEL,
     maxTokens: 6000,
     // Recall, not perception — it does not need to deliberate over a photo.
     effort: "low",
+    think: false,
   });
   return {
     countryOfOrigin: specs.countryOfOrigin ?? "",
