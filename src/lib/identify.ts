@@ -251,13 +251,15 @@ const ADJUDICATE_SCHEMA = objSchema({
 
 // --- Prompts -----------------------------------------------------------------
 
+const NO_MARKUP = " Do not include internal or system XML tags in your response.";
+
 const GROUNDING =
   "Work from the photo, not from what is most common. Fill visualEvidence FIRST with details you can actually see, then let those details pick the car — a badge you can read outranks a silhouette that merely looks familiar. If a detail is too blurry or cropped to read, do not invent it. Then set zoomRegion to the one detail worth magnifying to confirm your answer; it will actually be cropped and re-read, so box the detail tightly rather than the whole car.";
 
 const LOOK_PROMPT =
   "You are an expert automotive identifier. Identify this car as precisely as you can — make, model, year range, generation, and trim. " +
   GROUNDING +
-  " Name the closest car you rejected in alsoConsidered. Set confidence honestly: 'high' only when a badge, a model-specific light signature, or an unmistakable body detail is legible. Answer ONLY what the photo shows — identity, body style and colour. Do not describe specs, performance, rarity or value; another pass handles those. Keep every text field brief.";
+  " Name the closest car you rejected in alsoConsidered. Set confidence honestly: 'high' only when a badge, a model-specific light signature, or an unmistakable body detail is legible. Answer ONLY what the photo shows — identity, body style and colour. Do not describe specs, performance, rarity or value; another pass handles those. Keep every text field brief." + NO_MARKUP;
 
 // No image: by this point the car has a name, and engine, performance, rarity
 // and value are recall rather than perception. Running it without the photo
@@ -276,7 +278,7 @@ const PROMPT_BASIC =
 const SECOND_OPINION_PROMPT =
   "Identify the car in this photo. You are a second, independent opinion — no prior guess is given to you and you must not assume one. " +
   GROUNDING +
-  " Start from the parts owners cannot change: headlight and taillight internals, grille and intake shapes, glasshouse and roofline, panel gaps, badge text, exhaust exits. Aftermarket wheels, wraps and body kits are unreliable — weight them low. Give make, model, year range, generation and trim as precisely as the visible detail allows, and set confidence honestly.";
+  " Start from the parts owners cannot change: headlight and taillight internals, grille and intake shapes, glasshouse and roofline, panel gaps, badge text, exhaust exits. Aftermarket wheels, wraps and body kits are unreliable — weight them low. Give make, model, year range, generation and trim as precisely as the visible detail allows, and set confidence honestly." + NO_MARKUP;
 
 const ZOOM_PROMPT =
   "This is a magnified crop of one detail from a car photo — the detail a previous look flagged as the one worth confirming. Read it literally. Transcribe any badge text, emblem or lettering into `legible` exactly as it appears, and leave `legible` empty rather than guessing at something too soft to read. The crop has been enlarged, so it is soft by nature: do not read detail into upscaling blur or JPEG artefacts. Then give the most precise identification this detail alone supports, and set confidence on that basis.";
@@ -307,14 +309,20 @@ async function ask<T>(opts: {
   maxTokens: number;
   effort: Effort;
   model?: string;
+  think?: boolean;
 }): Promise<T> {
   const model = opts.model ?? MODEL;
   const supportsEffort = EFFORT_CAPABLE.test(model);
+  // Thinking is emitted before a single character of the answer, so switching it
+  // off is the one remaining way to shorten the call the spotter waits on. Only
+  // valid at effort `high` or below on Opus 5, which is where the looks sit.
+  const think = opts.think !== false;
   const send = (fast: boolean) =>
     getClient().beta.messages.create({
       model,
       max_tokens: opts.maxTokens,
       ...(fast ? { speed: "fast" as const, betas: ["fast-mode-2026-02-01"] } : {}),
+      ...(think ? {} : { thinking: { type: "disabled" as const } }),
       output_config: {
         ...(supportsEffort ? { effort: opts.effort } : {}),
         format: { type: "json_schema" as const, schema: opts.schema },
@@ -578,6 +586,7 @@ export async function identifyCar(
   const secondP = ask<RawSecond>({
     images: [wide],
     model: LOOK_MODEL,
+    think: false,
     prompt: SECOND_OPINION_PROMPT + note,
     schema: SECOND_OPINION_SCHEMA,
     maxTokens: 4000,
@@ -600,6 +609,7 @@ export async function identifyCar(
     ask<RawLook>({
       images: [wide],
       model: LOOK_MODEL,
+      think: false,
       prompt: LOOK_PROMPT + note,
       schema: LOOK_SCHEMA,
       maxTokens: 6000,
