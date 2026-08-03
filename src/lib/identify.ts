@@ -88,10 +88,11 @@ type Effort = "low" | "medium" | "high" | "xhigh" | "max";
 // here is the latency dial, and it is set low deliberately. Accuracy no longer
 // rests on this pass thinking longer — it rests on an independent second look,
 // a magnified read of the deciding detail, and an adjudicator that sees both.
-// A first look that is fast and occasionally wrong, checked three ways, beats a
-// slow one trusted on its own. Raise it with CAR_SPOTTER_EFFORT to trade the
-// wait back for deliberation.
-const LOOK_EFFORT = (process.env.CAR_SPOTTER_EFFORT as Effort) || "low";
+// Measured: dropping this to `low` moved the median barely at all and made the
+// two looks disagree noticeably more often, and a disagreement costs an
+// adjudication that dwarfs whatever the cheaper look saved. `medium` is the
+// floor that pays for itself. CAR_SPOTTER_EFFORT overrides it.
+const LOOK_EFFORT = (process.env.CAR_SPOTTER_EFFORT as Effort) || "medium";
 
 // `effort` is rejected outright by Haiku 4.5 and Sonnet 4.5, so a
 // CAR_SPOTTER_MODEL override pointing at one of those must not send it.
@@ -426,6 +427,28 @@ async function cropRegion(image: ImageRef, region: Region | undefined): Promise<
   }
 }
 
+// Wide enough to place a car, read its shape and pick a detail to magnify —
+// roughly a quarter of the image tokens of the full-resolution original, which
+// is time paid twice over since both wide-shot passes prefill it.
+const WIDE_PX = 1280;
+
+// Falls back to the original on any failure: a slower scan beats a failed one.
+async function shrink(image: ImageRef): Promise<ImageRef | null> {
+  try {
+    const buf = Buffer.from(image.base64Data, "base64");
+    const { width, height } = await sharp(buf).metadata();
+    if (!width || !height) return null;
+    if (Math.max(width, height) <= WIDE_PX) return null; // already small
+    const out = await sharp(buf)
+      .resize({ width: WIDE_PX, height: WIDE_PX, fit: "inside", kernel: "lanczos3" })
+      .jpeg({ quality: 90 })
+      .toBuffer();
+    return { mediaType: "image/jpeg", base64Data: out.toString("base64") };
+  } catch {
+    return null;
+  }
+}
+
 // A magnified read plus the crop it was taken from — the crop is kept so the
 // adjudicator can be shown the same detail rather than a description of it.
 type Zoomed = { read: RawZoom | null; crop: ImageRef | null };
@@ -523,13 +546,19 @@ export async function identifyCar(
   userText?: string,
 ): Promise<CarReport> {
   const image: ImageRef = { mediaType, base64Data };
+  // Both wide-shot passes prefill this photo, and at 2576px that is the single
+  // biggest fixed cost in the scan. They don't need it: their job is to place
+  // the car and pick the detail worth magnifying. The zoom is what reads the
+  // badge, and it still crops from the full-resolution original — so the detail
+  // is preserved exactly where it gets used.
+  const wide = (await shrink(image)) ?? image;
   const note =
     userText && userText.trim()
       ? `\n\nThe spotter added a note: "${userText.trim()}". Treat it as a hint, not as fact — if the photo contradicts it, trust the photo.`
       : "";
 
   const secondP = ask<RawSecond>({
-    images: [image],
+    images: [wide],
     prompt: SECOND_OPINION_PROMPT + note,
     schema: SECOND_OPINION_SCHEMA,
     maxTokens: 4000,
@@ -550,7 +579,7 @@ export async function identifyCar(
 
   const [report, second] = await Promise.all([
     ask<RawLook>({
-      images: [image],
+      images: [wide],
       prompt: LOOK_PROMPT + note,
       schema: LOOK_SCHEMA,
       maxTokens: 6000,
@@ -608,7 +637,7 @@ export async function identifyCar(
   }
 
   // Disagreement: one more look, with the crop alongside the full photo.
-  const images = zoomImage ? [image, zoomImage] : [image];
+  const images = zoomImage ? [wide, zoomImage] : [wide];
   const framing = zoomImage
     ? "\n\nYou are given two images: the full photo, then a magnified crop of the detail flagged as decisive."
     : "";
