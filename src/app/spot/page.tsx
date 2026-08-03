@@ -370,6 +370,8 @@ function InlineListings({ make, model, goodDealUsd }: { make: string; model: str
 export default function SpotPage() {
   const [status, setStatus] = useState<Status | null>(null);
   const [car, setCar] = useState<CarReport | null>(null);
+  // The identification lands first; specs, rarity and values stream in behind it.
+  const [specsPending, setSpecsPending] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [limitHit, setLimitHit] = useState(false);
@@ -462,39 +464,65 @@ export default function SpotPage() {
       setCar(data.car);
       setSpottedImage(image); // keep the exact photo for the AI customizer
       setStatus((prev) => ({ ...(prev as Status), ...data.status }));
-      // Save this spot to the on-device garage history + global leaderboard.
+
+      // The answer is on screen at this point. Everything below follows from the
+      // car's name rather than the photo, so it loads in behind the result
+      // instead of holding it up — including the garage and leaderboard entries,
+      // which need the rarity and price that arrive with it.
       if (data.car?.isCar) {
-        try {
-          const thumb = await downscale(raw, 360, 0.55);
-          addToGarage({
-            image: thumb,
-            make: data.car.make,
-            model: data.car.model,
-            yearRange: data.car.yearRange,
-            confidence: data.car.confidence,
-            rarityScore: data.car.rarityScore,
-            priceRange: data.car.priceRangeUsed,
-          });
-          // Submit to the global rarest-cars leaderboard (best-effort).
-          if (data.car.rarityScore > 0) {
-            const lbThumb = await downscale(raw, 200, 0.5);
-            void fetch("/api/leaderboard", {
+        setSpecsPending(true);
+        void (async () => {
+          try {
+            const dres = await fetch("/api/identify/details", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                image: lbThumb,
                 make: data.car.make,
                 model: data.car.model,
                 yearRange: data.car.yearRange,
-                rarityScore: data.car.rarityScore,
-                rarityReason: data.car.rarityReason,
-                priceRange: data.car.priceRangeUsed,
+                generation: data.car.generation,
+                trimGuess: data.car.trimGuess,
               }),
-            }).catch(() => {});
+            });
+            const dd = await dres.json();
+            if (!dd.specs) return;
+            const full = { ...data.car, ...dd.specs };
+            setCar(full);
+            if (dd.status) setStatus((prev) => ({ ...(prev as Status), ...dd.status }));
+
+            const thumb = await downscale(raw, 360, 0.55);
+            addToGarage({
+              image: thumb,
+              make: full.make,
+              model: full.model,
+              yearRange: full.yearRange,
+              confidence: full.confidence,
+              rarityScore: full.rarityScore,
+              priceRange: full.priceRangeUsed,
+            });
+            // Submit to the global rarest-cars leaderboard (best-effort).
+            if (full.rarityScore > 0) {
+              const lbThumb = await downscale(raw, 200, 0.5);
+              void fetch("/api/leaderboard", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  image: lbThumb,
+                  make: full.make,
+                  model: full.model,
+                  yearRange: full.yearRange,
+                  rarityScore: full.rarityScore,
+                  rarityReason: full.rarityReason,
+                  priceRange: full.priceRangeUsed,
+                }),
+              }).catch(() => {});
+            }
+          } catch {
+            /* details are best-effort — the identification already landed */
+          } finally {
+            setSpecsPending(false);
           }
-        } catch {
-          /* garage / leaderboard save is best-effort */
-        }
+        })();
       }
       // keep the photo on screen after identifying
       await refresh();
@@ -679,6 +707,12 @@ export default function SpotPage() {
                   </span>
                 </div>
                 {car.notes && <p className="mt-1 text-sm ">{car.notes}</p>}
+                {specsPending && (
+                  <p className="mt-1.5 flex items-center gap-2 text-xs opacity-60">
+                    <span className="inline-block h-1.5 w-1.5 animate-ping rounded-full bg-current" />
+                    Loading specs, rarity and values…
+                  </p>
+                )}
                 {car.crossChecked && car.crossCheckNote && (
                   <p className="mt-1.5 text-xs opacity-70">✓ {car.crossCheckNote}</p>
                 )}

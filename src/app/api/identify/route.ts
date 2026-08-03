@@ -12,7 +12,6 @@ import {
 } from "@/lib/store";
 import { PLANS } from "@/lib/plans";
 import { identifyCar, IdentifyError } from "@/lib/identify";
-import { goalsForDate, evaluateGoals } from "@/lib/gamification";
 import { auth } from "@/auth";
 import { getProfile, isActiveMember } from "@/lib/profile-blob";
 
@@ -73,16 +72,17 @@ export async function POST(req: Request) {
   }
 
   try {
-    const car = await identifyCar(mediaType, base64Data, plan.premiumReport, body.note);
-    const today = new Date().toISOString().slice(0, 10);
-    const completedGoals = car.isCar ? evaluateGoals(car, goalsForDate(today)) : [];
+    // Identification only — the spec sheet, rarity and values follow from the
+    // car's name, not the photo, and are fetched separately so the spotter sees
+    // their answer without waiting on them.
+    const car = await identifyCar(mediaType, base64Data, body.note);
     const status = recordIdentification(
       id,
       { make: car.make, model: car.model, yearRange: car.yearRange, isCar: car.isCar },
-      completedGoals,
+      [],
       effectivePlan,
     );
-    return NextResponse.json({ car, status, completedGoals });
+    return NextResponse.json({ car, status, premium: plan.premiumReport });
   } catch (e) {
     const message = e instanceof IdentifyError ? e.message : "Identification failed.";
     return NextResponse.json({ error: "identify_failed", message }, { status: 502 });

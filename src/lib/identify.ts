@@ -139,8 +139,11 @@ const REGION_PROP = {
     "A tight box around the ONE detail you would zoom into to confirm this car against the car you nearly said instead — usually a badge, a taillight's internal pattern, a grille, or a wheel centre. Box the detail itself, not the whole car.",
 } as const;
 
+// What the photo can answer. Kept deliberately small: this is the call a spotter
+// is actually waiting on, and every field here is one more thing to write before
+// they see the car's name.
 // Evidence is listed first so the model records what it sees before naming the car.
-const REPORT_SCHEMA = objSchema({
+const LOOK_SCHEMA = objSchema({
   visualEvidence: EVIDENCE_PROP,
   zoomRegion: REGION_PROP,
   isCar: { type: "boolean", description: "True if a car/vehicle is clearly visible." },
@@ -152,6 +155,13 @@ const REPORT_SCHEMA = objSchema({
   },
   bodyStyle: { type: "string" },
   color: { type: "string" },
+  confidence: { type: "string", enum: ["high", "medium", "low"] },
+  notes: { type: "string", description: "Caveats, ambiguity, or '' if none." },
+});
+
+// What the photo is irrelevant to. Once the car has a name these are recall, not
+// perception, so they run without the image and off the critical path.
+const SPECS_SCHEMA = objSchema({
   countryOfOrigin: { type: "string" },
   engine: { type: "string", description: "Typical engine for this model/era" },
   drivetrain: { type: "string", description: "FWD/RWD/AWD etc." },
@@ -164,8 +174,6 @@ const REPORT_SCHEMA = objSchema({
     items: { type: "string" },
     description: "Exactly 2 fun facts, each ONE short punchy sentence (max ~12 words). No preamble.",
   },
-  confidence: { type: "string", enum: ["high", "medium", "low"] },
-  notes: { type: "string", description: "Caveats, ambiguity, or '' if none." },
   parentCompany: {
     type: "string",
     description: "Corporate parent/group that owns the brand, e.g. 'Volkswagen Group' for Porsche.",
@@ -230,10 +238,16 @@ const ADJUDICATE_SCHEMA = objSchema({
 const GROUNDING =
   "Work from the photo, not from what is most common. Fill visualEvidence FIRST with details you can actually see, then let those details pick the car — a badge you can read outranks a silhouette that merely looks familiar. If a detail is too blurry or cropped to read, do not invent it. Then set zoomRegion to the one detail worth magnifying to confirm your answer; it will actually be cropped and re-read, so box the detail tightly rather than the whole car.";
 
-const REPORT_PROMPT =
+const LOOK_PROMPT =
   "You are an expert automotive identifier. Identify this car as precisely as you can — make, model, year range, generation, and trim. " +
   GROUNDING +
-  " Name the closest car you rejected in alsoConsidered. Set confidence honestly: 'high' only when a badge, a model-specific light signature, or an unmistakable body detail is legible. Keep every text field brief — short phrases, not paragraphs. Use '' for fields you truly cannot estimate. Always fill parentCompany, rarityScore (with a one-line rarityReason), a valueTimeline of exactly 4 points from new to today, and goodDealUsd (a realistic bargain price on the used market).";
+  " Name the closest car you rejected in alsoConsidered. Set confidence honestly: 'high' only when a badge, a model-specific light signature, or an unmistakable body detail is legible. Answer ONLY what the photo shows — identity, body style and colour. Do not describe specs, performance, rarity or value; another pass handles those. Keep every text field brief.";
+
+// No image: by this point the car has a name, and engine, performance, rarity
+// and value are recall rather than perception. Running it without the photo
+// keeps it off the path the spotter is waiting on.
+const SPECS_PROMPT =
+  "Give the standard specification and market picture for a car that has ALREADY been identified. Do not question or revise the identification — it was made from a photo you cannot see. Keep every text field brief: short phrases, not paragraphs, and '' for anything you genuinely cannot estimate. Always fill parentCompany, rarityScore (with a one-line rarityReason), a valueTimeline of exactly 4 points from new to today, and goodDealUsd (a realistic bargain price on the used market).";
 
 const PROMPT_PREMIUM =
   " Also fill valuation, reliability, and collectibility — ONE concise sentence each, not paragraphs.";
@@ -504,7 +518,6 @@ function absorb(
 export async function identifyCar(
   mediaType: string,
   base64Data: string,
-  premium: boolean,
   userText?: string,
 ): Promise<CarReport> {
   const image: ImageRef = { mediaType, base64Data };
@@ -537,13 +550,11 @@ export async function identifyCar(
     .catch(() => NO_ZOOM);
 
   const [report, second] = await Promise.all([
-    ask<RawReport>({
+    ask<RawLook>({
       images: [image],
-      prompt: REPORT_PROMPT + (premium ? PROMPT_PREMIUM : PROMPT_BASIC) + note,
-      schema: REPORT_SCHEMA,
-      // Thinking and the answer share this budget, and the report pass is the
-      // long one — leave room so a careful look never truncates the write-up.
-      maxTokens: 12000,
+      prompt: LOOK_PROMPT + note,
+      schema: LOOK_SCHEMA,
+      maxTokens: 6000,
       effort: REPORT_EFFORT,
     }),
     secondP,
@@ -627,39 +638,52 @@ export async function identifyCar(
     : `The first look said ${a.make} ${a.model}; a closer look settled on this — ${verdict.decidingDetail}${read}`;
 
   if (!settled) {
-    // The specs, facts and valuation in `out` describe the wrong car — the only
-    // honest fix is to regenerate them against the identity that won.
+    // Nothing to regenerate any more: the specs are written later, from whatever
+    // identity wins here. Overriding the name is the whole fix.
     out.make = verdict.make;
     out.model = verdict.model;
     out.yearRange = verdict.yearRange;
     out.generation = verdict.generation;
     out.trimGuess = verdict.trimGuess;
     out.alsoConsidered = `${a.make} ${a.model} — rejected on a second look.`;
-
-    const redo = await ask<RawReport>({
-      images: [image],
-      prompt:
-        `${REPORT_PROMPT}${premium ? PROMPT_PREMIUM : PROMPT_BASIC}${note}\n\nThe car has already been identified as: ${describe(verdict)}. Take that identification as settled and do not change it — fill in the specs, facts, rarity and values for that exact car.`,
-      schema: REPORT_SCHEMA,
-      maxTokens: 12000,
-      effort: REPORT_EFFORT,
-    });
-    const fixed = normalize(redo);
-    return {
-      ...fixed,
-      make: verdict.make,
-      model: verdict.model,
-      yearRange: verdict.yearRange,
-      generation: verdict.generation,
-      trimGuess: verdict.trimGuess,
-      confidence: out.confidence,
-      crossChecked: true,
-      crossCheckNote: out.crossCheckNote,
-      alsoConsidered: out.alsoConsidered,
-    };
   }
 
   return out;
+}
+
+// The other half of a report: everything that follows from the car's name rather
+// than from the photo. No image, so the input is a fraction of the size, and it
+// runs after the spotter already has their answer on screen.
+export async function describeCar(
+  identity: Identity,
+  premium: boolean,
+): Promise<Partial<CarReport>> {
+  const specs = await ask<Partial<CarReport>>({
+    images: [],
+    prompt: `${SPECS_PROMPT}${premium ? PROMPT_PREMIUM : PROMPT_BASIC}\n\nThe car is: ${describe(identity)}.`,
+    schema: SPECS_SCHEMA,
+    maxTokens: 6000,
+    // Recall, not perception — it does not need to deliberate over a photo.
+    effort: "low",
+  });
+  return {
+    countryOfOrigin: specs.countryOfOrigin ?? "",
+    engine: specs.engine ?? "",
+    drivetrain: specs.drivetrain ?? "",
+    horsepower: specs.horsepower ?? "",
+    zeroToSixty: specs.zeroToSixty ?? "",
+    topSpeed: specs.topSpeed ?? "",
+    priceRangeUsed: specs.priceRangeUsed ?? "",
+    funFacts: Array.isArray(specs.funFacts) ? specs.funFacts : [],
+    parentCompany: specs.parentCompany ?? "",
+    rarityScore: typeof specs.rarityScore === "number" ? specs.rarityScore : 0,
+    rarityReason: specs.rarityReason ?? "",
+    valueTimeline: Array.isArray(specs.valueTimeline) ? specs.valueTimeline : [],
+    goodDealUsd: typeof specs.goodDealUsd === "number" ? specs.goodDealUsd : 0,
+    valuation: specs.valuation ?? "",
+    reliability: specs.reliability ?? "",
+    collectibility: specs.collectibility ?? "",
+  };
 }
 
 const describe = (i: Identity) =>
@@ -667,7 +691,7 @@ const describe = (i: Identity) =>
     .filter(Boolean)
     .join(" ");
 
-type RawReport = Partial<CarReport> & Identity & { zoomRegion?: Region };
+type RawLook = Partial<CarReport> & Identity & { zoomRegion?: Region };
 type RawSecond = Identity & {
   isCar?: boolean;
   confidence?: string;

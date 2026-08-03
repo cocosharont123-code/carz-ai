@@ -166,6 +166,21 @@ export function recordIdentification(
   return planStatusFor(planOverride ?? user.plan, user);
 }
 
+// Goals are judged on engine, power, rarity and value — none of which the photo
+// answers — so they land after the scan itself has been recorded. Credits them
+// without touching the scan count, which `recordIdentification` already took.
+export function recordGoals(id: string, completedGoalIds: string[], planOverride?: PlanId) {
+  const store = loadStore();
+  const user = ensureUser(store, id);
+  if (completedGoalIds.length) {
+    const today = todayStr();
+    const merged = new Set([...(user.goalsDone[today] ?? []), ...completedGoalIds]);
+    user.goalsDone[today] = Array.from(merged);
+    saveStore(store);
+  }
+  return planStatusFor(planOverride ?? user.plan, user);
+}
+
 export function recentHistory(user: UserRecord, n = 20): HistoryItem[] {
   return user.history.slice(-n).reverse();
 }
