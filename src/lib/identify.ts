@@ -83,13 +83,15 @@ let fastMode = FAST_CAPABLE.test(MODEL) && process.env.CAR_SPOTTER_FAST !== "0";
 
 type Effort = "low" | "medium" | "high" | "xhigh" | "max";
 
-// Effort is the main thing standing between a spotter and their answer: it sets
-// how long the model deliberates before writing, and on the happy path this one
-// call is the whole wait. `medium` is the balance point — the zoom pass now
-// backstops the hard cars, so the wide-shot look doesn't have to carry them
-// alone. Raise it with CAR_SPOTTER_EFFORT if accuracy ever matters more than
-// the wait.
-const REPORT_EFFORT = (process.env.CAR_SPOTTER_EFFORT as Effort) || "medium";
+// This one call is the entire wait: the second opinion and the zoom run beside
+// it, and the spec sheet runs after the answer is already on screen. So effort
+// here is the latency dial, and it is set low deliberately. Accuracy no longer
+// rests on this pass thinking longer — it rests on an independent second look,
+// a magnified read of the deciding detail, and an adjudicator that sees both.
+// A first look that is fast and occasionally wrong, checked three ways, beats a
+// slow one trusted on its own. Raise it with CAR_SPOTTER_EFFORT to trade the
+// wait back for deliberation.
+const LOOK_EFFORT = (process.env.CAR_SPOTTER_EFFORT as Effort) || "low";
 
 // `effort` is rejected outright by Haiku 4.5 and Sonnet 4.5, so a
 // CAR_SPOTTER_MODEL override pointing at one of those must not send it.
@@ -114,7 +116,7 @@ const EVIDENCE_PROP = {
   type: "array",
   items: { type: "string" },
   description:
-    "3-4 short notes on what is literally visible in THIS photo and led you to the answer: badge text, grille shape, headlight/taillight signature, wheel design, mirror and door-handle style, roofline, exhaust layout. Observations only — no conclusions.",
+    "2-3 short notes on what is literally visible in THIS photo and led you to the answer: badge text, grille shape, headlight/taillight signature, wheel design, mirror and door-handle style, roofline, exhaust layout. Observations only — no conclusions.",
 } as const;
 
 function objSchema(props: Record<string, unknown>) {
@@ -552,7 +554,7 @@ export async function identifyCar(
       prompt: LOOK_PROMPT + note,
       schema: LOOK_SCHEMA,
       maxTokens: 6000,
-      effort: REPORT_EFFORT,
+      effort: LOOK_EFFORT,
     }),
     secondP,
   ]);
