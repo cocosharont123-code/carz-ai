@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
 import { SiteHeader } from "@/components/site-header";
@@ -16,6 +16,21 @@ export default function PricingPage() {
   const [promoInput, setPromoInput] = useState("");
   const [promo, setPromo] = useState<Promo | null>(null);
   const [promoError, setPromoError] = useState("");
+  const [joinError, setJoinError] = useState("");
+  // Null until the membership check lands, so an existing member never sees a
+  // join CTA flash before it resolves.
+  const [member, setMember] = useState<boolean | null>(null);
+  const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
+
+  useEffect(() => {
+    fetch("/api/membership", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        setMember(!!d.member);
+        if (d.billing) setBilling(d.billing);
+      })
+      .catch(() => setMember(false));
+  }, [status]);
 
   function post(body: Record<string, unknown>) {
     return fetch("/api/membership", {
@@ -49,6 +64,11 @@ export default function PricingPage() {
 
   async function joinCarzPlus() {
     if (busy) return;
+    // Already subscribed — go straight to the rewards, never re-run the join.
+    if (member) {
+      router.push("/membership");
+      return;
+    }
     if (status !== "authenticated") {
       signIn("google", { callbackUrl: "/pricing" });
       return;
@@ -71,24 +91,31 @@ export default function PricingPage() {
         router.push("/profile?next=/pricing");
         return;
       }
-      // Redeemed / started trial / joined — send them to their member area.
+      if (!d?.ok) {
+        setJoinError(d?.error || "Couldn't start your membership. Try again.");
+        return;
+      }
+      // Subscribed — the member area now opens straight onto the rewards.
+      setMember(true);
       router.push("/membership");
     } catch {
-      /* ignore */
+      setJoinError("Couldn't reach the server. Try again.");
     } finally {
       setBusy(false);
     }
   }
 
-  const carzButtonText = busy
-    ? "Starting…"
-    : isFree
-      ? "Redeem — Carz+ free"
-      : promo
-        ? `Get Carz+ · $${priceStr}${annual ? "/yr" : "/mo"}`
-        : annual
-          ? "Get annual · $80/yr"
-          : "Start free trial";
+  const carzButtonText = member
+    ? "See your rewards"
+    : busy
+      ? "Starting…"
+      : isFree
+        ? "Redeem — Carz+ free"
+        : promo
+          ? `Get Carz+ · $${priceStr}${annual ? "/yr" : "/mo"}`
+          : annual
+            ? "Get annual · $80/yr"
+            : "Start free trial";
 
   const plans: PricingCardProps[] = [
     {
@@ -102,15 +129,17 @@ export default function PricingPage() {
     },
     {
       planName: "Carz+",
-      description: "The membership for serious spotters.",
-      price: priceStr,
-      interval: annual ? "yr" : "mo",
+      description: member ? "You're a member — here's everything you unlocked." : "The membership for serious spotters.",
+      price: member ? (billing === "annual" ? "80" : "9.99") : priceStr,
+      interval: member ? (billing === "annual" ? "yr" : "mo") : annual ? "yr" : "mo",
       features: [
-        promo
-          ? `${promo.code.toUpperCase()} applied — ${promo.percentOff}% off${isFree ? " (free)" : `, was $${formatPrice(basePrice)}`}`
-          : annual
-            ? "Billed $80/year — save 33%"
-            : "7-day free trial, then $9.99/mo",
+        member
+          ? "Active — every reward below is yours"
+          : promo
+            ? `${promo.code.toUpperCase()} applied — ${promo.percentOff}% off${isFree ? " (free)" : `, was $${formatPrice(basePrice)}`}`
+            : annual
+              ? "Billed $80/year — save 33%"
+              : "7-day free trial, then $9.99/mo",
         "Unlimited car scans",
         "Wishlist auctions + car alerts",
         "Auctions 24h early",
@@ -125,7 +154,17 @@ export default function PricingPage() {
     },
   ];
 
-  const header = (
+  // Members get their status, not the join controls — the billing toggle and
+  // promo box only mean anything to someone who hasn't subscribed yet.
+  const header = member ? (
+    <div className="flex flex-col items-center gap-2">
+      <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/40 bg-cyan-400/10 px-4 py-1.5 text-sm text-cyan-300">
+        <span className="font-semibold">Carz+ active</span>
+        <span className="opacity-80">· {billing === "annual" ? "$80/yr" : "$9.99/mo"}</span>
+      </div>
+      <p className="text-sm text-foreground/70">Everything below is already unlocked.</p>
+    </div>
+  ) : (
     <div className="flex flex-col items-center gap-4">
       <div className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/5 p-1 text-sm backdrop-blur">
         <button
@@ -176,6 +215,7 @@ export default function PricingPage() {
           {promoError && <p className="text-xs text-[color:var(--coral,#ff5a5f)]">{promoError}</p>}
         </div>
       )}
+      {joinError && <p className="text-xs text-[color:var(--coral,#ff5a5f)]">{joinError}</p>}
     </div>
   );
 
@@ -184,11 +224,21 @@ export default function PricingPage() {
       <SiteHeader />
       <ModernPricingPage
         title={
-          <>
-            Choose your <span className="text-cyan-400">Carz</span> plan
-          </>
+          member ? (
+            <>
+              Your <span className="text-cyan-400">Carz+</span> rewards
+            </>
+          ) : (
+            <>
+              Choose your <span className="text-cyan-400">Carz</span> plan
+            </>
+          )
         }
-        subtitle="Start free. Upgrade to Carz+ for early auctions, auto-bid, alerts and more."
+        subtitle={
+          member
+            ? "You're subscribed. Every reward is live on your account right now."
+            : "Start free. Upgrade to Carz+ for early auctions, auto-bid, alerts and more."
+        }
         plans={plans}
         headerExtra={header}
         showAnimatedBackground

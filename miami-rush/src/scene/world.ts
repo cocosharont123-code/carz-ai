@@ -413,7 +413,7 @@ export function createWorld(envMap: THREE.Texture | null, profile: QualityProfil
   const oceanBase = (oceanGeo.attributes.position.array as Float32Array).slice();
 
   // ---- Overhead exit gantries ----
-  const gantryTexts = ["MIAMI BEACH ↑", "OCEAN DR EXIT 2A", "SOUTH POINTE ↑", "DOWNTOWN EXIT 1B"];
+  const gantryTexts = ["MIAMI BEACH", "OCEAN DR EXIT 2A", "SOUTH POINTE", "DOWNTOWN EXIT 1B"];
   const gantrySpacing = 220;
   const gantryCount = Math.ceil((FAR + NEAR) / gantrySpacing) + 1;
   for (let i = 0; i < gantryCount; i++) {

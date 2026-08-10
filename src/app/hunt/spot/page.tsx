@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { MemberGate } from "@/components/member-gate";
+import { Camera } from "lucide-react";
 import { Spinner } from "@/components/ui/editorial";
 import { getHunt, claimCar, matchWanted, colorOk, totalEarned } from "@/lib/hunt";
 
@@ -162,7 +163,6 @@ function HuntSpotInner() {
       <>
         <SiteHeader />
         <main className="mx-auto w-full max-w-lg px-5 py-16 text-center">
-          <div className="text-4xl">🏁</div>
           <h1 className="mt-3 text-2xl font-black">Join the hunt first</h1>
           <p className="mt-1 ">You need to join Car Hunt Miami before you can earn rewards.</p>
           <Link
@@ -182,7 +182,7 @@ function HuntSpotInner() {
       <main className="mx-auto w-full max-w-lg px-5 py-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-black tracking-tight">📸 Hunt camera</h1>
+            <h1 className="text-2xl font-black tracking-tight">Hunt camera</h1>
             <p className="text-sm ">Live photos only — no camera roll.</p>
           </div>
           <div className="text-right">
@@ -209,7 +209,7 @@ function HuntSpotInner() {
             {/* Idle / error overlay */}
             {!camOn && !result && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
-                <div className="text-5xl">🎥</div>
+                <Camera className="h-10 w-10 opacity-50" strokeWidth={1.5} aria-hidden />
                 <p className="text-sm ">
                   {camError || "Turn on the camera to start hunting. You can only use live photos."}
                 </p>
@@ -223,7 +223,7 @@ function HuntSpotInner() {
             )}
             {busy && (
               <div className="absolute rounded-lg inset-0 flex items-center justify-center bg-black/50 text-white text-sm font-semibold ">
-                🔎 Identifying…
+                Identifying…
               </div>
             )}
           </div>
@@ -240,7 +240,7 @@ function HuntSpotInner() {
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-neon-red to-neon-red py-3.5 font-black  transition hover:opacity-90 disabled:opacity-50"
               >
                 {busy && <Spinner className="h-4 w-4" />}
-                {busy ? "Identifying…" : "📸 Snap & identify"}
+                {busy ? "Identifying…" : "Snap & identify"}
               </button>
             ) : (
               <p className="text-center text-xs ">
@@ -251,7 +251,7 @@ function HuntSpotInner() {
         </div>
 
         <Link href="/hunt" className="mt-4 block text-center text-sm  ">
-          ← Wanted board
+          Wanted board
         </Link>
       </main>
     </>
@@ -264,21 +264,19 @@ function ResultCard({ result, shot, onAgain }: { result: Result; shot: string; o
   if (result.match && result.colorOk) {
     body = (
       <div className="rounded-2xl border border-neon-green/50 bg-neon-green/15 p-4 text-center">
-        <div className="text-3xl">🎯💰</div>
         <h3 className="mt-1 text-lg font-black text-neon-green">
           {result.awarded > 0 ? "Bounty found!" : "You spotted a wanted car!"}
         </h3>
         <p className="mt-1 text-sm">
           <span className="font-bold">{result.match.name}</span> — <span className="font-black text-neon-green">{money(result.match.bounty)}</span>
         </p>
-        <p className="mt-1 text-xs ">📍 Must be on a public road — verified from your photo.</p>
+        <p className="mt-1 text-xs ">Must be on a public road — verified from your photo.</p>
         <ClaimPrize carId={result.match.id} bounty={result.match.bounty} shot={shot} />
       </div>
     );
   } else if (result.match && !result.colorOk) {
     body = (
       <div className="rounded-2xl border border-neon-red/40 bg-neon-red/10 p-4 text-center">
-        <div className="text-3xl">🎨❌</div>
         <h3 className="mt-1 font-black text-neon-red">Wrong color!</h3>
         <p className="mt-1 text-sm">
           That&apos;s a <span className="font-bold">{result.match.name}</span>, but only the{" "}
@@ -290,7 +288,6 @@ function ResultCard({ result, shot, onAgain }: { result: Result; shot: string; o
   } else if (result.isCar) {
     body = (
       <div className="rounded-2xl border border-foreground/10 bg-foreground/[0.03] p-4 text-center">
-        <div className="text-3xl">🚗</div>
         <h3 className="mt-1 font-bold">{car || "A car"} — not wanted</h3>
         <p className="mt-1 text-sm ">That one&apos;s not on the Miami board. Keep hunting!</p>
       </div>
@@ -298,7 +295,6 @@ function ResultCard({ result, shot, onAgain }: { result: Result; shot: string; o
   } else {
     body = (
       <div className="rounded-2xl border border-foreground/10 bg-foreground/[0.03] p-4 text-center">
-        <div className="text-3xl">🤔</div>
         <h3 className="mt-1 font-bold">No car detected</h3>
         <p className="mt-1 text-sm ">Get closer and make sure the car fills the frame.</p>
       </div>
@@ -311,7 +307,7 @@ function ResultCard({ result, shot, onAgain }: { result: Result; shot: string; o
         onClick={onAgain}
         className="mt-3 w-full rounded-xl border border-foreground/15 bg-foreground/[0.06] py-3 font-bold hover:bg-foreground/[0.12]"
       >
-        📸 Hunt another
+        Hunt another
       </button>
     </div>
   );
@@ -353,7 +349,7 @@ function ClaimPrize({ carId, bounty, shot }: { carId: string; bounty: number; sh
   if (done) {
     return (
       <div className="mt-4 rounded-xl border border-neon-green/40 bg-background/50 p-3 text-left text-sm">
-        ✅ <span className="font-bold">Claim submitted!</span> Verification takes up to{" "}
+        <span className="font-bold">Claim submitted!</span> Verification takes up to{" "}
         <span className="font-bold">48 hours</span>. Once your spot is verified, {money(bounty)} will be
         sent to <span className="font-bold">{cashapp}</span> on CashApp.
       </div>
@@ -366,7 +362,7 @@ function ClaimPrize({ carId, bounty, shot }: { carId: string; bounty: number; sh
         onClick={() => setOpen(true)}
         className="mt-4 w-full rounded-xl bg-white py-2.5 font-black text-[#1f1f1f] transition hover:opacity-90"
       >
-        💵 Claim prize
+        Claim prize
       </button>
     );
   }

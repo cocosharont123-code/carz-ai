@@ -1,4 +1,4 @@
-// Carz+ promo codes → percentage off. Matched case-insensitively.
+// Carz+ promo codes -> percentage off. Matched case-insensitively.
 // Shared by the pricing/membership UI (to show the discounted price) and the
 // membership API (to validate redemptions server-side).
 export const PROMOS: Record<string, number> = {

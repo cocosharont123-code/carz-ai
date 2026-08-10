@@ -155,7 +155,7 @@ export class Hud {
       <div class="stat"><div class="k">Top speed</div><div class="v">${fmt(stats.topSpeedKmh)} km/h</div></div>
       <div class="stat"><div class="k">Session best</div><div class="v">${fmt(stats.best)}</div></div>
     `;
-    this.el["best-flag"].textContent = stats.isNewBest ? "★ New session best" : "";
+    this.el["best-flag"].textContent = stats.isNewBest ? "New session best" : "";
     this.toggleVeil("veil-over");
   }
   showPlaying(): void {

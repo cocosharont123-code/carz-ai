@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ImagePlus, Upload, Trash2, X } from "lucide-react";
+import { ImagePlus, Upload, Trash2, X, Check, Circle, Medal, Gem, TrafficCone } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Button as GlassButton } from "@/components/ui/editorial";
@@ -27,7 +27,7 @@ type Status = {
   apiConfigured?: boolean;
   history?: { make: string; model: string; yearRange: string; date: string }[];
   totalSpots?: number;
-  badges?: { id: string; threshold: number; name: string; emoji: string; blurb: string; earned: boolean }[];
+  badges?: { id: string; threshold: number; name: string; tone: "bronze" | "silver" | "gold" | "diamond"; blurb: string; earned: boolean }[];
   goals?: { id: string; label: string; done: boolean }[];
 };
 
@@ -36,13 +36,15 @@ function DailyGoals({ goals }: { goals?: { id: string; label: string; done: bool
   return (
     <div className="mt-6 rounded-3xl border border-foreground/[0.05] bg-card text-card-foreground p-5">
       <div className="flex items-center justify-between">
-        <h3 className="font-bold">🎯 Today&apos;s goals</h3>
+        <h3 className="font-bold">Today&apos;s goals</h3>
         <span className="text-xs ">Resets daily</span>
       </div>
       <div className="mt-3 space-y-2">
         {goals.map((g) => (
           <div key={g.id} className="flex items-center gap-2.5 text-sm">
-            <span>{g.done ? "✅" : "⚪"}</span>
+            <span className={g.done ? "text-neon-green" : "opacity-40"}>
+              {g.done ? <Check className="h-4 w-4" aria-hidden /> : <Circle className="h-4 w-4" aria-hidden />}
+            </span>
             <span className={g.done ? "text-neon-green line-through" : ""}>{g.label}</span>
           </div>
         ))}
@@ -51,11 +53,19 @@ function DailyGoals({ goals }: { goals?: { id: string; label: string; done: bool
   );
 }
 
+// Medal tint per badge tier — replaces the old medal emoji.
+const TONE: Record<"bronze" | "silver" | "gold" | "diamond", string> = {
+  bronze: "text-amber-700",
+  silver: "text-slate-300",
+  gold: "text-amber-400",
+  diamond: "text-cyan-300",
+};
+
 function Badges({
   badges,
   total,
 }: {
-  badges?: { id: string; threshold: number; name: string; emoji: string; earned: boolean }[];
+  badges?: { id: string; threshold: number; name: string; tone: keyof typeof TONE; earned: boolean }[];
   total?: number;
 }) {
   if (!badges || badges.length === 0) return null;
@@ -64,7 +74,7 @@ function Badges({
   return (
     <div className="mt-6 rounded-3xl border border-foreground/[0.05] bg-card text-card-foreground p-5">
       <div className="flex items-center justify-between">
-        <h3 className="font-bold">🏅 Badges</h3>
+        <h3 className="font-bold">Badges</h3>
         <span className="text-xs ">
           {t} car{t === 1 ? "" : "s"} spotted
         </span>
@@ -78,7 +88,11 @@ function Badges({
               b.earned ? "bg-foreground/[0.06] ring-1 ring-neon-red/40" : "bg-foreground/[0.02] opacity-40",
             )}
           >
-            <span className="text-2xl">{b.emoji}</span>
+            {b.tone === "diamond" ? (
+              <Gem className={cn("h-6 w-6", TONE[b.tone])} aria-hidden />
+            ) : (
+              <Medal className={cn("h-6 w-6", TONE[b.tone])} aria-hidden />
+            )}
             <span className="mt-1 text-[11px] font-semibold leading-tight">{b.name}</span>
             <span className="text-[10px] ">{b.threshold}+ cars</span>
           </div>
@@ -100,7 +114,7 @@ function Badges({
           </div>
         </div>
       ) : (
-        <p className="mt-3 text-sm text-neon-red">🏆 All badges earned — you&apos;re a Legendary Spotter!</p>
+        <p className="mt-3 text-sm text-neon-red">All badges earned — you&apos;re a Legendary Spotter!</p>
       )}
     </div>
   );
@@ -175,7 +189,7 @@ function RarityMeter({ score, reason }: { score: number; reason?: string }) {
       <div className="flex items-baseline justify-between">
         <span className="text-xs font-bold uppercase tracking-wide ">Rarity</span>
         <span className="text-sm font-bold">
-          {raw}/100 · <span className={ultra ? "text-neon-red" : "text-neon-red"}>{ultra ? "💎 " : ""}{label}</span>
+          {raw}/100 · <span className={ultra ? "text-neon-red" : "text-neon-red"}>{label}</span>
         </span>
       </div>
       <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-background">
@@ -213,7 +227,7 @@ function ValueChart({ points }: { points: { year: string; usd: number }[] }) {
           Market value over time
         </span>
         <span className="text-sm font-semibold">
-          {fmtUsd(pts[0].usd)} → {fmtUsd(pts[pts.length - 1].usd)}
+          {fmtUsd(pts[0].usd)} to {fmtUsd(pts[pts.length - 1].usd)}
         </span>
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} className="mt-2 w-full">
@@ -288,7 +302,7 @@ function InlineListings({ make, model, goodDealUsd }: { make: string; model: str
   return (
     <div className="mt-4 rounded-2xl border border-neon-green/30 bg-neon-green/[0.06] p-4">
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-xs font-bold uppercase tracking-wide text-neon-green">🏷️ For sale now</span>
+        <span className="text-xs font-bold uppercase tracking-wide text-neon-green">For sale now</span>
         {goodDealUsd > 0 && (
           <span className="text-sm font-semibold">
             Good deal: <span className="text-neon-green">under {fmtUsd(goodDealUsd)}</span>
@@ -352,7 +366,7 @@ function InlineListings({ make, model, goodDealUsd }: { make: string; model: str
                 rel="noopener noreferrer"
                 className="rounded-lg bg-foreground/[0.04] px-3 py-1.5 text-sm font-medium hover:bg-foreground/[0.08]"
               >
-                {s.name} ↗
+                {s.name}
               </a>
             ))}
           </div>
@@ -676,7 +690,7 @@ export default function SpotPage() {
 
         {limitHit && (
           <div className="mt-4 rounded-2xl border border-white/12 bg-card text-card-foreground p-6 text-center">
-            <div className="text-3xl">🚦</div>
+            <TrafficCone className="mx-auto h-8 w-8 opacity-50" strokeWidth={1.5} aria-hidden />
             <h3 className="display mt-2 text-2xl">Out of free scans</h3>
             <p className="mx-auto mt-1 max-w-sm text-[13px] opacity-70">
               You&apos;ve used all 3 of today&apos;s free scans. Get Carz+ for unlimited scanning.
@@ -716,7 +730,7 @@ export default function SpotPage() {
                   </p>
                 )}
                 {car.crossChecked && car.crossCheckNote && (
-                  <p className="mt-1.5 text-xs opacity-70">✓ {car.crossCheckNote}</p>
+                  <p className="mt-1.5 text-xs opacity-70">{car.crossCheckNote}</p>
                 )}
                 {car.visualEvidence?.length > 0 && (
                   <details className="mt-2">
@@ -768,8 +782,7 @@ export default function SpotPage() {
                   href={`/auctions/new?make=${encodeURIComponent(car.make)}&model=${encodeURIComponent(car.model)}`}
                   className="mt-3 flex items-center justify-between rounded-2xl border border-foreground/10 bg-foreground/[0.04] px-4 py-3 text-sm font-semibold transition hover:border-foreground/25 hover:bg-foreground/[0.08]"
                 >
-                  <span>🔨 List this car for auction on Carz</span>
-                  <span className="">→</span>
+                  <span>List this car for auction on Carz</span>
                 </Link>
 
                 {(car.valuation || car.reliability || car.collectibility) && (
@@ -777,7 +790,7 @@ export default function SpotPage() {
                     {car.valuation && (
                       <>
                         <h3 className="text-xs font-bold uppercase tracking-wide text-neon-green">
-                          💰 Valuation
+                          Valuation
                         </h3>
                         <p className="mb-3 mt-1 text-sm">{car.valuation}</p>
                       </>
@@ -785,7 +798,7 @@ export default function SpotPage() {
                     {car.reliability && (
                       <>
                         <h3 className="text-xs font-bold uppercase tracking-wide text-neon-green">
-                          🔧 Reliability
+                          Reliability
                         </h3>
                         <p className="mb-3 mt-1 text-sm">{car.reliability}</p>
                       </>
@@ -793,7 +806,7 @@ export default function SpotPage() {
                     {car.collectibility && (
                       <>
                         <h3 className="text-xs font-bold uppercase tracking-wide text-neon-green">
-                          📈 Collectibility
+                          Collectibility
                         </h3>
                         <p className="mt-1 text-sm">{car.collectibility}</p>
                       </>
@@ -805,7 +818,7 @@ export default function SpotPage() {
               </>
             ) : (
               <>
-                <h2 className="text-xl font-bold">No car detected 🤔</h2>
+                <h2 className="text-xl font-bold">No car detected</h2>
                 <p className="mt-1 text-sm ">
                   {car.notes || "Try a clearer photo of the car."}
                 </p>
@@ -837,7 +850,7 @@ export default function SpotPage() {
 
         {/* Spotting map — free for everyone */}
         <section className="mt-8">
-          <h3 className="text-xl font-bold">🗺️ Where to spot rare cars near you</h3>
+          <h3 className="text-xl font-bold">Where to spot rare cars near you</h3>
           <div className="mt-3">
             <CarHotspotsMap />
           </div>

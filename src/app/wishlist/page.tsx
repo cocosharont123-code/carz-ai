@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Heart } from "lucide-react";
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { PageTabs } from "@/components/page-tabs";
@@ -43,7 +44,7 @@ function WishlistInner() {
           <div className="mt-8 rounded-2xl border border-white/10 bg-card text-card-foreground p-10 text-center">
             <h3 className="display text-3xl">Nothing saved yet</h3>
             <p className="mx-auto mt-2 max-w-sm text-[13px] opacity-70">
-              Tap the ♥ on any auction to save it here. Carz+ members get alerted when a wishlisted car is
+              Tap the heart on any auction to save it here. Carz+ members get alerted when a wishlisted car is
               listed or sold.
             </p>
             <Button href="/auctions" className="mt-6">Browse auctions</Button>
@@ -57,7 +58,7 @@ function WishlistInner() {
                   title="Remove"
                   className="press absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-sm text-nred"
                 >
-                  ♥
+                  <Heart className="h-4 w-4" fill="currentColor" aria-hidden />
                 </button>
                 <Link href={`/auctions/${w.id}`}>
                   <div className="aspect-square w-full overflow-hidden">

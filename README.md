@@ -1,4 +1,4 @@
-# 🚗 Carz AI
+# Carz AI
 
 Snap a photo of any car and instantly get the make, model, year, specs, valuation —
 plus a live map of where cars gather near you. Built on **Next.js 16 + React 19 +

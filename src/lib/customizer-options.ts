@@ -48,7 +48,7 @@ export function rimOption(value?: string): ColorOption | undefined {
   return value ? RIM_COLORS.find((c) => c.value === value) : undefined;
 }
 
-/** Prompt strings → display labels, ignoring anything unrecognised. */
+/** Prompt strings -> display labels, ignoring anything unrecognised. */
 export function featureLabels(values: string[]): string[] {
   return FEATURES.filter((f) => values.includes(f.value)).map((f) => f.label);
 }

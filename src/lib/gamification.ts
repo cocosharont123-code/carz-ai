@@ -5,15 +5,16 @@ export type Badge = {
   id: string;
   threshold: number;
   name: string;
-  emoji: string;
+  /** Medal tint for the badge grid — bronze through diamond. */
+  tone: "bronze" | "silver" | "gold" | "diamond";
   blurb: string;
 };
 
 export const BADGES: Badge[] = [
-  { id: "b5", threshold: 5, name: "Rookie", emoji: "🥉", blurb: "Spot 5 cars" },
-  { id: "b15", threshold: 15, name: "Elite", emoji: "🥈", blurb: "Spot 15 cars" },
-  { id: "b30", threshold: 30, name: "Legendary", emoji: "🥇", blurb: "Spot 30 cars" },
-  { id: "b100", threshold: 100, name: "Diamond", emoji: "💎", blurb: "Spot 100 cars" },
+  { id: "b5", threshold: 5, name: "Rookie", tone: "bronze", blurb: "Spot 5 cars" },
+  { id: "b15", threshold: 15, name: "Elite", tone: "silver", blurb: "Spot 15 cars" },
+  { id: "b30", threshold: 30, name: "Legendary", tone: "gold", blurb: "Spot 30 cars" },
+  { id: "b100", threshold: 100, name: "Diamond", tone: "diamond", blurb: "Spot 100 cars" },
 ];
 
 export function badgesFor(total: number) {

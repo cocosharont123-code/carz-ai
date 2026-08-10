@@ -30,7 +30,7 @@ export function HomeHero() {
                 onClick={() => router.push("/spot")}
                 className="rounded-full border border-white/30 "
               >
-                Start spotting →
+                Start spotting
               </LiquidButton>
             </div>
           </main>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Car, Inbox } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
 import { SiteHeader } from "@/components/site-header";
 
@@ -40,7 +41,7 @@ export default function ClaimsPage() {
     <>
       <SiteHeader />
       <main className="mx-auto w-full max-w-2xl px-5 py-8">
-        <h1 className="text-2xl font-black tracking-tight">💵 Prize claims</h1>
+        <h1 className="text-2xl font-black tracking-tight">Prize claims</h1>
         <p className="mt-1 text-sm ">Review verified spots and pay out via CashApp.</p>
 
         {loading ? (
@@ -62,7 +63,7 @@ export default function ClaimsPage() {
           </div>
         ) : claims.length === 0 ? (
           <div className="mt-8 rounded-3xl border border-foreground/[0.06] bg-card text-card-foreground p-8 text-center">
-            <div className="text-4xl">📭</div>
+            <Inbox className="mx-auto h-9 w-9 opacity-40" strokeWidth={1.5} aria-hidden />
             <h3 className="mt-2 font-bold">No claims yet</h3>
           </div>
         ) : (
@@ -74,7 +75,9 @@ export default function ClaimsPage() {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={c.image} alt={c.carName} className="h-full w-full object-cover" />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-2xl">🚗</div>
+                    <div className="flex h-full w-full items-center justify-center">
+                      <Car className="h-7 w-7 opacity-40" strokeWidth={1.5} aria-hidden />
+                    </div>
                   )}
                 </div>
                 <div className="min-w-0 flex-1">

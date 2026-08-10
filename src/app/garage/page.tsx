@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { X } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { PageTabs } from "@/components/page-tabs";
 import { MemberGate } from "@/components/member-gate";
@@ -106,7 +107,7 @@ function GarageInner() {
                     title="Remove"
                     className="absolute rounded-lg right-2 top-2 z-10 hidden h-6 w-6 items-center justify-center bg-black/70 text-white text-xs  group-hover:flex hover:bg-carz "
                   >
-                    ✕
+                    <X className="h-3.5 w-3.5" aria-hidden />
                   </button>
                   <div className="relative aspect-square w-full overflow-hidden">
                     <CarPhoto src={c.image} alt={`${c.make} ${c.model}`} />

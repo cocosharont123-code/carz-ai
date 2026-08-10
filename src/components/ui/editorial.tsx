@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { Car } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /* ==========================================================================
@@ -219,19 +220,20 @@ export function CarPhoto({
   src,
   alt,
   className,
-  fallback = "🚗",
+  fallback,
   color,
 }: {
   src?: string;
   alt: string;
   className?: string;
-  fallback?: string;
+  /** Placeholder when there's no photo. Defaults to a car outline. */
+  fallback?: ReactNode;
   color?: boolean; // true = show in full color (not black & white)
 }) {
   if (!src) {
     return (
-      <div className={cn("flex items-center justify-center bg-white/[0.04] text-4xl", !color && "grayscale", className)}>
-        {fallback}
+      <div className={cn("flex items-center justify-center bg-white/[0.04]", !color && "grayscale", className)}>
+        {fallback ?? <Car className="h-9 w-9 opacity-40" strokeWidth={1.5} aria-hidden />}
       </div>
     );
   }

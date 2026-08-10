@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Palette, X } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { PageTabs } from "@/components/page-tabs";
 import { MemberGate } from "@/components/member-gate";
@@ -165,7 +166,7 @@ function BuildsInner() {
                     title="Delete config"
                     className="absolute rounded-lg right-2 top-2 z-10 hidden h-6 w-6 items-center justify-center bg-black/70 text-white text-xs  group-hover:flex hover:bg-carz "
                   >
-                    {pendingId === b.id ? <Spinner className="h-3 w-3" /> : "✕"}
+                    {pendingId === b.id ? <Spinner className="h-3 w-3" /> : <X className="h-3.5 w-3.5" aria-hidden />}
                   </button>
                   <div className="relative aspect-square w-full overflow-hidden">
                     {/* Renders show in full colour — the colour is the whole point. */}
@@ -173,7 +174,7 @@ function BuildsInner() {
                       src={b.image}
                       alt={`Customized ${b.make} ${b.model}`}
                       color
-                      fallback="🎨"
+                      fallback={<Palette className="h-9 w-9 opacity-40" strokeWidth={1.5} aria-hidden />}
                       className="h-full w-full"
                     />
                     {!b.image && (

@@ -109,7 +109,7 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
       }
       setA(d.auction);
       setAmount("");
-      setMsg("🎉 You're the top bidder!");
+      setMsg("You're the top bidder!");
     } catch {
       setMsg("Network error — try again.");
     } finally {
@@ -136,7 +136,7 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
           <h1 className="display text-5xl">Not found</h1>
           <p className="mt-2 text-sm ">This auction doesn&apos;t exist or was removed.</p>
           <Link href="/auctions" className="util-label mt-6 inline-block  hover:brightness-110">
-            ← Back to auctions
+            Back to auctions
           </Link>
         </main>
       </>
@@ -151,7 +151,7 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
       <SiteHeader />
       <main className="mx-auto w-full max-w-3xl px-5 py-8">
         <Link href="/auctions" className="util-label  ">
-          ← All auctions
+          All auctions
         </Link>
 
         <div className="mt-4 rounded-2xl border border-white/10 bg-card text-card-foreground">

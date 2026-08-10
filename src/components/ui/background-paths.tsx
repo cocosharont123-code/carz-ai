@@ -120,12 +120,6 @@ export function BackgroundPaths({
                                 <span className="opacity-90 group-hover:opacity-100 transition-opacity">
                                     Discover Excellence
                                 </span>
-                                <span
-                                    className="ml-3 opacity-70 group-hover:opacity-100 group-hover:translate-x-1.5
-                                    transition-all duration-300"
-                                >
-                                    →
-                                </span>
                             </Link>
                         </Button>
                     </div>

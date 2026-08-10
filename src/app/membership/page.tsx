@@ -18,17 +18,17 @@ type Status = {
   streak: number;
 };
 
-const PERKS: { icon: string; title: string; desc: string }[] = [
-  { icon: "⏱", title: "Auctions 24h early", desc: "See and bid on every listing a full day before non-members." },
-  { icon: "♾️", title: "Unlimited AI scans", desc: "No caps on car identifications, ever." },
-  { icon: "🎥", title: "Spot cars in videos", desc: "Scan a video and identify every car in it, frame by frame." },
-  { icon: "🔔", title: "Car alerts", desc: "Get notified the moment a wishlisted car is listed or sold." },
-  { icon: "🤖", title: "Auto-bid", desc: "Set a max price and the AI bids for you — it knows market value." },
-  { icon: "📊", title: "Market-value insight", desc: "See exactly how far over or under market value a car is selling." },
-  { icon: "📍", title: "Radius alerts", desc: "Ping when a rare car is spotted near you." },
-  { icon: "🏠", title: "My Garage", desc: "Your full spotting history — members only." },
-  { icon: "🔥", title: "Day streaks", desc: "Build a streak; restore a lost one for $0.99." },
-  { icon: "🚀", title: "48h early access", desc: "Every new Carz feature reaches you 2 days before anyone else." },
+const PERKS: { title: string; desc: string }[] = [
+  { title: "Auctions 24h early", desc: "See and bid on every listing a full day before non-members." },
+  { title: "Unlimited AI scans", desc: "No caps on car identifications, ever." },
+  { title: "Spot cars in videos", desc: "Scan a video and identify every car in it, frame by frame." },
+  { title: "Car alerts", desc: "Get notified the moment a wishlisted car is listed or sold." },
+  { title: "Auto-bid", desc: "Set a max price and the AI bids for you — it knows market value." },
+  { title: "Market-value insight", desc: "See exactly how far over or under market value a car is selling." },
+  { title: "Radius alerts", desc: "Ping when a rare car is spotted near you." },
+  { title: "My Garage", desc: "Your full spotting history — members only." },
+  { title: "Day streaks", desc: "Build a streak; restore a lost one for $0.99." },
+  { title: "48h early access", desc: "Every new Carz feature reaches you 2 days before anyone else." },
 ];
 
 export default function MembershipPage() {
@@ -175,7 +175,7 @@ export default function MembershipPage() {
           </h1>
           {member ? (
             <>
-              <p className="mt-2 text-sm">🔥 {s?.streak ?? 0}-day streak</p>
+              <p className="mt-2 text-sm">{s?.streak ?? 0}-day streak</p>
               <div className="mt-5 flex flex-col items-center gap-2">
                 {onTrial ? (
                   <span className="rounded-full border border-carz/40 px-4 py-1.5 text-xs text-carz">
@@ -262,8 +262,7 @@ export default function MembershipPage() {
         <h2 className="display mt-8 text-2xl">What you get</h2>
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           {PERKS.map((p) => (
-            <div key={p.title} className="glass-card reveal press lift flex items-start gap-3 rounded-2xl p-4">
-              <div className="text-2xl">{p.icon}</div>
+            <div key={p.title} className="glass-card reveal press lift rounded-2xl p-4">
               <div>
                 <p className="text-[15px] font-semibold">{p.title}</p>
                 <p className="mt-0.5 text-[13px] opacity-70">{p.desc}</p>
@@ -282,7 +281,7 @@ export default function MembershipPage() {
                   : "Join Carz+ · $9.99/mo"}
             </Button>
             <Link href="/pricing" className="press util-label opacity-60 hover:opacity-100">
-              See the full plan comparison →
+              See the full plan comparison
             </Link>
           </div>
         )}

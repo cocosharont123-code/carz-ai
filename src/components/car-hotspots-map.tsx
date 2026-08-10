@@ -190,7 +190,7 @@ export function CarHotspotsMap() {
     started.current = true;
     const flyDefault = () => {
       mapRef.current?.flyTo({ center: DEFAULT_CENTER, zoom: 11, duration: 800 });
-      setStatusText("Showing Los Angeles — tap 📍 to jump to your area.");
+      setStatusText("Showing Los Angeles — use Find spots near me to jump to your area.");
     };
     const t = setTimeout(() => {
       if (!("geolocation" in navigator)) return flyDefault();
@@ -241,7 +241,7 @@ export function CarHotspotsMap() {
           onClick={locate}
           className="rounded-xl bg-foreground/[0.06] px-4 py-2 text-sm font-medium hover:bg-foreground/[0.12]"
         >
-          📍 Find spots near me
+          Find spots near me
         </button>
       </div>
       <p className="mt-2 text-sm ">{statusText}</p>

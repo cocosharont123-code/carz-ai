@@ -35,7 +35,7 @@ the DOM HUD (`CSS`, hex strings).
 | --- | --- | --- |
 | `baseSpeedStart` | 30 m/s | launch speed |
 | `baseSpeedMax` | 120 m/s | top speed (~430 km/h) |
-| `speedRampTime` | 55 s | time to ramp start → max |
+| `speedRampTime` | 55 s | time to ramp start -> max |
 | `steerLerp` | 0.18 | how snappily the car eases to the finger (higher = snappier) |
 | `maxRoll` | 0.5 rad | body roll at full steer |
 | `maxYaw` | 0.32 rad | yaw into the turn |
@@ -87,7 +87,7 @@ Session best is kept **in memory only** (no localStorage).
 
 | Constant | Value | Meaning |
 | --- | --- | --- |
-| `fovBase` → `fovMax` | 78 → 92 | FOV widens with speed |
+| `fovBase` -> `fovMax` | 78 -> 92 | FOV widens with speed |
 | `position` | `0, 3.05, 9.5` | chase-cam offset |
 | `speedShake` | 0.06 | subtle shake scaled by speed |
 | `streakStartKmh` | 220 | additive radial speed streaks kick in |

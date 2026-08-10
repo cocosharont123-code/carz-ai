@@ -99,7 +99,7 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
   }
 
   /**
-   * Cache the render on this device under the server's history id, so Garage →
+   * Cache the render on this device under the server's history id, so Garage ->
    * Builds can pair the synced config with a picture. Best-effort: the config is
    * safe server-side either way, so a full localStorage quota only costs this
    * device its thumbnail.

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Heart, Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { isWished, toggleWish, type WishItem } from "@/lib/wishlist";
 import { cn } from "@/lib/utils";
@@ -55,7 +56,11 @@ export function WishlistButton({ item, className }: { item: WishItem; className?
         className,
       )}
     >
-      {on ? "♥" : member === false ? "🔒" : "♡"}
+      {member === false ? (
+        <Lock className="h-4 w-4" aria-hidden />
+      ) : (
+        <Heart className="h-4 w-4" fill={on ? "currentColor" : "none"} aria-hidden />
+      )}
     </button>
   );
 }

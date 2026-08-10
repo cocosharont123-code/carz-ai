@@ -71,7 +71,7 @@ function AuctionCard({ a, now }: { a: Auction; now: number }) {
           </div>
         </div>
         <span className="mt-4 inline-flex justify-center border border-white/40 px-4 py-2.5 util-label  transition-colors group-hover:border-carz group-hover:bg-carz ">
-          {tl.ended ? "View result" : "Bid now →"}
+          {tl.ended ? "View result" : "Bid now"}
         </span>
       </div>
     </Link>

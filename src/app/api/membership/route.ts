@@ -14,7 +14,7 @@ import { lookupPromo } from "@/lib/promos";
 
 export const runtime = "nodejs";
 
-// GET → current membership + streak status.
+// GET -> current membership + streak status.
 export async function GET() {
   const session = await auth();
   const email = session?.user?.email;
@@ -36,7 +36,7 @@ export async function GET() {
   });
 }
 
-// POST → join / restore-streak. Real billing needs a payment provider (Stripe);
+// POST -> join / restore-streak. Real billing needs a payment provider (Stripe);
 // this flips the account flag so the membership + gating work end-to-end.
 export async function POST(req: Request) {
   const session = await auth();

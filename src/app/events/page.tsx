@@ -151,7 +151,7 @@ function EventsInner() {
                   </span>
                 </div>
                 {e.note && <p className="mt-2 text-[13px] opacity-80">{e.note}</p>}
-                <p className="mt-2 util-label opacity-60">🗓️ {e.when} · find details →</p>
+                <p className="mt-2 util-label opacity-60">{e.when} · find details</p>
               </a>
             ))}
           </div>

@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
+import { Car, KeyRound } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { Spinner } from "@/components/ui/editorial";
 
@@ -145,8 +146,8 @@ function NewAuctionInner() {
       // Year and starting price are always entered by the seller — never auto-filled.
       setAiMsg(
         c.goodDealUsd
-          ? `✨ Auto-filled the details! Now enter the exact year and your starting price (AI estimates similar sell for ~$${Math.round(c.goodDealUsd).toLocaleString()}), then your contact info.`
-          : "✨ Auto-filled the details! Now enter the exact year and your starting price, then your contact info.",
+          ? `Auto-filled the details! Now enter the exact year and your starting price (AI estimates similar sell for ~$${Math.round(c.goodDealUsd).toLocaleString()}), then your contact info.`
+          : "Auto-filled the details! Now enter the exact year and your starting price, then your contact info.",
       );
     } catch {
       setError("Network error — try again.");
@@ -217,7 +218,7 @@ function NewAuctionInner() {
 
         {status === "unauthenticated" ? (
           <div className="mt-8 rounded-3xl border border-foreground/[0.06] bg-card text-card-foreground p-8 text-center">
-            <div className="text-4xl">🔑</div>
+            <KeyRound className="mx-auto h-9 w-9 opacity-50" strokeWidth={1.5} aria-hidden />
             <h3 className="mt-3 text-lg font-bold">Sign in to list a car</h3>
             <button
               onClick={() => signIn("google", { callbackUrl: "/auctions/new" })}
@@ -237,7 +238,9 @@ function NewAuctionInner() {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={image} alt="car" className="h-full w-full object-cover" />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-2xl">🚗</div>
+                    <div className="flex h-full w-full items-center justify-center">
+                      <Car className="h-7 w-7 opacity-40" strokeWidth={1.5} aria-hidden />
+                    </div>
                   )}
                 </div>
                 <button
@@ -255,7 +258,7 @@ function NewAuctionInner() {
                 disabled={aiLoading || !image}
                 className="util-label mt-3 flex w-full items-center justify-center gap-2 border border-carz/50 bg-carz/10 py-3  transition hover:bg-carz  disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {aiLoading ? "🔎 AI is reading your photo…" : "✨ Auto-fill listing with AI"}
+                {aiLoading ? "AI is reading your photo…" : "Auto-fill listing with AI"}
               </button>
               <p className="mt-1.5 text-xs ">
                 Upload a photo and let Carz AI identify the car and write the title, make, model &
@@ -385,7 +388,7 @@ function NewAuctionInner() {
                 className="input"
               />
               <p className="mt-1 text-xs ">
-                🔒 Encrypted and hidden. Only the winning bidder sees this after the auction ends.
+                Encrypted and hidden. Only the winning bidder sees this after the auction ends.
               </p>
             </Field>
 

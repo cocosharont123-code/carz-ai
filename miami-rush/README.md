@@ -4,7 +4,7 @@ A mobile-first 3D endless racing web game. Golden-hour Miami, a highway aimed
 straight at a huge low sun, and nitro welded permanently open. Built with
 **Vite + TypeScript + Three.js**, fully static, no backend.
 
-![state: menu → playing → crash → over](./TUNING.md)
+![state: menu -> playing -> crash -> over](./TUNING.md)
 
 ## Run it
 
