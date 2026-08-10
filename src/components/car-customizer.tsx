@@ -1,47 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { signIn } from "next-auth/react";
+import { addBuild } from "@/lib/builds-local";
+import { BODY_COLORS, RIM_COLORS, FEATURES, bodyOption, rimOption, featureLabels } from "@/lib/customizer-options";
+import { Spinner } from "@/components/ui/editorial";
 import { cn } from "@/lib/utils";
 
 /**
  * Post-spot customizer: pick a body colour, rim finish and mods, then have the
  * AI re-render the exact photo the user took with those changes applied.
  */
-
-const BODY_COLORS: { label: string; value: string; hex: string }[] = [
-  { label: "Miami Blue", value: "vivid Miami blue", hex: "#19b6d8" },
-  { label: "Coral", value: "coral red", hex: "#ff5a5f" },
-  { label: "Midnight", value: "gloss midnight black", hex: "#14141b" },
-  { label: "Pearl White", value: "pearl white", hex: "#f2f2ee" },
-  { label: "Silver", value: "metallic silver", hex: "#c7ccd2" },
-  { label: "Racing Red", value: "racing red", hex: "#d61f26" },
-  { label: "Sunburst", value: "bright sunburst yellow", hex: "#ffcf3a" },
-  { label: "Matte Grey", value: "matte gunmetal grey", hex: "#5b5f66" },
-  { label: "BR Green", value: "British racing green", hex: "#12452b" },
-  { label: "Orange", value: "sunset orange", hex: "#ff7a1a" },
-  { label: "Purple", value: "deep candy purple", hex: "#6b2fb3" },
-];
-
-const RIM_COLORS: { label: string; value: string; hex: string }[] = [
-  { label: "Gloss Black", value: "gloss black", hex: "#14141b" },
-  { label: "Chrome", value: "polished chrome", hex: "#d7dbe0" },
-  { label: "Bronze", value: "matte bronze", hex: "#9a6a34" },
-  { label: "Gold", value: "gold", hex: "#d4af37" },
-  { label: "White", value: "gloss white", hex: "#f2f2ee" },
-  { label: "Gunmetal", value: "gunmetal grey", hex: "#4a4e56" },
-];
-
-const FEATURES: { label: string; value: string }[] = [
-  { label: "Lowered", value: "lower the ride height for an aggressive slammed stance" },
-  { label: "Wider wheels", value: "fit wider, larger diameter aftermarket wheels" },
-  { label: "Front splitter", value: "add a front lip splitter" },
-  { label: "Rear wing", value: "add a rear wing spoiler" },
-  { label: "Tinted windows", value: "add dark tinted windows" },
-  { label: "Carbon hood", value: "add an exposed carbon-fibre hood" },
-  { label: "Wide body", value: "add flared wide-body fenders" },
-  { label: "Off-road", value: "lift it and fit chunky off-road tyres" },
-];
 
 interface CarLike {
   make: string;
@@ -79,6 +49,8 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
   const [error, setError] = useState("");
   const [needSignIn, setNeedSignIn] = useState(false);
   const [remaining, setRemaining] = useState<number | null>(null);
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const anyChange = !!bodyColor || !!rimColor || features.length > 0;
 
@@ -92,6 +64,7 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
     setNeedSignIn(false);
     setBusy(true);
     setResult(null);
+    setSaved(false);
     try {
       const src = await shrink(image);
       const res = await fetch("/api/customize", {
@@ -115,10 +88,45 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
       }
       setResult(d.image);
       if (typeof d.remaining === "number") setRemaining(d.remaining);
+      // The config itself is already logged to the member's history by the API.
+      // All that's left is caching the render against that same id.
+      void cacheRender(d.image, d.historyId);
     } catch {
       setError("Network error — try again.");
     } finally {
       setBusy(false);
+    }
+  }
+
+  /**
+   * Cache the render on this device under the server's history id, so Garage →
+   * Builds can pair the synced config with a picture. Best-effort: the config is
+   * safe server-side either way, so a full localStorage quota only costs this
+   * device its thumbnail.
+   */
+  async function cacheRender(image: string, historyId?: string | null) {
+    setSaving(true);
+    try {
+      const body = bodyOption(bodyColor);
+      const rim = rimOption(rimColor);
+      const thumb = await shrink(image, 360, 0.55);
+      addBuild({
+        id: historyId ?? undefined,
+        image: thumb,
+        make: car.make,
+        model: car.model,
+        yearRange: car.yearRange,
+        bodyColor: body?.label,
+        bodyHex: body?.hex,
+        rimColor: rim?.label,
+        rimHex: rim?.hex,
+        features: featureLabels(features),
+      });
+      setSaved(true);
+    } catch {
+      /* the render stays on screen regardless */
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -191,8 +199,10 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
       <button
         onClick={generate}
         disabled={!anyChange || busy}
-        className="press mt-5 w-full rounded-2xl bg-carz py-3 text-sm font-bold text-black transition hover:brightness-110 disabled:opacity-40"
+        aria-busy={busy || undefined}
+        className="press mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-carz py-3 text-sm font-bold text-black transition hover:brightness-110 disabled:opacity-40"
       >
+        {busy && <Spinner className="h-4 w-4" />}
         {busy ? "Rendering your build…" : "Generate customized photo"}
       </button>
       {error && <p className="mt-2 text-sm text-nred">{error}</p>}
@@ -214,6 +224,21 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={result} alt={`Customized ${car.make} ${car.model}`} className="w-full" />
           </div>
+          {/* Saving is automatic — the config lands in the member's history the
+              moment the render succeeds. */}
+          <p className="mt-2 flex items-center justify-center gap-2 text-center text-xs opacity-70">
+            {saving && <Spinner className="h-3 w-3" />}
+            {saving ? (
+              "Saving to your builds…"
+            ) : saved ? (
+              <>
+                Saved to your builds ·{" "}
+                <Link href="/garage/builds" className="underline hover:opacity-100">
+                  View
+                </Link>
+              </>
+            ) : null}
+          </p>
           <div className="mt-2 flex gap-2">
             <a
               href={result}

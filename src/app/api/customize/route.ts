@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { restyleCar, restyleConfigured } from "@/lib/restyle";
 import { getRestyleUsage, recordRestyle, RESTYLE_DAILY_CAP } from "@/lib/restyle-usage";
+import { recordConfig } from "@/lib/config-history";
+import { bodyOption, rimOption, featureLabels } from "@/lib/customizer-options";
 
 export const runtime = "nodejs";
 export const maxDuration = 60; // image editing can take 15–40s
@@ -76,7 +78,34 @@ export async function POST(req: Request) {
     });
     // Charge a credit only on a successful generation.
     const remaining = await recordRestyle(email);
-    return NextResponse.json({ ok: true, image: `data:${out.mediaType};base64,${out.base64}`, remaining });
+
+    // Log the config to the member's history. Best-effort: a storage hiccup
+    // must not lose the render the user just spent a credit on.
+    let historyId: string | null = null;
+    try {
+      const body_ = bodyOption(body.bodyColor);
+      const rim = rimOption(body.rimColor);
+      const entry = await recordConfig(email, {
+        make: body.make ?? "",
+        model: body.model ?? "",
+        yearRange: body.yearRange ?? "",
+        bodyColor: body_?.label,
+        bodyHex: body_?.hex,
+        rimColor: rim?.label,
+        rimHex: rim?.hex,
+        features: featureLabels(features),
+      });
+      historyId = entry?.id ?? null;
+    } catch (e) {
+      console.error("config history write failed:", e);
+    }
+
+    return NextResponse.json({
+      ok: true,
+      image: `data:${out.mediaType};base64,${out.base64}`,
+      remaining,
+      historyId,
+    });
   } catch (e) {
     console.error("customize failed:", e);
     const detail = e instanceof Error ? e.message : String(e);

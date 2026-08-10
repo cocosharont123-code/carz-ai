@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Car Spotter",
-    short_name: "Car Spotter",
+    name: "Carz AI",
+    short_name: "Carz AI",
     description: "Snap any car and instantly know the make, model, year, value, rarity and where to buy one.",
     start_url: "/",
     display: "standalone",

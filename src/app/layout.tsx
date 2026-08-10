@@ -6,13 +6,13 @@ import { GlobalShaderBg } from "@/components/global-shader-bg";
 // UI type is the Apple system font stack (no downloaded Google Fonts).
 
 export const metadata: Metadata = {
-  title: "Car Spotter — snap a car, know everything",
+  title: "Carz AI — snap a car, know everything",
   description:
     "Point your camera at any car and instantly get the make, model, year, specs, valuation and nearby hotspots.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: "Car Spotter",
+    title: "Carz AI",
     statusBarStyle: "black-translucent",
   },
   icons: {

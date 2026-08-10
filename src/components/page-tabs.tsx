@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 // Grouped sections that share a page with a tab switcher:
-// Hunt + Events, Auctions + Wishlist, Garage + Ranks.
+// Hunt + Events, Auctions + Wishlist, Garage + Builds + Ranks.
 const GROUPS = {
   hunt: [
     { href: "/hunt", label: "Hunt" },
@@ -17,6 +17,7 @@ const GROUPS = {
   ],
   collection: [
     { href: "/garage", label: "Garage" },
+    { href: "/garage/builds", label: "Builds" },
     { href: "/leaderboard", label: "Ranks" },
   ],
 } as const;

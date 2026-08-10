@@ -19,13 +19,25 @@ type ButtonProps = {
   disabled?: boolean;
   title?: string;
   target?: string;
+  /** Show a spinner and block clicks while an action is in flight. */
+  loading?: boolean;
 };
 
 // Milky white glass bubble — near-black text.
 const GLASS =
   "border border-white/50 bg-white/90 text-neutral-900 shadow-[0_2px_12px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.95),inset_0_-2px_4px_rgba(0,0,0,0.12)] hover:bg-white hover:scale-[1.03]";
 
-export function Button({ href, variant = "solid", size = "md", className, children, target, ...rest }: ButtonProps) {
+export function Button({
+  href,
+  variant = "solid",
+  size = "md",
+  className,
+  children,
+  target,
+  loading,
+  disabled,
+  ...rest
+}: ButtonProps) {
   const base =
     "press inline-flex items-center justify-center gap-2 rounded-full text-[13px] font-semibold tracking-tight transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-40";
   const variants = {
@@ -47,9 +59,24 @@ export function Button({ href, variant = "solid", size = "md", className, childr
     );
   }
   return (
-    <button className={cls} {...rest}>
+    <button className={cls} disabled={disabled || loading} aria-busy={loading || undefined} {...rest}>
+      {loading && <Spinner className="h-3.5 w-3.5" />}
       {children}
     </button>
+  );
+}
+
+/* --- Spinner: inherits the button's text colour, so it reads on any surface -- */
+export function Spinner({ className }: { className?: string }) {
+  return (
+    <span
+      role="status"
+      aria-label="Loading"
+      className={cn(
+        "inline-block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-current/30 border-t-current align-[-0.125em]",
+        className,
+      )}
+    />
   );
 }
 

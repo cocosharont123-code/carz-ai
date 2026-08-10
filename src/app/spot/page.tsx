@@ -643,12 +643,12 @@ export default function SpotPage() {
           />
 
           {!car ? (
-            <GlassButton onClick={identify} disabled={!previewUrl || loading} size="lg" className="w-full py-5">
+            <GlassButton onClick={identify} disabled={!previewUrl} loading={loading} size="lg" className="w-full py-5">
               {loading ? "Reading the car…" : "Identify car"}
             </GlassButton>
           ) : (
             <div className="flex gap-3">
-              <GlassButton onClick={identify} disabled={loading} className="flex-1">
+              <GlassButton onClick={identify} loading={loading} className="flex-1">
                 {loading ? "Reading…" : "Re-identify"}
               </GlassButton>
               <GlassButton onClick={startNew} className="flex-1">

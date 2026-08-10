@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { MemberGate } from "@/components/member-gate";
+import { Spinner } from "@/components/ui/editorial";
 import { getHunt, claimCar, matchWanted, colorOk, totalEarned } from "@/lib/hunt";
 
 const money = (n: number) => "$" + n.toLocaleString("en-US");
@@ -235,8 +236,10 @@ function HuntSpotInner() {
               <button
                 onClick={capture}
                 disabled={busy}
-                className="w-full rounded-xl bg-gradient-to-br from-neon-red to-neon-red py-3.5 font-black  transition hover:opacity-90 disabled:opacity-50"
+                aria-busy={busy || undefined}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-neon-red to-neon-red py-3.5 font-black  transition hover:opacity-90 disabled:opacity-50"
               >
+                {busy && <Spinner className="h-4 w-4" />}
                 {busy ? "Identifying…" : "📸 Snap & identify"}
               </button>
             ) : (
@@ -386,8 +389,10 @@ function ClaimPrize({ carId, bounty, shot }: { carId: string; bounty: number; sh
       <button
         onClick={submit}
         disabled={submitting}
-        className="mt-2 w-full rounded-lg bg-gradient-to-br from-neon-green to-neon-blue py-2.5 text-sm font-bold  transition hover:opacity-90 disabled:opacity-50"
+        aria-busy={submitting || undefined}
+        className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-br from-neon-green to-neon-blue py-2.5 text-sm font-bold  transition hover:opacity-90 disabled:opacity-50"
       >
+        {submitting && <Spinner className="h-4 w-4" />}
         {submitting ? "Submitting…" : "Submit claim"}
       </button>
     </div>

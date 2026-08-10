@@ -8,7 +8,7 @@ import { PLANS, type PlanId, type Plan } from "./plans";
 // project dir is read-only, so we fall back to /tmp + the memory cache (which
 // persists for the life of a warm instance). Swap for a real DB in production.
 const DATA_DIR = process.env.VERCEL
-  ? "/tmp/car-spotter-data"
+  ? "/tmp/carz-ai-data"
   : path.join(process.cwd(), ".data");
 const STORE_PATH = path.join(DATA_DIR, "store.json");
 export const UID_COOKIE = "cs_uid";

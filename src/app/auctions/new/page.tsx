@@ -4,6 +4,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import { SiteHeader } from "@/components/site-header";
+import { Spinner } from "@/components/ui/editorial";
 
 function downscale(dataUrl: string, max = 900, quality = 0.7): Promise<string> {
   return new Promise((resolve) => {
@@ -109,7 +110,7 @@ function NewAuctionInner() {
     setAiMsg("");
   }
 
-  // Run the uploaded photo through the Car Spotter AI and auto-fill the listing.
+  // Run the uploaded photo through the Carz AI identifier and auto-fill the listing.
   async function generateWithAI() {
     if (!image) {
       setError("Upload a photo first, then let AI write the listing.");
@@ -248,7 +249,7 @@ function NewAuctionInner() {
                 <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickFile} />
               </div>
 
-              {/* AI auto-fill using the Car Spotter feature */}
+              {/* AI auto-fill using the Carz AI identify feature */}
               <button
                 onClick={generateWithAI}
                 disabled={aiLoading || !image}
@@ -257,7 +258,7 @@ function NewAuctionInner() {
                 {aiLoading ? "🔎 AI is reading your photo…" : "✨ Auto-fill listing with AI"}
               </button>
               <p className="mt-1.5 text-xs ">
-                Upload a photo and let Car Spotter identify the car and write the title, make, model &
+                Upload a photo and let Carz AI identify the car and write the title, make, model &
                 description for you.
               </p>
               {aiMsg && <p className="mt-2 text-sm text-neon-green">{aiMsg}</p>}
@@ -395,8 +396,10 @@ function NewAuctionInner() {
             <button
               onClick={submit}
               disabled={saving}
-              className="util-label w-full bg-carz py-4  transition hover:brightness-95 disabled:opacity-40"
+              aria-busy={saving || undefined}
+              className="util-label flex w-full items-center justify-center gap-2 bg-carz py-4  transition hover:brightness-95 disabled:opacity-40"
             >
+              {saving && <Spinner className="h-3.5 w-3.5" />}
               {saving ? "Publishing…" : "Publish listing"}
             </button>
           </div>

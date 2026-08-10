@@ -170,7 +170,13 @@ function ProfileInner() {
 
             {error && <div className="border border-carz/40 bg-carz/10 p-3 text-sm ">{error}</div>}
 
-            <Button onClick={save} disabled={blocked || saving || username.trim().length < 3} size="lg" className="w-full">
+            <Button
+              onClick={save}
+              disabled={blocked || username.trim().length < 3}
+              loading={saving}
+              size="lg"
+              className="w-full"
+            >
               {saving ? "Saving…" : "Save changes"}
             </Button>
           </div>

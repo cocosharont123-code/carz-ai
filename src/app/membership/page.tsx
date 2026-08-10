@@ -199,8 +199,8 @@ export default function MembershipPage() {
                     <span className="display text-3xl">7 days free</span>
                     <span className="opacity-70">, then $9.99 / month.</span> Cancel anytime.
                   </p>
-                  <Button onClick={startTrial} disabled={busy} size="lg" className="mt-5">
-                    {busy ? "…" : authStatus === "authenticated" ? "Start 7-day free trial" : "Sign in to start free trial"}
+                  <Button onClick={startTrial} loading={busy} size="lg" className="mt-5">
+                    {authStatus === "authenticated" ? "Start 7-day free trial" : "Sign in to start free trial"}
                   </Button>
                   <button
                     onClick={() => join("monthly")}
@@ -216,8 +216,8 @@ export default function MembershipPage() {
                     <span className="display text-3xl">$9.99</span>
                     <span className="opacity-70"> / month.</span> Cancel anytime.
                   </p>
-                  <Button onClick={() => join("monthly")} disabled={busy} size="lg" className="mt-5">
-                    {busy ? "…" : authStatus === "authenticated" ? "Join Carz+" : "Sign in to join"}
+                  <Button onClick={() => join("monthly")} loading={busy} size="lg" className="mt-5">
+                    {authStatus === "authenticated" ? "Join Carz+" : "Sign in to join"}
                   </Button>
                 </>
               )}
@@ -248,7 +248,7 @@ export default function MembershipPage() {
                     placeholder="Enter code"
                     className="w-full rounded-full border border-white/15 bg-white/[0.04] px-4 py-2.5 text-sm outline-none placeholder:opacity-40 focus:border-white/30"
                   />
-                  <Button onClick={redeem} disabled={busy} size="md">
+                  <Button onClick={redeem} loading={busy} size="md">
                     Redeem
                   </Button>
                 </div>
@@ -274,7 +274,7 @@ export default function MembershipPage() {
 
         {!member && (
           <div className="mt-8 flex flex-col items-center gap-3">
-            <Button onClick={trialAvailable ? startTrial : () => join("monthly")} disabled={busy} size="lg">
+            <Button onClick={trialAvailable ? startTrial : () => join("monthly")} loading={busy} size="lg">
               {authStatus !== "authenticated"
                 ? "Sign in to join"
                 : trialAvailable
