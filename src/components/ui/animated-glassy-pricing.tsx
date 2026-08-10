@@ -166,11 +166,16 @@ export interface PricingCardProps {
 export const PricingCard = ({
   planName, description, price, interval = 'mo', features, buttonText, isPopular = false, buttonVariant = 'primary', onSelect
 }: PricingCardProps) => {
+  // The blur lives on .blur-behind's pseudo-element, and the popular card grows
+  // by padding rather than scale-105 — a 1.05 transform resamples rasterized
+  // text and is the one thing here that genuinely blurs it.
   const cardClasses = `
-    backdrop-blur-[14px] bg-gradient-to-br rounded-2xl shadow-xl flex-1 max-w-xs px-7 py-8 flex flex-col transition-all duration-300
+    blur-behind bg-gradient-to-br rounded-2xl shadow-xl flex-1 max-w-xs flex flex-col transition-all duration-300
     from-black/5 to-black/0 border border-black/10
-    dark:from-white/10 dark:to-white/5 dark:border-white/10 dark:backdrop-brightness-[0.91]
-    ${isPopular ? 'scale-105 relative ring-2 ring-cyan-400/20 dark:from-white/20 dark:to-white/10 dark:border-cyan-400/30 shadow-2xl' : ''}
+    dark:from-white/10 dark:to-white/5 dark:border-white/10
+    ${isPopular
+      ? 'relative px-8 py-10 -my-2 ring-2 ring-cyan-400/20 dark:from-white/20 dark:to-white/10 dark:border-cyan-400/30 shadow-2xl'
+      : 'px-7 py-8'}
   `;
   const buttonClasses = `
     mt-auto w-full py-2.5 rounded-xl font-semibold text-[14px] transition font-sans

@@ -166,7 +166,7 @@ export default function PricingPage() {
     </div>
   ) : (
     <div className="flex flex-col items-center gap-4">
-      <div className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/5 p-1 text-sm backdrop-blur">
+      <div className="blur-behind inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/5 p-1 text-sm">
         <button
           onClick={() => setAnnual(false)}
           className={cn("press rounded-full px-4 py-1.5 font-medium transition", !annual ? "bg-cyan-400 text-black" : "text-foreground/70 hover:text-foreground")}

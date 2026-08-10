@@ -391,15 +391,35 @@ body {
 :root { --button-ripple-color: oklch(0.145 0 0 / 0.3); }
 .dark { --button-ripple-color: oklch(0.985 0 0 / 0.5); }
 
+/* Blur what's behind an element without dragging its text into the blurred
+   layer. backdrop-filter promotes the element to its own composited layer,
+   which costs the text subpixel antialiasing — over the animated shader that
+   reads as blur. Keeping the filter on a ::before leaves the text crisp.
+   Set --blur-behind to tune the radius. */
+.blur-behind {
+  position: relative;
+  isolation: isolate; /* keeps the -1 layer behind this box, not the page */
+}
+.blur-behind::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  backdrop-filter: blur(var(--blur-behind, 14px)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--blur-behind, 14px)) saturate(180%);
+  pointer-events: none;
+}
+
 /* Liquid glass bubble — translucent, blurred, floats on the black/neon background.
    Unlike the milky .bg-card (near-black text), glass is see-through so text is white. */
 .glass-card {
   position: relative;
+  isolation: isolate;
+  --blur-behind: 20px;
   color: oklch(0.985 0 0);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04) 55%, rgba(255, 255, 255, 0.02));
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow:
     inset 0 1px 0 0 rgba(255, 255, 255, 0.30),
@@ -407,6 +427,16 @@ body {
     inset 0 0 20px 0 rgba(255, 255, 255, 0.05),
     0 10px 30px -12px rgba(0, 0, 0, 0.7);
   transition: border-color 300ms var(--ease-apple), box-shadow 300ms var(--ease-apple);
+}
+.glass-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  backdrop-filter: blur(var(--blur-behind)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--blur-behind)) saturate(180%);
+  pointer-events: none;
 }
 .glass-card:hover {
   border-color: rgba(255, 255, 255, 0.28);
