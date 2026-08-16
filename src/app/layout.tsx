@@ -42,6 +42,10 @@ export default function RootLayout({
             __html: `try{localStorage.removeItem('theme');document.documentElement.classList.remove('light');document.documentElement.classList.add('dark');}catch(e){}`,
           }}
         />
+        {/* Without JS the reveal observer never runs, so unpin the reveals. */}
+        <noscript>
+          <style>{`.reveal{opacity:1!important;transform:none!important}`}</style>
+        </noscript>
         <GlobalShaderBg />
         <div className="relative z-10 flex min-h-full flex-1 flex-col">
           <Providers>{children}</Providers>

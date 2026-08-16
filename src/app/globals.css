@@ -330,6 +330,10 @@ h1, h2, h3, h4 { letter-spacing: -0.02em; line-height: 1.2; }
   .reveal { opacity: 0; transform: translateY(20px); }
   .reveal.in { opacity: 1; transform: none; transition: opacity 700ms var(--ease-apple), transform 700ms var(--ease-apple); }
 
+  /* Indeterminate sweep under the scanning button. */
+  @keyframes scanSweep { from { transform: translateX(-100%); } to { transform: translateX(400%); } }
+  .scan-sweep { animation: scanSweep 1.1s var(--ease-apple) infinite; }
+
   /* Press feedback on controls. */
   .press { transition: transform 250ms var(--ease-apple); }
   .press:active { transform: scale(0.96); }

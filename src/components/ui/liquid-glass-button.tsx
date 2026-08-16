@@ -61,7 +61,8 @@ const liquidbuttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-transparent hover:scale-105 duration-300 transition text-primary",
+        // brightness, not scale — a 1.05 transform resamples the label and softens it
+        default: "bg-transparent hover:brightness-125 duration-300 transition text-primary",
         destructive:
           "bg-destructive  hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40",
         outline:
