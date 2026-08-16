@@ -322,10 +322,12 @@ h1, h2, h3, h4 { letter-spacing: -0.02em; line-height: 1.2; }
   inset: 0;
   z-index: 0;
   pointer-events: none;
+  /* Kept faint: the sweep passes *under* the label, so a stronger tint would
+     close the gap between neon-blue text and its own background mid-pass. */
   background: linear-gradient(
     100deg,
     transparent 25%,
-    rgba(0, 229, 255, 0.28) 50%,
+    rgba(0, 229, 255, 0.14) 50%,
     transparent 75%
   );
   animation: carzScanSweep 1.7s linear infinite;

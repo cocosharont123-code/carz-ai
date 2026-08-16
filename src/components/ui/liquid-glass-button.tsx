@@ -276,8 +276,13 @@ const metalButtonVariants = (
       filter:
         isHovered && !isPressed && !isTouchDevice ? "brightness(1.05)" : "none",
     },
+    // No transform-gpu / will-change here: both promote this box to its own
+    // composited layer for good, and the label lives inside it — which trades
+    // subpixel antialiasing for grayscale and reads as soft type against the
+    // neon background. The press transform still animates on the GPU while it
+    // runs; it just doesn't hold the layer open the rest of the time.
     button: cn(
-      "relative z-10 m-[1px] rounded-md inline-flex h-11 transform-gpu cursor-pointer items-center justify-center overflow-hidden rounded-md px-6 py-2 text-sm leading-none font-semibold will-change-transform outline-none",
+      "relative z-10 m-[1px] rounded-md inline-flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-md px-6 py-2 text-sm leading-none font-semibold outline-none",
       colors.button,
       colors.textColor,
       colors.textShadow,

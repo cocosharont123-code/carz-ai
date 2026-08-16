@@ -39,7 +39,7 @@ function ScanningButton() {
       role="status"
       aria-live="polite"
       aria-busy="true"
-      className="carz-scan-btn carz-scan-sweep relative w-full overflow-hidden rounded-2xl border-2 border-neon-blue/70 bg-neon-blue/10 px-6 py-6 text-center"
+      className="carz-scan-btn carz-scan-sweep relative w-full overflow-hidden rounded-2xl border-2 border-neon-blue/70 bg-carz-ink px-6 py-6 text-center"
     >
       <div className="relative z-10 flex items-center justify-center gap-3">
         <Spinner className="h-6 w-6 text-neon-blue" />
