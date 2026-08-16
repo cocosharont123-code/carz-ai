@@ -17,11 +17,13 @@ export function GlobalShaderBg() {
   return (
     <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
       <WebGLShader />
-      {/* Flat floor: caps the clipped bands to roughly a quarter strength. */}
-      <div className="absolute inset-0 bg-black/75" />
-      {/* Vignette: extra hold toward the edges, where the bands run brightest,
-          while the centre keeps enough neon to still read as the brand. */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.15)_0%,rgba(0,0,0,0.55)_100%)]" />
+      {/* Flat floor. This is the brightness dial: lower percentage = brighter
+          neon. Below roughly /35 the clipped bands start reaching white behind
+          body text again, which is what made type look blurred. */}
+      <div className="absolute inset-0 bg-black/45" />
+      {/* Vignette: a light hold at the edges where the bands run brightest,
+          leaving the centre near full strength. */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.02)_0%,rgba(0,0,0,0.32)_100%)]" />
     </div>
   );
 }
