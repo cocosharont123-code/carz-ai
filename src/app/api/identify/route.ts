@@ -79,7 +79,6 @@ export async function POST(req: Request) {
     const status = recordIdentification(
       id,
       { make: car.make, model: car.model, yearRange: car.yearRange, isCar: car.isCar },
-      [],
       effectivePlan,
     );
     return NextResponse.json({ car, status, premium: plan.premiumReport });

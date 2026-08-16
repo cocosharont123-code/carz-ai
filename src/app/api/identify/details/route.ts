@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { getUserId, getUser, isPlanId, recordGoals, PLAN_COOKIE } from "@/lib/store";
+import { getUserId, getUser, isPlanId, planStatusFor, PLAN_COOKIE } from "@/lib/store";
 import { cookies } from "next/headers";
 import { PLANS } from "@/lib/plans";
-import { describeCar, IdentifyError, type CarReport } from "@/lib/identify";
-import { goalsForDate, evaluateGoals } from "@/lib/gamification";
+import { describeCar, IdentifyError } from "@/lib/identify";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -11,8 +10,8 @@ export const maxDuration = 120;
 // The half of a car report that doesn't need the photo. /api/identify returns
 // the identification as soon as it's settled; the client asks for this straight
 // after, so the spec sheet, rarity and values fill in behind an answer that is
-// already on screen. Scans were already counted by /api/identify — this only
-// credits goals, which are judged on the numbers that arrive here.
+// already on screen. Scans were already counted by /api/identify, so this only
+// echoes the current plan status back alongside the specs.
 export async function POST(req: Request) {
   const { id } = await getUserId();
   const jar = await cookies();
@@ -53,16 +52,9 @@ export async function POST(req: Request) {
       plan.premiumReport,
     );
 
-    // Goals check engine, power, rarity, top speed and value — all of which only
-    // exist now, which is why they're credited here rather than on the scan.
-    const today = new Date().toISOString().slice(0, 10);
-    const completedGoals = evaluateGoals(
-      { ...specs, isCar: true } as CarReport,
-      goalsForDate(today),
-    );
-    const status = recordGoals(id, completedGoals, effectivePlan);
+    const status = planStatusFor(effectivePlan, user);
 
-    return NextResponse.json({ specs, status, completedGoals });
+    return NextResponse.json({ specs, status });
   } catch (e) {
     const message = e instanceof IdentifyError ? e.message : "Couldn't load the details.";
     return NextResponse.json({ error: "details_failed", message }, { status: 502 });

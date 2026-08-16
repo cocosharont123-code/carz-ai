@@ -33,8 +33,7 @@ export type UserRecord = {
   plan: PlanId;
   usage: Record<string, number>; // date -> count
   history: HistoryItem[];
-  totalSpots: number; // lifetime cars identified (for badges)
-  goalsDone: Record<string, string[]>; // date -> completed goal ids
+  totalSpots: number; // lifetime cars identified
 };
 
 type Store = { users: Record<string, UserRecord> };
@@ -74,14 +73,13 @@ export async function getUserId(): Promise<{ id: string; isNew: boolean }> {
 
 function ensureUser(store: Store, id: string): UserRecord {
   if (!store.users[id]) {
-    store.users[id] = { plan: "free", usage: {}, history: [], totalSpots: 0, goalsDone: {} };
+    store.users[id] = { plan: "free", usage: {}, history: [], totalSpots: 0 };
   }
   const u = store.users[id];
   u.plan = u.plan ?? "free";
   u.usage = u.usage ?? {};
   u.history = u.history ?? [];
   u.totalSpots = u.totalSpots ?? 0;
-  u.goalsDone = u.goalsDone ?? {};
   return u;
 }
 
@@ -138,7 +136,6 @@ export function atLimit(user: UserRecord): boolean {
 export function recordIdentification(
   id: string,
   car: { make?: string; model?: string; yearRange?: string; isCar?: boolean },
-  completedGoalIds: string[] = [],
   planOverride?: PlanId,
 ) {
   const store = loadStore();
@@ -158,26 +155,7 @@ export function recordIdentification(
     });
     user.history = user.history.slice(-100);
   }
-  if (completedGoalIds.length) {
-    const merged = new Set([...(user.goalsDone[today] ?? []), ...completedGoalIds]);
-    user.goalsDone[today] = Array.from(merged);
-  }
   saveStore(store);
-  return planStatusFor(planOverride ?? user.plan, user);
-}
-
-// Goals are judged on engine, power, rarity and value — none of which the photo
-// answers — so they land after the scan itself has been recorded. Credits them
-// without touching the scan count, which `recordIdentification` already took.
-export function recordGoals(id: string, completedGoalIds: string[], planOverride?: PlanId) {
-  const store = loadStore();
-  const user = ensureUser(store, id);
-  if (completedGoalIds.length) {
-    const today = todayStr();
-    const merged = new Set([...(user.goalsDone[today] ?? []), ...completedGoalIds]);
-    user.goalsDone[today] = Array.from(merged);
-    saveStore(store);
-  }
   return planStatusFor(planOverride ?? user.plan, user);
 }
 

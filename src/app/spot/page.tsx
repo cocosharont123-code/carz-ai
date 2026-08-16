@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ImagePlus, Upload, Trash2, X, Check, Circle, Medal, Gem, TrafficCone } from "lucide-react";
+import { ImagePlus, Upload, Trash2, X, TrafficCone } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
-import { Button as GlassButton } from "@/components/ui/editorial";
+import { Button as GlassButton, Spinner } from "@/components/ui/editorial";
 import { Input } from "@/components/ui/input";
 import { useImageUpload } from "@/components/hooks/use-image-upload";
 import { CarHotspotsMap } from "@/components/car-hotspots-map";
@@ -27,95 +27,32 @@ type Status = {
   apiConfigured?: boolean;
   history?: { make: string; model: string; yearRange: string; date: string }[];
   totalSpots?: number;
-  badges?: { id: string; threshold: number; name: string; tone: "bronze" | "silver" | "gold" | "diamond"; blurb: string; earned: boolean }[];
-  goals?: { id: string; label: string; done: boolean }[];
 };
 
-function DailyGoals({ goals }: { goals?: { id: string; label: string; done: boolean }[] }) {
-  if (!goals || goals.length === 0) return null;
+// The in-flight state of the identify button. Identification runs for several
+// seconds against the model, so this takes over the button's own footprint
+// rather than sitting next to it — full width, neon ring, sweeping scan line
+// and an indeterminate bar, so there is no doubt the scan is running.
+function ScanningButton() {
   return (
-    <div className="mt-6 rounded-3xl border border-foreground/[0.05] bg-card text-card-foreground p-5">
-      <div className="flex items-center justify-between">
-        <h3 className="font-bold">Today&apos;s goals</h3>
-        <span className="text-xs ">Resets daily</span>
-      </div>
-      <div className="mt-3 space-y-2">
-        {goals.map((g) => (
-          <div key={g.id} className="flex items-center gap-2.5 text-sm">
-            <span className={g.done ? "text-neon-green" : "opacity-40"}>
-              {g.done ? <Check className="h-4 w-4" aria-hidden /> : <Circle className="h-4 w-4" aria-hidden />}
-            </span>
-            <span className={g.done ? "text-neon-green line-through" : ""}>{g.label}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// Medal tint per badge tier — replaces the old medal emoji.
-const TONE: Record<"bronze" | "silver" | "gold" | "diamond", string> = {
-  bronze: "text-amber-700",
-  silver: "text-slate-300",
-  gold: "text-amber-400",
-  diamond: "text-cyan-300",
-};
-
-function Badges({
-  badges,
-  total,
-}: {
-  badges?: { id: string; threshold: number; name: string; tone: keyof typeof TONE; earned: boolean }[];
-  total?: number;
-}) {
-  if (!badges || badges.length === 0) return null;
-  const t = total ?? 0;
-  const next = badges.find((b) => !b.earned);
-  return (
-    <div className="mt-6 rounded-3xl border border-foreground/[0.05] bg-card text-card-foreground p-5">
-      <div className="flex items-center justify-between">
-        <h3 className="font-bold">Badges</h3>
-        <span className="text-xs ">
-          {t} car{t === 1 ? "" : "s"} spotted
+    <div
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+      className="carz-scan-btn carz-scan-sweep relative w-full overflow-hidden rounded-2xl border-2 border-neon-blue/70 bg-neon-blue/10 px-6 py-6 text-center"
+    >
+      <div className="relative z-10 flex items-center justify-center gap-3">
+        <Spinner className="h-6 w-6 text-neon-blue" />
+        <span className="text-lg font-extrabold tracking-tight text-neon-blue">
+          Identifying car…
         </span>
       </div>
-      <div className="mt-3 grid grid-cols-4 gap-2">
-        {badges.map((b) => (
-          <div
-            key={b.id}
-            className={cn(
-              "flex flex-col items-center rounded-2xl p-3 text-center transition",
-              b.earned ? "bg-foreground/[0.06] ring-1 ring-neon-red/40" : "bg-foreground/[0.02] opacity-40",
-            )}
-          >
-            {b.tone === "diamond" ? (
-              <Gem className={cn("h-6 w-6", TONE[b.tone])} aria-hidden />
-            ) : (
-              <Medal className={cn("h-6 w-6", TONE[b.tone])} aria-hidden />
-            )}
-            <span className="mt-1 text-[11px] font-semibold leading-tight">{b.name}</span>
-            <span className="text-[10px] ">{b.threshold}+ cars</span>
-          </div>
-        ))}
+      <p className="relative z-10 mt-1.5 text-xs opacity-70">
+        Reading badges, lights and body lines — this takes a few seconds
+      </p>
+      <div className="relative z-10 mt-4 h-1.5 w-full overflow-hidden rounded-full bg-neon-blue/15">
+        <div className="carz-scan-bar h-full w-1/3 rounded-full bg-neon-blue" />
       </div>
-      {next ? (
-        <div className="mt-4">
-          <div className="flex justify-between text-xs ">
-            <span>Next: {next.name}</span>
-            <span>
-              {t}/{next.threshold}
-            </span>
-          </div>
-          <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-foreground/[0.06]">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-neon-red to-neon-red"
-              style={{ width: `${Math.min(100, (t / next.threshold) * 100)}%` }}
-            />
-          </div>
-        </div>
-      ) : (
-        <p className="mt-3 text-sm text-neon-red">All badges earned — you&apos;re a Legendary Spotter!</p>
-      )}
     </div>
   );
 }
@@ -656,14 +593,16 @@ export default function SpotPage() {
             placeholder="Optional note: 'spotted downtown, looked rare…'"
           />
 
-          {!car ? (
-            <GlassButton onClick={identify} disabled={!previewUrl} loading={loading} size="lg" className="w-full py-5">
-              {loading ? "Reading the car…" : "Identify car"}
+          {loading ? (
+            <ScanningButton />
+          ) : !car ? (
+            <GlassButton onClick={identify} disabled={!previewUrl} size="lg" className="w-full py-5">
+              Identify car
             </GlassButton>
           ) : (
             <div className="flex gap-3">
-              <GlassButton onClick={identify} loading={loading} className="flex-1">
-                {loading ? "Reading…" : "Re-identify"}
+              <GlassButton onClick={identify} className="flex-1">
+                Re-identify
               </GlassButton>
               <GlassButton onClick={startNew} className="flex-1">
                 New car
@@ -671,16 +610,6 @@ export default function SpotPage() {
             </div>
           )}
         </div>
-
-        <DailyGoals goals={status?.goals} />
-        <Badges badges={status?.badges} total={status?.totalSpots} />
-
-        {loading && (
-          <div className="mt-4 flex items-center gap-3 ">
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-border border-t-neon-blue" />
-            Reading the car…
-          </div>
-        )}
 
         {error && (
           <div className="mt-4 rounded-xl border border-neon-red/50 bg-neon-red/10 p-3 text-sm text-neon-red">

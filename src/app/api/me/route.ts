@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getUserId, getUser, planStatusFor, recentHistory, UID_COOKIE, PLAN_COOKIE, isPlanId } from "@/lib/store";
 import { PLANS } from "@/lib/plans";
-import { badgesFor, goalsForDate } from "@/lib/gamification";
 import { auth } from "@/auth";
 import { ensureProfile, isActiveMember } from "@/lib/profile-blob";
 
@@ -30,8 +29,6 @@ export async function GET() {
     username = profile.username;
   }
 
-  const today = new Date().toISOString().slice(0, 10);
-  const done = user.goalsDone?.[today] ?? [];
   return NextResponse.json({
     ...status,
     member,
@@ -41,7 +38,5 @@ export async function GET() {
     authEnabled: !!process.env.AUTH_GOOGLE_ID,
     history: status.saveHistory ? recentHistory(user) : [],
     totalSpots: user.totalSpots ?? 0,
-    badges: badgesFor(user.totalSpots ?? 0),
-    goals: goalsForDate(today).map((g) => ({ id: g.id, label: g.label, done: done.includes(g.id) })),
   });
 }
