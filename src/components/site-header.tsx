@@ -15,6 +15,7 @@ const LEFT_NAV = [
 ];
 const RIGHT_NAV = [
   { href: "/spot", label: "Spot" },
+  { href: "/drops", label: "Drops" },
   { href: "/feed", label: "Feed" },
   { href: "/auctions", label: "Auctions" },
   // Garage + Ranks share a page; it's named "Garage" and Ranks is a tab there.
