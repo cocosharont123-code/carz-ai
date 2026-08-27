@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Heart, MessageCircle } from "lucide-react";
-import { Avatar } from "@/components/default-avatar";
-import { FeedVideo, type VideoEdit } from "@/components/feed/feed-video";
-import { ShareButton } from "@/components/feed/share-button";
+import { Heart } from "lucide-react";
+import type { VideoEdit } from "@/components/feed/feed-video";
 import { cn } from "@/lib/utils";
+
+// Shared feed vocabulary: the post shape, the relative stamp and the like
+// control. The scroller renders posts through `Reel`; the post detail page
+// composes its own layout from these.
 
 export type FeedPostView = {
   id: string;
@@ -112,64 +114,3 @@ export function LikeButton({
   );
 }
 
-export function PostCard({
-  post,
-  signedIn,
-  onLikeChange,
-}: {
-  post: FeedPostView;
-  signedIn: boolean;
-  onLikeChange?: (liked: boolean, count: number) => void;
-}) {
-  return (
-    <article className="overflow-hidden rounded-3xl border border-white/10 bg-card text-card-foreground">
-      <header className="flex items-center gap-2.5 px-4 py-3">
-        <Avatar src={post.authorImage} size={30} />
-        <span className="truncate text-[13px] font-bold">{post.authorName}</span>
-        <span className="ml-auto shrink-0 text-[11px] uppercase tracking-wide opacity-50">
-          {timeAgo(post.createdAt)}
-        </span>
-      </header>
-
-      {/* A video is interactive, so it isn't wrapped in the link — tapping it
-          should play, not navigate. The caption and comment count still lead
-          through to the post. */}
-      {post.mediaKind === "video" && post.videoUrl ? (
-        <FeedVideo videoUrl={post.videoUrl} posterUrl={post.imageUrl} edit={post.edit} />
-      ) : (
-        <Link href={`/feed/${post.id}`} className="block">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={post.imageUrl}
-            alt={post.caption ? post.caption.slice(0, 120) : "A car posted to the feed"}
-            className="aspect-[4/3] w-full bg-black/5 object-cover"
-            loading="lazy"
-          />
-        </Link>
-      )}
-
-      <div className="px-4 py-3.5">
-        {post.caption && (
-          <p className="whitespace-pre-wrap text-[13px] leading-relaxed">{post.caption}</p>
-        )}
-        <div className={cn("flex items-center gap-2", post.caption && "mt-3")}>
-          <LikeButton
-            postId={post.id}
-            liked={post.likedByYou}
-            count={post.likeCount}
-            signedIn={signedIn}
-            onChange={onLikeChange}
-          />
-          <Link
-            href={`/feed/${post.id}`}
-            className="inline-flex items-center gap-1.5 rounded-full bg-black/[0.06] px-3 py-1.5 text-[13px] font-semibold transition hover:bg-black/[0.1]"
-          >
-            <MessageCircle className="h-4 w-4" strokeWidth={2} aria-hidden />
-            {post.commentCount}
-          </Link>
-          <ShareButton postId={post.id} caption={post.caption} className="ml-auto" />
-        </div>
-      </div>
-    </article>
-  );
-}
