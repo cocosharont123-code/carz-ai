@@ -131,7 +131,7 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
   }
 
   return (
-    <div className="mt-6 border-t border-foreground/10 pt-5">
+    <div className="mt-6 border-t border-black/15 pt-5">
       <h3 className="text-xs font-bold uppercase tracking-wide text-carz">Customize this car</h3>
       <p className="mb-3 mt-1 text-sm opacity-70">
         Pick a look and the AI repaints your photo — same car, same shot, new style.
@@ -147,7 +147,7 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
               onClick={() => setBodyColor((v) => (v === c.value ? "" : c.value))}
               className={cn(
                 "flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-xs transition",
-                bodyColor === c.value ? "border-carz bg-carz/10" : "border-foreground/15 hover:border-foreground/35",
+                bodyColor === c.value ? "border-carz bg-carz/10" : "border-black/20 hover:border-black/40",
               )}
             >
               <span className="h-3.5 w-3.5 rounded-full border border-black/20" style={{ background: c.hex }} />
@@ -167,7 +167,7 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
               onClick={() => setRimColor((v) => (v === c.value ? "" : c.value))}
               className={cn(
                 "flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-xs transition",
-                rimColor === c.value ? "border-carz bg-carz/10" : "border-foreground/15 hover:border-foreground/35",
+                rimColor === c.value ? "border-carz bg-carz/10" : "border-black/20 hover:border-black/40",
               )}
             >
               <span className="h-3.5 w-3.5 rounded-full border border-black/20" style={{ background: c.hex }} />
@@ -187,7 +187,7 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
               onClick={() => toggleFeature(f.value)}
               className={cn(
                 "rounded-full border px-3 py-1.5 text-xs transition",
-                features.includes(f.value) ? "border-carz bg-carz/10 text-carz" : "border-foreground/15 hover:border-foreground/35",
+                features.includes(f.value) ? "border-carz bg-carz/10 text-carz" : "border-black/20 hover:border-black/40",
               )}
             >
               {f.label}
@@ -209,7 +209,7 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
       {needSignIn && (
         <button
           onClick={() => signIn("google")}
-          className="press mt-2 w-full rounded-xl border border-foreground/20 py-2.5 text-sm font-semibold transition hover:border-foreground/40"
+          className="press mt-2 w-full rounded-xl border border-black/25 py-2.5 text-sm font-semibold transition hover:border-black/45"
         >
           Sign in with Google
         </button>
@@ -220,7 +220,7 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
 
       {result && (
         <div className="mt-4">
-          <div className="overflow-hidden rounded-2xl border border-foreground/10">
+          <div className="overflow-hidden rounded-2xl border border-black/15">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={result} alt={`Customized ${car.make} ${car.model}`} className="w-full" />
           </div>
@@ -243,14 +243,14 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
             <a
               href={result}
               download={`carz-${car.make}-${car.model}.jpg`.toLowerCase().replace(/\s+/g, "-")}
-              className="press flex-1 rounded-xl border border-foreground/15 py-2.5 text-center text-sm font-semibold transition hover:border-foreground/35"
+              className="press flex-1 rounded-xl border border-black/20 py-2.5 text-center text-sm font-semibold transition hover:border-black/40"
             >
               Download
             </a>
             <button
               onClick={generate}
               disabled={busy}
-              className="press flex-1 rounded-xl border border-foreground/15 py-2.5 text-sm font-semibold transition hover:border-foreground/35 disabled:opacity-40"
+              className="press flex-1 rounded-xl border border-black/20 py-2.5 text-sm font-semibold transition hover:border-black/40 disabled:opacity-40"
             >
               Regenerate
             </button>

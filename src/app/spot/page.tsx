@@ -118,7 +118,7 @@ async function objectUrlToDataUrl(url: string): Promise<string> {
 function Spec({ k, v }: { k: string; v?: string }) {
   if (!v) return null;
   return (
-    <div className="rounded-xl bg-foreground/[0.04] p-3">
+    <div className="rounded-xl bg-black/[0.05] p-3">
       <div className="text-[11px] uppercase tracking-wide ">{k}</div>
       <div className="mt-0.5 font-semibold">{v}</div>
     </div>
@@ -151,7 +151,7 @@ function RarityMeter({ score, reason }: { score: number; reason?: string }) {
       className={`mt-4 rounded-2xl p-4 ${
         ultra
           ? "bg-gradient-to-r from-neon-red/15 via-neon-green/10 to-neon-blue/15 shadow-[0_0_25px_-8px_rgba(57,255,20,0.7)]"
-          : "bg-foreground/[0.03]"
+          : "bg-black/[0.04]"
       }`}
     >
       <div className="flex items-baseline justify-between">
@@ -160,7 +160,9 @@ function RarityMeter({ score, reason }: { score: number; reason?: string }) {
           {raw}/100 · <span className={ultra ? "text-neon-red" : "text-neon-red"}>{label}</span>
         </span>
       </div>
-      <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-background">
+      {/* A pure-black track punched a hole in the grey card. A tint of black
+          reads as the same unfilled groove without the hard edge. */}
+      <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-black/15">
         <div
           className={`h-full rounded-full ${
             ultra
@@ -189,7 +191,7 @@ function ValueChart({ points }: { points: { year: string; usd: number }[] }) {
   const trendUp = pts[pts.length - 1].usd >= pts[0].usd;
   const stroke = trendUp ? "#34d399" : "#f87171";
   return (
-    <div className="mt-4 rounded-2xl bg-foreground/[0.03] p-4">
+    <div className="mt-4 rounded-2xl bg-black/[0.04] p-4">
       <div className="flex items-baseline justify-between">
         <span className="text-xs font-bold uppercase tracking-wide ">
           Market value over time
@@ -281,7 +283,7 @@ function InlineListings({ make, model, goodDealUsd }: { make: string; model: str
       {loading ? (
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="h-24 animate-pulse rounded-xl bg-foreground/[0.04]" />
+            <div key={i} className="h-24 animate-pulse rounded-xl bg-black/[0.05]" />
           ))}
         </div>
       ) : items.length > 0 ? (
@@ -294,13 +296,13 @@ function InlineListings({ make, model, goodDealUsd }: { make: string; model: str
                 href={it.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex gap-3 overflow-hidden rounded-xl bg-foreground/[0.03] p-2 ring-1 ring-foreground/[0.06] transition hover:bg-foreground/[0.06]"
+                className="group flex gap-3 overflow-hidden rounded-xl bg-black/[0.04] p-2 ring-1 ring-black/[0.08] transition hover:bg-black/[0.07]"
               >
                 {it.image ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={it.image} alt="" className="h-20 w-20 shrink-0 rounded-lg object-cover" />
                 ) : (
-                  <div className="h-20 w-20 shrink-0 rounded-lg bg-foreground/[0.05]" />
+                  <div className="h-20 w-20 shrink-0 rounded-lg bg-black/[0.06]" />
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="line-clamp-2 text-sm font-medium">{it.title}</p>
@@ -332,7 +334,7 @@ function InlineListings({ make, model, goodDealUsd }: { make: string; model: str
                 href={s.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-lg bg-foreground/[0.04] px-3 py-1.5 text-sm font-medium hover:bg-foreground/[0.08]"
+                className="rounded-lg bg-black/[0.05] px-3 py-1.5 text-sm font-medium hover:bg-black/[0.09]"
               >
                 {s.name}
               </a>
@@ -677,7 +679,7 @@ export default function SpotPage() {
 
         {/* Result */}
         {car && !limitHit && (
-          <section className="mt-6 rounded-3xl border border-foreground/[0.05] bg-card text-card-foreground p-6">
+          <section className="mt-6 rounded-3xl border border-black/10 bg-card text-card-foreground p-6">
             {car.isCar ? (
               <>
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -755,13 +757,13 @@ export default function SpotPage() {
 
                 <Link
                   href={`/auctions/new?make=${encodeURIComponent(car.make)}&model=${encodeURIComponent(car.model)}`}
-                  className="mt-3 flex items-center justify-between rounded-2xl border border-foreground/10 bg-foreground/[0.04] px-4 py-3 text-sm font-semibold transition hover:border-foreground/25 hover:bg-foreground/[0.08]"
+                  className="mt-3 flex items-center justify-between rounded-2xl border border-black/15 bg-black/[0.05] px-4 py-3 text-sm font-semibold transition hover:border-black/35 hover:bg-black/[0.09]"
                 >
                   <span>List this car for auction on Carz</span>
                 </Link>
 
                 {(car.valuation || car.reliability || car.collectibility) && (
-                  <div className="mt-6 border-t border-foreground/10 pt-5">
+                  <div className="mt-6 border-t border-black/15 pt-5">
                     {car.valuation && (
                       <>
                         <h3 className="text-xs font-bold uppercase tracking-wide text-neon-green">
@@ -804,13 +806,13 @@ export default function SpotPage() {
 
         {/* History (Pro/Max) */}
         {status?.saveHistory && status.history && status.history.length > 0 && (
-          <section className="mt-6 rounded-3xl border border-foreground/[0.05] bg-card text-card-foreground p-6">
+          <section className="mt-6 rounded-3xl border border-black/10 bg-card text-card-foreground p-6">
             <h3 className="font-bold">Your spotting history</h3>
             <div className="mt-3 space-y-2">
               {status.history.map((h, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between rounded-xl bg-foreground/[0.03] px-3 py-2 text-sm"
+                  className="flex items-center justify-between rounded-xl bg-black/[0.04] px-3 py-2 text-sm"
                 >
                   <span className="font-semibold">
                     {h.make} {h.model}{" "}
