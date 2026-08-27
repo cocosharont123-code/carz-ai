@@ -18,7 +18,19 @@ export type TermsSection = {
 };
 
 /** Bump when the text changes — a stored acceptance of an older version stops counting. */
-export const TERMS_VERSION = "2026-08-27";
+export const TERMS_VERSION = "2026-08-27.2";
+
+/**
+ * Appended to the end of every section.
+ *
+ * Worded as a standing disclosure about the Service rather than a claim that
+ * each individual clause is itself AI-driven — several of them (Governing Law,
+ * Indemnification, Termination) plainly aren't, and asserting otherwise in a
+ * legal instrument would be inaccurate. It points back at Section 5, which is
+ * where the substantive AI terms actually live.
+ */
+export const TERMS_AI_NOTICE =
+  "AI notice: The Service uses artificial intelligence, including for vehicle identification, specs, estimated values, listing generation, image customization, and the car assistant. AI output can be wrong and is provided for informational and entertainment purposes only — see Section 5 (AI Features).";
 
 export const TERMS_ENTITY = "Carzfinder LLC";
 export const TERMS_CONTACT_EMAIL = "carz.ai.ceo@carz-ai.com";

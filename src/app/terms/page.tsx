@@ -11,6 +11,7 @@ import {
   TERMS_VERSION,
   TERMS_ENTITY,
   TERMS_CONTACT_EMAIL,
+  TERMS_AI_NOTICE,
 } from "@/lib/terms";
 import { acceptTerms, getAcceptance } from "@/lib/terms-acceptance";
 import { cn } from "@/lib/utils";
@@ -150,6 +151,13 @@ export default function TermsPage() {
                     </p>
                   );
                 })}
+
+                {/* Set apart from the clause text on purpose: it's the same
+                    standing disclosure under every section, not bespoke legal
+                    wording that differs section to section. */}
+                <p className="mt-3 border-l-2 border-black/20 pl-3 text-[12px] leading-relaxed opacity-60">
+                  {TERMS_AI_NOTICE}
+                </p>
               </section>
             ))}
 
