@@ -4,13 +4,19 @@ import { useState } from "react";
 import Link from "next/link";
 import { Heart, MessageCircle } from "lucide-react";
 import { Avatar } from "@/components/default-avatar";
+import { FeedVideo, type VideoEdit } from "@/components/feed/feed-video";
+import { ShareButton } from "@/components/feed/share-button";
 import { cn } from "@/lib/utils";
 
 export type FeedPostView = {
   id: string;
   authorName: string;
   authorImage: string;
+  mediaKind: "photo" | "video";
   imageUrl: string;
+  videoUrl: string;
+  durationMs: number;
+  edit: VideoEdit;
   caption: string;
   createdAt: number;
   likeCount: number;
@@ -125,15 +131,22 @@ export function PostCard({
         </span>
       </header>
 
-      <Link href={`/feed/${post.id}`} className="block">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={post.imageUrl}
-          alt={post.caption ? post.caption.slice(0, 120) : "A car posted to the feed"}
-          className="aspect-[4/3] w-full bg-black/5 object-cover"
-          loading="lazy"
-        />
-      </Link>
+      {/* A video is interactive, so it isn't wrapped in the link — tapping it
+          should play, not navigate. The caption and comment count still lead
+          through to the post. */}
+      {post.mediaKind === "video" && post.videoUrl ? (
+        <FeedVideo videoUrl={post.videoUrl} posterUrl={post.imageUrl} edit={post.edit} />
+      ) : (
+        <Link href={`/feed/${post.id}`} className="block">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={post.imageUrl}
+            alt={post.caption ? post.caption.slice(0, 120) : "A car posted to the feed"}
+            className="aspect-[4/3] w-full bg-black/5 object-cover"
+            loading="lazy"
+          />
+        </Link>
+      )}
 
       <div className="px-4 py-3.5">
         {post.caption && (
@@ -154,6 +167,7 @@ export function PostCard({
             <MessageCircle className="h-4 w-4" strokeWidth={2} aria-hidden />
             {post.commentCount}
           </Link>
+          <ShareButton postId={post.id} caption={post.caption} className="ml-auto" />
         </div>
       </div>
     </article>

@@ -26,12 +26,46 @@ export type FeedComment = {
   ts: number;
 };
 
+/**
+ * A video post's edit, stored as playback instructions rather than baked into
+ * the file. Nothing is re-encoded: the player seeks to `trimStartMs`, stops at
+ * `trimEndMs`, mutes the original track if asked, and runs the music underneath.
+ *
+ * The trade is deliberate — no ffmpeg, no 30MB WASM download, and it works on
+ * mobile Safari. The cost is that the edit only exists inside Carz: download the
+ * file and you get the untrimmed original with no music.
+ */
+export type FeedEdit = {
+  trimStartMs: number;
+  trimEndMs: number; // 0 = play to the end
+  muteOriginal: boolean;
+  musicUrl: string; // "" = no music
+  musicTitle: string;
+  musicVolume: number; // 0..1
+  musicStartMs: number; // offset into the track
+};
+
+export const DEFAULT_EDIT: FeedEdit = {
+  trimStartMs: 0,
+  trimEndMs: 0,
+  muteOriginal: false,
+  musicUrl: "",
+  musicTitle: "",
+  musicVolume: 0.8,
+  musicStartMs: 0,
+};
+
 export type FeedPost = {
   id: string;
   authorHash: string;
   authorName: string;
   authorImage: string; // base64 avatar thumbnail, or "" for the animated default
-  imageUrl: string; // blob URL of the photo
+  /** Absent on records written before video existed — treat as "photo". */
+  mediaKind?: "photo" | "video";
+  imageUrl: string; // photo, or the video's poster frame
+  videoUrl?: string;
+  durationMs?: number;
+  edit?: FeedEdit;
   caption: string;
   createdAt: number;
   likes: FeedLike[];
@@ -52,7 +86,11 @@ export type PublicPost = {
   id: string;
   authorName: string;
   authorImage: string;
+  mediaKind: "photo" | "video";
   imageUrl: string;
+  videoUrl: string;
+  durationMs: number;
+  edit: FeedEdit;
   caption: string;
   createdAt: number;
   likeCount: number;
@@ -155,7 +193,11 @@ export function toPublicPost(
     id: p.id,
     authorName: p.authorName,
     authorImage: p.authorImage ?? "",
+    mediaKind: p.mediaKind === "video" ? "video" : "photo",
     imageUrl: p.imageUrl,
+    videoUrl: p.videoUrl ?? "",
+    durationMs: p.durationMs ?? 0,
+    edit: { ...DEFAULT_EDIT, ...(p.edit ?? {}) },
     caption: p.caption,
     createdAt: p.createdAt,
     likeCount: p.likes.length,
@@ -242,12 +284,57 @@ export function newPostId(): string {
   return randomUUID().slice(0, 12);
 }
 
+/**
+ * Videos and custom audio are uploaded straight from the browser to Blob, so
+ * the URL reaches us from the client. Anything not served by our own Blob store
+ * is refused — otherwise a post could point the player at an arbitrary host.
+ */
+export function isOurBlobUrl(url: string): boolean {
+  try {
+    const u = new URL(url);
+    return u.protocol === "https:" && u.hostname.endsWith(".public.blob.vercel-storage.com");
+  } catch {
+    return false;
+  }
+}
+
+/** Clamp a client-supplied edit into something the player can trust. */
+export function sanitizeEdit(raw: unknown, durationMs: number): FeedEdit {
+  const e = (raw ?? {}) as Partial<FeedEdit>;
+  const num = (v: unknown, fallback: number) =>
+    typeof v === "number" && Number.isFinite(v) ? v : fallback;
+
+  const cap = durationMs > 0 ? durationMs : Number.MAX_SAFE_INTEGER;
+  const start = Math.max(0, Math.min(cap, num(e.trimStartMs, 0)));
+  let end = Math.max(0, Math.min(cap, num(e.trimEndMs, 0)));
+  // An end at or before the start would freeze the player on one frame.
+  if (end !== 0 && end <= start) end = 0;
+
+  // Music has to be ours, or a path to a track bundled in /public.
+  const musicUrl = typeof e.musicUrl === "string" ? e.musicUrl : "";
+  const safeMusic = musicUrl.startsWith("/") || isOurBlobUrl(musicUrl) ? musicUrl : "";
+
+  return {
+    trimStartMs: start,
+    trimEndMs: end,
+    muteOriginal: !!e.muteOriginal,
+    musicUrl: safeMusic,
+    musicTitle: safeMusic ? String(e.musicTitle ?? "").slice(0, 80) : "",
+    musicVolume: Math.max(0, Math.min(1, num(e.musicVolume, 0.8))),
+    musicStartMs: Math.max(0, num(e.musicStartMs, 0)),
+  };
+}
+
 export async function createPost(input: {
   id: string;
   authorEmail: string;
   authorName: string;
   authorImage: string;
+  mediaKind: "photo" | "video";
   imageUrl: string;
+  videoUrl?: string;
+  durationMs?: number;
+  edit?: FeedEdit;
   caption: string;
 }): Promise<FeedPost> {
   const post: FeedPost = {
@@ -255,7 +342,15 @@ export async function createPost(input: {
     authorHash: hashEmail(input.authorEmail),
     authorName: input.authorName || "Spotter",
     authorImage: input.authorImage || "",
+    mediaKind: input.mediaKind,
     imageUrl: input.imageUrl,
+    ...(input.mediaKind === "video"
+      ? {
+          videoUrl: input.videoUrl,
+          durationMs: input.durationMs ?? 0,
+          edit: input.edit ?? DEFAULT_EDIT,
+        }
+      : {}),
     caption: input.caption.trim().slice(0, CAPTION_MAX),
     createdAt: Date.now(),
     likes: [],
@@ -279,12 +374,18 @@ export async function deletePost(
   }
   const [removed] = all.splice(idx, 1);
   await writeAll(all);
-  // The record is what makes the post exist; the photo is now unreachable
+  // The record is what makes the post exist; the media is now unreachable
   // either way, so a failure to clean it up must not fail the deletion.
-  try {
-    if (removed.imageUrl) await del(removed.imageUrl, { token: blobToken() });
-  } catch {
-    /* orphaned blob — the post is gone, which is what was asked for */
+  // Bundled /public tracks are skipped — they aren't ours to delete.
+  const orphans = [removed.imageUrl, removed.videoUrl, removed.edit?.musicUrl].filter(
+    (u): u is string => !!u && isOurBlobUrl(u),
+  );
+  for (const url of orphans) {
+    try {
+      await del(url, { token: blobToken() });
+    } catch {
+      /* orphaned blob — the post is gone, which is what was asked for */
+    }
   }
   return { ok: true };
 }
