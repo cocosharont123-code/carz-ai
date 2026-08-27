@@ -308,55 +308,13 @@ h1, h2, h3, h4 { letter-spacing: -0.02em; line-height: 1.2; }
   50% { opacity: 0.6; box-shadow: 0 0 0 5px rgba(57, 255, 20, 0); }
 }
 
-/* --- Identify button, in flight -------------------------------------------
-   A scan runs for several seconds, so its button has to read as busy from
-   across the room: a breathing neon halo, a scan line sweeping the surface,
-   and an indeterminate bar that never claims a percentage it doesn't know. */
-.carz-scan-btn {
-  animation: carzScanGlow 1.9s ease-in-out infinite;
-}
-@keyframes carzScanGlow {
-  0%, 100% { box-shadow: 0 0 20px -6px rgba(0, 229, 255, 0.7); }
-  50% { box-shadow: 0 0 46px -4px rgba(0, 229, 255, 0.95); }
-}
-
-/* Scan line. Pseudo-element so it sits under the label without a wrapper. */
-.carz-scan-sweep::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  /* Kept faint: the sweep passes *under* the label, so a stronger tint would
-     close the gap between neon-blue text and its own background mid-pass. */
-  background: linear-gradient(
-    100deg,
-    transparent 25%,
-    rgba(0, 229, 255, 0.14) 50%,
-    transparent 75%
-  );
-  animation: carzScanSweep 1.7s linear infinite;
-}
-@keyframes carzScanSweep {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(100%); }
-}
-
-.carz-scan-bar {
-  animation: carzScanBar 1.5s ease-in-out infinite;
-}
-@keyframes carzScanBar {
-  from { transform: translateX(-110%); }
-  to { transform: translateX(320%); }
-}
+/* The identify button's in-flight state is now ProgressiveFluxLoader, which
+   carries its own motion and its own reduced-motion path in the component. The
+   hand-rolled .carz-scan-* halo, sweep and bar it replaced are gone with it. */
 
 @media (prefers-reduced-motion: reduce) {
   .car-photo { transition: none; }
   .carz-live-dot { animation: none; }
-  /* Still unmistakably busy without motion: steady halo, full static bar. */
-  .carz-scan-btn { animation: none; box-shadow: 0 0 30px -6px rgba(0, 229, 255, 0.85); }
-  .carz-scan-sweep::after { display: none; }
-  .carz-scan-bar { animation: none; width: 100%; opacity: 0.65; }
   * { scroll-behavior: auto !important; }
 }
 
