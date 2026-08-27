@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Heart, MessageCircle, Share2, Check, Music, Volume2, VolumeX } from "lucide-react";
 import { Avatar } from "@/components/default-avatar";
 import { FeedVideo } from "@/components/feed/feed-video";
+import { CommentSheet } from "@/components/feed/comment-sheet";
 import { timeAgo, type FeedPostView } from "@/components/feed/post-card";
 import { cn } from "@/lib/utils";
 
@@ -68,6 +69,7 @@ export function Reel({
   muted,
   onToggleMuted,
   onLikeChange,
+  onCommentCountChange,
 }: {
   post: FeedPostView;
   active: boolean;
@@ -75,16 +77,20 @@ export function Reel({
   muted: boolean;
   onToggleMuted: () => void;
   onLikeChange: (liked: boolean, count: number) => void;
+  onCommentCountChange?: (count: number) => void;
 }) {
   const [copied, setCopied] = useState(false);
   const [likeBusy, setLikeBusy] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  // Keyed so a second double-tap restarts the animation rather than being
+  // swallowed while the first one is still running.
+  const [burst, setBurst] = useState(0);
   const isVideo = post.mediaKind === "video" && !!post.videoUrl;
 
-  async function like() {
+  async function toggleLike(next: boolean) {
     if (!signedIn || likeBusy) return;
-    const nextLiked = !post.likedByYou;
-    const nextCount = post.likeCount + (nextLiked ? 1 : -1);
-    onLikeChange(nextLiked, nextCount); // optimistic
+    const nextCount = post.likeCount + (next ? 1 : -1);
+    onLikeChange(next, nextCount); // optimistic
     setLikeBusy(true);
     try {
       const res = await fetch(`/api/feed/posts/${post.id}/like`, { method: "POST" });
@@ -99,6 +105,21 @@ export function Reel({
     } finally {
       setLikeBusy(false);
     }
+  }
+
+  function like() {
+    void toggleLike(!post.likedByYou);
+  }
+
+  /**
+   * Double tap likes — it never unlikes. Tapping twice on something you already
+   * liked reads as enthusiasm, not as taking it back, so the heart still flies
+   * and the count is left alone. Unliking stays on the rail button.
+   */
+  function doubleTapLike() {
+    setBurst((n) => n + 1);
+    if (!signedIn || post.likedByYou) return;
+    void toggleLike(true);
   }
 
   async function share() {
@@ -124,24 +145,46 @@ export function Reel({
   return (
     <section className="relative h-full w-full snap-start snap-always overflow-hidden bg-black">
       {/* Media fills the slide. `object-contain` rather than cover: a landscape
-          car shot cropped to a portrait slide loses the car. */}
-      {isVideo ? (
-        <FeedVideo
-          videoUrl={post.videoUrl}
-          posterUrl={post.imageUrl}
-          edit={post.edit}
-          active={active}
-          muted={muted}
-          fill
-        />
-      ) : (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={post.imageUrl}
-          alt={post.caption ? post.caption.slice(0, 120) : "A car on the feed"}
-          className="h-full w-full object-contain"
-          loading={active ? "eager" : "lazy"}
-        />
+          car shot cropped to a portrait slide loses the car.
+          Blurred while the comment sheet is up, so the clip stays visible
+          above it without competing with the text. */}
+      <div
+        className={cn(
+          "h-full w-full transition-[filter] duration-300",
+          commentsOpen && "blur-[6px]",
+        )}
+      >
+        {isVideo ? (
+          <FeedVideo
+            videoUrl={post.videoUrl}
+            posterUrl={post.imageUrl}
+            edit={post.edit}
+            active={active}
+            muted={muted}
+            onDoubleTap={doubleTapLike}
+            fill
+          />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={post.imageUrl}
+            alt={post.caption ? post.caption.slice(0, 120) : "A car on the feed"}
+            className="h-full w-full object-contain"
+            loading={active ? "eager" : "lazy"}
+          />
+        )}
+      </div>
+
+      {/* The double-tap heart. Purely decorative and click-through, so it can
+          never swallow the next tap. */}
+      {burst > 0 && (
+        <span
+          key={burst}
+          aria-hidden
+          className="carz-heart-burst pointer-events-none absolute inset-0 flex items-center justify-center"
+        >
+          <Heart className="h-24 w-24 text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.7)]" fill="currentColor" strokeWidth={0} />
+        </span>
       )}
 
       {/* Scrim so white overlay text survives a bright sky or a white car. */}
@@ -164,7 +207,11 @@ export function Reel({
           />
         </RailButton>
 
-        <RailButton label="Comments" count={post.commentCount} href={`/feed/${post.id}`}>
+        <RailButton
+          label="Comments"
+          count={post.commentCount}
+          onClick={() => setCommentsOpen(true)}
+        >
           <MessageCircle className="h-5 w-5" strokeWidth={2} aria-hidden />
         </RailButton>
 
@@ -210,6 +257,15 @@ export function Reel({
           </p>
         )}
       </div>
+
+      {commentsOpen && (
+        <CommentSheet
+          postId={post.id}
+          signedIn={signedIn}
+          onClose={() => setCommentsOpen(false)}
+          onCountChange={onCommentCountChange}
+        />
+      )}
     </section>
   );
 }

@@ -312,9 +312,28 @@ h1, h2, h3, h4 { letter-spacing: -0.02em; line-height: 1.2; }
    carries its own motion and its own reduced-motion path in the component. The
    hand-rolled .carz-scan-* halo, sweep and bar it replaced are gone with it. */
 
+/* Double-tap-to-like heart. Runs once and leaves nothing behind — the element
+   is keyed on a counter, so a second tap remounts it and replays from zero. */
+.carz-heart-burst {
+  animation: carzHeartBurst 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes carzHeartBurst {
+  0% { opacity: 0; transform: scale(0.4); }
+  22% { opacity: 1; transform: scale(1.12); }
+  42% { transform: scale(0.96); }
+  60% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.25); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .car-photo { transition: none; }
   .carz-live-dot { animation: none; }
+  /* Still confirms the like, just without the flight. */
+  .carz-heart-burst { animation: carzHeartFade 800ms linear both; }
+  @keyframes carzHeartFade {
+    0%, 70% { opacity: 1; }
+    100% { opacity: 0; }
+  }
   * { scroll-behavior: auto !important; }
 }
 

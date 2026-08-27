@@ -134,6 +134,12 @@ export default function FeedPage() {
     );
   }
 
+  // The sheet knows the real comment count once it has loaded them, so the
+  // rail badge follows it rather than drifting after an add or a delete.
+  function patchCommentCount(id: string, count: number) {
+    setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, commentCount: count } : p)));
+  }
+
   const composerHref = signedIn ? "/feed/new" : "/signin?callbackUrl=/feed/new";
 
   // A fixed-height column: the header keeps its natural size and the scroller
@@ -193,6 +199,7 @@ export default function FeedPage() {
                 muted={muted}
                 onToggleMuted={() => setMuted((m) => !m)}
                 onLikeChange={(liked, count) => patchLike(p.id, liked, count)}
+                onCommentCountChange={(count) => patchCommentCount(p.id, count)}
               />
             </div>
           ))}

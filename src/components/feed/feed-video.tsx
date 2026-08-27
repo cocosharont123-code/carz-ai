@@ -4,6 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Play, Music } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+/** Window for a second tap to count as a double. Long enough for a thumb, short
+ *  enough that a plain pause doesn't feel laggy. */
+const DOUBLE_TAP_MS = 260;
+
 export type VideoEdit = {
   trimStartMs: number;
   trimEndMs: number;
@@ -31,6 +35,7 @@ export function FeedVideo({
   active = true,
   muted = false,
   fill = false,
+  onDoubleTap,
   className,
 }: {
   videoUrl: string;
@@ -41,6 +46,8 @@ export function FeedVideo({
   muted?: boolean;
   /** Fill the parent instead of holding a 4:3 box. */
   fill?: boolean;
+  /** Two quick taps on the clip. When set, a single tap is delayed to tell them apart. */
+  onDoubleTap?: () => void;
   className?: string;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -119,6 +126,39 @@ export function FeedVideo({
     if (!muted && active && !paused) void a.play().catch(() => {});
   }, [edit.muteOriginal, edit.musicVolume, muted, active, paused]);
 
+  /**
+   * One tap pauses, two taps like. They can't both fire on the same gesture, so
+   * the single tap waits out the double-tap window before acting — otherwise a
+   * double tap would pause and unpause on its way to registering the like.
+   *
+   * Without an `onDoubleTap` handler there is nothing to wait for and the tap
+   * acts immediately.
+   */
+  const tapTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (tapTimer.current !== null) clearTimeout(tapTimer.current);
+    };
+  }, []);
+
+  function handleTap() {
+    if (!onDoubleTap) {
+      setPaused((p) => !p);
+      return;
+    }
+    if (tapTimer.current !== null) {
+      clearTimeout(tapTimer.current);
+      tapTimer.current = null;
+      onDoubleTap();
+      return;
+    }
+    tapTimer.current = window.setTimeout(() => {
+      tapTimer.current = null;
+      setPaused((p) => !p);
+    }, DOUBLE_TAP_MS);
+  }
+
   function onTimeUpdate() {
     const v = videoRef.current;
     if (!v) return;
@@ -144,7 +184,7 @@ export function FeedVideo({
         className={cn("w-full", fill ? "h-full object-contain" : "aspect-[4/3] object-cover")}
         onLoadedMetadata={rewind}
         onTimeUpdate={onTimeUpdate}
-        onClick={() => setPaused((p) => !p)}
+        onClick={handleTap}
       />
 
       {hasMusic && <audio ref={audioRef} src={edit.musicUrl} loop preload="metadata" />}
@@ -154,7 +194,9 @@ export function FeedVideo({
       {paused && active && (
         <button
           type="button"
-          onClick={() => setPaused(false)}
+          // Routed through the same handler so a double tap still likes while
+          // the clip is paused, rather than only resuming it.
+          onClick={handleTap}
           aria-label="Play"
           className="absolute inset-0 flex items-center justify-center bg-black/20"
         >
