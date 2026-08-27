@@ -80,15 +80,22 @@ export function FeedVideo({
     }
   }, [edit.musicStartMs, hasMusic, startSec]);
 
-  // Drive playback from `active`. Rewinding on exit means a slide you scroll
-  // back to starts from the top rather than resuming mid-clip.
+  // Seeking is kept in its own effect, keyed only on `active`. Scrolling to a
+  // slide starts its clip from the top; pausing and resuming must not, and it
+  // used to, because rewind lived in the play/pause effect below and fired
+  // again on every resume.
+  useEffect(() => {
+    rewind();
+  }, [active, rewind]);
+
+  // Play/pause only — this one never touches the playhead, so resuming picks up
+  // exactly where the tap stopped it, and toggling mute doesn't jump either.
   useEffect(() => {
     const v = videoRef.current;
     const a = audioRef.current;
     if (!v) return;
 
     if (active && !paused) {
-      rewind();
       // If the browser refuses — audible autoplay outside the muted scroller,
       // low power mode — fall back to showing the play button rather than
       // leaving a poster that looks broken.
@@ -97,9 +104,8 @@ export function FeedVideo({
     } else {
       v.pause();
       a?.pause();
-      if (!active) rewind();
     }
-  }, [active, paused, muted, hasMusic, rewind]);
+  }, [active, paused, muted, hasMusic]);
 
   // The edit's mute is the poster's choice and permanent; the viewer's mute
   // rides on top of it.
