@@ -92,8 +92,11 @@ export function SiteHeader() {
         </nav>
       </div>
 
-      {/* Mobile: hamburger + wordmark + account, links behind a dropdown menu */}
-      <div className="sm:hidden">
+      {/* Mobile: hamburger + wordmark + account, links behind a dropdown menu.
+          `relative` anchors the panel below, which is positioned rather than
+          in flow — in flow it grew the sticky header and pushed the page down
+          every time the menu opened. */}
+      <div className="relative sm:hidden">
         <div className="flex items-center justify-between gap-3 px-4 py-3">
           <button
             type="button"
@@ -116,13 +119,25 @@ export function SiteHeader() {
         </div>
 
         {menuOpen && (
-          <nav className="flex flex-col gap-y-3 border-t border-white/10 px-4 py-4">
-            {[...LEFT_NAV, ...RIGHT_NAV].map((n) => (
-              <span key={n.href} onClick={() => setMenuOpen(false)}>
-                <NavLink {...n} />
-              </span>
-            ))}
-          </nav>
+          <>
+            {/* Tap-anywhere-else to dismiss. Sits below the header's z-50 so it
+                dims the page without covering the menu or the toggle. */}
+            <div
+              onClick={() => setMenuOpen(false)}
+              aria-hidden
+              className="fixed inset-0 -z-10 bg-black/50"
+            />
+            {/* `absolute top-full` hangs it off the bottom edge of the header,
+                so it floats over the page instead of displacing it. Opaque,
+                because the content it covers scrolls underneath. */}
+            <nav className="absolute inset-x-0 top-full flex flex-col gap-y-3 border-b border-white/10 bg-black px-4 py-4 shadow-[0_16px_30px_-12px_rgba(0,0,0,0.9)]">
+              {[...LEFT_NAV, ...RIGHT_NAV].map((n) => (
+                <span key={n.href} onClick={() => setMenuOpen(false)}>
+                  <NavLink {...n} />
+                </span>
+              ))}
+            </nav>
+          </>
         )}
       </div>
     </header>
