@@ -31,7 +31,7 @@ export default function HuntPage() {
 
   return (
     <MemberGate
-      tabs={<PageTabs group="hunt" />}
+      tabs={<PageTabs group="events" />}
       title="Events"
       blurb="A real-money scavenger hunt for the world's rarest cars."
       points={[
@@ -41,7 +41,7 @@ export default function HuntPage() {
       ]}
     >
       <SiteHeader />
-      <PageTabs group="hunt" />
+      <PageTabs group="events" />
       <main className="mx-auto w-full max-w-2xl px-5 py-8">
         {/* Neon Miami hero */}
         <div className="hunt-banner rounded-3xl p-[2px] shadow-[0_0_50px_-12px_rgba(255,0,110,0.6)]">
