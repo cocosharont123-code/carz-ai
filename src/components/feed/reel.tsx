@@ -85,23 +85,40 @@ export function Reel({
   // Keyed so a second double-tap restarts the animation rather than being
   // swallowed while the first one is still running.
   const [burst, setBurst] = useState(0);
+  const [notice, setNotice] = useState("");
   const isVideo = post.mediaKind === "video" && !!post.videoUrl;
 
+  /** Transient message on the clip. A like that silently reverts is
+   *  indistinguishable from one that never fired. */
+  function say(message: string) {
+    setNotice(message);
+    window.setTimeout(() => setNotice((n) => (n === message ? "" : n)), 2600);
+  }
+
   async function toggleLike(next: boolean) {
-    if (!signedIn || likeBusy) return;
+    if (likeBusy) return;
+    if (!signedIn) {
+      say("Sign in to like");
+      return;
+    }
     const nextCount = post.likeCount + (next ? 1 : -1);
     onLikeChange(next, nextCount); // optimistic
     setLikeBusy(true);
     try {
       const res = await fetch(`/api/feed/posts/${post.id}/like`, { method: "POST" });
-      const d = await res.json();
+      const d = await res.json().catch(() => ({}));
       if (!res.ok || !d.ok) {
         onLikeChange(post.likedByYou, post.likeCount); // roll back
+        say(d.error || (res.status === 401 ? "Sign in to like" : "Couldn't save that like"));
         return;
       }
-      onLikeChange(!!d.liked, Number(d.likeCount) ?? nextCount);
+      // Number(undefined) is NaN, and `??` doesn't catch NaN — so this has to
+      // be a finite check, not a nullish fallback, or the count renders "NaN".
+      const serverCount = Number(d.likeCount);
+      onLikeChange(!!d.liked, Number.isFinite(serverCount) ? serverCount : nextCount);
     } catch {
       onLikeChange(post.likedByYou, post.likeCount);
+      say("Network error — like not saved");
     } finally {
       setLikeBusy(false);
     }
@@ -118,8 +135,8 @@ export function Reel({
    */
   function doubleTapLike() {
     setBurst((n) => n + 1);
-    if (!signedIn || post.likedByYou) return;
-    void toggleLike(true);
+    if (post.likedByYou) return;
+    void toggleLike(true); // reports its own failure, including signed-out
   }
 
   async function share() {
@@ -185,6 +202,17 @@ export function Reel({
         >
           <Heart className="h-24 w-24 text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.7)]" fill="currentColor" strokeWidth={0} />
         </span>
+      )}
+
+      {/* Why a like didn't land. Above the caption so it reads immediately,
+          and click-through so it can't eat the next tap. */}
+      {notice && (
+        <div
+          role="status"
+          className="pointer-events-none absolute bottom-40 left-1/2 z-20 -translate-x-1/2 rounded-full bg-black/80 px-4 py-2 text-[13px] font-semibold text-white"
+        >
+          {notice}
+        </div>
       )}
 
       {/* Scrim so white overlay text survives a bright sky or a white car. */}

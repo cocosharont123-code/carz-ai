@@ -77,7 +77,10 @@ export function LikeButton({
         return;
       }
       // Trust the server's count over the guess — it settles concurrent likes.
-      onChange?.(!!data.liked, Number(data.likeCount) ?? nextCount);
+      // Finite check, not `??`: Number(undefined) is NaN, which `??` lets
+      // through, and the count would render as "NaN".
+      const serverCount = Number(data.likeCount);
+      onChange?.(!!data.liked, Number.isFinite(serverCount) ? serverCount : nextCount);
     } catch {
       onChange?.(liked, count);
     } finally {
