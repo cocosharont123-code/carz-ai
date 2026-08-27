@@ -5,7 +5,8 @@ import Link from "next/link";
 import { ImagePlus, Upload, Trash2, X, TrafficCone } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
-import { Button as GlassButton, Spinner } from "@/components/ui/editorial";
+import { Button as GlassButton } from "@/components/ui/editorial";
+import { ProgressiveFluxLoader } from "@/components/ui/progressive-flux-loader";
 import { Input } from "@/components/ui/input";
 import { useImageUpload } from "@/components/hooks/use-image-upload";
 import { CarHotspotsMap } from "@/components/car-hotspots-map";
@@ -29,30 +30,60 @@ type Status = {
   totalSpots?: number;
 };
 
+// Phase labels tied to what the pipeline is actually doing: a wide look, then
+// an independent second opinion, then a magnified read of the deciding detail.
+const SCAN_PHASES = [
+  { at: 0, label: "reading the photo" },
+  { at: 20, label: "matching the shape" },
+  { at: 42, label: "reading the badges" },
+  { at: 64, label: "cross-checking" },
+  { at: 82, label: "almost there" },
+];
+
+/**
+ * The scan reports no progress — /api/identify is a single call that either
+ * answers or doesn't — so the bar is an elapsed-time estimate, not a
+ * measurement. It approaches CEIL asymptotically and never reaches 100, because
+ * claiming completion before the answer lands would be a lie the user can catch.
+ * TAU is tuned to a roughly ten-second scan: ~63% of the ceiling at 7s, ~86% at
+ * 14s, still climbing after that.
+ */
+const SCAN_CEILING = 94;
+const SCAN_TAU_SECONDS = 7;
+
+export function scanProgressAt(elapsedSeconds: number): number {
+  return SCAN_CEILING * (1 - Math.exp(-elapsedSeconds / SCAN_TAU_SECONDS));
+}
+
 // The in-flight state of the identify button. Identification runs for several
-// seconds against the model, so this takes over the button's own footprint
-// rather than sitting next to it — full width, neon ring, sweeping scan line
-// and an indeterminate bar, so there is no doubt the scan is running.
-function ScanningButton() {
+// seconds, so this takes over the button's own footprint rather than sitting
+// beside it — there is no doubt the scan is running.
+function ScanningButton({ progress }: { progress: number }) {
   return (
     <div
       role="status"
       aria-live="polite"
       aria-busy="true"
-      className="carz-scan-btn carz-scan-sweep relative w-full overflow-hidden rounded-2xl border-2 border-neon-blue/70 bg-carz-ink px-6 py-6 text-center"
+      className="w-full rounded-2xl border border-white/10 bg-white/[0.02] px-5 py-6"
+      // The loader reads its palette from these, so the brand blue is applied
+      // per instance rather than by editing the component.
+      style={
+        {
+          "--flux-from": "#0a84ff",
+          "--flux-to": "#00e5ff",
+        } as React.CSSProperties
+      }
     >
-      <div className="relative z-10 flex items-center justify-center gap-3">
-        <Spinner className="h-6 w-6 text-neon-blue" />
-        <span className="text-lg font-extrabold tracking-tight text-neon-blue">
-          Identifying car…
-        </span>
-      </div>
-      <p className="relative z-10 mt-1.5 text-xs opacity-70">
+      <ProgressiveFluxLoader
+        value={progress}
+        phases={SCAN_PHASES}
+        className="max-w-none gap-4"
+        textClassName="text-xl font-bold text-white sm:text-2xl"
+        barClassName="h-3 bg-white/10"
+      />
+      <p className="mt-4 text-center text-xs opacity-60">
         Reading badges, lights and body lines — this takes a few seconds
       </p>
-      <div className="relative z-10 mt-4 h-1.5 w-full overflow-hidden rounded-full bg-neon-blue/15">
-        <div className="carz-scan-bar h-full w-1/3 rounded-full bg-neon-blue" />
-      </div>
     </div>
   );
 }
@@ -324,6 +355,7 @@ export default function SpotPage() {
   // The identification lands first; specs, rarity and values stream in behind it.
   const [specsPending, setSpecsPending] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [scanProgress, setScanProgress] = useState(0);
   const [error, setError] = useState("");
   const [limitHit, setLimitHit] = useState(false);
   const [note, setNote] = useState("");
@@ -348,6 +380,19 @@ export default function SpotPage() {
   useEffect(() => {
     refresh().catch(() => {});
   }, []);
+
+  // Advance the scan bar while a scan is in flight. The write happens in the
+  // interval callback — an external event — not in the effect body. `identify`
+  // resets the value back to 0 before it sets `loading`, so a re-scan starts
+  // from the left rather than picking up where the last one stopped.
+  useEffect(() => {
+    if (!loading) return;
+    const startedAt = Date.now();
+    const id = setInterval(() => {
+      setScanProgress(scanProgressAt((Date.now() - startedAt) / 1000));
+    }, 120);
+    return () => clearInterval(id);
+  }, [loading]);
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -386,6 +431,7 @@ export default function SpotPage() {
     }
     setError("");
     setLimitHit(false);
+    setScanProgress(0);
     setLoading(true);
     try {
       const raw = await objectUrlToDataUrl(previewUrl);
@@ -594,7 +640,7 @@ export default function SpotPage() {
           />
 
           {loading ? (
-            <ScanningButton />
+            <ScanningButton progress={scanProgress} />
           ) : !car ? (
             <GlassButton onClick={identify} disabled={!previewUrl} size="lg" className="w-full py-5">
               Identify car
