@@ -49,7 +49,9 @@ export function SiteHeader() {
 
   const account = session?.user ? (
     <div className="flex items-center gap-2">
-      <Link href="/profile" title="Profile" className="press flex items-center gap-1.5 hover:opacity-90">
+      {/* The picture opens Settings, which is where the account lives now —
+          editing the profile itself is one link down from there. */}
+      <Link href="/settings" title="Settings" className="press flex items-center gap-1.5 hover:opacity-90">
         <Avatar src={profile?.image} size={24} />
         <span className="util-label hidden sm:inline">
           {profile?.username ? `@${profile.username}` : "Set username"}

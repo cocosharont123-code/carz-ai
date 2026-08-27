@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { auth } from "@/auth";
-import { ensureProfile, setProfile, profilesConfigured, ProfileStorageError } from "@/lib/profile-blob";
+import { ensureProfile, setProfile, profilesConfigured, ProfileStorageError, UNAME_COOKIE } from "@/lib/profile-blob";
 
 export const runtime = "nodejs";
-
-const UNAME_COOKIE = "cs_uname";
 
 export async function GET() {
   const session = await auth();

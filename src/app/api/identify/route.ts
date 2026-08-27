@@ -14,6 +14,7 @@ import { PLANS } from "@/lib/plans";
 import { identifyCar, IdentifyError } from "@/lib/identify";
 import { auth } from "@/auth";
 import { getProfile, isActiveMember } from "@/lib/profile-blob";
+import { SCAN_MODE_COOKIE, effectiveScanMode } from "@/lib/scan-mode";
 
 export const runtime = "nodejs";
 // A confident scan is two concurrent looks and returns quickly. A contested one
@@ -75,13 +76,17 @@ export async function POST(req: Request) {
     // Identification only — the spec sheet, rarity and values follow from the
     // car's name, not the photo, and are fetched separately so the spotter sees
     // their answer without waiting on them.
-    const car = await identifyCar(mediaType, base64Data, body.note);
+    // Read from the cookie, not the request body: the body is the client's to
+    // set, and Precise is a paid pipeline. `effectiveScanMode` also downgrades a
+    // cookie left over from a lapsed membership.
+    const scanMode = effectiveScanMode(jar.get(SCAN_MODE_COOKIE)?.value, isMember);
+    const car = await identifyCar(mediaType, base64Data, body.note, scanMode);
     const status = recordIdentification(
       id,
       { make: car.make, model: car.model, yearRange: car.yearRange, isCar: car.isCar },
       effectivePlan,
     );
-    return NextResponse.json({ car, status, premium: plan.premiumReport });
+    return NextResponse.json({ car, status, premium: plan.premiumReport, scanMode });
   } catch (e) {
     const message = e instanceof IdentifyError ? e.message : "Identification failed.";
     return NextResponse.json({ error: "identify_failed", message }, { status: 502 });

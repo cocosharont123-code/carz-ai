@@ -18,6 +18,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import sharp from "sharp";
+import type { ScanMode } from "./scan-mode";
 
 export type CarReport = {
   isCar: boolean;
@@ -124,6 +125,8 @@ const LOOK_EFFORT = (process.env.CAR_SPOTTER_EFFORT as Effort) || "medium";
 const EFFORT_CAPABLE = /^claude-(opus-(5|4-8|4-7|4-6|4-5)|sonnet-(5|4-6)|fable-5|mythos-5)$/;
 
 export class IdentifyError extends Error {}
+
+export type { ScanMode };
 
 // --- Schemas -----------------------------------------------------------------
 // Structured outputs require `additionalProperties: false` and every property
@@ -581,6 +584,7 @@ export async function identifyCar(
   mediaType: string,
   base64Data: string,
   userText?: string,
+  mode: ScanMode = "precise",
 ): Promise<CarReport> {
   const image: ImageRef = { mediaType, base64Data };
   // Both wide-shot passes prefill this photo, and at 2576px that is the single
@@ -593,6 +597,30 @@ export async function identifyCar(
     userText && userText.trim()
       ? `\n\nThe spotter added a note: "${userText.trim()}". Treat it as a hint, not as fact — if the photo contradicts it, trust the photo.`
       : "";
+
+  // Fast mode stops here: one wide-shot look, no second opinion, no zoom, no
+  // adjudication. That is one model call against up to four, so it returns in
+  // roughly the time the first look alone takes. What it gives up is precisely
+  // the machinery that rescues a contested car — so it can't claim `high`
+  // confidence off a single unchecked pass, and says so rather than implying a
+  // cross-check that never ran.
+  if (mode === "fast") {
+    const report = await ask<RawLook>({
+      images: [wide],
+      model: LOOK_MODEL,
+      think: false,
+      prompt: LOOK_PROMPT + note,
+      schema: LOOK_SCHEMA,
+      maxTokens: 6000,
+      effort: LOOK_EFFORT,
+    });
+    const out = normalize(report);
+    out.crossChecked = false;
+    out.crossCheckNote = out.isCar
+      ? "Fast scan — one look, not cross-checked. Switch to Precise in settings for the full check."
+      : "";
+    return out;
+  }
 
   const secondP = ask<RawSecond>({
     images: [wide],

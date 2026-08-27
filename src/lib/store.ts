@@ -159,6 +159,18 @@ export function recordIdentification(
   return planStatusFor(planOverride ?? user.plan, user);
 }
 
+/**
+ * Drop this device's local record — scan counts, spotting history, lifetime
+ * total. Called on account deletion; the cookie that points at it is cleared by
+ * the same request, so leaving the row behind would orphan it rather than free it.
+ */
+export function deleteUser(id: string): void {
+  const store = loadStore();
+  if (!store.users[id]) return;
+  delete store.users[id];
+  saveStore(store);
+}
+
 export function recentHistory(user: UserRecord, n = 20): HistoryItem[] {
   return user.history.slice(-n).reverse();
 }

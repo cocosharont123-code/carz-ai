@@ -33,6 +33,11 @@ export function isActiveMember(p: Profile | null | undefined): boolean {
 
 const PATH = "profiles.json";
 
+// Strongly-consistent mirror of the stored username, so the profile gate accepts
+// a rename before the Blob write propagates. Shared so account deletion clears
+// the same cookie the profile route sets, rather than leaving a stale name behind.
+export const UNAME_COOKIE = "cs_uname";
+
 // Storage is down/unreachable (suspended store, network, bad token). Distinct
 // from "no profiles yet" so writes can refuse to run on top of a failed read.
 export class ProfileStorageError extends Error {
@@ -253,6 +258,23 @@ export async function setProfile(
   all[myKey] = profile;
   await writeAll(all);
   return { ok: true, profile };
+}
+
+/**
+ * Erase this account's profile record — username, picture, membership, streak.
+ *
+ * Reads the whole map first and refuses to write on a failed read, same as
+ * every other mutation here: persisting a partial map would delete everyone.
+ * Returns false when there was nothing stored under this email to begin with,
+ * so the caller can tell "removed" from "never existed" without a second read.
+ */
+export async function deleteProfile(email: string): Promise<boolean> {
+  const all = await readAll();
+  const myKey = keyFor(email);
+  if (!all[myKey]) return false;
+  delete all[myKey];
+  await writeAll(all);
+  return true;
 }
 
 // --- Carz+ membership + streaks ---
