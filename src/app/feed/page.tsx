@@ -1,26 +1,30 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { Plus, Camera } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
-import { PageMasthead, Skeleton, Button } from "@/components/ui/editorial";
-import { PostCard, type FeedPostView } from "@/components/feed/post-card";
+import { Spinner } from "@/components/ui/editorial";
+import { Reel } from "@/components/feed/reel";
+import type { FeedPostView } from "@/components/feed/post-card";
 
 export default function FeedPage() {
   const { status: authStatus } = useSession();
   const signedIn = authStatus === "authenticated";
 
+  const scrollerRef = useRef<HTMLDivElement>(null);
   const [posts, setPosts] = useState<FeedPostView[]>([]);
   const [nextOffset, setNextOffset] = useState<number | null>(0);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [muted, setMuted] = useState(true); // audible autoplay is blocked everywhere
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [configured, setConfigured] = useState(true);
   const [error, setError] = useState("");
 
-  // Pure fetch — it returns a page and never touches state itself, so the only
-  // writes happen in the callbacks below rather than inside the effect body.
+  // Pure fetch — state is only written in the callbacks below, never inside an
+  // effect body.
   const load = useCallback(async (offset: number) => {
     const res = await fetch(`/api/feed/posts?offset=${offset}`, { cache: "no-store" });
     const d = await res.json();
@@ -49,28 +53,67 @@ export default function FeedPage() {
     return () => {
       cancelled = true;
     };
-    // Re-runs on sign-in so `likedByYou` reflects the new session.
   }, [load, authStatus]);
 
-  async function loadMore() {
+  const loadMore = useCallback(async () => {
     if (nextOffset === null || loadingMore) return;
     setLoadingMore(true);
-    setError("");
     try {
       const page = await load(nextOffset);
-      // Guard against a post being prepended between pages, which would
-      // otherwise shift the window and repeat one.
       setPosts((prev) => {
+        // A post prepended between pages would shift the window and repeat one.
         const seen = new Set(prev.map((p) => p.id));
         return [...prev, ...page.posts.filter((p) => !seen.has(p.id))];
       });
       setNextOffset(page.nextOffset);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Couldn't load more.");
+    } catch {
+      /* keep what's on screen; the next scroll retries */
     } finally {
       setLoadingMore(false);
     }
-  }
+  }, [load, loadingMore, nextOffset]);
+
+  // Read by the observer below, which outlives the render that created it.
+  // Refs rather than deps so a new page doesn't tear down and rebuild the
+  // observer on every append.
+  const loadMoreRef = useRef(loadMore);
+  const countRef = useRef(0);
+  useEffect(() => {
+    loadMoreRef.current = loadMore;
+    countRef.current = posts.length;
+  }, [loadMore, posts.length]);
+
+  /**
+   * Which slide is on screen. An observer beats a scroll handler here: snap
+   * points mean the browser settles on exactly one slide, and a 60% threshold
+   * fires once per slide instead of on every pixel of momentum.
+   *
+   * The prefetch is triggered from this callback rather than its own effect —
+   * it's a response to an external event, which is where a state write belongs.
+   */
+  useEffect(() => {
+    const root = scrollerRef.current;
+    if (!root || posts.length === 0) return;
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const i = Number((entry.target as HTMLElement).dataset.index);
+          if (!Number.isFinite(i)) continue;
+          setActiveIndex(i);
+          // Fetch while a few slides are still in hand, so a scroll never
+          // lands on the end. loadMore() no-ops once there's nothing left.
+          if (i >= countRef.current - 3) void loadMoreRef.current();
+        }
+      },
+      { root, threshold: 0.6 },
+    );
+
+    const slides = root.querySelectorAll("[data-index]");
+    slides.forEach((s) => io.observe(s));
+    return () => io.disconnect();
+  }, [posts.length]);
 
   function patchLike(id: string, liked: boolean, count: number) {
     setPosts((prev) =>
@@ -78,98 +121,92 @@ export default function FeedPage() {
     );
   }
 
+  const composerHref = signedIn ? "/feed/new" : "/signin?callbackUrl=/feed/new";
+
+  // A fixed-height column: the header keeps its natural size and the scroller
+  // takes the rest, so one slide is exactly one screen. `dvh` rather than `vh`
+  // because mobile browser chrome collapses on scroll.
   return (
-    <>
+    <div className="flex h-[100dvh] flex-col overflow-hidden">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-xl px-5 py-10 pb-28">
-        <PageMasthead
-          eyebrow="Cars worth stopping for"
-          title="Feed"
-          count={loading ? "—" : `${posts.length} shown`}
-        />
 
-        {!configured ? (
-          <div className="mt-10 rounded-3xl border border-white/10 bg-card text-card-foreground p-10 text-center">
-            <Camera className="mx-auto h-8 w-8 opacity-40" strokeWidth={1.5} aria-hidden />
-            <h2 className="mt-3 text-lg font-bold">The feed isn&apos;t switched on yet</h2>
-            <p className="mx-auto mt-1.5 max-w-sm text-[13px] opacity-60">
-              It needs a Vercel Blob store connected before posts can be saved.
-            </p>
-          </div>
-        ) : loading ? (
-          <div className="mt-6 space-y-5">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="overflow-hidden rounded-3xl border border-white/10 bg-card p-4">
-                <Skeleton className="h-8 w-1/3" />
-                <Skeleton className="mt-3 aspect-[4/3] w-full" />
-                <Skeleton className="mt-3 h-4 w-2/3" />
-              </div>
-            ))}
-          </div>
-        ) : posts.length === 0 ? (
-          <div className="mt-10 rounded-3xl border border-white/10 bg-card text-card-foreground p-10 text-center">
-            <Camera className="mx-auto h-8 w-8 opacity-40" strokeWidth={1.5} aria-hidden />
-            <h2 className="mt-3 text-lg font-bold">Nothing here yet</h2>
-            <p className="mx-auto mt-1.5 max-w-sm text-[13px] opacity-60">
-              Be the first to post a car.
-            </p>
-            <Link
-              href={signedIn ? "/feed/new" : "/signin?callbackUrl=/feed/new"}
-              className="press mt-5 inline-flex rounded-full bg-black px-6 py-2.5 text-sm font-bold text-white transition hover:opacity-90"
-            >
-              Post a car
-            </Link>
-          </div>
-        ) : (
-          <>
-            <div className="mt-6 space-y-5">
-              {posts.map((p) => (
-                <PostCard
-                  key={p.id}
-                  post={p}
-                  signedIn={signedIn}
-                  onLikeChange={(liked, count) => patchLike(p.id, liked, count)}
-                />
-              ))}
+      {!configured ? (
+        <Centered>
+          <Camera className="mx-auto h-8 w-8 opacity-40" strokeWidth={1.5} aria-hidden />
+          <h1 className="mt-3 text-lg font-bold">The feed isn&apos;t switched on yet</h1>
+          <p className="mx-auto mt-1.5 max-w-sm text-[13px] opacity-60">
+            It needs a Vercel Blob store connected before posts can be saved.
+          </p>
+        </Centered>
+      ) : loading ? (
+        <Centered>
+          <Spinner className="mx-auto h-6 w-6" />
+        </Centered>
+      ) : error ? (
+        <Centered>
+          <h1 className="text-lg font-bold">Couldn&apos;t load the feed</h1>
+          <p className="mx-auto mt-1.5 max-w-sm text-[13px] opacity-60">{error}</p>
+        </Centered>
+      ) : posts.length === 0 ? (
+        <Centered>
+          <Camera className="mx-auto h-8 w-8 opacity-40" strokeWidth={1.5} aria-hidden />
+          <h1 className="mt-3 text-lg font-bold">Nothing here yet</h1>
+          <p className="mx-auto mt-1.5 max-w-sm text-[13px] opacity-60">
+            Be the first to post a car.
+          </p>
+          <Link
+            href={composerHref}
+            className="press mt-5 inline-flex rounded-full bg-white px-6 py-2.5 text-sm font-bold text-black transition hover:opacity-90"
+          >
+            Post a car
+          </Link>
+        </Centered>
+      ) : (
+        <div
+          ref={scrollerRef}
+          className="relative flex-1 snap-y snap-mandatory overflow-y-scroll overscroll-y-contain scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {posts.map((p, i) => (
+            <div key={p.id} data-index={i} className="h-full w-full">
+              <Reel
+                post={p}
+                active={i === activeIndex}
+                signedIn={signedIn}
+                muted={muted}
+                onToggleMuted={() => setMuted((m) => !m)}
+                onLikeChange={(liked, count) => patchLike(p.id, liked, count)}
+              />
             </div>
+          ))}
 
-            {error && (
-              <div
-                role="alert"
-                className="mt-5 rounded-2xl border border-white/15 bg-white/5 p-3 text-center text-[13px]"
-              >
-                {error}
-              </div>
-            )}
+          {loadingMore && (
+            <div className="flex h-16 items-center justify-center">
+              <Spinner className="h-5 w-5 text-white" />
+            </div>
+          )}
+        </div>
+      )}
 
-            {nextOffset !== null && (
-              <div className="mt-6 flex justify-center">
-                <Button onClick={loadMore} loading={loadingMore} size="lg">
-                  {loadingMore ? "Loading" : "Load more"}
-                </Button>
-              </div>
-            )}
-            {nextOffset === null && posts.length > 0 && (
-              <p className="mt-8 text-center text-[11px] uppercase tracking-wide opacity-40">
-                You&apos;re all caught up
-              </p>
-            )}
-          </>
-        )}
-      </main>
-
-      {/* Floating composer entry. Sits above the feed, clear of the last card
-          thanks to the main element's bottom padding. */}
+      {/* Composer. Floats over the scroller rather than inside it, so it stays
+          put while slides move underneath. */}
       {configured && (
         <Link
-          href={signedIn ? "/feed/new" : "/signin?callbackUrl=/feed/new"}
+          href={composerHref}
           aria-label="Post a car"
           title="Post a car"
-          className="press fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full border border-white/50 bg-white text-black shadow-[0_2px_12px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.95)] transition hover:scale-105"
+          className="press fixed bottom-6 left-1/2 z-40 flex h-12 w-12 -translate-x-1/2 items-center justify-center rounded-full border border-white/50 bg-white text-black shadow-[0_2px_12px_rgba(0,0,0,0.6)] transition hover:scale-105"
         >
           <Plus className="h-6 w-6" strokeWidth={2.5} aria-hidden />
         </Link>
       )}
-    </>
+    </div>
+  );
+}
+
+function Centered({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex flex-1 items-center justify-center px-5">
+      <div className="text-center">{children}</div>
+    </div>
   );
 }
