@@ -23,6 +23,19 @@ export default function FeedPage() {
   const [configured, setConfigured] = useState(true);
   const [error, setError] = useState("");
 
+  // iOS bounces the *document* as well as the scroller, so pinning it here is
+  // what stops the whole screen sliding when there's nowhere left to go.
+  // Scoped to this page and restored on the way out, so pull-to-refresh still
+  // works everywhere else.
+  useEffect(() => {
+    const root = document.documentElement;
+    const previous = root.style.overscrollBehavior;
+    root.style.overscrollBehavior = "none";
+    return () => {
+      root.style.overscrollBehavior = previous;
+    };
+  }, []);
+
   // Pure fetch — state is only written in the callbacks below, never inside an
   // effect body.
   const load = useCallback(async (offset: number) => {
@@ -162,9 +175,14 @@ export default function FeedPage() {
           </Link>
         </Centered>
       ) : (
+        /* `overscroll-y-none`, not `contain`: contain stops the scroll chaining
+           to the page but still lets the scroller rubber-band, so dragging past
+           the first or last clip visibly moves the screen. None kills the bounce
+           too. Nothing is rendered after the last slide either — a loading row
+           in the flow would be somewhere to scroll to that isn't a clip. */
         <div
           ref={scrollerRef}
-          className="relative flex-1 snap-y snap-mandatory overflow-y-scroll overscroll-y-contain scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="relative flex-1 snap-y snap-mandatory overflow-y-scroll overscroll-y-none scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {posts.map((p, i) => (
             <div key={p.id} data-index={i} className="h-full w-full">
@@ -178,12 +196,6 @@ export default function FeedPage() {
               />
             </div>
           ))}
-
-          {loadingMore && (
-            <div className="flex h-16 items-center justify-center">
-              <Spinner className="h-5 w-5 text-white" />
-            </div>
-          )}
         </div>
       )}
 
