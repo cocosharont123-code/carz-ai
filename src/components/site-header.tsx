@@ -22,6 +22,16 @@ const RIGHT_NAV = [
   { href: "/garage", label: "Garage" },
 ];
 
+// The mobile sheet splits the links down the middle rather than stacking all of
+// them, which halves how much of the page it covers. Split in code rather than
+// with CSS columns so the break point is predictable: the first column takes
+// the extra link on an odd count.
+const ALL_NAV = [...LEFT_NAV, ...RIGHT_NAV];
+const NAV_COLUMNS = [
+  ALL_NAV.slice(0, Math.ceil(ALL_NAV.length / 2)),
+  ALL_NAV.slice(Math.ceil(ALL_NAV.length / 2)),
+];
+
 function NavLink({ href, label, accent }: { href: string; label: string; accent?: boolean }) {
   return (
     <Link
@@ -130,11 +140,15 @@ export function SiteHeader() {
             {/* `absolute top-full` hangs it off the bottom edge of the header,
                 so it floats over the page instead of displacing it. Opaque,
                 because the content it covers scrolls underneath. */}
-            <nav className="absolute inset-x-0 top-full flex flex-col gap-y-3 border-b border-white/10 bg-black px-4 py-4 shadow-[0_16px_30px_-12px_rgba(0,0,0,0.9)]">
-              {[...LEFT_NAV, ...RIGHT_NAV].map((n) => (
-                <span key={n.href} onClick={() => setMenuOpen(false)}>
-                  <NavLink {...n} />
-                </span>
+            <nav className="absolute inset-x-0 top-full grid grid-cols-2 gap-x-6 border-b border-white/10 bg-black px-4 py-4 shadow-[0_16px_30px_-12px_rgba(0,0,0,0.9)]">
+              {NAV_COLUMNS.map((column, i) => (
+                <div key={i} className="flex flex-col gap-y-3.5">
+                  {column.map((n) => (
+                    <span key={n.href} onClick={() => setMenuOpen(false)}>
+                      <NavLink {...n} />
+                    </span>
+                  ))}
+                </div>
               ))}
             </nav>
           </>
