@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ImagePlus, Upload, Trash2, X, TrafficCone } from "lucide-react";
+import { ImagePlus, Upload, Trash2, X, TrafficCone, Check, BookmarkPlus } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Button as GlassButton } from "@/components/ui/editorial";
@@ -84,6 +84,91 @@ function ScanningButton({ progress }: { progress: number }) {
       <p className="mt-4 text-center text-xs opacity-60">
         Reading badges, lights and body lines — this takes a few seconds
       </p>
+    </div>
+  );
+}
+
+/**
+ * The one way a car gets into the garage.
+ *
+ * Identification used to file every scan automatically, which made the garage a
+ * log rather than a collection. Now nothing is stored until this is pressed —
+ * so a blurry shot, a misidentification, or a car someone scanned out of
+ * curiosity doesn't end up in their album.
+ *
+ * Keyed on the car in the result, so the "saved" state resets by itself when a
+ * new scan replaces it — no clearing to remember at the call site.
+ */
+function SaveToGarage({ car, image }: { car: CarReport; image: string }) {
+  const [saved, setSaved] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function save() {
+    if (saved || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      // The album thumbnail is generated here rather than kept in memory from
+      // the scan: localStorage holds roughly 5MB, and a full-size frame per car
+      // would fill it inside a dozen saves.
+      const thumb = image ? await downscale(image, 360, 0.55) : "";
+      addToGarage({
+        image: thumb,
+        make: car.make,
+        model: car.model,
+        yearRange: car.yearRange,
+        confidence: car.confidence,
+        rarityScore: car.rarityScore,
+        priceRange: car.priceRangeUsed,
+      });
+      setSaved(true);
+    } catch {
+      setError("Couldn't save that — your garage storage may be full.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-4">
+      <button
+        type="button"
+        onClick={save}
+        disabled={saved || busy}
+        aria-busy={busy || undefined}
+        className={cn(
+          "press flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-sm font-bold transition",
+          saved
+            ? "cursor-default bg-black/[0.06] text-black/60"
+            : "bg-black text-white hover:opacity-90 disabled:opacity-50",
+        )}
+      >
+        {saved ? (
+          <>
+            <Check className="h-4 w-4" strokeWidth={2.5} aria-hidden />
+            Saved to garage
+          </>
+        ) : (
+          <>
+            <BookmarkPlus className="h-4 w-4" strokeWidth={2} aria-hidden />
+            {busy ? "Saving…" : "Save to garage"}
+          </>
+        )}
+      </button>
+
+      {saved && (
+        <p className="mt-2 text-center text-[11px] uppercase tracking-wide opacity-50">
+          <Link href="/garage" className="underline underline-offset-2 hover:opacity-80">
+            View your garage
+          </Link>
+        </p>
+      )}
+      {error && (
+        <p role="alert" className="mt-2 text-center text-[13px] font-medium">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -491,16 +576,10 @@ export default function SpotPage() {
             setCar(full);
             if (dd.status) setStatus((prev) => ({ ...(prev as Status), ...dd.status }));
 
-            const thumb = await downscale(raw, 360, 0.55);
-            addToGarage({
-              image: thumb,
-              make: full.make,
-              model: full.model,
-              yearRange: full.yearRange,
-              confidence: full.confidence,
-              rarityScore: full.rarityScore,
-              priceRange: full.priceRangeUsed,
-            });
+            // Nothing is filed in the garage here any more — the garage is a
+            // collection the spotter curates, so it only takes what they
+            // actually press Save on.
+
             // Submit to the global rarest-cars leaderboard (best-effort).
             if (full.rarityScore > 0) {
               const lbThumb = await downscale(raw, 200, 0.5);
@@ -750,6 +829,14 @@ export default function SpotPage() {
                     ))}
                   </ul>
                 )}
+
+                {/* Keyed on the identification so a re-scan remounts it and the
+                    "saved" state can't carry over onto a different car. */}
+                <SaveToGarage
+                  key={`${car.make}|${car.model}|${car.yearRange}`}
+                  car={car}
+                  image={spottedImage}
+                />
 
                 <RarityMeter score={car.rarityScore} reason={car.rarityReason} />
                 <ValueChart points={car.valueTimeline} />

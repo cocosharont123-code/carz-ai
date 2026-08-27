@@ -1,5 +1,10 @@
-// On-device spotting history ("Garage"). Stored in the browser via localStorage,
-// so it works with no database and no sign-in. Persists per-browser/device.
+// The Garage: a photo album of cars the spotter chose to keep. Stored in the
+// browser via localStorage, so it works with no database and no sign-in, and
+// persists per browser/device.
+//
+// Entries only ever arrive through "Save to garage" on a finished scan. Scans
+// used to be filed here automatically, which made this a log of everything
+// anyone pointed a camera at rather than a collection worth looking back at.
 
 export type GarageCar = {
   id: string;
@@ -37,7 +42,7 @@ function write(cars: GarageCar[]): boolean {
   }
 }
 
-// Save a newly-identified car to the front of the history.
+// Save a car to the front of the album.
 // Trims oldest entries (and, if storage is full, drops more) so it always fits.
 export function addToGarage(car: Omit<GarageCar, "id" | "ts">): GarageCar[] {
   if (typeof window === "undefined") return [];
