@@ -152,13 +152,13 @@ export default function FeedPage() {
           <Camera className="mx-auto h-8 w-8 opacity-40" strokeWidth={1.5} aria-hidden />
           <h1 className="mt-3 text-lg font-bold">Nothing here yet</h1>
           <p className="mx-auto mt-1.5 max-w-sm text-[13px] opacity-60">
-            Be the first to post a car.
+            Be the first to post a clip.
           </p>
           <Link
             href={composerHref}
             className="press mt-5 inline-flex rounded-full bg-white px-6 py-2.5 text-sm font-bold text-black transition hover:opacity-90"
           >
-            Post a car
+            Post a clip
           </Link>
         </Centered>
       ) : (
@@ -192,8 +192,8 @@ export default function FeedPage() {
       {configured && (
         <Link
           href={composerHref}
-          aria-label="Post a car"
-          title="Post a car"
+          aria-label="Post a clip"
+          title="Post a clip"
           className="press fixed bottom-6 left-1/2 z-40 flex h-12 w-12 -translate-x-1/2 items-center justify-center rounded-full border border-white/50 bg-white text-black shadow-[0_2px_12px_rgba(0,0,0,0.6)] transition hover:scale-105"
         >
           <Plus className="h-6 w-6" strokeWidth={2.5} aria-hidden />

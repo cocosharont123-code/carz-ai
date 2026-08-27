@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
-import { ImagePlus, X } from "lucide-react";
+import { Video, X } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { PageMasthead, Button, Spinner } from "@/components/ui/editorial";
 import { VideoEditor, EMPTY_EDIT } from "@/components/feed/video-editor";
@@ -30,15 +30,6 @@ function downscale(dataUrl: string, max = 1440, quality = 0.82): Promise<string>
     };
     img.onerror = () => resolve(dataUrl);
     img.src = dataUrl;
-  });
-}
-
-async function objectUrlToDataUrl(url: string): Promise<string> {
-  const blob = await fetch(url).then((r) => r.blob());
-  return await new Promise((resolve) => {
-    const fr = new FileReader();
-    fr.onload = () => resolve(fr.result as string);
-    fr.readAsDataURL(blob);
   });
 }
 
@@ -72,9 +63,7 @@ function captureFrame(video: HTMLVideoElement, atSec: number): Promise<string> {
   });
 }
 
-type Media =
-  | { kind: "photo"; objectUrl: string }
-  | { kind: "video"; objectUrl: string; blobUrl: string; durationMs: number };
+type Media = { objectUrl: string; blobUrl: string; durationMs: number };
 
 export default function NewPostPage() {
   const router = useRouter();
@@ -95,17 +84,19 @@ export default function NewPostPage() {
 
   async function pick(file: File) {
     setError("");
-    const objectUrl = URL.createObjectURL(file);
 
-    if (file.type.startsWith("image/")) {
-      setMedia({ kind: "photo", objectUrl });
-      return;
-    }
+    // Video only. The accept filter already narrows the picker, but a drag-drop
+    // bypasses it entirely, so the check has to be here too.
     if (!file.type.startsWith("video/")) {
-      setError("Pick a photo or a video.");
+      setError(
+        file.type.startsWith("image/")
+          ? "The feed takes video only — photos aren't accepted."
+          : "Pick a video file.",
+      );
       return;
     }
 
+    const objectUrl = URL.createObjectURL(file);
     setUploading(true);
     try {
       const durationMs = await probeDuration(objectUrl);
@@ -121,7 +112,7 @@ export default function NewPostPage() {
         access: "public",
         handleUploadUrl: "/api/feed/upload",
       });
-      setMedia({ kind: "video", objectUrl, blobUrl: blob.url, durationMs });
+      setMedia({ objectUrl, blobUrl: blob.url, durationMs });
       setEdit({ ...EMPTY_EDIT });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn't upload that video.");
@@ -140,24 +131,19 @@ export default function NewPostPage() {
 
   async function submit() {
     if (!media) {
-      setError("Add a photo or video first.");
+      setError("Add a video first.");
       return;
     }
     setError("");
     setPosting(true);
     try {
-      let image: string;
-      if (media.kind === "photo") {
-        image = await downscale(await objectUrlToDataUrl(media.objectUrl));
-      } else {
-        // Poster is taken at the in-point, so the still in the feed matches
-        // the first frame the clip actually plays.
-        const v = posterRef.current;
-        if (!v) throw new Error("Couldn't read that video.");
-        const frame = await captureFrame(v, edit.trimStartMs / 1000);
-        image = frame ? await downscale(frame) : "";
-        if (!image) throw new Error("Couldn't grab a preview frame.");
-      }
+      // Poster is taken at the in-point, so the still the slide shows matches
+      // the first frame the clip actually plays.
+      const v = posterRef.current;
+      if (!v) throw new Error("Couldn't read that video.");
+      const frame = await captureFrame(v, edit.trimStartMs / 1000);
+      const image = frame ? await downscale(frame) : "";
+      if (!image) throw new Error("Couldn't grab a preview frame.");
 
       const res = await fetch("/api/feed/posts", {
         method: "POST",
@@ -165,9 +151,9 @@ export default function NewPostPage() {
         body: JSON.stringify({
           image,
           caption,
-          ...(media.kind === "video"
-            ? { videoUrl: media.blobUrl, durationMs: media.durationMs, edit }
-            : {}),
+          videoUrl: media.blobUrl,
+          durationMs: media.durationMs,
+          edit,
         }),
       });
       const data = await res.json();
@@ -226,7 +212,7 @@ export default function NewPostPage() {
           <input
             ref={fileRef}
             type="file"
-            accept="image/*,video/*"
+            accept="video/*"
             className="hidden"
             onChange={(e) => {
               const f = e.target.files?.[0];
@@ -265,32 +251,18 @@ export default function NewPostPage() {
                 </>
               ) : (
                 <>
-                  <ImagePlus className="h-7 w-7 opacity-50" strokeWidth={1.5} aria-hidden />
+                  <Video className="h-7 w-7 opacity-50" strokeWidth={1.5} aria-hidden />
                   <div className="text-center">
-                    <p className="text-sm font-semibold">Click to add a photo or video</p>
+                    <p className="text-sm font-semibold">Click to add a video</p>
                     <p className="text-xs opacity-50">
                       or drag and drop · clips up to {MAX_VIDEO_SECONDS}s
+                    </p>
+                    <p className="mt-1 text-[11px] uppercase tracking-wide opacity-40">
+                      Video only — no photos
                     </p>
                   </div>
                 </>
               )}
-            </div>
-          ) : media.kind === "photo" ? (
-            <div className="relative overflow-hidden rounded-2xl">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={media.objectUrl}
-                alt="Your post"
-                className="aspect-[4/3] w-full object-cover"
-              />
-              <button
-                type="button"
-                onClick={clear}
-                aria-label="Remove photo"
-                className="press absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/70 text-white transition hover:bg-black"
-              >
-                <X className="h-4 w-4" aria-hidden />
-              </button>
             </div>
           ) : (
             <>

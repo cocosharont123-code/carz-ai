@@ -76,20 +76,27 @@ export async function POST(req: Request) {
   }
 
   const caption = (body.caption || "").trim();
-  const isVideo = !!body.videoUrl;
 
-  // A video post still carries a photo: the poster frame the composer grabbed,
-  // which is what the feed shows before playback starts.
-  if (!body.image) {
+  // Video only. Enforced here as well as in the composer, because the composer
+  // is bypassable and this is the endpoint that decides what exists.
+  if (!body.videoUrl) {
     return NextResponse.json(
-      { ok: false, error: isVideo ? "That video has no preview frame." : "Add a photo." },
+      { ok: false, error: "The feed takes video only — pick a clip." },
       { status: 400 },
     );
   }
   // The browser uploaded the video itself, so this URL is client-supplied.
   // Refuse anything that isn't served by our own Blob store.
-  if (isVideo && !isOurBlobUrl(body.videoUrl!)) {
+  if (!isOurBlobUrl(body.videoUrl)) {
     return NextResponse.json({ ok: false, error: "That video isn't ours." }, { status: 400 });
+  }
+  // Still an image on the record, but it's the poster frame the composer grabbed
+  // from the clip — what the slide shows before playback starts.
+  if (!body.image) {
+    return NextResponse.json(
+      { ok: false, error: "That video has no preview frame." },
+      { status: 400 },
+    );
   }
   // Checked here as well as in the composer: the client is bypassable, and the
   // cap is what keeps a caption from becoming an essay in the blob.
@@ -126,14 +133,14 @@ export async function POST(req: Request) {
       authorEmail: email,
       authorName: `@${profile.username}`,
       authorImage: profile.image || "",
-      mediaKind: isVideo ? "video" : "photo",
+      mediaKind: "video",
       imageUrl,
       videoUrl: body.videoUrl,
       durationMs,
       // Clamped server-side: trim points and volume arrive from the client and
       // drive the player, so an out-of-range value would stick every viewer on
       // a frozen frame.
-      edit: isVideo ? sanitizeEdit(body.edit, durationMs) : undefined,
+      edit: sanitizeEdit(body.edit, durationMs),
       caption,
     });
 

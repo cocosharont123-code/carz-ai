@@ -228,7 +228,10 @@ export async function listPosts(
   viewerHash: string | null,
   opts: { offset?: number; limit?: number } = {},
 ): Promise<{ posts: PublicPost[]; total: number; nextOffset: number | null }> {
-  const all = await readAll();
+  // The feed is video-only. Photo posts from before that rule are filtered out
+  // rather than deleted — they stay in the blob and a direct link to one still
+  // resolves, so nothing anyone posted is destroyed by the change.
+  const all = (await readAll()).filter((p) => p.mediaKind === "video" && !!p.videoUrl);
   const offset = Math.max(0, Math.floor(opts.offset ?? 0));
   const limit = Math.min(PAGE_SIZE, Math.max(1, Math.floor(opts.limit ?? PAGE_SIZE)));
   const slice = all.slice(offset, offset + limit);
