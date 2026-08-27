@@ -10,8 +10,25 @@ import { blobToken, blobConfigured } from "./blob-token";
 
 export const RESTYLE_DAILY_CAP = 3;
 
+/** Price of one extra generation once the daily three are gone. */
+export const RESTYLE_EXTRA_PRICE_USD = 0.5;
+
 const PATH = "restyle-usage.json";
-type Usage = Record<string, { day: string; count: number }>;
+
+// `credits` are bought, so they deliberately do NOT reset with `day` — someone
+// who pays at 11pm still has what they paid for the next morning.
+type Usage = Record<string, { day: string; count: number; credits?: number }>;
+
+export type RestyleQuota = {
+  /** Free generations used today. */
+  used: number;
+  /** Free generations left today. */
+  freeRemaining: number;
+  /** Bought extras in hand. */
+  credits: number;
+  /** What can actually be spent right now. */
+  available: number;
+};
 
 function keyFor(email: string): string {
   return createHash("sha256").update(email.toLowerCase().trim()).digest("hex").slice(0, 24);
@@ -55,24 +72,61 @@ async function writeAll(map: Usage): Promise<void> {
   });
 }
 
-/** Today's usage for a user. If storage isn't configured, reports full quota. */
-export async function getRestyleUsage(email: string): Promise<{ used: number; remaining: number }> {
-  if (!blobConfigured()) return { used: 0, remaining: RESTYLE_DAILY_CAP };
-  const all = await readAll();
-  const cur = all[keyFor(email)];
-  const used = cur && cur.day === today() ? cur.count : 0;
-  return { used, remaining: Math.max(0, RESTYLE_DAILY_CAP - used) };
+function quotaFrom(entry: Usage[string] | undefined): RestyleQuota {
+  const used = entry && entry.day === today() ? entry.count : 0;
+  const credits = Math.max(0, entry?.credits ?? 0);
+  const freeRemaining = Math.max(0, RESTYLE_DAILY_CAP - used);
+  return { used, freeRemaining, credits, available: freeRemaining + credits };
 }
 
-/** Record one successful generation. Returns the remaining quota after it. */
-export async function recordRestyle(email: string): Promise<number> {
-  if (!blobConfigured()) return RESTYLE_DAILY_CAP - 1;
+/** Today's quota for a user. If storage isn't configured, reports the free allowance. */
+export async function getRestyleUsage(email: string): Promise<RestyleQuota> {
+  if (!blobConfigured()) return quotaFrom(undefined);
+  const all = await readAll();
+  return quotaFrom(all[keyFor(email)]);
+}
+
+/**
+ * Record one successful generation.
+ *
+ * Spends the free daily allowance first and only then a bought credit, so
+ * nobody burns something they paid for while a free one was still available.
+ */
+export async function recordRestyle(email: string): Promise<RestyleQuota> {
+  if (!blobConfigured()) return { used: 1, freeRemaining: RESTYLE_DAILY_CAP - 1, credits: 0, available: RESTYLE_DAILY_CAP - 1 };
   const all = await readAll();
   const key = keyFor(email);
   const t = today();
   const cur = all[key];
-  const count = cur && cur.day === t ? cur.count + 1 : 1;
-  all[key] = { day: t, count };
+
+  const usedToday = cur && cur.day === t ? cur.count : 0;
+  let credits = Math.max(0, cur?.credits ?? 0);
+  let count = usedToday;
+
+  if (usedToday < RESTYLE_DAILY_CAP) count = usedToday + 1;
+  else if (credits > 0) credits -= 1;
+  // Neither available: the route refuses before reaching here, so this only
+  // guards a race and records nothing rather than going negative.
+
+  all[key] = { day: t, count, credits };
   await writeAll(all);
-  return Math.max(0, RESTYLE_DAILY_CAP - count);
+  return quotaFrom(all[key]);
+}
+
+/** Add bought generations. See the credits route for the payment caveat. */
+export async function grantRestyleCredits(email: string, n = 1): Promise<RestyleQuota> {
+  const add = Math.max(1, Math.min(10, Math.floor(n)));
+  if (!blobConfigured()) {
+    return { used: 0, freeRemaining: RESTYLE_DAILY_CAP, credits: add, available: RESTYLE_DAILY_CAP + add };
+  }
+  const all = await readAll();
+  const key = keyFor(email);
+  const cur = all[key];
+  all[key] = {
+    day: cur?.day ?? today(),
+    count: cur?.count ?? 0,
+    credits: Math.max(0, cur?.credits ?? 0) + add,
+  };
+  await writeAll(all);
+  return quotaFrom(all[key]);
 }

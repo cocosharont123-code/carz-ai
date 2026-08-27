@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { addBuild } from "@/lib/builds-local";
@@ -40,6 +40,16 @@ function shrink(dataUrl: string, max = 640, quality = 0.82): Promise<string> {
   });
 }
 
+type Quota = { used: number; freeRemaining: number; credits: number; available: number };
+type Access = {
+  configured: boolean;
+  signedIn: boolean;
+  member: boolean;
+  cap: number;
+  extraPriceUsd: number;
+  quota: Quota | null;
+};
+
 export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
   const [bodyColor, setBodyColor] = useState<string>("");
   const [rimColor, setRimColor] = useState<string>("");
@@ -48,11 +58,57 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [needSignIn, setNeedSignIn] = useState(false);
-  const [remaining, setRemaining] = useState<number | null>(null);
+  const [quota, setQuota] = useState<Quota | null>(null);
+  const [access, setAccess] = useState<Access | null>(null);
+  const [buying, setBuying] = useState(false);
+  const [buyNotice, setBuyNotice] = useState("");
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const anyChange = !!bodyColor || !!rimColor || features.length > 0;
+
+  // Membership and quota up front, so the gate shows before anyone picks
+  // colours and finds out on submit that they can't render.
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/customize", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d: Access) => {
+        if (cancelled) return;
+        setAccess(d);
+        if (d.quota) setQuota(d.quota);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function buyExtra() {
+    if (buying) return;
+    setBuying(true);
+    setBuyNotice("");
+    try {
+      const res = await fetch("/api/customize/credits", { method: "POST" });
+      const d = await res.json().catch(() => null);
+      if (!res.ok || !d?.ok) {
+        setBuyNotice(d?.error || "Couldn't add a customization.");
+        return;
+      }
+      setQuota(d.quota);
+      // Says so plainly rather than implying a card was charged — there is no
+      // payment provider wired in yet.
+      setBuyNotice(
+        d.charged === false
+          ? "Added. Payment isn't connected yet, so nothing was charged."
+          : "Added.",
+      );
+    } catch {
+      setBuyNotice("Network error — nothing was added.");
+    } finally {
+      setBuying(false);
+    }
+  }
 
   function toggleFeature(v: string) {
     setFeatures((f) => (f.includes(v) ? f.filter((x) => x !== v) : [...f, v]));
@@ -83,11 +139,13 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
       const d = await res.json().catch(() => null);
       if (!res.ok || !d?.ok) {
         if (res.status === 401 || d?.needSignIn) setNeedSignIn(true);
+        if (d?.needMembership) setAccess((a) => ({ ...(a as Access), member: false }));
+        if (d?.quota) setQuota(d.quota);
         setError(d?.error || `Couldn't restyle (error ${res.status}).`);
         return;
       }
       setResult(d.image);
-      if (typeof d.remaining === "number") setRemaining(d.remaining);
+      if (d.quota) setQuota(d.quota);
       // The config itself is already logged to the member's history by the API.
       // All that's left is caching the render against that same id.
       void cacheRender(d.image, d.historyId);
@@ -129,6 +187,33 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
       setSaving(false);
     }
   }
+
+  // Members only. Shown instead of the controls, so nobody picks a look and
+  // then discovers on submit that it was never available to them.
+  if (access && access.signedIn && !access.member) {
+    return (
+      <div className="mt-6 border-t border-black/15 pt-5">
+        <h3 className="text-xs font-bold uppercase tracking-wide text-carz">Customize this car</h3>
+        <div className="mt-3 rounded-2xl border border-black/15 bg-black/[0.04] p-5 text-center">
+          <p className="text-sm font-bold">The customizer is a Carz+ feature</p>
+          <p className="mx-auto mt-1.5 max-w-sm text-[13px] opacity-70">
+            Members get {access.cap} AI repaints a day. Extras are $
+            {access.extraPriceUsd.toFixed(2)} each.
+          </p>
+          <Link
+            href="/pricing"
+            className="press mt-4 inline-flex rounded-full bg-black px-6 py-2.5 text-sm font-bold text-white transition hover:opacity-90"
+          >
+            Get Carz+
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const cap = access?.cap ?? 3;
+  const price = access?.extraPriceUsd ?? 0.5;
+  const outOfQuota = !!quota && quota.available <= 0;
 
   return (
     <div className="mt-6 border-t border-black/15 pt-5">
@@ -214,8 +299,35 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
           Sign in with Google
         </button>
       )}
-      {remaining !== null && (
-        <p className="mt-2 text-center text-xs opacity-60">{remaining} of 3 customizations left today</p>
+      {quota && (
+        <div className="mt-2 text-center">
+          <p className="text-xs opacity-60">
+            {quota.freeRemaining} of {cap} left today
+            {quota.credits > 0 && ` · ${quota.credits} extra`}
+          </p>
+
+          {/* Only offered once the free three are actually gone — selling an
+              extra while one is still free would be taking money for nothing. */}
+          {outOfQuota && (
+            <div className="mt-3 rounded-2xl border border-black/15 bg-black/[0.04] p-4">
+              <p className="text-[13px] font-bold">Out of customizations for today</p>
+              <p className="mt-1 text-[13px] opacity-70">
+                Get one more for ${price.toFixed(2)}, or come back tomorrow for {cap} more.
+              </p>
+              <button
+                type="button"
+                onClick={buyExtra}
+                disabled={buying}
+                aria-busy={buying || undefined}
+                className="press mt-3 inline-flex items-center gap-2 rounded-full bg-black px-5 py-2.5 text-[13px] font-bold text-white transition hover:opacity-90 disabled:opacity-50"
+              >
+                {buying && <Spinner className="h-3.5 w-3.5" />}
+                {buying ? "Adding…" : `Add 1 for $${price.toFixed(2)}`}
+              </button>
+              {buyNotice && <p className="mt-2 text-[12px] opacity-70">{buyNotice}</p>}
+            </div>
+          )}
+        </div>
       )}
 
       {result && (

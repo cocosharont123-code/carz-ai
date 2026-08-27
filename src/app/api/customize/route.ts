@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { restyleCar, restyleConfigured } from "@/lib/restyle";
-import { getRestyleUsage, recordRestyle, RESTYLE_DAILY_CAP } from "@/lib/restyle-usage";
+import {
+  getRestyleUsage,
+  recordRestyle,
+  RESTYLE_DAILY_CAP,
+  RESTYLE_EXTRA_PRICE_USD,
+} from "@/lib/restyle-usage";
+import { getProfile, isActiveMember } from "@/lib/profile-blob";
 import { recordConfig } from "@/lib/config-history";
 import { bodyOption, rimOption, featureLabels } from "@/lib/customizer-options";
 
@@ -10,8 +16,29 @@ export const maxDuration = 60; // image editing can take 15–40s
 
 // Lightweight status check (no secrets) so the UI/ops can tell if the image
 // model is configured without going through the signed-in generation flow.
+// Also reports the caller's membership and quota, so the customizer can show
+// the right gate before anyone spends a generation finding out.
 export async function GET() {
-  return NextResponse.json({ configured: restyleConfigured() });
+  const session = await auth();
+  const email = session?.user?.email;
+  if (!email) {
+    return NextResponse.json({
+      configured: restyleConfigured(),
+      signedIn: false,
+      member: false,
+      cap: RESTYLE_DAILY_CAP,
+      extraPriceUsd: RESTYLE_EXTRA_PRICE_USD,
+    });
+  }
+  const member = isActiveMember(await getProfile(email));
+  return NextResponse.json({
+    configured: restyleConfigured(),
+    signedIn: true,
+    member,
+    cap: RESTYLE_DAILY_CAP,
+    extraPriceUsd: RESTYLE_EXTRA_PRICE_USD,
+    quota: member ? await getRestyleUsage(email) : null,
+  });
 }
 
 export async function POST(req: Request) {
@@ -29,10 +56,30 @@ export async function POST(req: Request) {
     );
   }
 
-  const usage = await getRestyleUsage(email);
-  if (usage.remaining <= 0) {
+  // Carz+ only. Checked against the stored profile, not anything the client
+  // sent, and re-checked on every generation so a lapsed membership stops
+  // working immediately rather than at the next daily reset.
+  if (!isActiveMember(await getProfile(email))) {
     return NextResponse.json(
-      { ok: false, error: `You've used all ${RESTYLE_DAILY_CAP} customizations for today. Come back tomorrow.`, remaining: 0 },
+      {
+        ok: false,
+        error: "The car customizer is a Carz+ feature.",
+        needMembership: true,
+      },
+      { status: 402 },
+    );
+  }
+
+  const quota = await getRestyleUsage(email);
+  if (quota.available <= 0) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: `You've used all ${RESTYLE_DAILY_CAP} customizations for today.`,
+        quota,
+        canBuyExtra: true,
+        extraPriceUsd: RESTYLE_EXTRA_PRICE_USD,
+      },
       { status: 429 },
     );
   }
@@ -76,8 +123,8 @@ export async function POST(req: Request) {
       rimColor: body.rimColor,
       features,
     });
-    // Charge a credit only on a successful generation.
-    const remaining = await recordRestyle(email);
+    // Charge only on a successful generation — a failed render costs nothing.
+    const spent = await recordRestyle(email);
 
     // Log the config to the member's history. Best-effort: a storage hiccup
     // must not lose the render the user just spent a credit on.
@@ -103,7 +150,9 @@ export async function POST(req: Request) {
     return NextResponse.json({
       ok: true,
       image: `data:${out.mediaType};base64,${out.base64}`,
-      remaining,
+      quota: spent,
+      // Kept for older clients that read a bare number.
+      remaining: spent.available,
       historyId,
     });
   } catch (e) {
