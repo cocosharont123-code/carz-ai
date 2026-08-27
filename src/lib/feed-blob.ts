@@ -237,7 +237,13 @@ export async function uploadFeedImage(dataUrl: string, postId: string): Promise<
   }
 }
 
+/** A post id, minted before the photo is uploaded so both share it. */
+export function newPostId(): string {
+  return randomUUID().slice(0, 12);
+}
+
 export async function createPost(input: {
+  id: string;
   authorEmail: string;
   authorName: string;
   authorImage: string;
@@ -245,7 +251,7 @@ export async function createPost(input: {
   caption: string;
 }): Promise<FeedPost> {
   const post: FeedPost = {
-    id: randomUUID().slice(0, 12),
+    id: input.id,
     authorHash: hashEmail(input.authorEmail),
     authorName: input.authorName || "Spotter",
     authorImage: input.authorImage || "",
