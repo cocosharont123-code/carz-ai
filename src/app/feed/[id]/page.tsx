@@ -9,6 +9,8 @@ import { SiteHeader } from "@/components/site-header";
 import { Skeleton, Spinner } from "@/components/ui/editorial";
 import { Avatar } from "@/components/default-avatar";
 import { LikeButton, timeAgo, type FeedPostView } from "@/components/feed/post-card";
+import { FeedVideo } from "@/components/feed/feed-video";
+import { ShareButton } from "@/components/feed/share-button";
 import { cn } from "@/lib/utils";
 
 const COMMENT_MAX = 500;
@@ -167,12 +169,20 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
                 </span>
               </header>
 
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={post.imageUrl}
-                alt={post.caption ? post.caption.slice(0, 120) : "A car posted to the feed"}
-                className="aspect-[4/3] w-full bg-black/5 object-cover"
-              />
+              {post.mediaKind === "video" && post.videoUrl ? (
+                <FeedVideo
+                  videoUrl={post.videoUrl}
+                  posterUrl={post.imageUrl}
+                  edit={post.edit}
+                />
+              ) : (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={post.imageUrl}
+                  alt={post.caption ? post.caption.slice(0, 120) : "A car posted to the feed"}
+                  className="aspect-[4/3] w-full bg-black/5 object-cover"
+                />
+              )}
 
               <div className="px-4 py-3.5">
                 {post.caption && (
@@ -191,6 +201,7 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
                   <span className="rounded-full bg-black/[0.06] px-3 py-1.5 text-[13px] font-semibold">
                     {post.commentCount} {post.commentCount === 1 ? "comment" : "comments"}
                   </span>
+                  <ShareButton postId={post.id} caption={post.caption} />
 
                   {post.youAreAuthor && (
                     <button
