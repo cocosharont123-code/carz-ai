@@ -346,6 +346,20 @@ export default function SettingsPage() {
           )}
         </section>
 
+        {/* --- Legal --- */}
+        <section className="mt-10">
+          <h2 className="text-xl font-bold">Legal</h2>
+          <div className="mt-3">
+            <Link
+              href="/terms"
+              className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 text-sm font-semibold transition hover:border-white/25 hover:bg-white/[0.05]"
+            >
+              <span>Terms of Service</span>
+              <span className="opacity-50">Read and accept →</span>
+            </Link>
+          </div>
+        </section>
+
         {/* Deleting is only meaningful for an account that exists. */}
         {signedIn && <DeleteAccount />}
       </main>
