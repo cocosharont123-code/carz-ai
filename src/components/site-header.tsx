@@ -10,7 +10,8 @@ import { cn } from "@/lib/utils";
 // Events lives as a tab on Hunt, Wishlist as a tab on Auctions, and Garage +
 // Ranks share a page — so they aren't separate top-level links.
 const LEFT_NAV = [
-  { href: "/hunt", label: "Hunt", accent: true },
+  // Points at Events; Hunt is a tab on the same group once you're there.
+  { href: "/events", label: "Events", accent: true },
   { href: "/pricing", label: "Carz+", accent: true },
 ];
 const RIGHT_NAV = [
