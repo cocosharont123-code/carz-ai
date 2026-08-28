@@ -4,7 +4,7 @@ import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft, Trash2, Heart, X } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { Skeleton, Spinner } from "@/components/ui/editorial";
 import { Avatar } from "@/components/default-avatar";
@@ -17,11 +17,27 @@ const COMMENT_MAX = 500;
 
 type Comment = {
   id: string;
+  parentId: string; // "" for a top-level comment
   userName: string;
   text: string;
   ts: number;
   youWrote: boolean;
+  likeCount: number;
+  likedByYou: boolean;
 };
+
+/**
+ * Keep a new reply in the server's threaded order — directly after the
+ * parent's last existing reply — rather than at the end of the list.
+ */
+function insertThreaded(list: Comment[], c: Comment): Comment[] {
+  if (!c.parentId) return [...list, c];
+  const parent = list.findIndex((x) => x.id === c.parentId);
+  if (parent < 0) return [...list, c];
+  let at = parent + 1;
+  while (at < list.length && list[at].parentId === c.parentId) at++;
+  return [...list.slice(0, at), c, ...list.slice(at)];
+}
 
 type PostDetail = FeedPostView & { comments: Comment[] };
 
@@ -39,6 +55,8 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
   const [deleting, setDeleting] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [error, setError] = useState("");
+  // The comment being replied to, or null for a new top-level comment.
+  const [replyTo, setReplyTo] = useState<{ id: string; userName: string } | null>(null);
 
   // Pure fetch — returns the post (or null when it's gone) without writing
   // state, so nothing is set synchronously inside the effect below.
@@ -61,11 +79,12 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
     if (!body || sending) return;
     setError("");
     setSending(true);
+    const parentId = replyTo?.id;
     try {
       const res = await fetch(`/api/feed/posts/${id}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: body }),
+        body: JSON.stringify({ text: body, ...(parentId ? { parentId } : {}) }),
       });
       const d = await res.json();
       if (!res.ok || !d.ok) {
@@ -73,8 +92,15 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
         return;
       }
       setText("");
+      setReplyTo(null);
       setPost((p) =>
-        p ? { ...p, comments: [...p.comments, d.comment], commentCount: p.commentCount + 1 } : p,
+        p
+          ? {
+              ...p,
+              comments: insertThreaded(p.comments, d.comment as Comment),
+              commentCount: p.commentCount + 1,
+            }
+          : p,
       );
     } catch {
       setError("Network error — your comment wasn't posted.");
@@ -83,18 +109,50 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
     }
   }
 
+  /**
+   * Optimistic, and not rolled back on failure: a like is a toggle, so a stale
+   * heart corrects itself on the next tap, and flipping it back under someone's
+   * finger reads as a bug.
+   */
+  async function toggleCommentLike(commentId: string) {
+    if (!signedIn) return;
+    const apply = (fn: (c: Comment) => Comment) =>
+      setPost((p) => (p ? { ...p, comments: p.comments.map((c) => (c.id === commentId ? fn(c) : c)) } : p));
+
+    apply((c) => ({
+      ...c,
+      likedByYou: !c.likedByYou,
+      likeCount: c.likeCount + (c.likedByYou ? -1 : 1),
+    }));
+    try {
+      const res = await fetch(`/api/feed/posts/${id}/comments/${commentId}/like`, { method: "POST" });
+      const d = await res.json();
+      if (!res.ok || !d.ok) {
+        setError(d.error || "Couldn't register that.");
+        return;
+      }
+      // Settle on the server's count — other people's likes land in between.
+      apply((c) => ({ ...c, likedByYou: !!d.liked, likeCount: d.likeCount ?? c.likeCount }));
+    } catch {
+      setError("Network error — that like didn't stick.");
+    }
+  }
+
   async function removeComment(commentId: string) {
     // Optimistic: drop it, restore on failure.
     const previous = post;
-    setPost((p) =>
-      p
-        ? {
-            ...p,
-            comments: p.comments.filter((c) => c.id !== commentId),
-            commentCount: Math.max(0, p.commentCount - 1),
-          }
-        : p,
-    );
+    // A top-level comment takes its replies with it, server-side; the same
+    // subtraction happens here so the optimistic list matches what comes back.
+    setPost((p) => {
+      if (!p) return p;
+      const comments = p.comments.filter((c) => c.id !== commentId && c.parentId !== commentId);
+      return {
+        ...p,
+        comments,
+        commentCount: Math.max(0, p.commentCount - (p.comments.length - comments.length)),
+      };
+    });
+    if (replyTo?.id === commentId) setReplyTo(null);
     try {
       const res = await fetch(`/api/feed/posts/${id}/comments/${commentId}`, { method: "DELETE" });
       const d = await res.json();
@@ -255,7 +313,15 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
               ) : (
                 <ul className="mt-3 space-y-3">
                   {post.comments.map((c) => (
-                    <li key={c.id} className="flex items-start gap-2.5">
+                    <li
+                      key={c.id}
+                      // Replies sit indented under the comment they answer,
+                      // with a hairline rule standing in for the thread.
+                      className={cn(
+                        "flex items-start gap-2.5",
+                        c.parentId && "ml-4 border-l border-black/10 pl-3",
+                      )}
+                    >
                       <div className="min-w-0 flex-1">
                         <div className="flex items-baseline gap-2">
                           <span className="truncate text-[13px] font-bold">{c.userName}</span>
@@ -264,7 +330,42 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
                         <p className="mt-0.5 whitespace-pre-wrap text-[13px] leading-relaxed">
                           {c.text}
                         </p>
+                        {signedIn && (
+                          <button
+                            type="button"
+                            // Replies collapse to one level, matching the store:
+                            // replying to a reply targets its parent.
+                            onClick={() => setReplyTo({ id: c.parentId || c.id, userName: c.userName })}
+                            className="press mt-1 text-[11px] font-bold opacity-50 transition hover:opacity-100"
+                          >
+                            Reply
+                          </button>
+                        )}
                       </div>
+
+                      <div className="flex shrink-0 flex-col items-center gap-0.5 pt-0.5">
+                        <button
+                          type="button"
+                          onClick={() => toggleCommentLike(c.id)}
+                          disabled={!signedIn}
+                          aria-pressed={c.likedByYou}
+                          aria-label={c.likedByYou ? "Unlike comment" : "Like comment"}
+                          className="press rounded-full p-1 transition hover:bg-black/[0.06] disabled:cursor-default disabled:hover:bg-transparent"
+                        >
+                          <Heart
+                            className={cn("h-3.5 w-3.5 transition", c.likedByYou ? "opacity-100" : "opacity-40")}
+                            strokeWidth={2}
+                            fill={c.likedByYou ? "currentColor" : "none"}
+                            aria-hidden
+                          />
+                        </button>
+                        {/* Held open only when there's a count, so an unliked
+                            row doesn't carry a stray zero. */}
+                        {c.likeCount > 0 && (
+                          <span className="text-[10px] tabular-nums opacity-50">{c.likeCount}</span>
+                        )}
+                      </div>
+
                       {(c.youWrote || post.youAreAuthor) && (
                         <button
                           type="button"
@@ -282,11 +383,26 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
 
               {signedIn ? (
                 <div className="mt-4 border-t border-black/10 pt-4">
+                  {replyTo && (
+                    <div className="mb-2 flex items-center justify-between gap-2 rounded-xl bg-black/[0.05] px-3 py-1.5">
+                      <span className="truncate text-[11px] opacity-60">
+                        Replying to <span className="font-bold">{replyTo.userName}</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setReplyTo(null)}
+                        aria-label="Cancel reply"
+                        className="press shrink-0 rounded-full p-0.5 opacity-50 transition hover:opacity-100"
+                      >
+                        <X className="h-3.5 w-3.5" aria-hidden />
+                      </button>
+                    </div>
+                  )}
                   <textarea
                     value={text}
                     onChange={(e) => setText(e.target.value.slice(0, COMMENT_MAX))}
                     rows={2}
-                    placeholder="Add a comment…"
+                    placeholder={replyTo ? `Reply to ${replyTo.userName}…` : "Add a comment…"}
                     className="w-full resize-none rounded-2xl border border-black/10 bg-black/[0.03] p-3 text-[13px] leading-relaxed outline-none transition focus:border-black/30"
                   />
                   <button
@@ -297,7 +413,7 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
                     className="press mt-2 inline-flex items-center gap-2 rounded-full bg-black px-5 py-2 text-[13px] font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-30"
                   >
                     {sending && <Spinner className="h-3.5 w-3.5" />}
-                    {sending ? "Posting…" : "Comment"}
+                    {sending ? "Posting…" : replyTo ? "Reply" : "Comment"}
                   </button>
                 </div>
               ) : (

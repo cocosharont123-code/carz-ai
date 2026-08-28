@@ -24,6 +24,14 @@ export type FeedComment = {
   userName: string;
   text: string;
   ts: number;
+  /** Absent on records written before comment likes existed — treat as []. */
+  likes?: FeedLike[];
+  /**
+   * The top-level comment this replies to, or absent for a top-level comment.
+   * Threads are one level deep: replying to a reply attaches to that reply's
+   * parent, so a thread never nests further than a single indent.
+   */
+  parentId?: string;
 };
 
 /**
@@ -76,10 +84,13 @@ export type FeedPost = {
 // own relationship to the post resolved server-side.
 export type PublicComment = {
   id: string;
+  parentId: string; // "" for a top-level comment
   userName: string;
   text: string;
   ts: number;
   youWrote: boolean;
+  likeCount: number;
+  likedByYou: boolean;
 };
 
 export type PublicPost = {
@@ -180,7 +191,40 @@ async function writeAll(posts: FeedPost[]): Promise<void> {
 function hydrate(p: FeedPost): FeedPost {
   p.likes = Array.isArray(p.likes) ? p.likes : [];
   p.comments = Array.isArray(p.comments) ? p.comments : [];
+  for (const c of p.comments) if (!Array.isArray(c.likes)) c.likes = [];
   return p;
+}
+
+/**
+ * Comments in display order: each top-level comment oldest-first, with its
+ * replies directly beneath it. Flat rather than nested — the array stays the
+ * one shape every caller already handles, and `parentId` is enough for the UI
+ * to indent a reply under the comment above it.
+ */
+function threadComments(comments: FeedComment[]): FeedComment[] {
+  const chron = comments.slice().sort((a, b) => a.ts - b.ts);
+  const ids = new Set(chron.map((c) => c.id));
+  const out: FeedComment[] = [];
+  const placed = new Set<string>();
+
+  // A reply whose parent is gone counts as a root, so it stays in the thread
+  // instead of dropping out of it.
+  for (const c of chron) {
+    if (c.parentId && ids.has(c.parentId)) continue; // emitted under its parent
+    out.push(c);
+    placed.add(c.id);
+    for (const reply of chron) {
+      if (reply.parentId === c.id && !placed.has(reply.id)) {
+        out.push(reply);
+        placed.add(reply.id);
+      }
+    }
+  }
+  // Only reachable from records that predate the one-level rule, where a reply
+  // points at another reply. Appended rather than dropped: every comment
+  // written is a comment shown.
+  for (const c of chron) if (!placed.has(c.id)) out.push(c);
+  return out;
 }
 
 export function toPublicPost(
@@ -206,18 +250,23 @@ export function toPublicPost(
     youAreAuthor: !!viewerHash && p.authorHash === viewerHash,
   };
   if (opts.withComments) {
-    out.comments = p.comments
-      .slice()
-      .sort((a, b) => a.ts - b.ts) // flat and chronological, oldest first
-      .map((c) => ({
-        id: c.id,
-        userName: c.userName,
-        text: c.text,
-        ts: c.ts,
-        youWrote: !!viewerHash && c.userHash === viewerHash,
-      }));
+    out.comments = threadComments(p.comments).map((c) => toPublicComment(c, viewerHash));
   }
   return out;
+}
+
+export function toPublicComment(c: FeedComment, viewerHash: string | null): PublicComment {
+  const likes = c.likes ?? [];
+  return {
+    id: c.id,
+    parentId: c.parentId ?? "",
+    userName: c.userName,
+    text: c.text,
+    ts: c.ts,
+    youWrote: !!viewerHash && c.userHash === viewerHash,
+    likeCount: likes.length,
+    likedByYou: !!viewerHash && likes.some((l) => l.userHash === viewerHash),
+  };
 }
 
 /**
@@ -416,6 +465,7 @@ export async function addComment(
   id: string,
   author: { hash: string; name: string },
   text: string,
+  parentId?: string,
 ): Promise<{ ok: boolean; error?: string; comment?: FeedComment }> {
   const body = (text || "").trim();
   if (!body) return { ok: false, error: "Write something first." };
@@ -425,12 +475,23 @@ export async function addComment(
   if (idx < 0) return { ok: false, error: "Post not found." };
   const post = hydrate(all[idx]);
 
+  // Replying to a reply attaches to that reply's own parent, so threads stay
+  // one level deep however far down the chain someone taps Reply.
+  let parent = "";
+  if (parentId) {
+    const target = post.comments.find((c) => c.id === parentId);
+    if (!target) return { ok: false, error: "That comment is gone." };
+    parent = target.parentId || target.id;
+  }
+
   const comment: FeedComment = {
     id: randomUUID().slice(0, 12),
     userHash: author.hash,
     userName: author.name || "Spotter",
     text: body.slice(0, COMMENT_MAX),
     ts: Date.now(),
+    likes: [],
+    ...(parent ? { parentId: parent } : {}),
   };
   post.comments.push(comment);
   all[idx] = post;
@@ -438,11 +499,38 @@ export async function addComment(
   return { ok: true, comment };
 }
 
+/**
+ * Toggle this viewer's like on one comment. Mirrors `toggleLike` for posts:
+ * keyed by the viewer's hash, so a double tap can't count twice.
+ */
+export async function toggleCommentLike(
+  postId: string,
+  commentId: string,
+  viewerHash: string,
+): Promise<{ ok: boolean; error?: string; liked?: boolean; likeCount?: number }> {
+  const all = await readAll();
+  const idx = all.findIndex((p) => p.id === postId);
+  if (idx < 0) return { ok: false, error: "Post not found." };
+  const post = hydrate(all[idx]);
+
+  const comment = post.comments.find((c) => c.id === commentId);
+  if (!comment) return { ok: false, error: "Comment not found." };
+
+  const likes = comment.likes ?? (comment.likes = []);
+  const at = likes.findIndex((l) => l.userHash === viewerHash);
+  if (at >= 0) likes.splice(at, 1);
+  else likes.push({ userHash: viewerHash, ts: Date.now() });
+
+  all[idx] = post;
+  await writeAll(all);
+  return { ok: true, liked: at < 0, likeCount: likes.length };
+}
+
 export async function deleteComment(
   postId: string,
   commentId: string,
   viewerHash: string,
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{ ok: boolean; error?: string; removed?: string[] }> {
   const all = await readAll();
   const idx = all.findIndex((p) => p.id === postId);
   if (idx < 0) return { ok: false, error: "Post not found." };
@@ -457,8 +545,15 @@ export async function deleteComment(
     return { ok: false, error: "You can only delete your own comments." };
   }
 
-  post.comments.splice(at, 1);
+  // Deleting a top-level comment takes its replies with it — leaving them
+  // behind would strand answers under a question nobody can read. Every id
+  // that went comes back, so a client list can drop them in one pass.
+  const doomed = new Set([
+    commentId,
+    ...post.comments.filter((c) => c.parentId === commentId).map((c) => c.id),
+  ]);
+  post.comments = post.comments.filter((c) => !doomed.has(c.id));
   all[idx] = post;
   await writeAll(all);
-  return { ok: true };
+  return { ok: true, removed: [...doomed] };
 }

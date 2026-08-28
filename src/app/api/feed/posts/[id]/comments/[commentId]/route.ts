@@ -26,7 +26,9 @@ export async function DELETE(
       const missing = res.error?.endsWith("not found.");
       return NextResponse.json({ ok: false, error: res.error }, { status: missing ? 404 : 403 });
     }
-    return NextResponse.json({ ok: true });
+    // `removed` lists the comment and any replies that went with it, so the
+    // client drops the whole thread in one pass instead of the parent alone.
+    return NextResponse.json({ ok: true, removed: res.removed ?? [commentId] });
   } catch (e) {
     console.error("feed storage error:", e);
     const down = e instanceof FeedStorageError;

@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { ensureProfile } from "@/lib/profile-blob";
 import {
   addComment,
+  toPublicComment,
   hashEmail,
   feedConfigured,
   FeedStorageError,
@@ -11,7 +12,8 @@ import {
 
 export const runtime = "nodejs";
 
-// POST /api/feed/posts/[id]/comments -> add a comment.
+// POST /api/feed/posts/[id]/comments -> add a comment, or a reply when the
+// body carries `parentId`.
 // Reading comments happens through GET /api/feed/posts/[id], which already
 // returns them, so there's no GET here to keep the two in sync.
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -25,7 +27,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ ok: false, error: "Sign in to comment." }, { status: 401 });
   }
 
-  let body: { text?: string };
+  let body: { text?: string; parentId?: string };
   try {
     body = await req.json();
   } catch {
@@ -44,16 +46,20 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   }
 
   try {
+    const viewerHash = hashEmail(email);
     const { profile } = await ensureProfile(email);
-    const res = await addComment(id, { hash: hashEmail(email), name: `@${profile.username}` }, text);
+    const res = await addComment(
+      id,
+      { hash: viewerHash, name: `@${profile.username}` },
+      text,
+      // The store resolves this against the stored thread — a reply to a reply
+      // is re-pointed at its parent rather than rejected.
+      typeof body.parentId === "string" ? body.parentId : undefined,
+    );
     if (!res.ok) {
       return NextResponse.json({ ok: false, error: res.error }, { status: 404 });
     }
-    const c = res.comment!;
-    return NextResponse.json({
-      ok: true,
-      comment: { id: c.id, userName: c.userName, text: c.text, ts: c.ts, youWrote: true },
-    });
+    return NextResponse.json({ ok: true, comment: toPublicComment(res.comment!, viewerHash) });
   } catch (e) {
     console.error("feed storage error:", e);
     const down = e instanceof FeedStorageError;
