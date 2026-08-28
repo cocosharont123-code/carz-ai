@@ -90,8 +90,7 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <Link href="/" className="press flex items-center justify-center gap-2">
-          <span className="inline-block h-3 w-3 rounded-full bg-carz" />
+        <Link href="/" className="press flex items-center justify-center">
           <span className="wordmark whitespace-nowrap text-2xl leading-none">Carz AI</span>
         </Link>
 
@@ -121,8 +120,7 @@ export function SiteHeader() {
             <span className={cn("block h-0.5 w-5 bg-current transition-transform", menuOpen && "-translate-y-[7px] -rotate-45")} />
           </button>
 
-          <Link href="/" className="press flex items-center gap-2" onClick={() => setMenuOpen(false)}>
-            <span className="inline-block h-3 w-3 rounded-full bg-carz" />
+          <Link href="/" className="press flex items-center" onClick={() => setMenuOpen(false)}>
             <span className="wordmark whitespace-nowrap text-xl leading-none">Carz AI</span>
           </Link>
 
