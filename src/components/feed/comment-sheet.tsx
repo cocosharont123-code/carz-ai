@@ -46,11 +46,14 @@ function insertThreaded(list: Comment[], c: Comment): Comment[] {
 export function CommentSheet({
   postId,
   signedIn,
+  youAreAuthor = false,
   onClose,
   onCountChange,
 }: {
   postId: string;
   signedIn: boolean;
+  /** The post is yours, so you can clear any comment off it — not just your own. */
+  youAreAuthor?: boolean;
   onClose: () => void;
   onCountChange?: (count: number) => void;
 }) {
@@ -291,7 +294,7 @@ export function CommentSheet({
                     )}
                   </div>
 
-                  {c.youWrote && (
+                  {(c.youWrote || youAreAuthor) && (
                     <button
                       type="button"
                       onClick={() => remove(c.id)}

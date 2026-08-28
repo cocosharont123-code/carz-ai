@@ -216,10 +216,29 @@ export function Reel({
       )}
 
       {/* Scrim so white overlay text survives a bright sky or a white car. */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+      <div
+        className={cn(
+          "pointer-events-none absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/80 via-black/30 to-transparent transition-opacity duration-200",
+          commentsOpen && "opacity-0",
+        )}
+      />
 
-      {/* Right rail */}
-      <div className="absolute bottom-24 right-3 flex flex-col items-center gap-4">
+      {/* Right rail. Hidden behind the comment sheet: the sheet's scrim is
+          semi-transparent, so these stayed legible through it and read as a
+          second set of controls competing with the ones in the sheet. Faded
+          rather than unmounted, so the rail doesn't pop back on close, and
+          made click-through so a tap near the edge can't reach a button that
+          isn't really there. */}
+      <div
+        className={cn(
+          "absolute bottom-24 right-3 flex flex-col items-center gap-4 transition-opacity duration-200",
+          commentsOpen && "pointer-events-none opacity-0",
+        )}
+        aria-hidden={commentsOpen || undefined}
+        // Not just pointer-events-none: without `inert` these stay in the tab
+        // order, so keyboard focus walks into buttons nobody can see.
+        inert={commentsOpen}
+      >
         <RailButton
           label={post.likedByYou ? "Unlike" : "Like"}
           count={post.likeCount}
@@ -262,8 +281,15 @@ export function Reel({
         )}
       </div>
 
-      {/* Caption block */}
-      <div className="absolute inset-x-0 bottom-0 p-4 pr-20">
+      {/* Caption block — hidden with the rail for the same reason. */}
+      <div
+        className={cn(
+          "absolute inset-x-0 bottom-0 p-4 pr-20 transition-opacity duration-200",
+          commentsOpen && "pointer-events-none opacity-0",
+        )}
+        aria-hidden={commentsOpen || undefined}
+        inert={commentsOpen}
+      >
         <Link href={`/feed/${post.id}`} className="flex items-center gap-2">
           <Avatar src={post.authorImage} size={28} />
           <span className="truncate text-[13px] font-bold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
@@ -290,6 +316,7 @@ export function Reel({
         <CommentSheet
           postId={post.id}
           signedIn={signedIn}
+          youAreAuthor={post.youAreAuthor}
           onClose={() => setCommentsOpen(false)}
           onCountChange={onCommentCountChange}
         />
