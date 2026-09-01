@@ -2,91 +2,68 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { PageMasthead } from "@/components/ui/editorial";
 import { Input } from "@/components/ui/input";
 import {
+  EXPLORE_BUBBLES,
   EXPLORE_COPY,
-  EXPLORE_SECTIONS,
-  EXPLORE_START_HERE,
   matchesExploreQuery,
   type ExploreItem,
 } from "@/config/explore";
 
 /**
- * The front door: every feature in Carz on one screen.
+ * The front door: the whole app on one screen as a grid of bubbles.
  *
- * Nothing here knows anything about the features it lists — it renders the
- * config and links onward. Members-only rows link exactly like the rest,
- * because each destination already gates itself and a second copy of that
- * logic here could only ever disagree with the first.
+ * One page, no sections — the point is to take it all in at a glance rather
+ * than read down a list, so everything is the same size and nothing is filed
+ * under a heading you have to scroll past.
+ *
+ * Nothing here knows anything about the features it lists — it renders a config
+ * and links onward. Members-only bubbles link exactly like the rest, because
+ * each destination already gates itself.
  *
  * All copy lives in src/config/explore.ts.
  */
 
-/** One tappable row: icon · label · description · chevron. */
-function ExploreRow({ item }: { item: ExploreItem }) {
+function Bubble({ item }: { item: ExploreItem }) {
   const Icon = item.icon;
   return (
-    <Link
-      href={item.href}
-      className="press glass-card flex items-center gap-3.5 rounded-2xl px-4 py-3.5"
-    >
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/[0.06]">
-        <Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="text-sm font-semibold">{item.label}</span>
-          {item.membersOnly && (
-            <span className="util-label text-carz">{EXPLORE_COPY.membersBadge}</span>
-          )}
+    <div className="flex flex-col items-center">
+      <Link
+        href={item.href}
+        // aspect-square + rounded-full is the bubble. The label sits inside it,
+        // which is what keeps the names short.
+        className="press glass-card flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-full p-4 text-center"
+      >
+        <Icon className="h-6 w-6 shrink-0" strokeWidth={1.75} aria-hidden />
+        {/* Long pairings like "Auctions & Wishlist" have to wrap inside a
+            circle rather than spill out of it, so the line height is tight and
+            the box is capped short of the bubble's straight edges. */}
+        <span className="max-w-[86%] text-[13px] font-semibold leading-tight">
+          {item.label}
         </span>
-        <span className="mt-0.5 block truncate text-[13px] opacity-60">{item.description}</span>
+        {item.membersOnly && (
+          <span className="util-label text-carz">{EXPLORE_COPY.membersBadge}</span>
+        )}
+      </Link>
+      {/* Outside the circle: there is no room for it inside, and it would push
+          the label off-centre. */}
+      <span className="mt-2 block text-center text-[11px] leading-snug opacity-60">
+        {item.description}
       </span>
-      <ChevronRight className="h-4 w-4 shrink-0 opacity-40" aria-hidden />
-    </Link>
-  );
-}
-
-/** The three things someone most likely opened the app to do. */
-function StartHereTile({ item }: { item: ExploreItem }) {
-  const Icon = item.icon;
-  return (
-    <Link
-      href={item.href}
-      className="press glass-card flex flex-col justify-between gap-4 rounded-2xl p-5"
-    >
-      <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/[0.06]">
-        <Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden />
-      </span>
-      <span className="block">
-        <span className="block text-base font-semibold">{item.label}</span>
-        <span className="mt-1 block text-[13px] leading-relaxed opacity-60">
-          {item.description}
-        </span>
-      </span>
-    </Link>
+    </div>
   );
 }
 
 export default function ExplorePage() {
   const [query, setQuery] = useState("");
-  const searching = query.trim() !== "";
 
-  // Sections drop out entirely once nothing in them matches, so the filtered
-  // view is a short list rather than a page of empty headings.
-  const sections = useMemo(
-    () =>
-      EXPLORE_SECTIONS.map((s) => ({
-        ...s,
-        items: s.items.filter((i) => matchesExploreQuery(i, query)),
-      })).filter((s) => s.items.length > 0),
+  const bubbles = useMemo(
+    () => EXPLORE_BUBBLES.filter((i) => matchesExploreQuery(i, query)),
     [query],
   );
-
-  const nothingMatches = searching && sections.length === 0;
 
   return (
     <>
@@ -114,34 +91,16 @@ export default function ExplorePage() {
           />
         </div>
 
-        {/* Browsing and searching are different screens: once someone has typed,
-            the shortcuts are noise between them and their answer. */}
-        {!searching && (
-          <section className="mt-8">
-            <h2 className="util-label">{EXPLORE_COPY.startHere}</h2>
-            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
-              {EXPLORE_START_HERE.map((item) => (
-                <StartHereTile key={item.label} item={item} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {nothingMatches ? (
+        {bubbles.length === 0 ? (
           <p className="mt-8 text-[13px] opacity-60">{EXPLORE_COPY.empty}</p>
         ) : (
-          sections.map((section) => (
-            <section key={section.title} className="mt-8">
-              <h2 className="util-label">{section.title}</h2>
-              <div className="mt-3 space-y-3">
-                {section.items.map((item) => (
-                  // Two rows can share a destination (membership and redeeming
-                  // a code both land on /membership), so the label is the key.
-                  <ExploreRow key={item.label} item={item} />
-                ))}
-              </div>
-            </section>
-          ))
+          // Two across on a phone keeps every bubble a comfortable tap; three
+          // once there is room, so the whole app still fits one screen.
+          <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3">
+            {bubbles.map((item) => (
+              <Bubble key={item.label} item={item} />
+            ))}
+          </div>
         )}
       </main>
     </>

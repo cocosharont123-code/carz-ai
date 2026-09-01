@@ -1,264 +1,141 @@
-// Every feature in Carz, in one list, written for someone who has had the app
-// for ten seconds.
+// Every feature in Carz, as one grid of bubbles.
 //
 // All Explore copy lives here rather than in the page, so the wording of the
 // whole app's front door can be reviewed in one file without reading JSX.
 //
 // Rules the labels follow, deliberately:
-//   - Plain nouns, three words at most. No internal names — nobody arriving
-//     knows what a "restyle" or a "spot" is.
-//   - One line of description, eight words at most, saying what the feature
-//     does rather than what it is called.
+//   - Short enough to sit inside a bubble. Where two features share a page,
+//     the bubble is named for both ("Auctions & Wishlist") and opens the page
+//     they share — the second one is a tab once you arrive.
+//   - One line underneath saying what it does, eight words at most.
 //   - Every href is a route that exists. Features that live inside another
-//     page (the customizer, the value chart, the hotspots map) are not listed
-//     as destinations, because there is nowhere to send someone.
+//     page — the customizer, the value chart, the hotspots map — are not
+//     listed, because there is nowhere to send someone.
 
 import {
-  Barcode,
-  Camera,
-  Crosshair,
   Crown,
   Gavel,
-  Heart,
   Images,
   KeyRound,
   LogIn,
-  Palette,
-  Rocket,
   ScanLine,
   Settings,
   ShieldCheck,
-  Sparkles,
-  Tag,
   Ticket,
-  Trophy,
   User,
   Users,
   type LucideIcon,
 } from "lucide-react";
 
 export type ExploreItem = {
-  /** Plain noun, three words at most. */
+  /** Short enough to read inside a bubble at a glance. */
   label: string;
   /** What it does, eight words at most. */
   description: string;
   href: string;
   icon: LucideIcon;
-  /** Shown as the existing Carz+ label. The link still works — the feature's
-   *  own gate handles what happens on arrival, and it is not rebuilt here. */
+  /** Shown as the existing Carz+ label. The link still works — the destination
+   *  already gates itself, and a second copy of that logic here could only
+   *  ever disagree with the first. */
   membersOnly?: boolean;
-  /** Signing in is required by the destination itself; same principle. */
-  requiresAuth?: boolean;
-};
-
-export type ExploreSection = {
-  title: string;
-  items: ExploreItem[];
 };
 
 export const EXPLORE_COPY = {
   eyebrow: "Everything in Carz",
   title: "Explore",
-  subtitle: "Every feature in one place — tap anything to jump straight in.",
-  searchPlaceholder: "Search: scan, auctions, map…",
+  subtitle: "Tap anything to jump straight in.",
+  searchPlaceholder: "Search: spot, auctions, garage…",
   searchLabel: "Search features",
-  startHere: "Start here",
-  empty: "Nothing matches. Try “scan” or “auctions”.",
-  /** Sits beside a members-only row. Same wording the gate itself uses. */
+  empty: "Nothing matches. Try “spot” or “auctions”.",
+  /** Sits on a members-only bubble. Same wording the gate itself uses. */
   membersBadge: "Carz+",
 } as const;
 
-/** The three things a new user most likely came to do. */
-export const EXPLORE_START_HERE: ExploreItem[] = [
+/**
+ * The whole app, in tap order: what people came to do first, then the rest,
+ * then the account.
+ *
+ * A paired bubble opens the feature it is named for first. Auctions & Wishlist
+ * and Garage & Ranks land on pages where the other half is genuinely a tab, so
+ * both are one tap away. Events & Drops and Carz+ & Hunt are pairs by theme
+ * rather than by page, so those open Events and Carz+ respectively.
+ */
+export const EXPLORE_BUBBLES: ExploreItem[] = [
   {
-    label: "Scan a car",
+    label: "Spot",
     description: "Identify any car from a photo",
     href: "/spot",
     icon: ScanLine,
   },
   {
-    label: "Auctions",
-    description: "Bid on cars live",
+    label: "Auctions & Wishlist",
+    description: "Bid live, save the cars you want",
     href: "/auctions",
     icon: Gavel,
+  },
+  {
+    label: "Garage & Ranks",
+    description: "Your saved cars and the leaderboard",
+    href: "/garage",
+    icon: Images,
+    membersOnly: true,
+  },
+  {
+    label: "Events & Drops",
+    description: "Car meets and new supercar launches",
+    href: "/events",
+    icon: Ticket,
+    membersOnly: true,
+  },
+  {
+    label: "Carz+ & Hunt",
+    description: "Membership perks and cash bounties",
+    href: "/pricing",
+    icon: Crown,
+  },
+  {
+    label: "Feed",
+    description: "Watch car clips from everyone",
+    href: "/feed",
+    icon: Users,
   },
   {
     label: "Sell a car",
     description: "Free listing, AI writes it for you",
     href: "/auctions/new",
     icon: KeyRound,
-    requiresAuth: true,
-  },
-];
-
-export const EXPLORE_SECTIONS: ExploreSection[] = [
-  {
-    title: "Spot & identify",
-    items: [
-      {
-        label: "Scan a car",
-        description: "Identify any car from a photo",
-        href: "/spot",
-        icon: ScanLine,
-      },
-      {
-        label: "Scan a VIN",
-        description: "Photograph the VIN, get the exact car",
-        href: "/spot",
-        icon: Barcode,
-      },
-      {
-        label: "Your garage",
-        description: "A photo album of cars you saved",
-        href: "/garage",
-        icon: Images,
-        membersOnly: true,
-      },
-      {
-        label: "Saved builds",
-        description: "Car colours and rims you designed",
-        href: "/garage/builds",
-        icon: Palette,
-        membersOnly: true,
-      },
-    ],
   },
   {
-    title: "Buy & sell",
-    items: [
-      {
-        label: "Auctions",
-        description: "Bid on cars live",
-        href: "/auctions",
-        icon: Gavel,
-      },
-      {
-        label: "Sell a car",
-        description: "Free listing, AI writes it for you",
-        href: "/auctions/new",
-        icon: KeyRound,
-        requiresAuth: true,
-      },
-      {
-        label: "New drops",
-        description: "Just-launched supercars over $120k",
-        href: "/drops",
-        icon: Rocket,
-      },
-      {
-        label: "Wishlist",
-        description: "Get told when your car appears",
-        href: "/wishlist",
-        icon: Heart,
-        membersOnly: true,
-      },
-    ],
+    label: "Profile",
+    description: "Your name, photo and spotting stats",
+    href: "/profile",
+    icon: User,
   },
   {
-    title: "Near you",
-    items: [
-      {
-        label: "Car events",
-        description: "Meets, shows and track days nearby",
-        href: "/events",
-        icon: Ticket,
-        membersOnly: true,
-      },
-      {
-        label: "Car Hunt Miami",
-        description: "Find a wanted car, win the bounty",
-        href: "/hunt",
-        icon: Crosshair,
-        membersOnly: true,
-      },
-    ],
+    label: "Settings",
+    description: "Scan quality and account controls",
+    href: "/settings",
+    icon: Settings,
   },
   {
-    title: "Compete & play",
-    items: [
-      {
-        label: "Rarest cars",
-        description: "The leaderboard of rarest finds",
-        href: "/leaderboard",
-        icon: Trophy,
-      },
-      {
-        label: "Community",
-        description: "Watch car clips from everyone",
-        href: "/feed",
-        icon: Users,
-      },
-      {
-        label: "Post a clip",
-        description: "Share a car you filmed",
-        href: "/feed/new",
-        icon: Camera,
-        requiresAuth: true,
-      },
-    ],
+    label: "Sign in",
+    description: "Sign in or create an account",
+    href: "/signin",
+    icon: LogIn,
   },
   {
-    title: "Carz+",
-    items: [
-      {
-        label: "What you get",
-        description: "Everything membership unlocks",
-        href: "/pricing",
-        icon: Crown,
-      },
-      {
-        label: "Membership",
-        description: "Start your free trial",
-        href: "/membership",
-        icon: Sparkles,
-        requiresAuth: true,
-      },
-      {
-        label: "Redeem a code",
-        description: "Turn a promo code into membership",
-        href: "/membership",
-        icon: Tag,
-        requiresAuth: true,
-      },
-    ],
-  },
-  {
-    title: "Account & help",
-    items: [
-      {
-        label: "Your profile",
-        description: "Name, photo and spotting stats",
-        href: "/profile",
-        icon: User,
-        requiresAuth: true,
-      },
-      {
-        label: "Settings",
-        description: "Scan quality and account controls",
-        href: "/settings",
-        icon: Settings,
-      },
-      {
-        label: "Sign in",
-        description: "Sign in or create an account",
-        href: "/signin",
-        icon: LogIn,
-      },
-      {
-        label: "Terms & privacy",
-        description: "How Carz works and handles data",
-        href: "/terms",
-        icon: ShieldCheck,
-      },
-    ],
+    label: "Terms",
+    description: "How Carz works and handles data",
+    href: "/terms",
+    icon: ShieldCheck,
   },
 ];
 
 /**
- * Matches an item against a typed query — label first, then description, so
- * someone typing "map" finds the hunt board by what it does rather than only by
- * what it is called. Case- and whitespace-insensitive; an empty query matches
- * everything, which is what makes the unfiltered page and the filtered page the
+ * Matches a bubble against a typed query — label first, then description, so
+ * someone typing "bid" finds Auctions by what it does rather than only by what
+ * it is called. Case- and whitespace-insensitive; an empty query matches
+ * everything, which is what makes the unfiltered grid and the filtered grid the
  * same render path.
  */
 export function matchesExploreQuery(item: ExploreItem, query: string): boolean {
