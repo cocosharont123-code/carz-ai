@@ -38,17 +38,15 @@ function Bubble({ item }: { item: ExploreItem }) {
     <div className="flex flex-col items-center">
       <Link
         href={item.href}
-        // aspect-square + rounded-full is the bubble. The label sits inside it,
-        // which is what keeps the names short.
-        className="press glass-card flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-full p-4 text-center"
+        // A squircle, not a circle: the same app-icon shape the phone's own
+        // home screen uses. It also gives the label its corners back, which a
+        // circle spends on empty space.
+        className="press glass-card flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-3xl p-4 text-center"
       >
         <Icon className="h-6 w-6 shrink-0" strokeWidth={1.75} aria-hidden />
-        {/* Long pairings like "Auctions & Wishlist" have to wrap inside a
-            circle rather than spill out of it, so the line height is tight and
-            the box is capped short of the bubble's straight edges. */}
-        <span className="max-w-[86%] text-[13px] font-semibold leading-tight">
-          {item.label}
-        </span>
+        {/* Long pairings like "Auctions & Wishlist" still wrap, but a squircle
+            has the width to hold them without being narrowed at the corners. */}
+        <span className="text-[13px] font-semibold leading-tight">{item.label}</span>
         {item.membersOnly && (
           <span className="util-label text-carz">{EXPLORE_COPY.membersBadge}</span>
         )}
