@@ -46,9 +46,9 @@ export const SCAN_MODE_META: Record<
 > = {
   fast: {
     name: "Lightning",
-    tagline: "Instant · a little less accurate",
+    tagline: "Instant · for more basic cars",
     detail:
-      "One look at the photo and an answer straight back. Right on almost every car you'll point it at; the ones it can miss are near-identical trims and lookalike generations.",
+      "One look at the photo and an answer straight back. Made for the everyday cars you'll point it at most — near-identical trims and lookalike generations are what PRO is for.",
     premium: false,
   },
   precise: {
