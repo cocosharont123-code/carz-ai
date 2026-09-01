@@ -15,6 +15,7 @@ const LEFT_NAV = [
   { href: "/pricing", label: "Carz+", accent: true },
 ];
 const RIGHT_NAV = [
+  { href: "/explore", label: "Explore" },
   { href: "/spot", label: "Spot" },
   { href: "/drops", label: "Drops" },
   { href: "/feed", label: "Feed" },
