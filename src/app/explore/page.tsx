@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
-import { SiteHeader } from "@/components/site-header";
 import { PageMasthead } from "@/components/ui/editorial";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,6 +14,12 @@ import {
 
 /**
  * The front door: the whole app on one screen as a grid of bubbles.
+ *
+ * This is where the app opens, so it carries no site header. The bubbles are
+ * the navigation — a menu bar above them would be a second, smaller copy of
+ * the same thing, and the hamburger is the exact gesture this page exists to
+ * make unnecessary. Every page a bubble leads to still has the header, with an
+ * Explore link in it to come back.
  *
  * One page, no sections — the point is to take it all in at a glance rather
  * than read down a list, so everything is the same size and nothing is filed
@@ -67,8 +72,15 @@ export default function ExplorePage() {
 
   return (
     <>
-      <SiteHeader />
-      <main className="mx-auto w-full max-w-3xl px-5 py-10">
+      {/* The wordmark alone, in place of the header: the app should still say
+          whose front door this is, without putting a menu back on it. */}
+      <div className="flex justify-center px-5 pt-8">
+        <Link href="/explore" className="press flex items-center">
+          <span className="wordmark whitespace-nowrap text-2xl leading-none">Carz AI</span>
+        </Link>
+      </div>
+
+      <main className="mx-auto w-full max-w-3xl px-5 pb-10 pt-6">
         <PageMasthead title={EXPLORE_COPY.title} eyebrow={EXPLORE_COPY.eyebrow} />
         <p className="mt-3 max-w-prose text-[13px] leading-relaxed opacity-60">
           {EXPLORE_COPY.subtitle}
