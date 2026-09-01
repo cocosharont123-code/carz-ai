@@ -30,3 +30,32 @@ export function effectiveScanMode(
   const wanted = isScanMode(cookieValue) ? cookieValue : DEFAULT_SCAN_MODE;
   return wanted === "precise" && !isMember ? "fast" : wanted;
 }
+
+/**
+ * What the two modes are called and what they promise.
+ *
+ * Kept here rather than in either page because both the spotter's picker and
+ * the settings screen show the same two choices — if the names lived in one of
+ * them, the other would eventually disagree with it about what the app offers.
+ * Strings only: this module is imported by API routes, and icons belong to
+ * whichever page is drawing them.
+ */
+export const SCAN_MODE_META: Record<
+  ScanMode,
+  { name: string; tagline: string; detail: string; premium: boolean }
+> = {
+  fast: {
+    name: "Lightning",
+    tagline: "Instant · a little less accurate",
+    detail:
+      "One look at the photo and an answer straight back. Right on almost every car you'll point it at; the ones it can miss are near-identical trims and lookalike generations.",
+    premium: false,
+  },
+  precise: {
+    name: "PRO",
+    tagline: "A little slower · almost 100% accurate",
+    detail:
+      "Runs a second independent look, magnifies the one detail that decides it — a badge, a taillight's internals — and brings in a third opinion to settle any disagreement. This is what catches the cars Lightning gets wrong.",
+    premium: true,
+  },
+};

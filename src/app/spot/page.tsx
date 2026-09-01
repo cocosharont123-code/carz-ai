@@ -11,9 +11,11 @@ import { Input } from "@/components/ui/input";
 import { useImageUpload } from "@/components/hooks/use-image-upload";
 import { CarHotspotsMap } from "@/components/car-hotspots-map";
 import { CarCustomizer } from "@/components/car-customizer";
+import { ScanModePicker } from "@/components/scan-mode-picker";
 import { VinPanel } from "@/components/vin-panel";
 import { addToGarage } from "@/lib/garage-local";
 import { normalizeVin, type VinFacts } from "@/lib/vin";
+import { SCAN_MODE_META, type ScanMode } from "@/lib/scan-mode";
 import { cn } from "@/lib/utils";
 import type { CarReport } from "@/lib/identify";
 
@@ -488,6 +490,9 @@ export default function SpotPage() {
   const [mode, setMode] = useState<SpotMode>("photo");
   const [vinInput, setVinInput] = useState("");
   const [vinResult, setVinResult] = useState<VinResult | null>(null);
+  // Mirrored from the picker purely so the loader can say which mode is
+  // running — PRO is the slower one, and the wait makes more sense named.
+  const [scanMode, setScanMode] = useState<ScanMode>("fast");
 
   const {
     previewUrl,
@@ -918,6 +923,11 @@ export default function SpotPage() {
             />
           )}
 
+          {/* Only on the photo tab: a VIN read is a transcription, and the two
+              modes are about how hard to look at a car's bodywork. Showing a
+              control here that the VIN pipeline ignores would be a lie. */}
+          {!isVin && !loading && <ScanModePicker onModeChange={setScanMode} />}
+
           {loading ? (
             <ScanningButton
               progress={scanProgress}
@@ -925,7 +935,9 @@ export default function SpotPage() {
               hint={
                 isVin
                   ? "Reading seventeen characters and checking them against the VIN's own checksum"
-                  : "Reading badges, lights and body lines — this takes a few seconds"
+                  : scanMode === "precise"
+                    ? `${SCAN_MODE_META.precise.name} scan — a second look, a magnified detail, and a tiebreak`
+                    : "Reading badges, lights and body lines — this takes a few seconds"
               }
             />
           ) : !car ? (
