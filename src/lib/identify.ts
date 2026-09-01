@@ -19,6 +19,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import sharp from "sharp";
 import type { ScanMode } from "./scan-mode";
+import { normalizeVin, checkDigitPasses } from "./vin";
 
 export type CarReport = {
   isCar: boolean;
@@ -832,4 +833,256 @@ function normalize(input: Partial<CarReport>): CarReport {
     crossChecked: false,
     crossCheckNote: "",
   };
+}
+
+// --- VIN ---------------------------------------------------------------------
+//
+// Reading a VIN is a different problem from identifying a car. There is no
+// shape to recognise and nothing to reason about — there are seventeen stamped
+// characters, and the entire task is transcribing them without a single slip,
+// because one wrong character is a different vehicle.
+//
+// Two things make that reliable. The plate is tiny in a phone photo, so the
+// first pass boxes it and a second pass reads a magnified crop of just that box
+// — the same trick that reads badges, and it matters far more here. And the
+// answer is checkable: position 9 is a checksum over the other sixteen, so a
+// read either verifies arithmetically or it doesn't, and the passes stop as
+// soon as one does.
+
+export type VinRead = {
+  found: boolean;
+  vin: string;
+  /** Where on the car it was read — dash plate, door jamb, engine bay, paperwork. */
+  surface: string;
+  legibility: "high" | "medium" | "low";
+  notes: string;
+  /** True when the returned VIN's own check digit computes. */
+  verified: boolean;
+};
+
+const VIN_PROPS = {
+  found: {
+    type: "boolean",
+    description: "True only if you can actually see VIN characters in this image.",
+  },
+  vin: {
+    type: "string",
+    description:
+      "The 17 characters exactly as stamped, left to right, no spaces or punctuation. Empty string if you cannot see a VIN at all.",
+  },
+  surface: {
+    type: "string",
+    description:
+      "Where it is written: 'dashboard plate through the windscreen', 'driver door jamb sticker', 'engine bay stamp', 'chassis stamp', 'registration document', etc.",
+  },
+  legibility: {
+    type: "string",
+    enum: ["high", "medium", "low"],
+    description:
+      "high = every character is crisply readable. medium = readable but some characters are soft. low = you are partly guessing.",
+  },
+  notes: {
+    type: "string",
+    description:
+      "Which character positions, if any, you are unsure of and what they might otherwise be. '' if the read is clean.",
+  },
+} as const;
+
+const VIN_LOCATE_SCHEMA = objSchema({
+  ...VIN_PROPS,
+  zoomRegion: {
+    ...objSchema({
+      x: { type: "number", description: "Left edge, 0-1 across the width." },
+      y: { type: "number", description: "Top edge, 0-1 down the height." },
+      w: { type: "number", description: "Width as a fraction of the image width." },
+      h: { type: "number", description: "Height as a fraction of the image height." },
+    }),
+    description:
+      "A tight box around the VIN characters themselves — the plate or sticker, not the whole dashboard or door. It will be cropped and enlarged to read the characters properly.",
+  },
+});
+
+const VIN_READ_SCHEMA = objSchema(VIN_PROPS);
+
+// The alphabet rule is the single most useful thing to tell the model: a VIN
+// physically cannot contain I, O or Q, so those readings are always something
+// else and it should say which.
+const VIN_RULES =
+  " A VIN is exactly 17 characters and NEVER contains the letters I, O or Q — if a character looks like one of those it is a 1 or a 0. Transcribe what is stamped, character by character; do not tidy it up, do not skip a character, and do not pad it out to 17 if you can only see fewer. If part of it is out of frame or unreadable, say so in notes rather than inventing the missing characters.";
+
+const VIN_LOCATE_PROMPT =
+  "Find the Vehicle Identification Number in this photo and transcribe it. It is usually on a small plate at the base of the windscreen on the driver's side, on a sticker in the driver's door jamb, stamped in the engine bay or on the chassis, or printed on registration paperwork." +
+  VIN_RULES +
+  " Then set zoomRegion tightly around the characters so they can be magnified and checked." +
+  NO_MARKUP;
+
+const VIN_ZOOM_PROMPT =
+  "This is a magnified crop of a VIN plate. Read the 17 characters off it, one at a time, left to right." +
+  VIN_RULES +
+  " The crop has been enlarged so it is soft by nature — read the stamped characters, not the upscaling blur." +
+  NO_MARKUP;
+
+/**
+ * Read the VIN out of a photo.
+ *
+ * The wide pass locates and transcribes; if what it returns doesn't verify
+ * against its own check digit, the flagged region is cropped, enlarged and read
+ * again. A verified read wins outright — it is the only outcome that is
+ * self-proving — and past that a 17-character zoom read beats a wide one,
+ * because the zoom is looking at characters the wide pass saw as a smudge.
+ */
+export async function readVin(mediaType: string, base64Data: string): Promise<VinRead> {
+  const image: ImageRef = { mediaType, base64Data };
+
+  const wide = await ask<VinRead & { zoomRegion?: Region }>({
+    images: [image],
+    model: LOOK_MODEL,
+    prompt: VIN_LOCATE_PROMPT,
+    schema: VIN_LOCATE_SCHEMA,
+    maxTokens: 3000,
+    // Transcription, not deliberation. The accuracy here comes from magnifying
+    // the plate, not from thinking longer about a blurry one.
+    effort: "medium",
+  });
+
+  const wideRead = settle(wide);
+  if (wideRead.verified) return wideRead;
+
+  // Worth a crop even when the wide pass saw nothing: a VIN it missed entirely
+  // is usually one that was too small to register, and there is no region to
+  // crop to in that case, so this simply falls through.
+  const crop = await cropRegion(image, wide.zoomRegion);
+  if (!crop) return wideRead;
+
+  let zoomRead: VinRead;
+  try {
+    zoomRead = settle(
+      await ask<VinRead>({
+        images: [crop],
+        model: LOOK_MODEL,
+        prompt: VIN_ZOOM_PROMPT,
+        schema: VIN_READ_SCHEMA,
+        maxTokens: 3000,
+        effort: "medium",
+      }),
+    );
+  } catch (e) {
+    console.warn("VIN zoom pass failed:", e);
+    return wideRead;
+  }
+
+  if (zoomRead.verified) return zoomRead;
+  // Neither verifies. Prefer whichever actually produced 17 characters, and the
+  // magnified one when both did.
+  if (zoomRead.vin.length === 17) return zoomRead;
+  if (wideRead.vin.length === 17) return wideRead;
+  return zoomRead.vin.length >= wideRead.vin.length ? zoomRead : wideRead;
+}
+
+/** Normalise the model's raw transcription and mark whether it proves itself. */
+function settle(raw: Partial<VinRead>): VinRead {
+  const vin = normalizeVin(raw.vin ?? "");
+  return {
+    found: !!raw.found && vin.length > 0,
+    vin,
+    surface: raw.surface ?? "",
+    legibility: (raw.legibility as VinRead["legibility"]) ?? "low",
+    notes: raw.notes ?? "",
+    verified: checkDigitPasses(vin),
+  };
+}
+
+// What the VIN itself has already settled. The model is handed these rather
+// than asked for them, so it can't overwrite arithmetic with a hunch.
+export type VinKnown = {
+  vin: string;
+  manufacturer: string;
+  country: string;
+  modelYear: number | null;
+  /** vPIC's answer, when it had one — treated as ground truth, not a suggestion. */
+  registry?: {
+    make: string;
+    model: string;
+    modelYear: string;
+    series: string;
+    trim: string;
+    bodyClass: string;
+    driveType: string;
+    engine: string;
+  } | null;
+};
+
+const VIN_DECODE_SCHEMA = objSchema({
+  ...IDENTITY_PROPS,
+  isCar: { type: "boolean", description: "True unless this VIN belongs to something that isn't a car." },
+  bodyStyle: { type: "string" },
+  confidence: { type: "string", enum: ["high", "medium", "low"] },
+  notes: {
+    type: "string",
+    description:
+      "One short sentence on what the VIN could and couldn't pin down — trim especially. '' if nothing is worth caveating.",
+  },
+});
+
+const VIN_DECODE_PROMPT =
+  "Identify the exact vehicle this VIN belongs to. Characters 4 to 8 are the manufacturer's own vehicle descriptor section — decode them using what you know of that manufacturer's scheme for that era. " +
+  "The manufacturer, country and model year below were computed from the VIN arithmetically and are not in question: never contradict them, and never name a model the stated manufacturer does not build. " +
+  "Where an authoritative registry decode is given, treat its make, model and year as correct and add only what it left out. " +
+  "Set trimGuess only if the descriptor section genuinely encodes it — a VIN often does not, and '' is the honest answer. " +
+  "Set confidence on how specifically the VIN identifies the car: 'high' when the descriptor section pins the model, 'low' when you are reasoning from the manufacturer and year alone." +
+  NO_MARKUP;
+
+/**
+ * Turn a decoded VIN into a car.
+ *
+ * No image is involved: by this point the VIN has been read and verified, and
+ * naming the vehicle is recall over the manufacturer's descriptor scheme. The
+ * arithmetic facts and the registry lookup are passed in as settled, so this
+ * pass fills the gaps between them rather than re-deriving what is already known.
+ */
+export async function decodeVinToCar(known: VinKnown): Promise<CarReport> {
+  const r = known.registry;
+  const facts = [
+    `VIN: ${known.vin}`,
+    known.manufacturer && `Manufacturer (from the WMI): ${known.manufacturer}`,
+    known.country && `Assembled in: ${known.country}`,
+    known.modelYear && `Model year (from position 10): ${known.modelYear}`,
+    r && `Registry decode — make: ${r.make || "?"}, model: ${r.model || "?"}, year: ${r.modelYear || "?"}, series: ${r.series || "?"}, trim: ${r.trim || "?"}, body: ${r.bodyClass || "?"}, drive: ${r.driveType || "?"}, engine: ${r.engine || "?"}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const out = await ask<Partial<CarReport>>({
+    images: [],
+    prompt: `${VIN_DECODE_PROMPT}\n\n${facts}`,
+    schema: VIN_DECODE_SCHEMA,
+    model: SPECS_MODEL,
+    maxTokens: 3000,
+    effort: "low",
+    think: false,
+  });
+
+  const car = normalize({ ...out, isCar: out.isCar !== false });
+
+  // The registry and the arithmetic outrank the model on the fields they cover,
+  // whatever it wrote. Applied after normalisation so an empty registry field
+  // can't blank out an answer the model did have.
+  if (r?.make) car.make = r.make;
+  if (r?.model) car.model = r.model;
+  if (r?.trim && !car.trimGuess) car.trimGuess = r.trim;
+  if (r?.bodyClass && !car.bodyStyle) car.bodyStyle = r.bodyClass;
+  const year = r?.modelYear || (known.modelYear ? String(known.modelYear) : "");
+  if (year) car.yearRange = year;
+  if (!car.make && known.manufacturer) car.make = known.manufacturer;
+
+  // Evidence, for the same reason a photo scan shows its working: it should be
+  // visible that this came off the plate rather than out of a guess.
+  car.visualEvidence = [
+    `VIN ${known.vin} read off the vehicle`,
+    known.manufacturer && `Characters 1-3 (${known.vin.slice(0, 3)}) are ${known.manufacturer}`,
+    known.modelYear && `Character 10 (${known.vin[9]}) is model year ${known.modelYear}`,
+    r?.make ? "Confirmed against the NHTSA vPIC registry" : "",
+  ].filter((s): s is string => !!s);
+
+  return car;
 }
