@@ -7,7 +7,7 @@ import { Gauge, Crosshair, Lock, TriangleAlert } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { Button, PageMasthead, Skeleton, Spinner } from "@/components/ui/editorial";
 import { cn } from "@/lib/utils";
-import type { ScanMode } from "@/lib/scan-mode";
+import { SCAN_MODE_META, type ScanMode } from "@/lib/scan-mode";
 
 type Settings = {
   member: boolean;
@@ -15,32 +15,11 @@ type Settings = {
   effectiveScanMode: ScanMode;
 };
 
-const MODES: {
-  id: ScanMode;
-  name: string;
-  tagline: string;
-  detail: string;
-  premium: boolean;
-  Icon: typeof Gauge;
-}[] = [
-  {
-    id: "fast",
-    name: "Fast",
-    tagline: "Super fast · a little less accurate",
-    detail:
-      "One look at the photo and an answer straight back. Right on almost every car you'll point it at; the ones it can miss are near-identical trims and lookalike generations.",
-    premium: false,
-    Icon: Gauge,
-  },
-  {
-    id: "precise",
-    name: "Precise",
-    tagline: "A little slower · near-perfect accuracy",
-    detail:
-      "Runs a second independent look, magnifies the one detail that decides it — a badge, a taillight's internals — and brings in a third opinion to settle any disagreement. This is what catches the cars Fast gets wrong.",
-    premium: true,
-    Icon: Crosshair,
-  },
+// Names and copy come from the shared meta so this screen and the picker on
+// /spot always describe the same two modes. Only the icon is chosen here.
+const MODES: ({ id: ScanMode; Icon: typeof Gauge } & (typeof SCAN_MODE_META)[ScanMode])[] = [
+  { id: "fast", ...SCAN_MODE_META.fast, Icon: Gauge },
+  { id: "precise", ...SCAN_MODE_META.precise, Icon: Crosshair },
 ];
 
 function ScanModeCard({
@@ -278,7 +257,7 @@ export default function SettingsPage() {
                       href="/pricing"
                       className="mt-2 flex items-center justify-between rounded-xl border border-carz/30 bg-carz/[0.06] px-4 py-2.5 text-[13px] font-semibold transition hover:border-carz/60 hover:bg-carz/[0.1]"
                     >
-                      <span>Get Carz+ to unlock Precise scanning</span>
+                      <span>Get Carz+ to unlock {SCAN_MODE_META.precise.name} scanning</span>
                       <span className="text-carz">$9.99/mo →</span>
                     </Link>
                   </div>

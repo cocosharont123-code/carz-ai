@@ -5,6 +5,7 @@ import { getProfile, isActiveMember } from "@/lib/profile-blob";
 import {
   SCAN_MODE_COOKIE,
   DEFAULT_SCAN_MODE,
+  SCAN_MODE_META,
   isScanMode,
   effectiveScanMode,
 } from "@/lib/scan-mode";
@@ -50,7 +51,9 @@ export async function POST(req: Request) {
   // the page that sets it.
   if (body.scanMode === "precise" && !member) {
     return NextResponse.json(
-      { ok: false, error: "Precise scanning is a Carz+ feature.", member: false },
+      // Named from the shared meta: this string is shown to the spotter by
+      // the picker on /spot, so it has to match what the button says.
+      { ok: false, error: `${SCAN_MODE_META.precise.name} scanning is a Carz+ feature.`, member: false },
       { status: 402 },
     );
   }
