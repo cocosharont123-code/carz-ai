@@ -6,46 +6,39 @@ import * as THREE from "three";
 /**
  * The neon background, drawn full-screen behind every page.
  *
- * It is an ambient effect, so it is deliberately not drawn as well or as often
- * as it could be. Four limits keep it off the main thread's back, and they
- * matter most on an iPhone, where scrolling used to make it stutter:
+ * It is a still image. Nothing animates it, and nothing is allowed to move it:
  *
- *  1. Device pixel ratio is capped. An iPhone reports 3, and a full-screen
- *     fragment shader at 3x is nine times the pixels of 1x — about three
- *     million per frame. This shader is soft bands with no fine detail, so 2x
- *     looks the same and costs less than half as much.
+ *  1. It renders exactly one frame. There is no animation loop at all, so
+ *     there is no per-frame GPU cost and nothing competing with a scroll.
  *
- *  2. It runs at ~30fps, not at the display's refresh rate. A ProMotion iPhone
- *     asks for 120, which for a gradient this slow is four frames of GPU work
- *     to show what one frame would.
+ *  2. The canvas is taller than the viewport and is never resized while you
+ *     scroll. This is the part that used to make the bands drift: iOS Safari
+ *     hides and shows the URL bar as you scroll, the viewport height changes
+ *     under it, and a canvas sized to 100% of that height gets stretched — so
+ *     the pattern slid with the bar. It now gets a fixed pixel size with the
+ *     bar's travel to spare at both ends, offset by half of that, so the bar
+ *     can come and go without the canvas changing size, moving, or leaving an
+ *     unpainted edge behind.
  *
- *  3. The animation advances on elapsed time rather than per frame. It used to
- *     add a fixed step per frame, so it genuinely ran twice as fast on a 120Hz
- *     phone as on a 60Hz one — and would have changed speed again under the
- *     frame cap above.
- *
- *  4. Height-only resizes are ignored. This is the one that made scrolling
- *     stutter: iOS Safari hides and shows the URL bar as you scroll, which
- *     fires `resize`, and reallocating the drawing buffer mid-scroll is one of
- *     the most expensive things a page can do. The canvas is a fixed
- *     full-bleed gradient, so letting it stretch by the height of the URL bar
- *     is invisible; rebuilding it is not.
+ * The buffer is only rebuilt for a real layout change — a rotation, or a
+ * desktop window actually being resized — which is why the height threshold
+ * has to be bigger than a URL bar.
  */
 
-// An iPhone's 3 buys nothing here and costs 2.25x the fragment work of 2.
+// An iPhone reports 3, which for soft bands with no fine detail buys nothing
+// and costs 2.25x the fragment work of 2.
 const MAX_PIXEL_RATIO = 2;
 
-// Roughly 30fps. The bands drift slowly enough that more is spent, not seen.
-const FRAME_MS = 1000 / 30;
+// Spare height above and below the viewport. iOS's URL bar is around 60-90px,
+// so this covers it coming and going without the canvas ever being touched.
+const VIEWPORT_SLOP = 160;
 
-// How far the pattern advances per second. Matches the previous look at 60fps
-// (0.01 per frame) now that it no longer depends on the frame rate.
-const TIME_PER_SECOND = 0.6;
+// How far the bands stray from the centre line. Lower keeps them gathered
+// around the middle of the screen instead of sweeping out to the edges.
+const Y_SCALE = 0.25;
 
-// iOS shows/hides a URL bar around 60-90px tall. A height change bigger than
-// this is a real layout change — a rotation, or a resized desktop window — and
-// does need the buffer rebuilt.
-const URL_BAR_SLOP = 120;
+// Which moment of the — no longer running — animation to freeze on.
+const FROZEN_TIME = 0;
 
 type Uniforms = {
   resolution: { value: [number, number] };
@@ -103,9 +96,9 @@ export function WebGLShader() {
 
     const uniforms: Uniforms = {
       resolution: { value: [window.innerWidth, window.innerHeight] },
-      time: { value: 0 },
+      time: { value: FROZEN_TIME },
       xScale: { value: 1.0 },
-      yScale: { value: 0.5 },
+      yScale: { value: Y_SCALE },
       distortion: { value: 0.05 },
     };
 
@@ -134,71 +127,36 @@ export function WebGLShader() {
     let lastWidth = 0;
     let lastHeight = 0;
 
-    const resize = () => {
+    const layout = () => {
       const width = window.innerWidth;
       const height = window.innerHeight;
-      // The expensive part. Skip it for the URL bar sliding in and out.
-      if (width === lastWidth && Math.abs(height - lastHeight) < URL_BAR_SLOP) return;
+      // A URL bar sliding in or out is not a layout change. Ignoring it is what
+      // keeps the bands still: the canvas is not resized, not repainted, and
+      // above all not moved.
+      if (width === lastWidth && Math.abs(height - lastHeight) < VIEWPORT_SLOP) return;
       lastWidth = width;
       lastHeight = height;
-      renderer.setSize(width, height, false);
-      uniforms.resolution.value = [width, height];
-      // With the loop stopped — reduced motion, or a backgrounded tab — nothing
-      // else will repaint, and the old frame would sit there stretched.
-      if (frameId === null) draw();
+
+      // Overshoot the viewport at both ends and pull it up by half, so the
+      // canvas stays centred on the screen and the URL bar's travel is already
+      // painted in either direction.
+      const drawHeight = height + VIEWPORT_SLOP * 2;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${drawHeight}px`;
+      canvas.style.top = `${-VIEWPORT_SLOP}px`;
+
+      renderer.setSize(width, drawHeight, false);
+      uniforms.resolution.value = [width, drawHeight];
+      renderer.render(scene, camera);
     };
 
-    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)");
-
-    let frameId: number | null = null;
-    let lastFrame = 0;
-    let lastTick = 0;
-
-    const draw = () => renderer.render(scene, camera);
-
-    const animate = (now: number) => {
-      frameId = requestAnimationFrame(animate);
-      if (now - lastFrame < FRAME_MS) return;
-      // Advance by real elapsed time, so the drift is the same speed on a
-      // 60Hz screen, a 120Hz one, and under the frame cap.
-      const elapsed = lastTick ? (now - lastTick) / 1000 : 0;
-      lastTick = now;
-      lastFrame = now;
-      uniforms.time.value += Math.min(elapsed, 0.1) * TIME_PER_SECOND;
-      draw();
-    };
-
-    const start = () => {
-      if (frameId !== null) return;
-      // A fresh timestamp, or the first frame back would jump by however long
-      // the page spent in the background.
-      lastTick = 0;
-      frameId = requestAnimationFrame(animate);
-    };
-
-    const stop = () => {
-      if (frameId === null) return;
-      cancelAnimationFrame(frameId);
-      frameId = null;
-    };
-
-    // Nothing to animate when the page isn't on screen. Coming back must not
-    // start a loop that reduced motion asked us never to run.
-    const onVisibility = () => {
-      if (document.hidden) stop();
-      else if (!reducedMotion?.matches) start();
-    };
-
-    resize(); // sizes the buffer, and paints the first frame
-    if (!reducedMotion?.matches) start();
-
-    window.addEventListener("resize", resize);
-    document.addEventListener("visibilitychange", onVisibility);
+    layout();
+    // Only fires for a rotation or a real window resize; `layout` discards
+    // everything smaller than that itself.
+    window.addEventListener("resize", layout);
 
     return () => {
-      stop();
-      window.removeEventListener("resize", resize);
-      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("resize", layout);
       scene.remove(mesh);
       geometry.dispose();
       material.dispose();
@@ -206,5 +164,7 @@ export function WebGLShader() {
     };
   }, []);
 
-  return <canvas ref={canvasRef} className="absolute inset-0 block h-full w-full" />;
+  // Sized and positioned entirely from the effect: a CSS height of 100% would
+  // track the viewport, which is the thing being avoided.
+  return <canvas ref={canvasRef} className="absolute left-0 block" />;
 }
