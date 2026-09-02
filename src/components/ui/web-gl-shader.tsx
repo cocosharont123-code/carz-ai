@@ -6,39 +6,46 @@ import * as THREE from "three";
 /**
  * The neon background, drawn full-screen behind every page.
  *
- * It is a still image. Nothing animates it, and nothing is allowed to move it:
+ * The bands wave, and waving is the only motion they are allowed. Two
+ * different things used to move them on top of that, and both are dealt with
+ * separately from the animation:
  *
- *  1. It renders exactly one frame. There is no animation loop at all, so
- *     there is no per-frame GPU cost and nothing competing with a scroll.
+ *  1. The viewport. This is what showed up as drifting while you scrolled:
+ *     iOS Safari hides and shows the URL bar as you scroll, the viewport
+ *     height changes under it, and a canvas sized to 100% of that height gets
+ *     stretched — so the whole pattern slid with the bar. The canvas now takes
+ *     a fixed pixel size with the bar's travel to spare at both ends, offset
+ *     by half of it, so the bar can come and go without the canvas changing
+ *     size, moving, or leaving an unpainted edge. It is rebuilt only for a
+ *     rotation or a real window resize.
  *
- *  2. The canvas is taller than the viewport and is never resized while you
- *     scroll. This is the part that used to make the bands drift: iOS Safari
- *     hides and shows the URL bar as you scroll, the viewport height changes
- *     under it, and a canvas sized to 100% of that height gets stretched — so
- *     the pattern slid with the bar. It now gets a fixed pixel size with the
- *     bar's travel to spare at both ends, offset by half of that, so the bar
- *     can come and go without the canvas changing size, moving, or leaving an
- *     unpainted edge behind.
+ *  2. The frame rate. The wave used to advance a fixed step per frame, so it
+ *     genuinely ran twice as fast on a 120Hz phone as on a 60Hz one. It moves
+ *     on elapsed time now, so the wave is the same speed everywhere.
  *
- * The buffer is only rebuilt for a real layout change — a rotation, or a
- * desktop window actually being resized — which is why the height threshold
- * has to be bigger than a URL bar.
+ * What is left is deliberately cheap: half the pixels an iPhone would ask for,
+ * a third of the frames, and nothing at all while the tab is in the background.
  */
 
 // An iPhone reports 3, which for soft bands with no fine detail buys nothing
 // and costs 2.25x the fragment work of 2.
 const MAX_PIXEL_RATIO = 2;
 
+// Roughly 30fps. The wave rolls slowly enough that more is spent, not seen.
+const FRAME_MS = 1000 / 30;
+
+// How far the wave travels per second. Matches the original look, which
+// advanced 0.01 per frame at 60fps.
+const TIME_PER_SECOND = 0.6;
+
 // Spare height above and below the viewport. iOS's URL bar is around 60-90px,
 // so this covers it coming and going without the canvas ever being touched.
 const VIEWPORT_SLOP = 160;
 
-// How far the bands stray from the centre line. Lower keeps them gathered
-// around the middle of the screen instead of sweeping out to the edges.
-const Y_SCALE = 0.25;
-
-// Which moment of the — no longer running — animation to freeze on.
-const FROZEN_TIME = 0;
+// Wave height. This is the waviness: at 0.25 the bands were nearly flat, and
+// the original 0.5 threw them out to the top and bottom edges. This keeps a
+// full wave while staying gathered around the middle of the screen.
+const Y_SCALE = 0.45;
 
 type Uniforms = {
   resolution: { value: [number, number] };
@@ -96,7 +103,7 @@ export function WebGLShader() {
 
     const uniforms: Uniforms = {
       resolution: { value: [window.innerWidth, window.innerHeight] },
-      time: { value: FROZEN_TIME },
+      time: { value: 0 },
       xScale: { value: 1.0 },
       yScale: { value: Y_SCALE },
       distortion: { value: 0.05 },
@@ -124,6 +131,8 @@ export function WebGLShader() {
     const mesh = new THREE.Mesh(geometry, material);
     scene.add(mesh);
 
+    const draw = () => renderer.render(scene, camera);
+
     let lastWidth = 0;
     let lastHeight = 0;
 
@@ -131,8 +140,8 @@ export function WebGLShader() {
       const width = window.innerWidth;
       const height = window.innerHeight;
       // A URL bar sliding in or out is not a layout change. Ignoring it is what
-      // keeps the bands still: the canvas is not resized, not repainted, and
-      // above all not moved.
+      // keeps the pattern anchored: the canvas is not resized and not moved, so
+      // the wave carries on waving exactly where it was.
       if (width === lastWidth && Math.abs(height - lastHeight) < VIEWPORT_SLOP) return;
       lastWidth = width;
       lastHeight = height;
@@ -147,16 +156,58 @@ export function WebGLShader() {
 
       renderer.setSize(width, drawHeight, false);
       uniforms.resolution.value = [width, drawHeight];
-      renderer.render(scene, camera);
+      draw();
     };
 
-    layout();
-    // Only fires for a rotation or a real window resize; `layout` discards
-    // everything smaller than that itself.
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+
+    let frameId: number | null = null;
+    let lastFrame = 0;
+    let lastTick = 0;
+
+    const animate = (now: number) => {
+      frameId = requestAnimationFrame(animate);
+      if (now - lastFrame < FRAME_MS) return;
+      // Advance by real elapsed time, so the wave rolls at one speed on a 60Hz
+      // screen, a 120Hz one, and under the frame cap.
+      const elapsed = lastTick ? (now - lastTick) / 1000 : 0;
+      lastTick = now;
+      lastFrame = now;
+      uniforms.time.value += Math.min(elapsed, 0.1) * TIME_PER_SECOND;
+      draw();
+    };
+
+    const start = () => {
+      if (frameId !== null) return;
+      // A fresh timestamp, or the first frame back would jump the wave by
+      // however long the page spent in the background.
+      lastTick = 0;
+      frameId = requestAnimationFrame(animate);
+    };
+
+    const stop = () => {
+      if (frameId === null) return;
+      cancelAnimationFrame(frameId);
+      frameId = null;
+    };
+
+    // Nothing to animate when the page isn't on screen. Coming back must not
+    // start a loop that reduced motion asked us never to run.
+    const onVisibility = () => {
+      if (document.hidden) stop();
+      else if (!reducedMotion?.matches) start();
+    };
+
+    layout(); // sizes the canvas and paints the first frame
+    if (!reducedMotion?.matches) start();
+
     window.addEventListener("resize", layout);
+    document.addEventListener("visibilitychange", onVisibility);
 
     return () => {
+      stop();
       window.removeEventListener("resize", layout);
+      document.removeEventListener("visibilitychange", onVisibility);
       scene.remove(mesh);
       geometry.dispose();
       material.dispose();
