@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import {
   EXPLORE_BUBBLES,
   EXPLORE_COPY,
-  EXPLORE_LINKS,
   matchesExploreQuery,
   type ExploreItem,
 } from "@/config/explore";
@@ -21,11 +20,10 @@ import {
  * make unnecessary. Every page a bubble leads to still has the header, with an
  * Explore link in it to come back.
  *
- * Two rules keep it quick to read. Everything above the grid is one wordmark
- * and one line, because a stack of headings is space spent before anything is
- * tappable. And only features get a tile: the account and legal links sit
- * small at the bottom, since giving them a tile the size of "Spot" told people
- * they mattered equally.
+ * Everything above the grid is one wordmark and one line, because a stack of
+ * headings is space spent before anything is tappable. Below it there is
+ * nothing: account and legal reach the user through the header that every
+ * other page carries, so repeating them here only added a tail to scroll past.
  *
  * All copy lives in src/config/explore.ts.
  */
@@ -67,12 +65,6 @@ export default function ExplorePage() {
     () => EXPLORE_BUBBLES.filter((i) => matchesExploreQuery(i, query)),
     [query],
   );
-  // Filtered too, so typing "terms" still finds it even though it isn't a tile.
-  const links = useMemo(
-    () => EXPLORE_LINKS.filter((i) => matchesExploreQuery(i, query)),
-    [query],
-  );
-
   return (
     <main className="mx-auto w-full max-w-3xl px-5 pb-12 pt-10">
       {/* The wordmark alone, in place of the header: the app should still say
@@ -101,41 +93,16 @@ export default function ExplorePage() {
         />
       </div>
 
-      {bubbles.length === 0 && links.length === 0 ? (
+      {bubbles.length === 0 ? (
         <p className="mt-8 text-center text-[13px] opacity-60">{EXPLORE_COPY.empty}</p>
       ) : (
-        <>
-          {/* Two across on a phone keeps every tile a comfortable tap; three
-              once there is room, so the whole app still fits one screen. */}
-          {bubbles.length > 0 && (
-            <div className="mt-7 grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-3">
-              {bubbles.map((item) => (
-                <Bubble key={item.label} item={item} />
-              ))}
-            </div>
-          )}
-
-          {links.length > 0 && (
-            <nav className="mt-10 flex flex-wrap items-center justify-center gap-x-2 gap-y-3 border-t border-white/10 pt-6">
-              {links.map((item, i) => (
-                <span key={item.label} className="flex items-center gap-2">
-                  {/* A separator between links, never leading the row — which
-                      is why it hangs off the item rather than being emitted
-                      between them and needing a trailing-item special case. */}
-                  {i > 0 && <span aria-hidden className="opacity-25">·</span>}
-                  {/* py-2 px-3 rather than bare text: these are the smallest
-                      targets on the page and still have to be thumb-sized. */}
-                  <Link
-                    href={item.href}
-                    className="press util-label rounded-full px-3 py-2 opacity-60 transition-opacity hover:opacity-100"
-                  >
-                    {item.label}
-                  </Link>
-                </span>
-              ))}
-            </nav>
-          )}
-        </>
+        // Two across on a phone keeps every tile a comfortable tap; three once
+        // there is room, so the whole app still fits one screen.
+        <div className="mt-7 grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-3">
+          {bubbles.map((item) => (
+            <Bubble key={item.label} item={item} />
+          ))}
+        </div>
       )}
     </main>
   );

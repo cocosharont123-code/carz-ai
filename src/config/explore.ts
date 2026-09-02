@@ -17,12 +17,8 @@ import {
   Gavel,
   Images,
   KeyRound,
-  LogIn,
   ScanLine,
-  Settings,
-  ShieldCheck,
   Ticket,
-  User,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -107,38 +103,6 @@ export const EXPLORE_BUBBLES: ExploreItem[] = [
   },
 ];
 
-/**
- * Account and housekeeping. Split out of the grid because they were competing
- * with the features at exactly the same size, and nobody opens a car app to
- * read the terms — they belong at the bottom, small, where you go looking for
- * them on purpose. Still searchable, so typing "terms" finds them.
- */
-export const EXPLORE_LINKS: ExploreItem[] = [
-  {
-    label: "Profile",
-    description: "Your name, photo and spotting stats",
-    href: "/profile",
-    icon: User,
-  },
-  {
-    label: "Settings",
-    description: "Scan quality and account controls",
-    href: "/settings",
-    icon: Settings,
-  },
-  {
-    label: "Sign in",
-    description: "Sign in or create an account",
-    href: "/signin",
-    icon: LogIn,
-  },
-  {
-    label: "Terms",
-    description: "How Carz works and handles data",
-    href: "/terms",
-    icon: ShieldCheck,
-  },
-];
 
 /**
  * Matches a bubble against a typed query — label first, then description, so
