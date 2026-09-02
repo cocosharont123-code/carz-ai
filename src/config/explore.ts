@@ -49,8 +49,7 @@ export const EXPLORE_COPY = {
 } as const;
 
 /**
- * The whole app, in tap order: what people came to do first, then the rest,
- * then the account.
+ * The whole app, in the order the tiles are laid out.
  *
  * A paired bubble opens the feature it is named for first. Auctions & Wishlist
  * and Garage & Ranks land on pages where the other half is genuinely a tab, so
@@ -65,10 +64,10 @@ export const EXPLORE_BUBBLES: ExploreItem[] = [
     icon: ScanLine,
   },
   {
-    label: "Auctions & Wishlist",
-    description: "Bid live, save the cars you want",
-    href: "/auctions",
-    icon: Gavel,
+    label: "Feed",
+    description: "Watch car clips from everyone",
+    href: "/feed",
+    icon: Users,
   },
   {
     label: "Garage & Ranks",
@@ -92,20 +91,19 @@ export const EXPLORE_BUBBLES: ExploreItem[] = [
     membersOnly: true,
   },
   {
-    label: "Feed",
-    description: "Watch car clips from everyone",
-    href: "/feed",
-    icon: Users,
-  },
-  {
     label: "Sell a car",
     description: "Free listing, AI writes it for you",
     href: "/auctions/new",
     icon: KeyRound,
   },
+  {
+    label: "Auctions & Wishlist",
+    description: "Bid live, save the cars you want",
+    href: "/auctions",
+    icon: Gavel,
+  },
   // Last, because it is the one tile that sells something rather than doing
-  // something. Hunt used to be bolted onto it, which left the bounty board
-  // unreachable from here — a bubble can only lead one place.
+  // something.
   {
     label: "Carz+",
     description: "Everything membership unlocks",
