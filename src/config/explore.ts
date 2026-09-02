@@ -13,6 +13,7 @@
 //     listed, because there is nowhere to send someone.
 
 import {
+  Crosshair,
   Crown,
   Gavel,
   Images,
@@ -53,8 +54,8 @@ export const EXPLORE_COPY = {
  *
  * A paired bubble opens the feature it is named for first. Auctions & Wishlist
  * and Garage & Ranks land on pages where the other half is genuinely a tab, so
- * both are one tap away. Events & Drops and Carz+ & Hunt are pairs by theme
- * rather than by page, so those open Events and Carz+ respectively.
+ * both are one tap away. Events & Drops is a pair by theme rather than by page,
+ * so it opens Events.
  */
 export const EXPLORE_BUBBLES: ExploreItem[] = [
   {
@@ -84,10 +85,11 @@ export const EXPLORE_BUBBLES: ExploreItem[] = [
     membersOnly: true,
   },
   {
-    label: "Carz+ & Hunt",
-    description: "Membership perks and cash bounties",
-    href: "/pricing",
-    icon: Crown,
+    label: "Hunt",
+    description: "Find a wanted car, win the bounty",
+    href: "/hunt",
+    icon: Crosshair,
+    membersOnly: true,
   },
   {
     label: "Feed",
@@ -100,6 +102,15 @@ export const EXPLORE_BUBBLES: ExploreItem[] = [
     description: "Free listing, AI writes it for you",
     href: "/auctions/new",
     icon: KeyRound,
+  },
+  // Last, because it is the one tile that sells something rather than doing
+  // something. Hunt used to be bolted onto it, which left the bounty board
+  // unreachable from here — a bubble can only lead one place.
+  {
+    label: "Carz+",
+    description: "Everything membership unlocks",
+    href: "/pricing",
+    icon: Crown,
   },
 ];
 
