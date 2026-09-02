@@ -6,9 +6,8 @@ import * as THREE from "three";
 /**
  * The neon background, drawn full-screen behind every page.
  *
- * The bands wave, and waving is the only motion they are allowed — a slow
- * sideways drift, slow enough that a crest passing overhead reads as ambient
- * rather than as movement. Two different things used to move them on top of
+ * The bands wave, and waving is the only motion they are allowed — a sideways
+ * drift, and nothing else. Two different things used to move them on top of
  * that, and both are dealt with separately from the animation:
  *
  *  1. The viewport. This is what showed up as drifting while you scrolled:
@@ -25,23 +24,24 @@ import * as THREE from "three";
  *     on elapsed time now, so the wave is the same speed everywhere.
  *
  * What is left is deliberately cheap: half the pixels an iPhone would ask for,
- * a sixth of the frames a ProMotion screen would run, and nothing at all while
- * the tab is in the background.
+ * a quarter of the frames a ProMotion screen would run, and nothing at all
+ * while the tab is in the background.
  */
 
 // An iPhone reports 3, which for soft bands with no fine detail buys nothing
 // and costs 2.25x the fragment work of 2.
 const MAX_PIXEL_RATIO = 2;
 
-// Roughly 20fps. At the speed below the wave crosses about a pixel per frame,
-// so anything faster is spent rather than seen.
-const FRAME_MS = 1000 / 20;
+// Roughly 30fps. Back up from 20 along with the speed below: the wave now
+// crosses about two pixels per frame, which is where 20 would start to look
+// stepped rather than smooth.
+const FRAME_MS = 1000 / 30;
 
-// How far the wave travels per second — a fifth of what it was, so a full wave
-// takes the better part of a minute to pass rather than ten seconds. It still
-// travels sideways; it is just slow enough that the rise and fall as a crest
-// goes by reads as ambient rather than as something moving on the screen.
-const TIME_PER_SECOND = 0.12;
+// How far the wave travels per second. Half the original 0.6, which was fast
+// enough to read as something happening on the screen, and well clear of the
+// 0.12 that was slow enough to look stopped. A full wave passes in about
+// twenty seconds.
+const TIME_PER_SECOND = 0.3;
 
 // Spare height above and below the viewport. iOS's URL bar is around 60-90px,
 // so this covers it coming and going without the canvas ever being touched.
