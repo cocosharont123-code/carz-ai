@@ -62,8 +62,6 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
   const [access, setAccess] = useState<Access | null>(null);
   const [buying, setBuying] = useState(false);
   const [buyNotice, setBuyNotice] = useState("");
-  const [saved, setSaved] = useState(false);
-  const [saving, setSaving] = useState(false);
 
   const anyChange = !!bodyColor || !!rimColor || features.length > 0;
 
@@ -120,7 +118,6 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
     setNeedSignIn(false);
     setBusy(true);
     setResult(null);
-    setSaved(false);
     try {
       const src = await shrink(image);
       const res = await fetch("/api/customize", {
@@ -158,12 +155,12 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
 
   /**
    * Cache the render on this device under the server's history id, so Garage ->
-   * Builds can pair the synced config with a picture. Best-effort: the config is
-   * safe server-side either way, so a full localStorage quota only costs this
-   * device its thumbnail.
+   * Builds can pair the synced config with a picture. Best-effort and silent:
+   * the config is safe server-side either way, so a full localStorage quota
+   * only costs this device its thumbnail, and it is not worth telling anyone
+   * about while they are looking at the render they asked for.
    */
   async function cacheRender(image: string, historyId?: string | null) {
-    setSaving(true);
     try {
       const body = bodyOption(bodyColor);
       const rim = rimOption(rimColor);
@@ -180,11 +177,8 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
         rimHex: rim?.hex,
         features: featureLabels(features),
       });
-      setSaved(true);
     } catch {
       /* the render stays on screen regardless */
-    } finally {
-      setSaving(false);
     }
   }
 
@@ -336,21 +330,6 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={result} alt={`Customized ${car.make} ${car.model}`} className="w-full" />
           </div>
-          {/* Saving is automatic — the config lands in the member's history the
-              moment the render succeeds. */}
-          <p className="mt-2 flex items-center justify-center gap-2 text-center text-xs opacity-70">
-            {saving && <Spinner className="h-3 w-3" />}
-            {saving ? (
-              "Saving to your builds…"
-            ) : saved ? (
-              <>
-                Saved to your builds ·{" "}
-                <Link href="/garage/builds" className="underline hover:opacity-100">
-                  View
-                </Link>
-              </>
-            ) : null}
-          </p>
           <div className="mt-2 flex gap-2">
             <a
               href={result}
