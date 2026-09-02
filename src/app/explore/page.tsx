@@ -41,7 +41,9 @@ function Bubble({ item }: { item: ExploreItem }) {
         // A squircle, not a circle: the same app-icon shape the phone's own
         // home screen uses. It also gives the label its corners back, which a
         // circle spends on empty space.
-        className="press glass-card flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-3xl p-4 text-center"
+        // 4:3 rather than square — full width, but shorter, so more of the grid
+        // lands above the fold without any tile getting narrower.
+        className="press glass-card flex aspect-[4/3] w-full flex-col items-center justify-center gap-1.5 rounded-3xl p-3 text-center"
       >
         <Icon className="h-6 w-6 shrink-0" strokeWidth={1.75} aria-hidden />
         {/* Long pairings like "Auctions & Wishlist" still wrap, but a squircle
