@@ -41,9 +41,9 @@ export type ExploreItem = {
 };
 
 export const EXPLORE_COPY = {
-  eyebrow: "Everything in Carz",
-  title: "Explore",
-  subtitle: "Tap anything to jump straight in.",
+  /** One line under the wordmark. An eyebrow, a title and a subtitle all said
+   *  the same thing and pushed the first tappable thing off the screen. */
+  tagline: "Everything in Carz — tap anything to jump in.",
   searchPlaceholder: "Search: spot, auctions, garage…",
   searchLabel: "Search features",
   empty: "Nothing matches. Try “spot” or “auctions”.",
@@ -105,6 +105,15 @@ export const EXPLORE_BUBBLES: ExploreItem[] = [
     href: "/auctions/new",
     icon: KeyRound,
   },
+];
+
+/**
+ * Account and housekeeping. Split out of the grid because they were competing
+ * with the features at exactly the same size, and nobody opens a car app to
+ * read the terms — they belong at the bottom, small, where you go looking for
+ * them on purpose. Still searchable, so typing "terms" finds them.
+ */
+export const EXPLORE_LINKS: ExploreItem[] = [
   {
     label: "Profile",
     description: "Your name, photo and spotting stats",

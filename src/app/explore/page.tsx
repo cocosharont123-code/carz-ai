@@ -3,17 +3,17 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
-import { PageMasthead } from "@/components/ui/editorial";
 import { Input } from "@/components/ui/input";
 import {
   EXPLORE_BUBBLES,
   EXPLORE_COPY,
+  EXPLORE_LINKS,
   matchesExploreQuery,
   type ExploreItem,
 } from "@/config/explore";
 
 /**
- * The front door: the whole app on one screen as a grid of bubbles.
+ * The front door: the whole app on one screen as a grid of squircles.
  *
  * This is where the app opens, so it carries no site header. The bubbles are
  * the navigation — a menu bar above them would be a second, smaller copy of
@@ -21,13 +21,11 @@ import {
  * make unnecessary. Every page a bubble leads to still has the header, with an
  * Explore link in it to come back.
  *
- * One page, no sections — the point is to take it all in at a glance rather
- * than read down a list, so everything is the same size and nothing is filed
- * under a heading you have to scroll past.
- *
- * Nothing here knows anything about the features it lists — it renders a config
- * and links onward. Members-only bubbles link exactly like the rest, because
- * each destination already gates itself.
+ * Two rules keep it quick to read. Everything above the grid is one wordmark
+ * and one line, because a stack of headings is space spent before anything is
+ * tappable. And only features get a tile: the account and legal links sit
+ * small at the bottom, since giving them a tile the size of "Spot" told people
+ * they mattered equally.
  *
  * All copy lives in src/config/explore.ts.
  */
@@ -39,22 +37,22 @@ function Bubble({ item }: { item: ExploreItem }) {
       <Link
         href={item.href}
         // A squircle, not a circle: the same app-icon shape the phone's own
-        // home screen uses. It also gives the label its corners back, which a
-        // circle spends on empty space.
-        // 4:3 rather than square — full width, but shorter, so more of the grid
-        // lands above the fold without any tile getting narrower.
-        className="press glass-card flex aspect-[4/3] w-full flex-col items-center justify-center gap-1.5 rounded-3xl p-3 text-center"
+        // home screen uses, and it gives the label its corners back.
+        // 4:3 rather than square — full width, but shorter, so more of the
+        // grid lands above the fold without any tile getting narrower.
+        className="press glass-card relative flex aspect-[4/3] w-full flex-col items-center justify-center gap-2 rounded-3xl p-3 text-center"
       >
-        <Icon className="h-6 w-6 shrink-0" strokeWidth={1.75} aria-hidden />
-        {/* Long pairings like "Auctions & Wishlist" still wrap, but a squircle
-            has the width to hold them without being narrowed at the corners. */}
-        <span className="text-[13px] font-semibold leading-tight">{item.label}</span>
+        {/* Corner-mounted rather than stacked under the label: as a third line
+            it pushed the icon and label off the tile's centre, so only the
+            members-only tiles looked aligned differently from the rest. */}
         {item.membersOnly && (
-          <span className="util-label text-carz">{EXPLORE_COPY.membersBadge}</span>
+          <span className="util-label absolute right-2.5 top-2 text-[9px] text-carz">
+            {EXPLORE_COPY.membersBadge}
+          </span>
         )}
+        <Icon className="h-6 w-6 shrink-0" strokeWidth={1.75} aria-hidden />
+        <span className="text-[13px] font-semibold leading-tight">{item.label}</span>
       </Link>
-      {/* Outside the circle: there is no room for it inside, and it would push
-          the label off-centre. */}
       <span className="mt-2 block text-center text-[11px] leading-snug opacity-60">
         {item.description}
       </span>
@@ -69,52 +67,76 @@ export default function ExplorePage() {
     () => EXPLORE_BUBBLES.filter((i) => matchesExploreQuery(i, query)),
     [query],
   );
+  // Filtered too, so typing "terms" still finds it even though it isn't a tile.
+  const links = useMemo(
+    () => EXPLORE_LINKS.filter((i) => matchesExploreQuery(i, query)),
+    [query],
+  );
 
   return (
-    <>
+    <main className="mx-auto w-full max-w-3xl px-5 pb-12 pt-10">
       {/* The wordmark alone, in place of the header: the app should still say
           whose front door this is, without putting a menu back on it. */}
-      <div className="flex justify-center px-5 pt-8">
-        <Link href="/explore" className="press flex items-center">
-          <span className="wordmark whitespace-nowrap text-2xl leading-none">Carz AI</span>
+      <div className="text-center">
+        <Link href="/explore" className="press inline-flex items-center">
+          <span className="wordmark whitespace-nowrap text-3xl leading-none">Carz AI</span>
         </Link>
+        <p className="mt-2 text-[13px] opacity-60">{EXPLORE_COPY.tagline}</p>
       </div>
 
-      <main className="mx-auto w-full max-w-3xl px-5 pb-10 pt-6">
-        <PageMasthead title={EXPLORE_COPY.title} eyebrow={EXPLORE_COPY.eyebrow} />
-        <p className="mt-3 max-w-prose text-[13px] leading-relaxed opacity-60">
-          {EXPLORE_COPY.subtitle}
-        </p>
+      <div className="relative mt-6">
+        {/* Click-through so a tap on the icon still lands in the field. */}
+        <Search
+          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 opacity-40"
+          aria-hidden
+        />
+        <Input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={EXPLORE_COPY.searchPlaceholder}
+          aria-label={EXPLORE_COPY.searchLabel}
+          autoComplete="off"
+          className="h-11 pl-9"
+        />
+      </div>
 
-        <div className="relative mt-6">
-          {/* Click-through so a tap on the icon still lands in the field. */}
-          <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 opacity-40"
-            aria-hidden
-          />
-          <Input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={EXPLORE_COPY.searchPlaceholder}
-            aria-label={EXPLORE_COPY.searchLabel}
-            autoComplete="off"
-            className="h-11 pl-9"
-          />
-        </div>
+      {bubbles.length === 0 && links.length === 0 ? (
+        <p className="mt-8 text-center text-[13px] opacity-60">{EXPLORE_COPY.empty}</p>
+      ) : (
+        <>
+          {/* Two across on a phone keeps every tile a comfortable tap; three
+              once there is room, so the whole app still fits one screen. */}
+          {bubbles.length > 0 && (
+            <div className="mt-7 grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-3">
+              {bubbles.map((item) => (
+                <Bubble key={item.label} item={item} />
+              ))}
+            </div>
+          )}
 
-        {bubbles.length === 0 ? (
-          <p className="mt-8 text-[13px] opacity-60">{EXPLORE_COPY.empty}</p>
-        ) : (
-          // Two across on a phone keeps every bubble a comfortable tap; three
-          // once there is room, so the whole app still fits one screen.
-          <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3">
-            {bubbles.map((item) => (
-              <Bubble key={item.label} item={item} />
-            ))}
-          </div>
-        )}
-      </main>
-    </>
+          {links.length > 0 && (
+            <nav className="mt-10 flex flex-wrap items-center justify-center gap-x-2 gap-y-3 border-t border-white/10 pt-6">
+              {links.map((item, i) => (
+                <span key={item.label} className="flex items-center gap-2">
+                  {/* A separator between links, never leading the row — which
+                      is why it hangs off the item rather than being emitted
+                      between them and needing a trailing-item special case. */}
+                  {i > 0 && <span aria-hidden className="opacity-25">·</span>}
+                  {/* py-2 px-3 rather than bare text: these are the smallest
+                      targets on the page and still have to be thumb-sized. */}
+                  <Link
+                    href={item.href}
+                    className="press util-label rounded-full px-3 py-2 opacity-60 transition-opacity hover:opacity-100"
+                  >
+                    {item.label}
+                  </Link>
+                </span>
+              ))}
+            </nav>
+          )}
+        </>
+      )}
+    </main>
   );
 }
