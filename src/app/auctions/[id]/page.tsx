@@ -3,7 +3,6 @@
 import { use, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { signIn, useSession } from "next-auth/react";
-import { SiteHeader } from "@/components/site-header";
 import { Button, CarPhoto, DataTable, LiveDot } from "@/components/ui/editorial";
 
 type Bid = { bidderName: string; amount: number; ts: number };
@@ -120,7 +119,6 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
   if (loading) {
     return (
       <>
-        <SiteHeader />
         <main className="mx-auto w-full max-w-3xl px-5 py-10">
           <div className="h-96 w-full animate-pulse bg-white/[0.06]" />
         </main>
@@ -131,7 +129,6 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
   if (notFound || !a) {
     return (
       <>
-        <SiteHeader />
         <main className="mx-auto w-full max-w-3xl px-5 py-24 text-center">
           <h1 className="display text-5xl">Not found</h1>
           <p className="mt-2 text-sm ">This auction doesn&apos;t exist or was removed.</p>
@@ -148,7 +145,6 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
 
   return (
     <>
-      <SiteHeader />
       <main className="mx-auto w-full max-w-3xl px-5 py-8">
         <Link href="/auctions" className="util-label  ">
           All auctions

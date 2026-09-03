@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { ImagePlus, Upload, Trash2, X, TrafficCone, Check, BookmarkPlus } from "lucide-react";
-import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Button as GlassButton } from "@/components/ui/editorial";
 import { ProgressiveFluxLoader } from "@/components/ui/progressive-flux-loader";
@@ -772,7 +771,6 @@ export default function SpotPage() {
 
   return (
     <>
-      <SiteHeader />
       <main className="mx-auto w-full max-w-2xl px-5 py-14">
         <div className="util-label ">Scan · identify · save</div>
         <h1 className="display mt-3 text-7xl">Spot a car</h1>

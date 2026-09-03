@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/editorial";
 
 /**
@@ -37,7 +36,6 @@ export function MemberGate({
   if (member === null) {
     return (
       <>
-        <SiteHeader />
         {tabs}
         <main className="mx-auto w-full max-w-lg px-5 py-16 text-center">
           <div className="util-label opacity-50">Loading…</div>
@@ -49,7 +47,6 @@ export function MemberGate({
   if (!member) {
     return (
       <>
-        <SiteHeader />
         {tabs}
         <main className="mx-auto w-full max-w-lg px-5 py-16">
           <div className="glass-card rounded-3xl p-8 text-center">

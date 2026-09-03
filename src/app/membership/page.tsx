@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import Link from "next/link";
-import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/editorial";
 
 type Status = {
@@ -165,7 +164,6 @@ export default function MembershipPage() {
 
   return (
     <>
-      <SiteHeader />
       <main className="mx-auto w-full max-w-2xl px-5 py-10">
         {/* Hero offer */}
         <div className="reveal rounded-3xl border border-white/12 bg-card p-8 text-center">

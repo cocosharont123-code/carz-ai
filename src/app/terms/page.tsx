@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
-import { SiteHeader } from "@/components/site-header";
 import { PageMasthead } from "@/components/ui/editorial";
 import { TermsReader } from "@/components/terms-reader";
 import { TERMS_VERSION, TERMS_ENTITY } from "@/lib/terms";
@@ -33,7 +32,6 @@ export default function TermsPage() {
 
   return (
     <>
-      <SiteHeader />
       <main className="mx-auto w-full max-w-3xl px-5 py-10">
         <PageMasthead
           eyebrow={`${TERMS_ENTITY} · version ${TERMS_VERSION}`}

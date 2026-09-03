@@ -3,7 +3,6 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
-import { SiteHeader } from "@/components/site-header";
 import { Avatar } from "@/components/default-avatar";
 import { Button, PageMasthead, Skeleton } from "@/components/ui/editorial";
 
@@ -101,7 +100,6 @@ function ProfileInner() {
 
   return (
     <>
-      <SiteHeader />
       <main className="mx-auto w-full max-w-lg px-5 py-10">
         <PageMasthead eyebrow="Your account" title="Your profile" />
 

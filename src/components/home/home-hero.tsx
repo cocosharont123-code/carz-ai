@@ -2,13 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { LiquidButton } from "@/components/ui/liquid-glass-button";
-import { SiteHeader } from "@/components/site-header";
 
 export function HomeHero() {
   const router = useRouter();
   return (
     <div className="relative w-full overflow-x-clip">
-      <SiteHeader />
       <section className="relative isolate flex min-h-[88vh] w-full items-center justify-center overflow-hidden px-4">
         {/* Neon shader is now the global page background (see layout). */}
         <div className="relative z-10 mx-auto w-full max-w-3xl rounded-3xl border border-white/15 p-2">

@@ -4,6 +4,13 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Height of the fixed top bar, notch included. The bar's spacer and any
+   full-screen page that has to sit under it both measure from this, so the
+   bar and the space reserved for it cannot drift apart. */
+:root {
+  --topnav-h: calc(3.5rem + env(safe-area-inset-top));
+}
+
 /* Leaderboard crown + trend colors used by leaderboard-rankings.tsx */
 @theme {
   --color-rank-1: #fbbf24;

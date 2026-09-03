@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { Car, Inbox } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
-import { SiteHeader } from "@/components/site-header";
 
 type Claim = {
   id: string;
@@ -39,7 +38,6 @@ export default function ClaimsPage() {
 
   return (
     <>
-      <SiteHeader />
       <main className="mx-auto w-full max-w-2xl px-5 py-8">
         <h1 className="text-2xl font-black tracking-tight">Prize claims</h1>
         <p className="mt-1 text-sm ">Review verified spots and pay out via CashApp.</p>

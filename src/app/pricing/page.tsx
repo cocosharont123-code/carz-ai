@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
-import { SiteHeader } from "@/components/site-header";
 import { ModernPricingPage, type PricingCardProps } from "@/components/ui/animated-glassy-pricing";
 import { cn } from "@/lib/utils";
 import { applyDiscount, formatPrice, lookupPromo, type Promo } from "@/lib/promos";
@@ -221,7 +220,6 @@ export default function PricingPage() {
 
   return (
     <>
-      <SiteHeader />
       <ModernPricingPage
         title={
           member ? (

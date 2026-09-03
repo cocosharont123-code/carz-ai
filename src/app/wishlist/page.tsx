@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
 import Link from "next/link";
-import { SiteHeader } from "@/components/site-header";
 import { PageTabs } from "@/components/page-tabs";
 import { MemberGate } from "@/components/member-gate";
 import { PageMasthead, CarPhoto, Button } from "@/components/ui/editorial";
@@ -35,7 +34,6 @@ function WishlistInner() {
 
   return (
     <>
-      <SiteHeader />
       <PageTabs group="auctions" />
       <main className="mx-auto w-full max-w-4xl px-5 py-10">
         <PageMasthead eyebrow="Cars you love" title="Wishlist" count={items ? `${items.length} saved` : "—"} />

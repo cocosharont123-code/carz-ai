@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { ArrowLeft, Trash2, Heart, X } from "lucide-react";
-import { SiteHeader } from "@/components/site-header";
 import { Skeleton, Spinner } from "@/components/ui/editorial";
 import { Avatar } from "@/components/default-avatar";
 import { LikeButton, timeAgo, type FeedPostView } from "@/components/feed/post-card";
@@ -187,7 +186,6 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
 
   return (
     <>
-      <SiteHeader />
       <main className="mx-auto w-full max-w-xl px-5 py-10">
         <Link
           href="/feed"

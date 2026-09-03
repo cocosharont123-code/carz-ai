@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import { Video, X } from "lucide-react";
-import { SiteHeader } from "@/components/site-header";
 import { PageMasthead, Button, Spinner } from "@/components/ui/editorial";
 import { VideoEditor, EMPTY_EDIT } from "@/components/feed/video-editor";
 import type { VideoEdit } from "@/components/feed/feed-video";
@@ -173,7 +172,6 @@ export default function NewPostPage() {
   if (authStatus === "unauthenticated") {
     return (
       <>
-        <SiteHeader />
         <main className="mx-auto w-full max-w-xl px-5 py-10">
           <PageMasthead eyebrow="Share a spot" title="New post" />
           <div className="mt-8 rounded-3xl border border-white/10 bg-card text-card-foreground p-8 text-center">
@@ -196,7 +194,6 @@ export default function NewPostPage() {
 
   return (
     <>
-      <SiteHeader />
       <main className="mx-auto w-full max-w-xl px-5 py-10">
         <PageMasthead
           eyebrow="Share a spot"

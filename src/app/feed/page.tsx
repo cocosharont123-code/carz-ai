@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { Plus, Camera } from "lucide-react";
-import { SiteHeader } from "@/components/site-header";
 import { Spinner } from "@/components/ui/editorial";
 import { Reel } from "@/components/feed/reel";
 import type { FeedPostView } from "@/components/feed/post-card";
@@ -142,12 +141,12 @@ export default function FeedPage() {
 
   const composerHref = signedIn ? "/feed/new" : "/signin?callbackUrl=/feed/new";
 
-  // A fixed-height column: the header keeps its natural size and the scroller
-  // takes the rest, so one slide is exactly one screen. `dvh` rather than `vh`
-  // because mobile browser chrome collapses on scroll.
+  // A fixed-height column, and one slide is exactly one screen. The viewport
+  // minus the fixed top bar: measured from the same --topnav-h the bar and its
+  // spacer use, so a slide can never be taller than the space it has. `dvh`
+  // rather than `vh` because mobile browser chrome collapses on scroll.
   return (
-    <div className="flex h-[100dvh] flex-col overflow-hidden">
-      <SiteHeader />
+    <div className="flex h-[calc(100dvh-var(--topnav-h))] flex-col overflow-hidden">
 
       {!configured ? (
         <Centered>

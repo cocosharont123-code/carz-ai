@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Sparkles, Rocket } from "lucide-react";
-import { SiteHeader } from "@/components/site-header";
 import { PageMasthead, Skeleton, Button } from "@/components/ui/editorial";
 import { cn } from "@/lib/utils";
 
@@ -115,7 +114,6 @@ export default function DropsPage() {
 
   return (
     <>
-      <SiteHeader />
       <main className="mx-auto w-full max-w-4xl px-5 py-10">
         <PageMasthead
           eyebrow={`New metal · from $${(MIN_PRICE_USD / 1000).toFixed(0)}k up`}

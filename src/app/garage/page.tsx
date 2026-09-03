@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { X, Trash2, ChevronLeft, ChevronRight, Images } from "lucide-react";
-import { SiteHeader } from "@/components/site-header";
 import { PageTabs } from "@/components/page-tabs";
 import { MemberGate } from "@/components/member-gate";
 import { getGarage, removeFromGarage, clearGarage, type GarageCar } from "@/lib/garage-local";
@@ -195,7 +194,6 @@ function GarageInner() {
 
   return (
     <>
-      <SiteHeader />
       <PageTabs group="collection" />
       <main className="mx-auto w-full max-w-5xl px-5 py-10">
         <PageMasthead

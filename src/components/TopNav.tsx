@@ -3,7 +3,20 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ScanLine, Play, Warehouse, KeyRound, Menu, X } from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
+import {
+  ScanLine,
+  Play,
+  Warehouse,
+  KeyRound,
+  Menu,
+  X,
+  User,
+  Settings,
+  LogIn,
+  LogOut,
+  ShieldCheck,
+} from "lucide-react";
 import { EXPLORE_BUBBLES, EXPLORE_COPY } from "@/config/explore";
 import { cn } from "@/lib/utils";
 
@@ -15,24 +28,11 @@ import { cn } from "@/lib/utils";
  * route that hides the bar gets no phantom gap.
  */
 
-// 56px of bar, plus whatever the notch takes. Both the bar and the spacer are
-// sized from these, which is what keeps them in step.
+// --topnav-h is defined in globals.css and is what the feed measures its own
+// height against, so the bar and the space under it cannot drift apart.
 const BAR_H = "h-14";
 const SAFE_TOP = { paddingTop: "env(safe-area-inset-top)" } as const;
-const SPACER_H = { height: "calc(3.5rem + env(safe-area-inset-top))" } as const;
-
-/**
- * Routes that own the whole screen.
- *
- * /feed is the full-screen reel scroller: it sizes itself to 100dvh and
- * snap-scrolls, so a fixed bar over it would cover the first clip and the
- * spacer would push the scroller past the bottom of the window.
- *
- * The spec also asked for the Miami Rush game route. There is no such route in
- * this repo — nothing under src/app matches, and nothing references it — so
- * there is nothing to match on yet. When that page lands, its prefix goes here.
- */
-const FULL_SCREEN_ROUTES = ["/feed"];
+const SPACER_H = { height: "var(--topnav-h)" } as const;
 
 export function TopNav() {
   const pathname = usePathname();
@@ -47,10 +47,6 @@ export function TopNav() {
     return () => window.removeEventListener("keydown", onKey);
   }, [menuOpen]);
 
-  if (FULL_SCREEN_ROUTES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
-    return null;
-  }
-
   const items = [
     {
       key: "spot",
@@ -64,8 +60,6 @@ export function TopNav() {
       label: "Feed",
       href: "/feed",
       Icon: Play,
-      // Never actually renders active: the bar is hidden on /feed itself, since
-      // that page is the full-screen scroller. Kept correct anyway.
       active: pathname.startsWith("/feed"),
     },
     {
@@ -86,7 +80,7 @@ export function TopNav() {
     },
   ];
 
-  const menuActive = menuOpen || pathname === "/explore";
+  const menuActive = menuOpen;
 
   return (
     <>
@@ -172,13 +166,13 @@ function ExploreSheet({ onClose }: { onClose: () => void }) {
         onClick={onClose}
         aria-hidden
         className="fixed inset-0 z-[55] bg-black/60"
-        style={{ top: "calc(3.5rem + env(safe-area-inset-top))" }}
+        style={{ top: "var(--topnav-h)" }}
       />
       <div
         role="dialog"
         aria-label="Explore"
         className="fixed inset-x-0 z-[58] max-h-[70dvh] overflow-y-auto border-b border-white/10 bg-black/95 px-5 pb-6 pt-5 backdrop-blur-xl"
-        style={{ top: "calc(3.5rem + env(safe-area-inset-top))" }}
+        style={{ top: "var(--topnav-h)" }}
       >
         <div className="grid grid-cols-2 gap-x-3 gap-y-3 sm:grid-cols-3">
           {EXPLORE_BUBBLES.map((item) => {
@@ -203,7 +197,60 @@ function ExploreSheet({ onClose }: { onClose: () => void }) {
             );
           })}
         </div>
+
+        <AccountRow onClose={onClose} />
       </div>
     </>
+  );
+}
+
+/**
+ * Sign-in, the account and the terms.
+ *
+ * These lived in the site header, which no longer exists — and signing in is
+ * not optional furniture: membership, bidding and posting all need it. So the
+ * menu carries them, small, under the features.
+ */
+function AccountRow({ onClose }: { onClose: () => void }) {
+  const { status } = useSession();
+  const signedIn = status === "authenticated";
+
+  const links = [
+    ...(signedIn
+      ? [
+          { label: "Profile", href: "/profile", Icon: User },
+          { label: "Settings", href: "/settings", Icon: Settings },
+        ]
+      : [{ label: "Sign in", href: "/signin", Icon: LogIn }]),
+    { label: "Terms", href: "/terms", Icon: ShieldCheck },
+  ];
+
+  return (
+    <div className="mt-4 flex flex-wrap items-center justify-center gap-1 border-t border-white/10 pt-3">
+      {links.map(({ label, href, Icon }) => (
+        <Link
+          key={label}
+          href={href}
+          onClick={onClose}
+          className="press util-label flex min-h-[44px] items-center gap-2 rounded-full px-3 opacity-70 transition-opacity hover:opacity-100"
+        >
+          <Icon className="h-4 w-4" strokeWidth={2} aria-hidden />
+          {label}
+        </Link>
+      ))}
+      {signedIn && (
+        <button
+          type="button"
+          onClick={() => {
+            onClose();
+            void signOut();
+          }}
+          className="press util-label flex min-h-[44px] items-center gap-2 rounded-full px-3 opacity-70 transition-opacity hover:opacity-100"
+        >
+          <LogOut className="h-4 w-4" strokeWidth={2} aria-hidden />
+          Sign out
+        </button>
+      )}
+    </div>
   );
 }

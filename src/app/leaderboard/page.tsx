@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SiteHeader } from "@/components/site-header";
 import { PageTabs } from "@/components/page-tabs";
 import { Avatar } from "@/components/default-avatar";
 import { Button, PageMasthead, CarPhoto, Skeleton, Eyebrow } from "@/components/ui/editorial";
@@ -44,7 +43,6 @@ export default function LeaderboardPage() {
 
   return (
     <>
-      <SiteHeader />
       <PageTabs group="collection" />
       <main className="mx-auto w-full max-w-3xl px-5 py-10">
         <PageMasthead eyebrow="The board" title="Rarest Cars" count={loading ? "—" : `${cars.length} logged`} />

@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { Gauge, Crosshair, Lock, TriangleAlert } from "lucide-react";
-import { SiteHeader } from "@/components/site-header";
 import { Button, PageMasthead, Skeleton, Spinner } from "@/components/ui/editorial";
 import { cn } from "@/lib/utils";
 import { SCAN_MODE_META, type ScanMode } from "@/lib/scan-mode";
@@ -224,7 +223,6 @@ export default function SettingsPage() {
 
   return (
     <>
-      <SiteHeader />
       <main className="mx-auto w-full max-w-2xl px-5 py-14">
         <PageMasthead title="Settings" eyebrow="Your account" />
 

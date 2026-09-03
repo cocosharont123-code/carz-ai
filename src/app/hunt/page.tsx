@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SiteHeader } from "@/components/site-header";
 import { WANTED, HUNT_RULE, getHunt, joinHunt, totalEarned, type HuntState } from "@/lib/hunt";
 import { Button, LiveDot } from "@/components/ui/editorial";
 import { MemberGate } from "@/components/member-gate";
@@ -38,7 +37,6 @@ export default function HuntPage() {
         "Verified winners get paid out through CashApp.",
       ]}
     >
-      <SiteHeader />
       <main className="mx-auto w-full max-w-2xl px-5 py-8">
         {/* Neon Miami hero */}
         <div className="hunt-banner rounded-3xl p-[2px] shadow-[0_0_50px_-12px_rgba(255,0,110,0.6)]">

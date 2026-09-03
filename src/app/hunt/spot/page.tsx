@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { SiteHeader } from "@/components/site-header";
 import { MemberGate } from "@/components/member-gate";
 import { Camera } from "lucide-react";
 import { Spinner } from "@/components/ui/editorial";
@@ -150,7 +149,6 @@ function HuntSpotInner() {
   if (joined === null) {
     return (
       <>
-        <SiteHeader />
         <main className="mx-auto w-full max-w-lg px-5 py-10">
           <div className="h-80 animate-pulse rounded-3xl bg-foreground/[0.04]" />
         </main>
@@ -161,7 +159,6 @@ function HuntSpotInner() {
   if (!joined) {
     return (
       <>
-        <SiteHeader />
         <main className="mx-auto w-full max-w-lg px-5 py-16 text-center">
           <h1 className="mt-3 text-2xl font-black">Join the hunt first</h1>
           <p className="mt-1 ">You need to join Car Hunt Miami before you can earn rewards.</p>
@@ -178,7 +175,6 @@ function HuntSpotInner() {
 
   return (
     <>
-      <SiteHeader />
       <main className="mx-auto w-full max-w-lg px-5 py-8">
         <div className="flex items-center justify-between">
           <div>

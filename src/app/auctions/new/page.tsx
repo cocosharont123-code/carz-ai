@@ -4,7 +4,6 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import { Car, KeyRound } from "lucide-react";
-import { SiteHeader } from "@/components/site-header";
 import { Spinner } from "@/components/ui/editorial";
 
 function downscale(dataUrl: string, max = 900, quality = 0.7): Promise<string> {
@@ -208,7 +207,6 @@ function NewAuctionInner() {
 
   return (
     <>
-      <SiteHeader />
       <main className="mx-auto w-full max-w-lg px-5 py-10">
         <div className="util-label ">Sell — powered by AI</div>
         <h1 className="display mt-3 text-6xl">List your car</h1>
