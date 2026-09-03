@@ -100,24 +100,30 @@ export function ScanModePicker({ onModeChange }: { onModeChange?: (mode: ScanMod
             <>
               <div className="flex items-center gap-2">
                 <Icon
-                  className={cn("h-4 w-4 shrink-0", selected ? "text-neon-blue" : "opacity-60")}
+                  className={cn("h-4 w-4 shrink-0", !selected && "opacity-60")}
                   strokeWidth={2}
                   aria-hidden
                 />
                 <span className="text-sm font-bold">{meta.name}</span>
                 {locked && <Lock className="h-3 w-3 shrink-0 opacity-60" aria-hidden />}
               </div>
-              <p className="mt-1 text-[11px] leading-snug opacity-60">{meta.tagline}</p>
+              <p className={cn("mt-1 text-[11px] leading-snug", selected ? "opacity-70" : "opacity-60")}>
+                {meta.tagline}
+              </p>
             </>
           );
 
           // Locked PRO goes to the upsell instead of firing a request that the
           // server would only refuse.
+          // Unselected is the app's liquid glass; selected goes solid white
+          // with dark text. White reads as chosen at a glance without a glow,
+          // and it is the same "this is the active one" language the rest of
+          // the app already uses for its primary buttons.
           const cls = cn(
-            "press w-full rounded-2xl border p-3 text-left transition",
+            "press w-full rounded-2xl p-3 text-left transition",
             selected
-              ? "border-neon-blue/70 bg-neon-blue/[0.07] shadow-[0_0_28px_-14px_rgba(0,229,255,0.9)]"
-              : "border-white/10 bg-white/[0.02] hover:border-white/25 hover:bg-white/[0.05]",
+              ? "bg-white text-neutral-900 shadow-[0_2px_14px_rgba(0,0,0,0.35)]"
+              : "glass-card",
             locked && "opacity-70",
           );
 
