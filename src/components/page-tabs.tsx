@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 // Grouped sections that share a page with a tab switcher:
-// Auctions + Wishlist, Garage + Ranks.
+// Auctions + Wishlist, Garage + Leaderboard.
 //
 // Events and Hunt used to be a pair here. They aren't related — one lists car
 // meets near you, the other is a cash-bounty board for Miami — so they are two
@@ -17,7 +17,7 @@ const GROUPS = {
   ],
   collection: [
     { href: "/garage", label: "Garage" },
-    { href: "/leaderboard", label: "Ranks" },
+    { href: "/leaderboard", label: "Leaderboard" },
   ],
 } as const;
 

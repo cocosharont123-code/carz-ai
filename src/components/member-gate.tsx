@@ -21,7 +21,7 @@ export function MemberGate({
   /** What this locked feature actually does — explained for non-members. */
   points?: string[];
   /** Optional section tab bar, shown under the header even while locked so
-   *  a sibling public tab (e.g. Ranks) stays reachable for non-members. */
+   *  a sibling public tab (e.g. Leaderboard) stays reachable for non-members. */
   tabs?: ReactNode;
 }) {
   const [member, setMember] = useState<boolean | null>(null);

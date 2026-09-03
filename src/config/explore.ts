@@ -52,7 +52,7 @@ export const EXPLORE_COPY = {
  * The whole app, in the order the tiles are laid out.
  *
  * A paired bubble opens the feature it is named for first. Auctions & Wishlist
- * and Garage & Ranks land on pages where the other half is genuinely a tab, so
+ * and Garage & Leaderboard land on pages where the other half is a tab, so
  * both are one tap away. Events & Drops is a pair by theme rather than by page,
  * so it opens Events.
  */
@@ -70,7 +70,7 @@ export const EXPLORE_BUBBLES: ExploreItem[] = [
     icon: Users,
   },
   {
-    label: "Garage & Ranks",
+    label: "Garage & Leaderboard",
     description: "Your saved cars and the leaderboard",
     href: "/garage",
     icon: Images,

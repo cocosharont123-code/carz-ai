@@ -64,10 +64,10 @@ export function TopNav() {
     },
     {
       key: "garage",
-      label: "Garage and ranks",
+      label: "Garage and leaderboard",
       href: "/garage",
       Icon: Warehouse,
-      // Ranks lives at /leaderboard as a tab on the same group, so the door
+      // The leaderboard is a tab on the same group, so the door
       // stays lit when you switch to it.
       active: pathname.startsWith("/garage") || pathname === "/leaderboard",
     },
