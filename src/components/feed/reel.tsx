@@ -160,7 +160,9 @@ export function Reel({
   }
 
   return (
-    <section className="relative h-full w-full snap-start snap-always overflow-hidden bg-black">
+    // No background of its own: the app gradient shows through, so a portrait
+    // clip letterboxes onto colour rather than onto a black slab.
+    <section className="relative h-full w-full snap-start snap-always overflow-hidden">
       {/* Media fills the slide. `object-contain` rather than cover: a landscape
           car shot cropped to a portrait slide loses the car.
           Blurred while the comment sheet is up, so the clip stays visible

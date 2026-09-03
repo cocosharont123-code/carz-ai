@@ -87,7 +87,7 @@ export function TopNav() {
       <header
         style={SAFE_TOP}
         className={cn(
-          "fixed inset-x-0 top-0 z-[60] bg-black/95 backdrop-blur-xl",
+          "fixed inset-x-0 top-0 z-[60] bg-black/50 backdrop-blur-xl",
           "border-b border-white/10",
         )}
       >
@@ -165,13 +165,13 @@ function ExploreSheet({ onClose }: { onClose: () => void }) {
       <div
         onClick={onClose}
         aria-hidden
-        className="fixed inset-0 z-[55] bg-black/60"
+        className="fixed inset-0 z-[55] bg-black/25"
         style={{ top: "var(--topnav-h)" }}
       />
       <div
         role="dialog"
         aria-label="Explore"
-        className="fixed inset-x-0 z-[58] max-h-[70dvh] overflow-y-auto border-b border-white/10 bg-black/95 px-5 pb-6 pt-5 backdrop-blur-xl"
+        className="fixed inset-x-0 z-[58] max-h-[70dvh] overflow-y-auto border-b border-white/10 bg-black/40 px-5 pb-6 pt-5 backdrop-blur-2xl"
         style={{ top: "var(--topnav-h)" }}
       >
         <div className="grid grid-cols-2 gap-x-3 gap-y-3 sm:grid-cols-3">
