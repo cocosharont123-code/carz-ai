@@ -57,14 +57,14 @@ export type CarReport = {
   crossCheckNote: string;
 };
 
-const DEFAULT_MODEL = "claude-opus-5";
+const DEFAULT_MODEL = "claude-fable-5-1";
 
 // This pipeline depends on structured outputs, so an override naming a model
 // without them would 400 on every scan. Honour the env var only when it names a
 // model that can actually run this, and otherwise fall back rather than break
 // spotting for a value nobody remembers setting.
 const STRUCTURED_OUTPUT_CAPABLE =
-  /^claude-(opus-(5|4-8)|sonnet-5|haiku-4-5|fable-5|mythos-5)$/;
+  /^claude-(opus-(5|4-8)|sonnet-5|haiku-4-5|(fable|mythos)-5(-1)?)$/;
 
 function pickModel(): string {
   const override = process.env.CAR_SPOTTER_MODEL?.trim();
@@ -92,20 +92,30 @@ const LOOK_MODEL = (() => {
   return MODEL;
 })();
 
-// The spec sheet is pure recall — no photo, no second opinion, no adjudicator.
-// That matters: the reason a cheaper model backfired on the wide looks was the
-// disagreement it caused and the Opus ruling that followed, and none of that
-// machinery exists on this call. There is nothing here for a smaller model to
-// destabilise, so it takes the quicker one.
+// The spec sheet is pure recall — no photo, no second opinion, no adjudicator —
+// so it ran on the quicker, cheaper model for a long time. It is on Fable now
+// because the whole app is, but this is the call where that costs the most for
+// the least: recall does not need the reasoning being paid for. Effort is
+// pinned low below, and CAR_SPOTTER_SPECS_MODEL puts it back on Sonnet 5
+// without a deploy if the bill argues otherwise.
 const SPECS_MODEL = (() => {
   const override = process.env.CAR_SPOTTER_SPECS_MODEL?.trim();
   if (override && STRUCTURED_OUTPUT_CAPABLE.test(override)) return override;
-  return "claude-sonnet-5";
+  return "claude-fable-5-1";
 })();
 
 // Fast mode runs the same model at up to 2.5x output speed. Only Opus 5 / 4.8
-// support it, so any other model silently runs at standard speed.
+// support it, so any other model silently runs at standard speed — including
+// Fable, which is now the default. Left in place for a CAR_SPOTTER_MODEL
+// override pointing back at Opus.
 const FAST_CAPABLE = /^claude-opus-(5|4-8)$/;
+
+// Fable and Mythos think on every request and reject being told otherwise:
+// `thinking: {type: "disabled"}` is a 400, not a no-op. So the passes that used
+// to switch thinking off to save the spotter a few seconds simply cannot on
+// these models — they ask for low effort instead, which is the supported way to
+// buy the same thing.
+const THINKING_ALWAYS_ON = /^claude-(fable|mythos)-5(-1)?$/;
 let fastMode = process.env.CAR_SPOTTER_FAST !== "0";
 
 type Effort = "low" | "medium" | "high" | "xhigh" | "max";
@@ -123,7 +133,8 @@ const LOOK_EFFORT = (process.env.CAR_SPOTTER_EFFORT as Effort) || "medium";
 
 // `effort` is rejected outright by Haiku 4.5 and Sonnet 4.5, so a
 // CAR_SPOTTER_MODEL override pointing at one of those must not send it.
-const EFFORT_CAPABLE = /^claude-(opus-(5|4-8|4-7|4-6|4-5)|sonnet-(5|4-6)|fable-5|mythos-5)$/;
+const EFFORT_CAPABLE =
+  /^claude-(opus-(5|4-8|4-7|4-6|4-5)|sonnet-(5|4-6)|(fable|mythos)-5(-1)?)$/;
 
 export class IdentifyError extends Error {}
 
@@ -329,14 +340,22 @@ async function ask<T>(opts: {
   const model = opts.model ?? MODEL;
   const supportsEffort = EFFORT_CAPABLE.test(model);
   // Thinking is emitted before a single character of the answer, so switching it
-  // off is the one remaining way to shorten the call the spotter waits on. Only
-  // valid at effort `high` or below on Opus 5, which is where the looks sit.
-  const think = opts.think !== false;
+  // off used to be the one remaining way to shorten the call the spotter waits
+  // on. Only honoured where the model actually accepts it: on Fable the same
+  // request is a 400, so the flag is dropped rather than passed through.
+  const think = opts.think !== false || THINKING_ALWAYS_ON.test(model);
   const send = (fast: boolean) =>
     getClient().beta.messages.create({
       model,
       max_tokens: opts.maxTokens,
-      ...(fast ? { speed: "fast" as const, betas: ["fast-mode-2026-02-01"] } : {}),
+      // Server-side fallbacks: a safety classifier can decline a request, and a
+      // refusal would otherwise surface as a failed scan. "default" lets the
+      // server route by refusal category rather than us maintaining a model list.
+      betas: fast
+        ? ["server-side-fallback-2026-07-01", "fast-mode-2026-02-01"]
+        : ["server-side-fallback-2026-07-01"],
+      fallbacks: "default",
+      ...(fast ? { speed: "fast" as const } : {}),
       ...(think ? {} : { thinking: { type: "disabled" as const } }),
       output_config: {
         ...(supportsEffort ? { effort: opts.effort } : {}),
