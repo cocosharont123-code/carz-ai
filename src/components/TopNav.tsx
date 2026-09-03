@@ -64,7 +64,7 @@ export function TopNav() {
     },
     {
       key: "garage",
-      label: "Garage and leaderboard",
+      label: "Garage",
       href: "/garage",
       Icon: Warehouse,
       // The leaderboard is a tab on the same group, so the door

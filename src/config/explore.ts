@@ -15,6 +15,7 @@
 import {
   Crosshair,
   Crown,
+  Trophy,
   Gavel,
   Images,
   KeyRound,
@@ -52,9 +53,10 @@ export const EXPLORE_COPY = {
  * The whole app, in the order the tiles are laid out.
  *
  * A paired bubble opens the feature it is named for first. Auctions & Wishlist
- * and Garage & Leaderboard land on pages where the other half is a tab, so
- * both are one tap away. Events & Drops is a pair by theme rather than by page,
- * so it opens Events.
+ * lands on a page where the other half is a tab, so both are one tap away.
+ * Events & Drops is a pair by theme rather than by page, so it opens Events.
+ * Anything gated gets its own entry rather than being paired with something
+ * public, or the public half ends up behind the gate.
  */
 export const EXPLORE_BUBBLES: ExploreItem[] = [
   {
@@ -70,11 +72,20 @@ export const EXPLORE_BUBBLES: ExploreItem[] = [
     icon: Users,
   },
   {
-    label: "Garage & Leaderboard",
-    description: "Your saved cars and the leaderboard",
+    label: "Garage",
+    description: "A photo album of cars you saved",
     href: "/garage",
     icon: Images,
     membersOnly: true,
+  },
+  // Its own entry, not folded into Garage. They are tabs on one page, but
+  // Garage is members-only and the leaderboard is not — pairing them put a
+  // public page behind an upsell wall with no other way in.
+  {
+    label: "Leaderboard",
+    description: "The rarest cars anyone has found",
+    href: "/leaderboard",
+    icon: Trophy,
   },
   {
     label: "Events & Drops",
