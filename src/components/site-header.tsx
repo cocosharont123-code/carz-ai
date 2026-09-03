@@ -6,12 +6,13 @@ import { useSession, signOut } from "next-auth/react";
 import { Avatar } from "@/components/default-avatar";
 import { cn } from "@/lib/utils";
 
-// Split nav: Hunt / Carz+ on the left, everything else on the right.
-// Events lives as a tab on Hunt, Wishlist as a tab on Auctions, and Garage +
-// Ranks share a page — so they aren't separate top-level links.
+// Split nav: the accented entries on the left, everything else on the right.
+// Wishlist is a tab on Auctions and Garage + Ranks share a page, so those
+// aren't separate top-level links. Events and Hunt are — they were a tab pair
+// once, which left Hunt with no entry of its own.
 const LEFT_NAV = [
-  // Points at Events; Hunt is a tab on the same group once you're there.
   { href: "/events", label: "Events", accent: true },
+  { href: "/hunt", label: "Hunt", accent: true },
   { href: "/pricing", label: "Carz+", accent: true },
 ];
 const RIGHT_NAV = [

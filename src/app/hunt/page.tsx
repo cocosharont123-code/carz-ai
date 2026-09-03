@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { SiteHeader } from "@/components/site-header";
-import { PageTabs } from "@/components/page-tabs";
 import { WANTED, HUNT_RULE, getHunt, joinHunt, totalEarned, type HuntState } from "@/lib/hunt";
 import { Button, LiveDot } from "@/components/ui/editorial";
 import { MemberGate } from "@/components/member-gate";
@@ -31,8 +30,7 @@ export default function HuntPage() {
 
   return (
     <MemberGate
-      tabs={<PageTabs group="events" />}
-      title="Events"
+      title="Car Hunt Miami"
       blurb="A real-money scavenger hunt for the world's rarest cars."
       points={[
         "A wanted board of rare cars, each with a cash bounty.",
@@ -41,7 +39,6 @@ export default function HuntPage() {
       ]}
     >
       <SiteHeader />
-      <PageTabs group="events" />
       <main className="mx-auto w-full max-w-2xl px-5 py-8">
         {/* Neon Miami hero */}
         <div className="hunt-banner rounded-3xl p-[2px] shadow-[0_0_50px_-12px_rgba(255,0,110,0.6)]">

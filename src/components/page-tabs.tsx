@@ -5,14 +5,12 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 // Grouped sections that share a page with a tab switcher:
-// Events + Hunt, Auctions + Wishlist, Garage + Builds + Ranks.
+// Auctions + Wishlist, Garage + Builds + Ranks.
+//
+// Events and Hunt used to be a pair here. They aren't related — one lists car
+// meets near you, the other is a cash-bounty board for Miami — so they are two
+// pages with their own nav entries now, not two tabs on one.
 const GROUPS = {
-  // Events leads: it's what the nav points at, so it's the tab you arrive on
-  // and Hunt is the one you switch to.
-  events: [
-    { href: "/events", label: "Events" },
-    { href: "/hunt", label: "Hunt" },
-  ],
   auctions: [
     { href: "/auctions", label: "Auctions" },
     { href: "/wishlist", label: "Wishlist" },
