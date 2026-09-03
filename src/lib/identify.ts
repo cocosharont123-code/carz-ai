@@ -57,7 +57,7 @@ export type CarReport = {
   crossCheckNote: string;
 };
 
-const DEFAULT_MODEL = "claude-fable-5-1";
+const DEFAULT_MODEL = "claude-haiku-4-5";
 
 // This pipeline depends on structured outputs, so an override naming a model
 // without them would 400 on every scan. Honour the env var only when it names a
@@ -101,7 +101,7 @@ const LOOK_MODEL = (() => {
 const SPECS_MODEL = (() => {
   const override = process.env.CAR_SPOTTER_SPECS_MODEL?.trim();
   if (override && STRUCTURED_OUTPUT_CAPABLE.test(override)) return override;
-  return "claude-fable-5-1";
+  return "claude-haiku-4-5";
 })();
 
 // Fast mode runs the same model at up to 2.5x output speed. Only Opus 5 / 4.8
@@ -109,6 +109,12 @@ const SPECS_MODEL = (() => {
 // Fable, which is now the default. Left in place for a CAR_SPOTTER_MODEL
 // override pointing back at Opus.
 const FAST_CAPABLE = /^claude-opus-(5|4-8)$/;
+
+// Server-side fallbacks route a refused request to another model. Offered on
+// the frontier models, where a safety classifier declining is a real outcome —
+// sending the parameter to a model that doesn't take it is a 400, so it is
+// gated rather than sent to whatever the override names.
+const FALLBACK_CAPABLE = /^claude-((opus|sonnet)-5|opus-4-8|(fable|mythos)-5(-1)?)$/;
 
 // Fable and Mythos think on every request and reject being told otherwise:
 // `thinking: {type: "disabled"}` is a 400, not a no-op. So the passes that used
@@ -339,6 +345,7 @@ async function ask<T>(opts: {
 }): Promise<T> {
   const model = opts.model ?? MODEL;
   const supportsEffort = EFFORT_CAPABLE.test(model);
+  const supportsFallbacks = FALLBACK_CAPABLE.test(model);
   // Thinking is emitted before a single character of the answer, so switching it
   // off used to be the one remaining way to shorten the call the spotter waits
   // on. Only honoured where the model actually accepts it: on Fable the same
@@ -351,10 +358,16 @@ async function ask<T>(opts: {
       // Server-side fallbacks: a safety classifier can decline a request, and a
       // refusal would otherwise surface as a failed scan. "default" lets the
       // server route by refusal category rather than us maintaining a model list.
-      betas: fast
-        ? ["server-side-fallback-2026-07-01", "fast-mode-2026-02-01"]
-        : ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
+      ...(supportsFallbacks
+        ? {
+            betas: fast
+              ? (["server-side-fallback-2026-07-01", "fast-mode-2026-02-01"] as const)
+              : (["server-side-fallback-2026-07-01"] as const),
+            fallbacks: "default" as const,
+          }
+        : fast
+          ? { betas: ["fast-mode-2026-02-01" as const] }
+          : {}),
       ...(fast ? { speed: "fast" as const } : {}),
       ...(think ? {} : { thinking: { type: "disabled" as const } }),
       output_config: {

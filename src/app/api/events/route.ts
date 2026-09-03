@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
-// Fable thinks on every request and is the slowest model in the lineup; 45s
-// was sized for Haiku.
-export const maxDuration = 120;
+export const maxDuration = 45;
 
-const MODEL = process.env.CAR_SPOTTER_MODEL || "claude-fable-5-1";
+const MODEL = process.env.CAR_SPOTTER_MODEL || "claude-haiku-4-5";
 
 const TOOL = {
   name: "report_events",
@@ -80,13 +78,7 @@ export async function POST(req: Request) {
       headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
       body: JSON.stringify({
         model: MODEL,
-        // Thinking tokens come out of this budget, and on Fable thinking cannot
-        // be switched off — 1600 was sized for a model that wasn't thinking at
-        // all, and would now be spent before the tool call was written.
-        max_tokens: 8000,
-        // Recall about real places, not reasoning about them. Low effort is the
-        // supported way to keep an always-thinking model brief.
-        output_config: { effort: "low" },
+        max_tokens: 1600,
         tools: [TOOL],
         tool_choice: { type: "tool", name: "report_events" },
         messages: [{ role: "user", content: prompt }],

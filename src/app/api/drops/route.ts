@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
-// Fable thinks on every request and is the slowest model in the lineup.
-export const maxDuration = 120;
+export const maxDuration = 60;
 
-// Recall, not vision — the same reasoning as the spec sheet in identify.ts.
-// On Fable like everything else now; effort is pinned low below, and
-// CAR_DROPS_MODEL puts it back on a cheaper model without a deploy.
-const MODEL = process.env.CAR_DROPS_MODEL || "claude-fable-5-1";
+// Recall, not vision — the same reasoning as the spec sheet in identify.ts, so
+// it takes the cheapest model rather than the identification pipeline's.
+const MODEL = process.env.CAR_DROPS_MODEL || "claude-haiku-4-5";
 
 /** Floor for what counts as a drop worth listing here. */
 export const MIN_PRICE_USD = 120_000;
@@ -139,11 +137,7 @@ export async function GET() {
       },
       body: JSON.stringify({
         model: MODEL,
-        // Thinking tokens come out of this budget, and on Fable thinking cannot
-        // be switched off.
-        max_tokens: 12000,
-        // Recall, not reasoning — low effort keeps an always-thinking model brief.
-        output_config: { effort: "low" },
+        max_tokens: 4000,
         tools: [TOOL],
         tool_choice: { type: "tool", name: "report_drops" },
         messages: [{ role: "user", content: PROMPT }],
