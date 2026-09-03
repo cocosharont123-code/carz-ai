@@ -57,7 +57,7 @@ export type CarReport = {
   crossCheckNote: string;
 };
 
-const DEFAULT_MODEL = "claude-haiku-4-5";
+const DEFAULT_MODEL = "claude-sonnet-5";
 
 // This pipeline depends on structured outputs, so an override naming a model
 // without them would 400 on every scan. Honour the env var only when it names a
@@ -92,12 +92,11 @@ const LOOK_MODEL = (() => {
   return MODEL;
 })();
 
-// The spec sheet is pure recall — no photo, no second opinion, no adjudicator —
-// so it ran on the quicker, cheaper model for a long time. It is on Fable now
-// because the whole app is, but this is the call where that costs the most for
-// the least: recall does not need the reasoning being paid for. Effort is
-// pinned low below, and CAR_SPOTTER_SPECS_MODEL puts it back on Sonnet 5
-// without a deploy if the bill argues otherwise.
+// The spec sheet is pure recall — no photo, no second opinion, no adjudicator.
+// That matters: the reason a cheaper model backfired on the wide looks was the
+// disagreement it caused and the adjudication that followed, and none of that
+// machinery exists on this call. There is nothing here for a smaller model to
+// destabilise, so it takes the cheapest one while spotting does not.
 const SPECS_MODEL = (() => {
   const override = process.env.CAR_SPOTTER_SPECS_MODEL?.trim();
   if (override && STRUCTURED_OUTPUT_CAPABLE.test(override)) return override;
@@ -114,7 +113,7 @@ const FAST_CAPABLE = /^claude-opus-(5|4-8)$/;
 // the frontier models, where a safety classifier declining is a real outcome —
 // sending the parameter to a model that doesn't take it is a 400, so it is
 // gated rather than sent to whatever the override names.
-const FALLBACK_CAPABLE = /^claude-((opus|sonnet)-5|opus-4-8|(fable|mythos)-5(-1)?)$/;
+const FALLBACK_CAPABLE = /^claude-(opus-(5|4-8)|(fable|mythos)-5(-1)?)$/;
 
 // Fable and Mythos think on every request and reject being told otherwise:
 // `thinking: {type: "disabled"}` is a 400, not a no-op. So the passes that used
