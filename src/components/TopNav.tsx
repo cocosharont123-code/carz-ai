@@ -3,10 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { Home, User, ShoppingCart, Menu, X } from "lucide-react";
+import { ScanLine, Play, Warehouse, KeyRound, Menu, X } from "lucide-react";
 import { EXPLORE_BUBBLES, EXPLORE_COPY } from "@/config/explore";
-import { getWishlist } from "@/lib/wishlist";
 import { cn } from "@/lib/utils";
 
 /**
@@ -38,25 +36,7 @@ const FULL_SCREEN_ROUTES = ["/feed"];
 
 export function TopNav() {
   const pathname = usePathname();
-  const { status } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [cartCount, setCartCount] = useState(0);
-
-  // The badge counts the watchlist, which lives in localStorage on this device.
-  // Re-read on every navigation so returning from Wishlist shows the new count.
-  // Deferred off the effect body: a synchronous setState there cascades renders.
-  useEffect(() => {
-    let cancelled = false;
-    Promise.resolve()
-      .then(() => getWishlist().length)
-      .then((n) => {
-        if (!cancelled) setCartCount(n);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [pathname]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -71,26 +51,38 @@ export function TopNav() {
     return null;
   }
 
-  // Signed out, the person icon goes to sign-in rather than a profile page that
-  // would only bounce them there itself.
-  const profileHref = status === "authenticated" ? "/profile" : "/signin";
-
   const items = [
-    { key: "home", label: "Spot", href: "/spot", Icon: Home, active: pathname === "/spot" },
     {
-      key: "profile",
-      label: status === "authenticated" ? "Profile" : "Sign in",
-      href: profileHref,
-      Icon: User,
-      active: pathname === "/profile" || pathname === "/signin",
+      key: "spot",
+      label: "Spot a car",
+      href: "/spot",
+      Icon: ScanLine,
+      active: pathname === "/spot",
     },
     {
-      key: "cart",
-      label: "Auctions",
-      href: "/auctions",
-      Icon: ShoppingCart,
-      active: pathname.startsWith("/auctions"),
-      badge: cartCount,
+      key: "feed",
+      label: "Feed",
+      href: "/feed",
+      Icon: Play,
+      // Never actually renders active: the bar is hidden on /feed itself, since
+      // that page is the full-screen scroller. Kept correct anyway.
+      active: pathname.startsWith("/feed"),
+    },
+    {
+      key: "garage",
+      label: "Garage and ranks",
+      href: "/garage",
+      Icon: Warehouse,
+      // Ranks lives at /leaderboard as a tab on the same group, so the door
+      // stays lit when you switch to it.
+      active: pathname.startsWith("/garage") || pathname === "/leaderboard",
+    },
+    {
+      key: "sell",
+      label: "Sell a car",
+      href: "/auctions/new",
+      Icon: KeyRound,
+      active: pathname === "/auctions/new",
     },
   ];
 
@@ -106,7 +98,7 @@ export function TopNav() {
         )}
       >
         <nav className={cn("flex items-stretch justify-around", BAR_H)} aria-label="Main">
-          {items.map(({ key, label, href, Icon, active, badge }) => (
+          {items.map(({ key, label, href, Icon, active }) => (
             <Link
               key={key}
               href={href}
@@ -116,19 +108,12 @@ export function TopNav() {
               className="press relative flex min-h-[44px] min-w-[44px] flex-1 items-center justify-center"
             >
               <ActiveBar on={active} />
-              <span className="relative">
-                <Icon
-                  size={26}
-                  strokeWidth={2}
-                  className={cn("text-white transition-opacity", active ? "opacity-100" : "opacity-70")}
-                  aria-hidden
-                />
-                {badge !== undefined && badge > 0 && (
-                  <span className="absolute -right-2 -top-1.5 min-w-[17px] rounded-full bg-neon-red px-1 text-center text-[10px] font-bold leading-[17px] text-white">
-                    {badge > 99 ? "99+" : badge}
-                  </span>
-                )}
-              </span>
+              <Icon
+                size={26}
+                strokeWidth={2}
+                className={cn("text-white transition-opacity", active ? "opacity-100" : "opacity-70")}
+                aria-hidden
+              />
             </Link>
           ))}
 
@@ -152,24 +137,6 @@ export function TopNav() {
             )}
           </button>
 
-          {/* The app icon, which is the only squircle mark this repo has — the
-              PWA icon it installs to a home screen with. */}
-          <Link
-            href="/"
-            aria-label="Carz AI home"
-            onClick={() => setMenuOpen(false)}
-            className="press relative flex min-h-[44px] min-w-[44px] flex-1 items-center justify-center"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/icon-192.png"
-              alt=""
-              width={28}
-              height={28}
-              className="h-7 w-7 rounded-[9px]"
-              draggable={false}
-            />
-          </Link>
         </nav>
       </header>
 
