@@ -5,7 +5,7 @@ import { X, Trash2, ChevronLeft, ChevronRight, Images } from "lucide-react";
 import { PageTabs } from "@/components/page-tabs";
 import { MemberGate } from "@/components/member-gate";
 import { getGarage, removeFromGarage, clearGarage, type GarageCar } from "@/lib/garage-local";
-import { Button, PageMasthead, StatRow, CarPhoto, Skeleton } from "@/components/ui/editorial";
+import { Button, PageMasthead, CarPhoto, Skeleton } from "@/components/ui/editorial";
 
 function fmtDate(ts: number): string {
   return new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -19,7 +19,7 @@ export default function GaragePage() {
       blurb="A photo album of every car you've saved."
       points={[
         "Save a car from a scan and it lands here as a photo.",
-        "Tracks your total saves, unique models, and rarest find.",
+        "Counts every car you have found.",
         "Browse the album full-screen, one car at a time.",
       ]}
     >
@@ -186,12 +186,6 @@ function GarageInner() {
     }
   }
 
-  const uniqueModels = new Set(cars.map((c) => `${c.make} ${c.model}`.trim())).size;
-  const rarest = cars.reduce<GarageCar | null>(
-    (best, c) => (!best || c.rarityScore > best.rarityScore ? c : best),
-    null,
-  );
-
   return (
     <>
       <PageTabs group="collection" />
@@ -229,14 +223,14 @@ function GarageInner() {
           </div>
         ) : (
           <>
-            <div className="mt-6 grid grid-cols-3 gap-4">
-              <StatRow value={cars.length} label="Saved" className="p-4 sm:p-6" />
-              <StatRow value={uniqueModels} label="Unique models" yellow className="p-4 sm:p-6" />
-              <div className="flex flex-col justify-center rounded-2xl border border-white/10 bg-card text-card-foreground p-4 sm:p-6">
-                <div className="display truncate text-2xl sm:text-3xl">
-                  {rarest && rarest.rarityScore > 0 ? `${rarest.make} ${rarest.model}` : "—"}
+            {/* One number, big. Three tiles competed with each other and with
+                the album underneath; the count is the one anybody was reading. */}
+            <div className="mt-6 flex justify-center">
+              <div className="glass-card flex aspect-square w-full max-w-[260px] flex-col items-center justify-center rounded-[2.75rem] p-6 text-center">
+                <div className="display text-6xl leading-none sm:text-7xl">{cars.length}</div>
+                <div className="util-label mt-3 opacity-70">
+                  {cars.length === 1 ? "Car found" : "Cars found"}
                 </div>
-                <div className="util-label mt-2">Rarest find</div>
               </div>
             </div>
 
