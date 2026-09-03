@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { GlobalShaderBg } from "@/components/global-shader-bg";
+import { TopNav } from "@/components/TopNav";
 
 // UI type is the Apple system font stack (no downloaded Google Fonts).
 
@@ -44,7 +45,13 @@ export default function RootLayout({
         />
         <GlobalShaderBg />
         <div className="relative z-10 flex min-h-full flex-1 flex-col">
-          <Providers>{children}</Providers>
+          {/* Inside Providers on purpose: TopNav reads the session, and being a
+              child of the Terms gate means it stays hidden behind the blocking
+              terms screen rather than floating over it. */}
+          <Providers>
+            <TopNav />
+            {children}
+          </Providers>
         </div>
       </body>
     </html>
