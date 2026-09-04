@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "@/components/providers";
-import { GlobalGradientBg } from "@/components/global-gradient-bg";
+import { GlobalShaderBg } from "@/components/global-shader-bg";
 import { TopNav } from "@/components/TopNav";
 
 // UI type is the Apple system font stack (no downloaded Google Fonts).
@@ -37,13 +37,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className="dark h-full antialiased">
-      <body className="min-h-full flex flex-col ">
+      <body className="min-h-full flex flex-col bg-background ">
         <script
           dangerouslySetInnerHTML={{
             __html: `try{localStorage.removeItem('theme');document.documentElement.classList.remove('light');document.documentElement.classList.add('dark');}catch(e){}`,
           }}
         />
-        <GlobalGradientBg />
+        <GlobalShaderBg />
         <div className="relative z-10 flex min-h-full flex-1 flex-col">
           {/* Inside Providers on purpose: TopNav reads the session, and being a
               child of the Terms gate means it stays hidden behind the blocking

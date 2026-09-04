@@ -164,11 +164,7 @@
     max-width: 100%;
   }
   body {
-    @apply text-foreground;
-    /* The gradient itself is on the fixed .carz-bg-gradient layer — this is
-       only a floor, so nothing flashes white before that layer paints. It is
-       the gradient's darkest stop. */
-    background-color: #12131F;
+    @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     position: relative;
@@ -484,105 +480,4 @@ body {
     inset 0 -1px 1px 0 rgba(255, 255, 255, 0.08),
     inset 0 0 24px 0 rgba(255, 255, 255, 0.07),
     0 14px 36px -12px rgba(0, 0, 0, 0.75);
-}
-
-
-/* ==========================================================================
-   App background — the page gradient, and light moving over it
-   ==========================================================================
-   Mounted once in the root layout by GlobalGradientBg, behind every page.
-
-   Everything here animates on `transform` alone. A gradient animated through
-   `background-position` repaints the whole viewport every frame, which is what
-   made the WebGL background this replaced stutter on iOS; a transform is
-   composited on the GPU and repaints nothing. There are no blur filters
-   either — the softness is the radial falloff, which is free. */
-
-.carz-bg-gradient {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    225deg,
-    #F7CDB0 0%,
-    #E09A82 14%,
-    #B8323E 32%,
-    #6E2C4C 48%,
-    #4B5F86 60%,
-    #2A3352 76%,
-    #171A2A 90%,
-    #12131F 100%
-  );
-}
-
-.carz-glass-pool,
-.carz-glass-sheen {
-  position: absolute;
-  will-change: transform;
-}
-
-/* Two lobes of light, sized off vmax so they stay the same shape in either
-   orientation, and hung outside the frame so no edge is ever visible. */
-.carz-glass-pool {
-  width: 95vmax;
-  height: 95vmax;
-  border-radius: 50%;
-}
-.carz-glass-pool-a {
-  top: -34vmax;
-  right: -22vmax;
-  background: radial-gradient(
-    circle,
-    rgba(255, 255, 255, 0.14) 0%,
-    rgba(255, 255, 255, 0.05) 38%,
-    rgba(255, 255, 255, 0) 70%
-  );
-  animation: carzGlassPoolA 34s ease-in-out infinite;
-}
-/* Cooler and lower, so it reads as the steel-blue band catching the light
-   rather than a second white lamp. */
-.carz-glass-pool-b {
-  bottom: -38vmax;
-  left: -26vmax;
-  background: radial-gradient(
-    circle,
-    rgba(140, 170, 235, 0.20) 0%,
-    rgba(140, 170, 235, 0.07) 40%,
-    rgba(140, 170, 235, 0) 70%
-  );
-  animation: carzGlassPoolB 46s ease-in-out infinite;
-}
-
-/* Overhangs the viewport on both sides so the sweep never shows an end. */
-.carz-glass-sheen {
-  inset: -20% -45%;
-  background: linear-gradient(
-    105deg,
-    transparent 38%,
-    rgba(255, 255, 255, 0.05) 46%,
-    rgba(255, 255, 255, 0.10) 50%,
-    rgba(255, 255, 255, 0.05) 54%,
-    transparent 62%
-  );
-  animation: carzGlassSheen 28s ease-in-out infinite;
-}
-
-@keyframes carzGlassPoolA {
-  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-  50%      { transform: translate3d(-8%, 6%, 0) scale(1.14); }
-}
-@keyframes carzGlassPoolB {
-  0%, 100% { transform: translate3d(0, 0, 0) scale(1.08); }
-  50%      { transform: translate3d(9%, -7%, 0) scale(1); }
-}
-@keyframes carzGlassSheen {
-  0%, 100% { transform: translate3d(-14%, 0, 0); }
-  50%      { transform: translate3d(14%, 0, 0); }
-}
-
-/* The colour stays; only the motion goes. */
-@media (prefers-reduced-motion: reduce) {
-  .carz-glass-pool,
-  .carz-glass-sheen {
-    animation: none;
-  }
 }
