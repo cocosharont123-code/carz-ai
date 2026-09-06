@@ -130,7 +130,9 @@ export default function PricingPage() {
     {
       planName: "Carz+",
       description: member ? "You're a member — here's everything you unlocked." : "The membership for serious spotters.",
-      price: member ? (billing === "annual" ? String(CARZ_PLUS.annual) : CARZ_PLUS.monthly.toFixed(2)) : priceStr,
+      price: member
+        ? (billing === "annual" ? CARZ_PLUS.annual : CARZ_PLUS.monthly).toFixed(2)
+        : priceStr,
       interval: member ? (billing === "annual" ? "yr" : "mo") : annual ? "yr" : "mo",
       features: [
         member

@@ -42,7 +42,7 @@ export const PLANS: Record<PlanId, Plan> = {
  */
 export const CARZ_PLUS = {
   monthly: 7.99,
-  annual: 80,
+  annual: 79.99,
   /** Everything here is members-only. Nothing on this list is free. */
   perks: [
     { title: "Auctions 24h early", desc: "See and bid on every listing a full day before anyone else." },
@@ -58,7 +58,7 @@ export const CARZ_PLUS = {
 
 /** "$7.99" — two decimals, because a price with one looks like a typo. */
 export const carzPlusMonthly = (): string => `$${CARZ_PLUS.monthly.toFixed(2)}`;
-export const carzPlusAnnual = (): string => `$${CARZ_PLUS.annual}`;
+export const carzPlusAnnual = (): string => `$${CARZ_PLUS.annual.toFixed(2)}`;
 
 /** What the annual plan actually saves, computed rather than asserted — the
  *  old copy claimed 33% against a monthly price that has since changed. */
