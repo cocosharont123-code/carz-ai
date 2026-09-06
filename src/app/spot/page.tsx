@@ -13,6 +13,7 @@ import { CarCustomizer } from "@/components/car-customizer";
 import { ScanModePicker } from "@/components/scan-mode-picker";
 import { VinPanel } from "@/components/vin-panel";
 import { addToGarage } from "@/lib/garage-local";
+import { carzPlusMonthly, carzPlusAnnual, carzPlusAnnualSaving } from "@/lib/plans";
 import { normalizeVin, type VinFacts } from "@/lib/vin";
 import { SCAN_MODE_META, type ScanMode } from "@/lib/scan-mode";
 import { cn } from "@/lib/utils";
@@ -967,8 +968,10 @@ export default function SpotPage() {
             <p className="mx-auto mt-1 max-w-sm text-[13px] opacity-70">
               You&apos;ve used all 3 of today&apos;s free scans. Get Carz+ for unlimited scanning.
             </p>
-            <GlassButton href="/pricing" className="mt-4">Get Carz+ · $9.99/mo</GlassButton>
-            <p className="mt-3 text-xs opacity-60">or $80/year — save 33%</p>
+            <GlassButton href="/pricing" className="mt-4">Get Carz+ · {carzPlusMonthly()}/mo</GlassButton>
+            <p className="mt-3 text-xs opacity-60">
+              or {carzPlusAnnual()}/year — save {carzPlusAnnualSaving()}%
+            </p>
           </div>
         )}
 

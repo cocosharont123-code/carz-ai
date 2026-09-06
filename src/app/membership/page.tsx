@@ -5,6 +5,12 @@ import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/editorial";
+import {
+  CARZ_PLUS,
+  carzPlusMonthly,
+  carzPlusAnnual,
+  carzPlusAnnualSaving,
+} from "@/lib/plans";
 
 type Status = {
   signedIn: boolean;
@@ -17,18 +23,6 @@ type Status = {
   streak: number;
 };
 
-const PERKS: { title: string; desc: string }[] = [
-  { title: "Auctions 24h early", desc: "See and bid on every listing a full day before non-members." },
-  { title: "Unlimited AI scans", desc: "No caps on car identifications, ever." },
-  { title: "Spot cars in videos", desc: "Scan a video and identify every car in it, frame by frame." },
-  { title: "Car alerts", desc: "Get notified the moment a wishlisted car is listed or sold." },
-  { title: "Auto-bid", desc: "Set a max price and the AI bids for you — it knows market value." },
-  { title: "Market-value insight", desc: "See exactly how far over or under market value a car is selling." },
-  { title: "Radius alerts", desc: "Ping when a rare car is spotted near you." },
-  { title: "My Garage", desc: "Your full spotting history — members only." },
-  { title: "Day streaks", desc: "Build a streak; restore a lost one for $0.99." },
-  { title: "48h early access", desc: "Every new Carz feature reaches you 2 days before anyone else." },
-];
 
 export default function MembershipPage() {
   const { status: authStatus } = useSession();
@@ -177,11 +171,11 @@ export default function MembershipPage() {
               <div className="mt-5 flex flex-col items-center gap-2">
                 {onTrial ? (
                   <span className="rounded-full border border-carz/40 px-4 py-1.5 text-xs text-carz">
-                    Free trial · {trialDaysLeft} {trialDaysLeft === 1 ? "day" : "days"} left · then $9.99/mo
+                    Free trial · {trialDaysLeft} {trialDaysLeft === 1 ? "day" : "days"} left · then {carzPlusMonthly()}/mo
                   </span>
                 ) : (
                   <span className="rounded-full border border-white/15 px-4 py-1.5 text-xs">
-                    Active · {s?.billing === "annual" ? "$80/yr" : "$9.99/mo"}
+                    Active · {s?.billing === "annual" ? `${carzPlusAnnual()}/yr` : `${carzPlusMonthly()}/mo`}
                   </span>
                 )}
                 <button onClick={restore} disabled={busy} className="press text-xs underline underline-offset-4 opacity-70 hover:opacity-100">
@@ -195,7 +189,7 @@ export default function MembershipPage() {
                 <>
                   <p className="mx-auto mt-3 max-w-md text-sm">
                     <span className="display text-3xl">7 days free</span>
-                    <span className="opacity-70">, then $9.99 / month.</span> Cancel anytime.
+                    <span className="opacity-70">, then {carzPlusMonthly()} / month.</span> Cancel anytime.
                   </p>
                   <Button onClick={startTrial} loading={busy} size="lg" className="mt-5">
                     {authStatus === "authenticated" ? "Start 7-day free trial" : "Sign in to start free trial"}
@@ -205,13 +199,13 @@ export default function MembershipPage() {
                     disabled={busy}
                     className="press mt-3 block text-xs underline underline-offset-4 opacity-60 hover:opacity-100"
                   >
-                    Skip the trial — join now for $9.99/mo
+                    Skip the trial — join now for {carzPlusMonthly()}/mo
                   </button>
                 </>
               ) : (
                 <>
                   <p className="mx-auto mt-3 max-w-md text-sm">
-                    <span className="display text-3xl">$9.99</span>
+                    <span className="display text-3xl">{carzPlusMonthly()}</span>
                     <span className="opacity-70"> / month.</span> Cancel anytime.
                   </p>
                   <Button onClick={() => join("monthly")} loading={busy} size="lg" className="mt-5">
@@ -226,7 +220,8 @@ export default function MembershipPage() {
                 disabled={busy}
                 className="press mt-3 block w-full text-xs opacity-70 hover:opacity-100"
               >
-                Or get a year for <span className="font-semibold">$80</span> — save 33%
+                Or get a year for <span className="font-semibold">{carzPlusAnnual()}</span> — save{" "}
+                {carzPlusAnnualSaving()}%
               </button>
               {error && <p className="mt-2 text-sm text-nred">{error}</p>}
 
@@ -259,7 +254,7 @@ export default function MembershipPage() {
         {/* Perks */}
         <h2 className="display mt-8 text-2xl">What you get</h2>
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {PERKS.map((p) => (
+          {CARZ_PLUS.perks.map((p) => (
             <div key={p.title} className="glass-card reveal press lift rounded-2xl p-4">
               <div>
                 <p className="text-[15px] font-semibold">{p.title}</p>
@@ -276,7 +271,7 @@ export default function MembershipPage() {
                 ? "Sign in to join"
                 : trialAvailable
                   ? "Start 7-day free trial"
-                  : "Join Carz+ · $9.99/mo"}
+                  : `Join Carz+ · ${carzPlusMonthly()}/mo`}
             </Button>
             <Link href="/pricing" className="press util-label opacity-60 hover:opacity-100">
               See the full plan comparison

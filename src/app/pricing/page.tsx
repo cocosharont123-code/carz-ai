@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CARZ_PLUS, carzPlusMonthly, carzPlusAnnual, carzPlusAnnualSaving } from "@/lib/plans";
 import { useRouter } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
 import { ModernPricingPage, type PricingCardProps } from "@/components/ui/animated-glassy-pricing";
@@ -56,7 +57,7 @@ export default function PricingPage() {
     setPromoError("");
   }
 
-  const basePrice = annual ? 80 : 9.99;
+  const basePrice = annual ? CARZ_PLUS.annual : CARZ_PLUS.monthly;
   const finalPrice = promo ? applyDiscount(basePrice, promo.percentOff) : basePrice;
   const priceStr = formatPrice(finalPrice);
   const isFree = promo?.percentOff === 100;
@@ -129,7 +130,7 @@ export default function PricingPage() {
     {
       planName: "Carz+",
       description: member ? "You're a member — here's everything you unlocked." : "The membership for serious spotters.",
-      price: member ? (billing === "annual" ? "80" : "9.99") : priceStr,
+      price: member ? (billing === "annual" ? String(CARZ_PLUS.annual) : CARZ_PLUS.monthly.toFixed(2)) : priceStr,
       interval: member ? (billing === "annual" ? "yr" : "mo") : annual ? "yr" : "mo",
       features: [
         member
@@ -137,14 +138,9 @@ export default function PricingPage() {
           : promo
             ? `${promo.code.toUpperCase()} applied — ${promo.percentOff}% off${isFree ? " (free)" : `, was $${formatPrice(basePrice)}`}`
             : annual
-              ? "Billed $80/year — save 33%"
-              : "7-day free trial, then $9.99/mo",
-        "Unlimited car scans",
-        "Wishlist auctions + car alerts",
-        "Auctions 24h early",
-        "Members-only Garage",
-        "Auto-bid + market-value insight",
-        "48h early access to new features",
+              ? `Billed ${carzPlusAnnual()}/year — save ${carzPlusAnnualSaving()}%`
+              : `7-day free trial, then ${carzPlusMonthly()}/mo`,
+        ...CARZ_PLUS.perks.map((p) => p.title),
       ],
       buttonText: carzButtonText,
       isPopular: true,
@@ -159,7 +155,9 @@ export default function PricingPage() {
     <div className="flex flex-col items-center gap-2">
       <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/40 bg-cyan-400/10 px-4 py-1.5 text-sm text-cyan-300">
         <span className="font-semibold">Carz+ active</span>
-        <span className="opacity-80">· {billing === "annual" ? "$80/yr" : "$9.99/mo"}</span>
+        <span className="opacity-80">
+          · {billing === "annual" ? `${carzPlusAnnual()}/yr` : `${carzPlusMonthly()}/mo`}
+        </span>
       </div>
       <p className="text-sm text-foreground/70">Everything below is already unlocked.</p>
     </div>
@@ -176,7 +174,7 @@ export default function PricingPage() {
           onClick={() => setAnnual(true)}
           className={cn("press rounded-full px-4 py-1.5 font-medium transition", annual ? "bg-cyan-400 text-black" : "text-foreground/70 hover:text-foreground")}
         >
-          Annual <span className="opacity-70">· save 33%</span>
+          Annual <span className="opacity-70">· save {carzPlusAnnualSaving()}%</span>
         </button>
       </div>
 

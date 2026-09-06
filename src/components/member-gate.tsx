@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/editorial";
+import { carzPlusMonthly, carzPlusAnnual, carzPlusAnnualSaving } from "@/lib/plans";
 
 /**
  * Wraps members-only content. Renders the children only for Carz+ members;
@@ -65,8 +66,10 @@ export function MemberGate({
               </ul>
             )}
 
-            <Button href="/pricing" className="mt-6">Get Carz+ · $9.99/mo</Button>
-            <p className="mt-3 text-xs opacity-60">or $80/year — save 33%</p>
+            <Button href="/pricing" className="mt-6">Get Carz+ · {carzPlusMonthly()}/mo</Button>
+            <p className="mt-3 text-xs opacity-60">
+              or {carzPlusAnnual()}/year — save {carzPlusAnnualSaving()}%
+            </p>
           </div>
         </main>
       </>

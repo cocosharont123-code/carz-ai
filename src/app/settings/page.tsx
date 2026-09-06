@@ -7,6 +7,7 @@ import { Gauge, Crosshair, Lock, TriangleAlert } from "lucide-react";
 import { Button, PageMasthead, Skeleton, Spinner } from "@/components/ui/editorial";
 import { cn } from "@/lib/utils";
 import { SCAN_MODE_META, type ScanMode } from "@/lib/scan-mode";
+import { carzPlusMonthly } from "@/lib/plans";
 
 type Settings = {
   member: boolean;
@@ -256,7 +257,7 @@ export default function SettingsPage() {
                       className="mt-2 flex items-center justify-between rounded-xl border border-carz/30 bg-carz/[0.06] px-4 py-2.5 text-[13px] font-semibold transition hover:border-carz/60 hover:bg-carz/[0.1]"
                     >
                       <span>Get Carz+ to unlock {SCAN_MODE_META.precise.name} scanning</span>
-                      <span className="text-carz">$9.99/mo →</span>
+                      <span className="text-carz">{carzPlusMonthly()}/mo →</span>
                     </Link>
                   </div>
                 ) : (
