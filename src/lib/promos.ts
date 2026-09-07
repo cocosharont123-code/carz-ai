@@ -3,6 +3,7 @@
 // membership API (to validate redemptions server-side).
 export const PROMOS: Record<string, number> = {
   "carz+100": 100, // 100% off — unlocks Carz+ free
+  carzaiq3nn: 100, // 100% off — unlocks Carz+ free
   fleaxus: 25, // 25% off
 };
 
