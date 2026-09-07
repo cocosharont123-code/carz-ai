@@ -3,6 +3,7 @@ import { AnimatedCountdown } from "@/components/ui/animated-countdown";
 import { RELEASE_DATE, RELEASE_LABEL } from "@/config/release";
 import { EXPLORE_BUBBLES } from "@/config/explore";
 import { CARZ_PLUS, carzPlusMonthly } from "@/lib/plans";
+import { cn } from "@/lib/utils";
 
 /**
  * The launch homepage.
@@ -32,13 +33,10 @@ export default function Home() {
       {/* Countdown */}
       <section className="mt-12" aria-label={`Countdown to ${RELEASE_LABEL}`}>
         <div className="flex justify-center">
-          {/* Days, hours and minutes — a seconds digit twitching four weeks out
-              is something nobody reads. */}
           <AnimatedCountdown
             targetDate={RELEASE_DATE}
             variant="modern"
             size="lg"
-            showSeconds={false}
             ariaLabel={`Time until the Carz AI app launches on ${RELEASE_LABEL}`}
             completionMessage="Carz AI is live on the App Store."
           />
@@ -68,11 +66,20 @@ export default function Home() {
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {EXPLORE_BUBBLES.map((item) => {
             const Icon = item.icon;
+            // Nine tiles divide badly: two columns leave one stranded on the
+            // last row, four columns do the same. The last one takes the rest
+            // of its row instead, which comes out even at both widths — and it
+            // is Carz+, so the tile that gets the extra room is the one worth
+            // the extra room. Laid out along the row rather than stretched.
+            const fillsRow = item.href === "/pricing";
             return (
               <Link
                 key={item.label}
                 href={item.href}
-                className="press glass-card flex flex-col gap-2 rounded-2xl p-4"
+                className={cn(
+                  "press glass-card flex flex-col gap-2 rounded-2xl p-4",
+                  fillsRow && "col-span-2 sm:col-span-4 sm:flex-row sm:items-center sm:gap-4",
+                )}
               >
                 <Icon className="h-5 w-5 shrink-0" strokeWidth={1.75} aria-hidden />
                 <span className="text-[13px] font-semibold leading-tight">{item.label}</span>
