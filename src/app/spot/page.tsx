@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ImagePlus, Upload, Trash2, X, TrafficCone } from "lucide-react";
+import { Camera, ImagePlus, Upload, Trash2, X, TrafficCone } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Button as GlassButton } from "@/components/ui/editorial";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { useImageUpload } from "@/components/hooks/use-image-upload";
 import { CarHotspotsMap } from "@/components/car-hotspots-map";
 import { CarCustomizer } from "@/components/car-customizer";
+import { NearbySpots } from "@/components/nearby-spots";
 import { addToGarage } from "@/lib/garage-local";
 import { cn } from "@/lib/utils";
 import type { CarReport } from "@/lib/identify";
@@ -311,6 +312,105 @@ export default function SpotPage() {
     handleRemove,
   } = useImageUpload();
 
+  // The live viewfinder. A photo taken here is the only kind that can reach the
+  // "Spotted near you" feed — a camera-roll upload could be any car, taken
+  // anywhere, at any time, and the feed's whole claim is "here, now".
+  const [camOn, setCamOn] = useState(false);
+  const [camError, setCamError] = useState("");
+  const [liveShot, setLiveShot] = useState("");
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  // Whichever photo is staged, from either source.
+  const shotUrl = liveShot || previewUrl;
+
+  const stopCam = useCallback(() => {
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    setCamOn(false);
+  }, []);
+
+  // Release the camera when leaving the page — without this the recording
+  // indicator stays lit after navigating away.
+  useEffect(() => stopCam, [stopCam]);
+
+  async function startCam() {
+    setCamError("");
+    setError("");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" } },
+        audio: false,
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+      setCamOn(true);
+    } catch {
+      setCamError("Couldn't open the camera. Allow camera access, or upload a photo instead.");
+    }
+  }
+
+  function captureLive() {
+    const v = videoRef.current;
+    if (!v || !streamRef.current) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = v.videoWidth;
+    canvas.height = v.videoHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+    // Full sensor resolution here; identify() downscales once, further down, so
+    // the badge detail survives to the zoom crop.
+    setLiveShot(canvas.toDataURL("image/jpeg", 0.9));
+    stopCam();
+  }
+
+  // Clear whichever source staged the current photo.
+  function clearShot() {
+    setLiveShot("");
+    handleRemove();
+  }
+
+  /**
+   * Publish a live spot to the nearby feed. Best-effort by design: it runs after
+   * the result is already on screen, and a denied location prompt or a failed
+   * request must never surface as a failed scan.
+   */
+  const publishNearby = useCallback((car: CarReport, source: string) => {
+    if (!("geolocation" in navigator)) return;
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const thumb = await downscale(source, 320, 0.5);
+          await fetch("/api/nearby", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              live: true,
+              make: car.make,
+              model: car.model,
+              yearRange: car.yearRange,
+              rarityScore: car.rarityScore,
+              priceRange: car.priceRangeUsed,
+              image: thumb,
+              lat: pos.coords.latitude,
+              lon: pos.coords.longitude,
+            }),
+          });
+        } catch {
+          /* the feed is a nicety; the scan already succeeded */
+        }
+      },
+      () => {
+        /* no location, no nearby entry — nothing to tell the user */
+      },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 5 * 60_000 },
+    );
+  }, []);
+
   async function refresh() {
     const s = await fetch("/api/me").then((r) => r.json());
     setStatus(s);
@@ -352,15 +452,17 @@ export default function SpotPage() {
   );
 
   async function identify() {
-    if (!previewUrl) {
-      setError("Attach a photo of a car first.");
+    if (!shotUrl) {
+      setError("Take a photo of a car, or attach one, first.");
       return;
     }
     setError("");
     setLimitHit(false);
     setLoading(true);
     try {
-      const raw = await objectUrlToDataUrl(previewUrl);
+      // A live capture is already a data URL; an upload is an object URL.
+      const fromCamera = !!liveShot;
+      const raw = liveShot || (await objectUrlToDataUrl(shotUrl));
       // 2576px is the model's high-resolution limit — anything smaller throws
       // away the badge text and headlight detail the identification leans on.
       // At 1024/0.72 a Carrera 4S badge is a smudge; this is the single biggest
@@ -389,6 +491,9 @@ export default function SpotPage() {
       setCar(data.car);
       setSpottedImage(image); // keep the exact photo for the AI customizer
       setStatus((prev) => ({ ...(prev as Status), ...data.status }));
+
+      // Only live captures feed "Spotted near you".
+      if (fromCamera && data.car?.isCar) publishNearby(data.car, raw);
 
       // The answer is on screen at this point. Everything below follows from the
       // car's name rather than the photo, so it loads in behind the result
@@ -509,24 +614,64 @@ export default function SpotPage() {
             onChange={handleFileChange}
           />
 
-          {!previewUrl ? (
-            <div
-              onClick={handleThumbnailClick}
-              onDragOver={handleDragOver}
-              onDragEnter={handleDragEnter}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              className={cn(
-                "flex h-64 cursor-pointer flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-foreground/15 bg-foreground/[0.02] transition-colors hover:bg-foreground/[0.04]",
-                isDragging && "border-neon-blue/60 bg-neon-blue/5",
-              )}
-            >
-              <div className="rounded-full bg-background p-3 shadow-sm">
-                <ImagePlus className="h-6 w-6 " />
+          {camOn && !shotUrl ? (
+            <div className="overflow-hidden rounded-2xl border border-white/12 bg-black">
+              <div className="relative aspect-[4/3] w-full">
+                {/* muted + playsInline so iOS Safari plays inline instead of
+                    taking over the screen with its native player. */}
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  muted
+                  playsInline
+                  className="h-full w-full object-cover"
+                />
               </div>
-              <div className="text-center">
-                <p className="text-sm font-medium">Click to select a car photo</p>
-                <p className="text-xs ">or drag and drop it here</p>
+              <div className="flex gap-2 p-3">
+                <button
+                  onClick={captureLive}
+                  className="press flex-1 rounded-xl bg-white py-3 font-black text-[#1f1f1f] transition hover:opacity-90"
+                >
+                  Take the shot
+                </button>
+                <button
+                  onClick={stopCam}
+                  className="press rounded-xl border border-white/20 px-5 py-3 text-sm font-semibold text-white transition hover:border-white/40"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : !shotUrl ? (
+            <div className="space-y-3">
+              {/* Live camera first: it is the only route into "Spotted near you",
+                  and on a phone it is also the faster one. */}
+              <button
+                onClick={startCam}
+                className="press flex w-full items-center justify-center gap-2 rounded-2xl border border-carz/50 bg-carz/10 py-4 font-bold transition hover:bg-carz/20"
+              >
+                <Camera className="h-5 w-5" aria-hidden />
+                Open the camera
+              </button>
+              {camError && <p className="text-sm text-neon-red">{camError}</p>}
+              <div
+                onClick={handleThumbnailClick}
+                onDragOver={handleDragOver}
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className={cn(
+                  "flex h-52 cursor-pointer flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-foreground/15 bg-foreground/[0.02] transition-colors hover:bg-foreground/[0.04]",
+                  isDragging && "border-neon-blue/60 bg-neon-blue/5",
+                )}
+              >
+                <div className="rounded-full bg-background p-3 shadow-sm">
+                  <ImagePlus className="h-6 w-6 " />
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-medium">Or select a photo from your library</p>
+                  <p className="text-xs ">drag and drop works too</p>
+                </div>
               </div>
             </div>
           ) : (
@@ -534,24 +679,42 @@ export default function SpotPage() {
               <div className="group relative h-64 overflow-hidden rounded-xl border border-border">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={previewUrl}
+                  src={shotUrl}
                   alt="Car preview"
                   className="h-full w-full object-cover brightness-75 transition-transform duration-300 group-hover:scale-105"
                 />
+                {liveShot && (
+                  <span className="absolute left-2 top-2 flex items-center gap-1.5 rounded-full bg-black/70 px-2.5 py-1 text-[11px] font-semibold text-white">
+                    <Camera className="h-3 w-3" aria-hidden />
+                    Live shot
+                  </span>
+                )}
                 <div className="absolute inset-0 bg-black/40 text-white opacity-0 transition-opacity group-hover:opacity-100" />
                 <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-                  <Button size="sm" variant="secondary" onClick={handleThumbnailClick} className="h-9 w-9 p-0">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => {
+                      setLiveShot("");
+                      void startCam();
+                    }}
+                    title="Retake with the camera"
+                    className="h-9 w-9 p-0"
+                  >
+                    <Camera className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="secondary" onClick={handleThumbnailClick} title="Choose another photo" className="h-9 w-9 p-0">
                     <Upload className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" variant="destructive" onClick={handleRemove} className="h-9 w-9 p-0">
+                  <Button size="sm" variant="destructive" onClick={clearShot} title="Remove" className="h-9 w-9 p-0">
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
-              {fileName && (
+              {(liveShot || fileName) && (
                 <div className="mt-2 flex items-center gap-2 text-sm ">
-                  <span className="truncate">{fileName}</span>
-                  <button onClick={handleRemove} className="ml-auto rounded-full p-1 hover:bg-muted">
+                  <span className="truncate">{liveShot ? "Taken just now on the live camera" : fileName}</span>
+                  <button onClick={clearShot} className="ml-auto rounded-full p-1 hover:bg-muted">
                     <X className="h-4 w-4" />
                   </button>
                 </div>
@@ -583,7 +746,7 @@ export default function SpotPage() {
               </div>
             </div>
           ) : !car ? (
-            <GlassButton onClick={identify} disabled={!previewUrl} size="lg" className="w-full py-5">
+            <GlassButton onClick={identify} disabled={!shotUrl} size="lg" className="w-full py-5">
               Identify car
             </GlassButton>
           ) : (
@@ -763,6 +926,8 @@ export default function SpotPage() {
             </div>
           </section>
         )}
+
+        <NearbySpots />
 
         {/* Spotting map — free for everyone */}
         <section className="mt-8">
