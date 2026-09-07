@@ -182,7 +182,14 @@ function ExploreSheet({ onClose }: { onClose: () => void }) {
                 key={item.label}
                 href={item.href}
                 onClick={onClose}
-                className="press glass-card relative flex min-h-[44px] items-center gap-3 rounded-2xl px-3 py-3"
+                className={cn(
+                  "press glass-card relative flex min-h-[44px] items-center gap-3 rounded-2xl px-3 py-3",
+                  // Nine rows leave one stranded in two columns. The last takes
+                  // both, which fills the grid — but only there: at three
+                  // columns nine already divides evenly, and spanning would be
+                  // the thing that broke it.
+                  item.href === "/pricing" && "col-span-2 sm:col-span-1",
+                )}
               >
                 <Icon className="h-5 w-5 shrink-0" strokeWidth={1.75} aria-hidden />
                 <span className="min-w-0 flex-1 text-[13px] font-semibold leading-tight">
