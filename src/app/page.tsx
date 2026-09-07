@@ -1,5 +1,6 @@
 import Link from "next/link";
-import ShiftingCountdown, { RELEASE_LABEL } from "@/components/ui/countdown-timer";
+import { AnimatedCountdown } from "@/components/ui/animated-countdown";
+import { RELEASE_DATE, RELEASE_LABEL } from "@/config/release";
 import { EXPLORE_BUBBLES } from "@/config/explore";
 import { CARZ_PLUS, carzPlusMonthly } from "@/lib/plans";
 
@@ -30,10 +31,17 @@ export default function Home() {
 
       {/* Countdown */}
       <section className="mt-12" aria-label={`Countdown to ${RELEASE_LABEL}`}>
-        <div className="glass-card mx-auto max-w-3xl rounded-3xl px-2 py-2 sm:px-6">
-          {/* Days, hours and minutes — seconds on a launch this far out is a
-              twitching digit nobody reads. */}
-          <ShiftingCountdown units={["Day", "Hour", "Minute"]} />
+        <div className="flex justify-center">
+          {/* Days, hours and minutes — a seconds digit twitching four weeks out
+              is something nobody reads. */}
+          <AnimatedCountdown
+            targetDate={RELEASE_DATE}
+            variant="modern"
+            size="lg"
+            showSeconds={false}
+            ariaLabel={`Time until the Carz AI app launches on ${RELEASE_LABEL}`}
+            completionMessage="Carz AI is live on the App Store."
+          />
         </div>
         <p className="mt-5 text-center text-[13px] opacity-60">
           Until Carz AI lands on the App Store.
