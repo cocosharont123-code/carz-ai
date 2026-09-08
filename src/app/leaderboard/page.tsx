@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Crown } from "lucide-react";
 import { PageTabs } from "@/components/page-tabs";
 import { Avatar } from "@/components/default-avatar";
 import { Button, PageMasthead, CarPhoto, Skeleton, Eyebrow } from "@/components/ui/editorial";
@@ -101,9 +102,24 @@ export default function LeaderboardPage() {
                     <p className="mt-0.5 flex items-center gap-1.5 truncate text-xs">
                       <Avatar src={c.spotterImage} size={15} />
                       <span className={cn("truncate", ultra ? "" : "")}>{c.spotter}</span>
+                      {/* A crown rather than a "Carz+" pill. The label still has
+                          to reach a screen reader and a hover, so it moves to the
+                          wrapper — an icon on its own says nothing to either.
+                          text-rank-1 is the gold this board already uses for
+                          first place. */}
                       {c.spotterMember && (
-                        <span className="inline-flex shrink-0 items-center rounded-full bg-gradient-to-b from-amber-200 to-yellow-500 px-1.5 py-0.5 text-[9px] font-bold uppercase leading-none tracking-wide text-black shadow-[0_0_8px_rgba(250,204,21,0.35)] ring-1 ring-amber-300/60">
-                          Carz+
+                        <span
+                          role="img"
+                          aria-label="Carz+ member"
+                          title="Carz+ member"
+                          className="inline-flex shrink-0 items-center"
+                        >
+                          <Crown
+                            className="h-3.5 w-3.5 text-rank-1 drop-shadow-[0_0_6px_rgba(250,204,21,0.45)]"
+                            strokeWidth={2}
+                            fill="currentColor"
+                            aria-hidden
+                          />
                         </span>
                       )}
                     </p>
