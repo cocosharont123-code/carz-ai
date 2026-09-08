@@ -77,18 +77,21 @@ export default function LeaderboardPage() {
               <span className="util-label text-right ">Rarity</span>
             </div>
             {cars.map((c, i) => {
-              const ultra = c.rarityScore >= 100;
+              // Only the top three are highlighted. This used to key off
+              // rarity >= 100, which lit any ultra-rare car wherever it sat in
+              // the list — including well down the board, where a highlighted
+              // row reads as the leader and isn't one.
               const top = i < 3;
               return (
                 <div
                   key={c.id}
                   className={cn(
                     "group grid grid-cols-[2.5rem_4rem_1fr_auto] items-center gap-3 border-b border-white/10 px-4 sm:grid-cols-[3rem_5rem_1fr_5rem]",
-                    ultra ? "bg-carz " : "",
+                    top ? "bg-carz/10" : "",
                     top ? "py-4" : "py-3",
                   )}
                 >
-                  <span className={cn("display", top ? "text-3xl" : "text-2xl", ultra ? "" : "")}>
+                  <span className={cn("display", top ? "text-3xl" : "text-2xl")}>
                     {i + 1}
                   </span>
                   <div className={cn("overflow-hidden rounded-lg", top ? "h-14 w-16" : "h-12 w-14")}>
@@ -97,11 +100,11 @@ export default function LeaderboardPage() {
                   <div className="min-w-0">
                     <p className={cn("truncate font-semibold", top && "text-lg")}>
                       {c.make} {c.model}
-                      {c.yearRange ? <span className={cn("font-normal", ultra ? "" : "")}> · {c.yearRange}</span> : null}
+                      {c.yearRange ? <span className="font-normal"> · {c.yearRange}</span> : null}
                     </p>
                     <p className="mt-0.5 flex items-center gap-1.5 truncate text-xs">
                       <Avatar src={c.spotterImage} size={15} />
-                      <span className={cn("truncate", ultra ? "" : "")}>{c.spotter}</span>
+                      <span className="truncate">{c.spotter}</span>
                       {/* A crown rather than a "Carz+" pill. The label still has
                           to reach a screen reader and a hover, so it moves to the
                           wrapper — an icon on its own says nothing to either.
@@ -126,7 +129,7 @@ export default function LeaderboardPage() {
                   </div>
                   <div className="text-right">
                     <div className={cn("display", top ? "text-3xl" : "text-2xl")}>{Math.round(c.rarityScore)}</div>
-                    <div className={cn("util-label", ultra ? "" : "")}>{rarityLabel(c.rarityScore)}</div>
+                    <div className="util-label">{rarityLabel(c.rarityScore)}</div>
                   </div>
                 </div>
               );
