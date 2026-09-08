@@ -16,6 +16,15 @@ export type WantedCar = {
 export const HUNT_CITY = "Miami";
 
 // Every hunt car must be spotted out on a public road.
+/**
+ * The hunt does not start until this many accounts have entered.
+ *
+ * A scavenger hunt with cash bounties needs a crowd to be a hunt rather than a
+ * payout — with a handful of entrants the rarest cars get claimed in a day and
+ * the pot is gone.
+ */
+export const HUNT_MIN_ENTRANTS = 1000;
+
 export const HUNT_RULE = "All cars must be spotted out on the road.";
 
 export const WANTED: WantedCar[] = [
