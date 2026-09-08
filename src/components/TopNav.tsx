@@ -9,7 +9,6 @@ import {
   ScanLine,
   Play,
   Warehouse,
-  KeyRound,
   Menu,
   X,
   User,
@@ -78,13 +77,6 @@ export function TopNav() {
       // The leaderboard is a tab on the same group, so the door
       // stays lit when you switch to it.
       active: pathname.startsWith("/garage") || pathname === "/leaderboard",
-    },
-    {
-      key: "sell",
-      label: "Sell a car",
-      href: "/auctions/new",
-      Icon: KeyRound,
-      active: pathname === "/auctions/new",
     },
   ];
 
@@ -192,11 +184,10 @@ function ExploreSheet({ onClose }: { onClose: () => void }) {
                 onClick={onClose}
                 className={cn(
                   "press glass-card relative flex min-h-[44px] items-center gap-3 rounded-2xl px-3 py-3",
-                  // Nine rows leave one stranded in two columns. The last takes
-                  // both, which fills the grid — but only there: at three
-                  // columns nine already divides evenly, and spanning would be
-                  // the thing that broke it.
-                  item.href === "/pricing" && "col-span-2 sm:col-span-1",
+                  // Seven rows: six fill three rows of two and two rows of
+                  // three, so the last takes whatever is left of its row at
+                  // either width.
+                  item.href === "/pricing" && "col-span-2 sm:col-span-3",
                 )}
               >
                 <Icon className="h-5 w-5 shrink-0" strokeWidth={1.75} aria-hidden />

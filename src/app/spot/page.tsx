@@ -1073,13 +1073,6 @@ export default function SpotPage() {
                 <ValueChart points={car.valueTimeline} />
                 <InlineListings make={car.make} model={car.model} goodDealUsd={car.goodDealUsd} />
 
-                <Link
-                  href={`/auctions/new?make=${encodeURIComponent(car.make)}&model=${encodeURIComponent(car.model)}`}
-                  className="mt-3 flex items-center justify-between rounded-2xl border border-black/15 bg-black/[0.05] px-4 py-3 text-sm font-semibold transition hover:border-black/35 hover:bg-black/[0.09]"
-                >
-                  <span>List this car for auction on Carz</span>
-                </Link>
-
                 {(car.valuation || car.reliability || car.collectibility) && (
                   <div className="mt-6 border-t border-black/15 pt-5">
                     {car.valuation && (

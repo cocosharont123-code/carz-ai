@@ -45,13 +45,10 @@ export const CARZ_PLUS = {
   annual: 79.99,
   /** Everything here is members-only. Nothing on this list is free. */
   perks: [
-    { title: "Auctions 24h early", desc: "See and bid on every listing a full day before anyone else." },
     { title: "Unlimited AI scans", desc: "No cap on car identifications, ever." },
     { title: "Spot cars in video", desc: "Scan a video and identify every car in it." },
-    { title: "AI auto-bid", desc: "Set a maximum and the AI bids for you — it knows market value." },
     { title: "Car config", desc: "Restyle any car you spot — colour, rims, mods." },
     { title: "Garage", desc: "A photo album of every car you save." },
-    { title: "Wishlist", desc: "Track the cars you're chasing and get told when they appear." },
     { title: "Market-value insight", desc: "See how far over or under market value a car is selling." },
   ],
 } as const;

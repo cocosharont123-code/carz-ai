@@ -66,11 +66,10 @@ export default function Home() {
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {EXPLORE_BUBBLES.map((item) => {
             const Icon = item.icon;
-            // Nine tiles divide badly: two columns leave one stranded on the
-            // last row, four columns do the same. The last one takes the rest
-            // of its row instead, which comes out even at both widths — and it
-            // is Carz+, so the tile that gets the extra room is the one worth
-            // the extra room. Laid out along the row rather than stretched.
+            // Seven tiles: six fill whole rows at two and at four columns, so
+            // the last takes what is left of its row and the grid comes out
+            // even at both widths. It is Carz+, so the tile with the extra room
+            // is the one worth it. Laid out along the row, not stretched.
             const fillsRow = item.href === "/pricing";
             return (
               <Link
@@ -78,7 +77,7 @@ export default function Home() {
                 href={item.href}
                 className={cn(
                   "press glass-card flex flex-col gap-2 rounded-2xl p-4",
-                  fillsRow && "col-span-2 sm:col-span-4 sm:flex-row sm:items-center sm:gap-4",
+                  fillsRow && "col-span-2 sm:col-span-2 sm:flex-row sm:items-center sm:gap-4",
                 )}
               >
                 <Icon className="h-5 w-5 shrink-0" strokeWidth={1.75} aria-hidden />

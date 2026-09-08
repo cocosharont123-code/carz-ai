@@ -16,9 +16,7 @@ import {
   Crosshair,
   Crown,
   Trophy,
-  Gavel,
   Images,
-  KeyRound,
   ScanLine,
   Ticket,
   Users,
@@ -52,8 +50,6 @@ export const EXPLORE_COPY = {
 /**
  * The whole app, in the order the tiles are laid out.
  *
- * A paired bubble opens the feature it is named for first. Auctions & Wishlist
- * lands on a page where the other half is a tab, so both are one tap away.
  * Events & Drops is a pair by theme rather than by page, so it opens Events.
  * Anything gated gets its own entry rather than being paired with something
  * public, or the public half ends up behind the gate.
@@ -100,18 +96,6 @@ export const EXPLORE_BUBBLES: ExploreItem[] = [
     href: "/hunt",
     icon: Crosshair,
     membersOnly: true,
-  },
-  {
-    label: "Sell a car",
-    description: "Free listing, AI writes it for you",
-    href: "/auctions/new",
-    icon: KeyRound,
-  },
-  {
-    label: "Auctions & Wishlist",
-    description: "Bid live, save the cars you want",
-    href: "/auctions",
-    icon: Gavel,
   },
   // Last, because it is the one tile that sells something rather than doing
   // something.
