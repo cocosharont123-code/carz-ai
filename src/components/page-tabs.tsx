@@ -4,8 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-// Grouped sections that share a page with a tab switcher:
-// Auctions + Wishlist, Garage + Leaderboard.
+// Grouped sections that share a page with a tab switcher.
+//
+// Garage and Leaderboard used to be a pair here. They aren't related — one is
+// your own saved cars, the other is everyone's rarest finds — and the
+// leaderboard has its own entry in the bar now, so they are two pages.
 //
 // Events and Hunt used to be a pair here. They aren't related — one lists car
 // meets near you, the other is a cash-bounty board for Miami — so they are two
@@ -15,10 +18,7 @@ const GROUPS = {
     { href: "/auctions", label: "Auctions" },
     { href: "/wishlist", label: "Wishlist" },
   ],
-  collection: [
-    { href: "/garage", label: "Garage" },
-    { href: "/leaderboard", label: "Leaderboard" },
-  ],
+
 } as const;
 
 export function PageTabs({ group }: { group: keyof typeof GROUPS }) {

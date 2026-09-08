@@ -59,7 +59,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "Profiles are not configured." }, { status: 503 });
   }
 
-  let body: { username?: string; displayName?: string; image?: string };
+  let body: { username?: string; displayName?: string; image?: string; birthday?: string };
   try {
     body = await req.json();
   } catch {
@@ -72,6 +72,7 @@ export async function POST(req: Request) {
       username: body.username || "",
       displayName: body.displayName,
       image: body.image,
+      birthday: body.birthday,
     });
   } catch (e) {
     // Surface the real storage reason (e.g. missing/expired BLOB_READ_WRITE_TOKEN

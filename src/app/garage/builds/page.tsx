@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Palette, X } from "lucide-react";
-import { PageTabs } from "@/components/page-tabs";
 import { MemberGate } from "@/components/member-gate";
 import { getBuilds, removeBuild, clearBuilds, type SavedBuild } from "@/lib/builds-local";
 import type { ConfigEntry } from "@/lib/config-history";
@@ -24,7 +23,6 @@ function fmtDate(ts: number): string {
 export default function BuildsPage() {
   return (
     <MemberGate
-      tabs={<PageTabs group="collection" />}
       title="Builds"
       blurb="Every car configuration you've generated, saved to your account."
       points={[
@@ -111,7 +109,6 @@ function BuildsInner() {
 
   return (
     <>
-      <PageTabs group="collection" />
       <main className="mx-auto w-full max-w-4xl px-5 py-10">
         <PageMasthead
           eyebrow="Your configs · Carz+"

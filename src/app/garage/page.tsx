@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { X, Trash2, ChevronLeft, ChevronRight, Images } from "lucide-react";
-import { PageTabs } from "@/components/page-tabs";
 import { MemberGate } from "@/components/member-gate";
 import { getGarage, removeFromGarage, clearGarage, type GarageCar } from "@/lib/garage-local";
 import { Button, PageMasthead, CarPhoto, Skeleton } from "@/components/ui/editorial";
@@ -14,7 +13,6 @@ function fmtDate(ts: number): string {
 export default function GaragePage() {
   return (
     <MemberGate
-      tabs={<PageTabs group="collection" />}
       title="Garage"
       blurb="A photo album of every car you've saved."
       points={[
@@ -188,7 +186,6 @@ function GarageInner() {
 
   return (
     <>
-      <PageTabs group="collection" />
       <main className="mx-auto w-full max-w-5xl px-5 py-10">
         <PageMasthead
           eyebrow="Your album · members only"

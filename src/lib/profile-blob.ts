@@ -9,6 +9,14 @@ export type Profile = {
   username: string;
   displayName: string;
   image: string; // base64 thumbnail, or "" for the animated default
+  /**
+   * Birthday as "MM-DD" — month and day, never a year.
+   *
+   * Stored without one on purpose: a birth year is the piece that makes a
+   * birthday useful for identifying someone, and nothing here needs it. There
+   * is no field to put one in, so none can be collected by accident.
+   */
+  birthday?: string;
   ts: number;
   member?: boolean; // Carz+ membership
   memberSince?: number;
@@ -228,9 +236,24 @@ export async function getProfile(
   }
 }
 
+/** "MM-DD" and a real day of that month. Rejects anything with a year in it. */
+export function validateBirthday(raw: string): { ok: boolean; value?: string } {
+  const v = (raw || "").trim();
+  if (!v) return { ok: true, value: "" }; // clearing it is allowed
+  const m = /^(\d{2})-(\d{2})$/.exec(v);
+  if (!m) return { ok: false };
+  const month = Number(m[1]);
+  const day = Number(m[2]);
+  if (month < 1 || month > 12 || day < 1) return { ok: false };
+  // Leap day is allowed: 29 February is a birthday even in years it isn't a date.
+  const maxDay = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1];
+  if (day > maxDay) return { ok: false };
+  return { ok: true, value: `${m[1]}-${m[2]}` };
+}
+
 export async function setProfile(
   email: string,
-  data: { username: string; displayName?: string; image?: string },
+  data: { username: string; displayName?: string; image?: string; birthday?: string },
 ): Promise<{ ok: boolean; error?: string; profile?: Profile }> {
   const v = validateUsername(data.username);
   if (!v.ok) return { ok: false, error: v.error };
@@ -248,11 +271,21 @@ export async function setProfile(
   const image =
     typeof data.image === "string" && data.image.startsWith("data:") ? data.image.slice(0, 80_000) : all[myKey]?.image ?? "";
 
+  // Undefined means "not being edited" and keeps what is stored; an empty
+  // string is an explicit clear.
+  let birthday = all[myKey]?.birthday ?? "";
+  if (data.birthday !== undefined) {
+    const b = validateBirthday(data.birthday);
+    if (!b.ok) return { ok: false, error: "That birthday isn't a real date." };
+    birthday = b.value ?? "";
+  }
+
   const profile: Profile = {
     ...all[myKey], // preserve membership + streak
     username: v.value,
     displayName: (data.displayName || "").trim().slice(0, 40) || v.value,
     image,
+    birthday,
     ts: Date.now(),
   };
   all[myKey] = profile;

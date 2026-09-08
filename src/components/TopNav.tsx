@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import {
   Home,
+  Trophy,
   ScanLine,
   Play,
   Warehouse,
@@ -74,9 +75,14 @@ export function TopNav() {
       label: "Garage",
       href: "/garage",
       Icon: Warehouse,
-      // The leaderboard is a tab on the same group, so the door
-      // stays lit when you switch to it.
-      active: pathname.startsWith("/garage") || pathname === "/leaderboard",
+      active: pathname.startsWith("/garage"),
+    },
+    {
+      key: "leaderboard",
+      label: "Leaderboard",
+      href: "/leaderboard",
+      Icon: Trophy,
+      active: pathname === "/leaderboard",
     },
   ];
 
@@ -224,7 +230,7 @@ function AccountRow({ onClose }: { onClose: () => void }) {
   const links = [
     ...(signedIn
       ? [
-          { label: "Profile", href: "/profile", Icon: User },
+          { label: "Account", href: "/profile", Icon: User },
           { label: "Settings", href: "/settings", Icon: Settings },
         ]
       : [{ label: "Sign in", href: "/signin", Icon: LogIn }]),

@@ -4,6 +4,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import { Avatar } from "@/components/default-avatar";
+import { DeleteAccount } from "@/components/delete-account";
 import { Button, PageMasthead, Skeleton } from "@/components/ui/editorial";
 
 function downscale(dataUrl: string, max = 256, quality = 0.7): Promise<string> {
@@ -24,6 +25,18 @@ function downscale(dataUrl: string, max = 256, quality = 0.7): Promise<string> {
   });
 }
 
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+/** Days available in a month, 29 February included — it is a birthday even in
+ *  the years it is not a date. */
+function daysInMonth(mm: string): string[] {
+  const n = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][Number(mm) - 1] ?? 31;
+  return Array.from({ length: n }, (_, i) => String(i + 1).padStart(2, "0"));
+}
+
 function ProfileInner() {
   const { status: authStatus } = useSession();
   const router = useRouter();
@@ -34,6 +47,8 @@ function ProfileInner() {
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [image, setImage] = useState("");
+  // "MM-DD". No year: there is nowhere to put one.
+  const [birthday, setBirthday] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [blocked, setBlocked] = useState(false);
@@ -52,6 +67,7 @@ function ProfileInner() {
           setUsername(d.profile.username || "");
           setDisplayName(d.profile.displayName || "");
           setImage(d.profile.image || "");
+          setBirthday(d.profile.birthday || "");
         }
         // A name always exists — it just can't be *changed* while storage is
         // unreachable, so disable saving rather than letting every submit 503.
@@ -83,7 +99,7 @@ function ProfileInner() {
       const res = await fetch("/api/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, displayName, image }),
+        body: JSON.stringify({ username, displayName, image, birthday }),
       });
       const d = await res.json().catch(() => null);
       if (!res.ok || !d?.ok) {
@@ -118,23 +134,41 @@ function ProfileInner() {
           </div>
         ) : (
           <div className="mt-8 space-y-7">
-            {/* picture + preview */}
-            <div className="flex items-center gap-4">
-              <Avatar src={image} size={80} rounded="0" />
-              <div>
+            {/* The photo is the control. Tapping it opens the picker — a
+                separate "Change" button beside a preview makes the picture
+                look like decoration rather than the thing you press. */}
+            <div className="flex flex-col items-center">
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                aria-label={image ? "Change your profile photo" : "Add a profile photo"}
+                className="press group relative rounded-full"
+              >
+                <Avatar src={image} size={132} />
+                <span className="absolute inset-0 flex items-end justify-center rounded-full bg-gradient-to-t from-black/70 to-transparent pb-3 opacity-0 transition-opacity group-hover:opacity-100">
+                  <span className="util-label text-white">{image ? "Change" : "Add photo"}</span>
+                </span>
+              </button>
+
+              <div className="mt-3 flex items-center gap-4">
                 <button
+                  type="button"
                   onClick={() => fileRef.current?.click()}
-                  className="util-label border border-white/20 px-4 py-2  transition hover:border-carz "
+                  className="util-label opacity-70 transition-opacity hover:opacity-100"
                 >
-                  {image ? "Change" : "Upload"}
+                  {image ? "Change photo" : "Add photo"}
                 </button>
                 {image && (
-                  <button onClick={() => setImage("")} className="util-label ml-3  ">
+                  <button
+                    type="button"
+                    onClick={() => setImage("")}
+                    className="util-label opacity-70 transition-opacity hover:opacity-100"
+                  >
                     Remove
                   </button>
                 )}
-                <p className="mt-2 text-xs ">Optional — empty gives the animated car avatar.</p>
               </div>
+              <p className="mt-1.5 text-xs opacity-60">Empty gives the animated car avatar.</p>
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickFile} />
             </div>
 
@@ -166,6 +200,56 @@ function ProfileInner() {
               />
             </div>
 
+            <div>
+              <label className="util-label">Birthday</label>
+              {/* Two selects rather than a date input. A date field cannot be
+                  filled without a year, and the year is the half that turns a
+                  birthday into an identifier — so there is nowhere to enter one
+                  and nowhere to store one. */}
+              <div className="mt-2 flex gap-3">
+                <select
+                  aria-label="Birth month"
+                  value={birthday.slice(0, 2)}
+                  onChange={(e) => setBirthday(e.target.value ? `${e.target.value}-${birthday.slice(3) || "01"}` : "")}
+                  className="w-full rounded-xl border border-white/15 bg-white/[0.03] px-3 py-3 text-sm outline-none"
+                >
+                  <option value="">Month</option>
+                  {MONTHS.map((m, i) => (
+                    <option key={m} value={String(i + 1).padStart(2, "0")}>{m}</option>
+                  ))}
+                </select>
+                <select
+                  aria-label="Birth day"
+                  value={birthday.slice(3)}
+                  disabled={!birthday.slice(0, 2)}
+                  onChange={(e) => setBirthday(`${birthday.slice(0, 2)}-${e.target.value}`)}
+                  className="w-full rounded-xl border border-white/15 bg-white/[0.03] px-3 py-3 text-sm outline-none disabled:opacity-40"
+                >
+                  {/* A placeholder that matches the empty value: without one
+                      React has a select whose value is not among its options. */}
+                  <option value="">Day</option>
+                  {daysInMonth(birthday.slice(0, 2)).map((d) => (
+                    <option key={d} value={d}>{Number(d)}</option>
+                  ))}
+                </select>
+              </div>
+              <p className="mt-1.5 text-xs opacity-60">
+                Day and month only — we never ask for the year.
+                {birthday && (
+                  <>
+                    {" "}
+                    <button
+                      type="button"
+                      onClick={() => setBirthday("")}
+                      className="underline underline-offset-2 hover:opacity-80"
+                    >
+                      Clear
+                    </button>
+                  </>
+                )}
+              </p>
+            </div>
+
             {error && <div className="border border-carz/40 bg-carz/10 p-3 text-sm ">{error}</div>}
 
             <Button
@@ -177,6 +261,8 @@ function ProfileInner() {
             >
               {saving ? "Saving…" : "Save changes"}
             </Button>
+
+            <DeleteAccount />
           </div>
         )}
       </main>
