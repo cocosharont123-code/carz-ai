@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import {
+  Home,
   ScanLine,
   Play,
   Warehouse,
@@ -48,6 +49,13 @@ export function TopNav() {
   }, [menuOpen]);
 
   const items = [
+    {
+      key: "home",
+      label: "Home",
+      href: "/",
+      Icon: Home,
+      active: pathname === "/",
+    },
     {
       key: "spot",
       label: "Spot a car",
