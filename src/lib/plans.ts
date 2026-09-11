@@ -9,7 +9,6 @@ export type Plan = {
   dailyLimit: number | null; // null = unlimited
   premiumReport: boolean;
   saveHistory: boolean;
-  hotspotsMap: boolean;
   blurb: string;
   features: string[];
 };
@@ -22,7 +21,6 @@ export const PLANS: Record<PlanId, Plan> = {
     dailyLimit: 3, // Carz+ members get unlimited (enforced in /api/identify)
     premiumReport: true,
     saveHistory: true,
-    hotspotsMap: true,
     blurb: "3 scans a day, free.",
     features: [
       "3 car scans per day",

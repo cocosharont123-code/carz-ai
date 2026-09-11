@@ -100,7 +100,6 @@ export type PlanStatus = {
   remainingToday: number | null;
   premiumReport: boolean;
   saveHistory: boolean;
-  hotspotsMap: boolean;
 };
 
 export function planStatusFor(planId: PlanId, user: UserRecord): PlanStatus {
@@ -115,7 +114,6 @@ export function planStatusFor(planId: PlanId, user: UserRecord): PlanStatus {
     remainingToday: limit === null ? null : Math.max(0, limit - used),
     premiumReport: plan.premiumReport,
     saveHistory: plan.saveHistory,
-    hotspotsMap: plan.hotspotsMap,
   };
 }
 

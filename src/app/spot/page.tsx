@@ -2,13 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ImagePlus, Upload, Trash2, X, TrafficCone, Check, BookmarkPlus } from "lucide-react";
+import { ImagePlus, Upload, Trash2, X, TrafficCone, Check, BookmarkPlus, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Button as GlassButton } from "@/components/ui/editorial";
 import { ProgressiveFluxLoader } from "@/components/ui/progressive-flux-loader";
 import { Input } from "@/components/ui/input";
 import { useImageUpload } from "@/components/hooks/use-image-upload";
-import { CarHotspotsMap } from "@/components/car-hotspots-map";
 import { CarCustomizer } from "@/components/car-customizer";
 import { ScanModePicker } from "@/components/scan-mode-picker";
 import { VinPanel } from "@/components/vin-panel";
@@ -28,7 +27,6 @@ type Status = {
   remainingToday: number | null;
   premiumReport: boolean;
   saveHistory: boolean;
-  hotspotsMap: boolean;
   apiConfigured?: boolean;
   history?: { make: string; model: string; yearRange: string; date: string }[];
   totalSpots?: number;
@@ -342,135 +340,6 @@ function ValueChart({ points }: { points: { year: string; usd: number }[] }) {
           </g>
         ))}
       </svg>
-    </div>
-  );
-}
-
-type Listing = { title: string; price: number; currency: string; image: string; url: string; location: string };
-
-function fmtMoney(n: number, currency: string): string {
-  if (!n || n <= 0) return "";
-  try {
-    return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(n);
-  } catch {
-    return "$" + Math.round(n).toLocaleString("en-US");
-  }
-}
-
-function InlineListings({ make, model, goodDealUsd }: { make: string; model: string; goodDealUsd: number }) {
-  const [loading, setLoading] = useState(true);
-  const [configured, setConfigured] = useState(true);
-  const [items, setItems] = useState<Listing[]>([]);
-
-  useEffect(() => {
-    if (!make) return;
-    let cancelled = false;
-    setLoading(true);
-    fetch(`/api/listings?make=${encodeURIComponent(make)}&model=${encodeURIComponent(model)}`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (cancelled) return;
-        setConfigured(d.configured !== false);
-        setItems(Array.isArray(d.items) ? d.items : []);
-      })
-      .catch(() => {
-        if (!cancelled) setItems([]);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [make, model]);
-
-  if (!make) return null;
-  const q = encodeURIComponent(`${make} ${model}`.trim());
-  const fallback = [
-    { name: "eBay Motors", url: `https://www.ebay.com/sch/i.html?_nkw=${q}&_sop=15` },
-    { name: "Cars.com", url: `https://www.cars.com/shopping/results/?keyword=${q}&sort=list_price` },
-    { name: "AutoTrader", url: `https://www.autotrader.com/cars-for-sale/all-cars?keyword=${q}` },
-    { name: "Craigslist", url: `https://www.craigslist.org/search/cta?query=${q}&sort=priceasc` },
-  ];
-
-  return (
-    <div className="mt-4 rounded-2xl border border-neon-green/30 bg-neon-green/[0.06] p-4">
-      <div className="flex items-baseline justify-between gap-2">
-        <span className="text-xs font-bold uppercase tracking-wide text-neon-green">For sale now</span>
-        {goodDealUsd > 0 && (
-          <span className="text-sm font-semibold">
-            Good deal: <span className="text-neon-green">under {fmtUsd(goodDealUsd)}</span>
-          </span>
-        )}
-      </div>
-
-      {loading ? (
-        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="h-24 animate-pulse rounded-xl bg-black/[0.05]" />
-          ))}
-        </div>
-      ) : items.length > 0 ? (
-        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {items.map((it, i) => {
-            const isDeal = goodDealUsd > 0 && it.price > 0 && it.price <= goodDealUsd;
-            return (
-              <a
-                key={i}
-                href={it.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex gap-3 overflow-hidden rounded-xl bg-black/[0.04] p-2 ring-1 ring-black/[0.08] transition hover:bg-black/[0.07]"
-              >
-                {it.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={it.image} alt="" className="h-20 w-20 shrink-0 rounded-lg object-cover" />
-                ) : (
-                  <div className="h-20 w-20 shrink-0 rounded-lg bg-black/[0.06]" />
-                )}
-                <div className="min-w-0 flex-1">
-                  <p className="line-clamp-2 text-sm font-medium">{it.title}</p>
-                  <div className="mt-1 flex items-center gap-2">
-                    <span className="font-bold">{fmtMoney(it.price, it.currency)}</span>
-                    {isDeal && (
-                      <span className="rounded-full bg-neon-green/20 px-1.5 py-0.5 text-[10px] font-bold text-neon-green">
-                        DEAL
-                      </span>
-                    )}
-                  </div>
-                  {it.location && <p className="mt-0.5 text-xs ">{it.location}</p>}
-                </div>
-              </a>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="mt-3">
-          <p className="text-xs ">
-            {configured
-              ? "No live listings found right now — try these searches:"
-              : "Live listings aren’t connected yet — searching these instead:"}
-          </p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {fallback.map((s) => (
-              <a
-                key={s.name}
-                href={s.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-lg bg-black/[0.05] px-3 py-1.5 text-sm font-medium hover:bg-black/[0.09]"
-              >
-                {s.name}
-              </a>
-            ))}
-          </div>
-          {!configured && (
-            <p className="mt-2 text-[11px] ">
-              Add a free eBay App ID (EBAY_APP_ID) to show real listings right here.
-            </p>
-          )}
-        </div>
-      )}
     </div>
   );
 }
@@ -1038,10 +907,6 @@ export default function SpotPage() {
                 )}
 
                 <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <Spec k="Body style" v={car.bodyStyle} />
-                  <Spec k="Generation" v={car.generation} />
-                  <Spec k="Trim (guess)" v={car.trimGuess} />
-                  <Spec k="Color" v={car.color} />
                   <Spec k="Engine" v={car.engine} />
                   <Spec k="Drivetrain" v={car.drivetrain} />
                   <Spec k="Horsepower" v={car.horsepower} />
@@ -1051,6 +916,30 @@ export default function SpotPage() {
                   <Spec k="Parent company" v={car.parentCompany} />
                   <Spec k="Used price" v={car.priceRangeUsed} />
                 </div>
+
+                {/* Body style, generation, trim and colour are the four the
+                    model is least sure of — a trim is a guess by its own label.
+                    Behind a disclosure they are still one tap away without
+                    sitting at the top of the answer as though they were as
+                    solid as the engine. */}
+                {(car.bodyStyle || car.generation || car.trimGuess || car.color) && (
+                  <details className="group mt-3">
+                    <summary className="press flex min-h-11 cursor-pointer list-none items-center justify-between rounded-xl bg-black/[0.05] px-4 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+                      <span>More info</span>
+                      <ChevronDown
+                        className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180"
+                        strokeWidth={2}
+                        aria-hidden
+                      />
+                    </summary>
+                    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <Spec k="Body style" v={car.bodyStyle} />
+                      <Spec k="Generation" v={car.generation} />
+                      <Spec k="Trim (guess)" v={car.trimGuess} />
+                      <Spec k="Color" v={car.color} />
+                    </div>
+                  </details>
+                )}
 
                 {car.funFacts.length > 0 && (
                   <ul className="mt-4 list-disc space-y-1 pl-5 text-sm">
@@ -1070,7 +959,6 @@ export default function SpotPage() {
 
                 <RarityMeter score={car.rarityScore} reason={car.rarityReason} />
                 <ValueChart points={car.valueTimeline} />
-                <InlineListings make={car.make} model={car.model} goodDealUsd={car.goodDealUsd} />
 
                 {(car.valuation || car.reliability || car.collectibility) && (
                   <div className="mt-6 border-t border-black/15 pt-5">
@@ -1140,13 +1028,6 @@ export default function SpotPage() {
           </section>
         )}
 
-        {/* Spotting map — free for everyone */}
-        <section className="mt-8">
-          <h3 className="text-xl font-bold">Where to spot rare cars near you</h3>
-          <div className="mt-3">
-            <CarHotspotsMap />
-          </div>
-        </section>
       </main>
     </>
   );
