@@ -9,6 +9,18 @@ import { Spinner } from "@/components/ui/editorial";
 import { Reel } from "@/components/feed/reel";
 import type { FeedPostView } from "@/components/feed/post-card";
 
+/**
+ * How many times the feed is laid out once there is nothing left to fetch.
+ *
+ * Two, not more: the viewer scrolls out of the first lap into the second, and
+ * the scroller is then silently wound back one lap to where the identical clip
+ * sits in the first. There is always a full lap ahead, the rewind is invisible
+ * because it lands on the same post at the same offset, and the DOM stays at
+ * twice the feed rather than growing a lap at a time until the browser runs out
+ * of video elements it is willing to hold.
+ */
+const LOOP_LAPS = 2;
+
 /** Puts one post at the head of the list, leaving the rest in order. */
 function leadWith(posts: FeedPostView[], id: string): FeedPostView[] {
   const i = posts.findIndex((p) => p.id === id);
@@ -52,6 +64,13 @@ function FeedInner() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [configured, setConfigured] = useState(true);
   const [error, setError] = useState("");
+
+  // Looping starts only once the feed is exhausted: while there are still real
+  // pages to fetch, repeating what's already been seen would push the unseen
+  // clips further away.
+  const lapSize = nextOffset === null ? posts.length : 0;
+  const looping = lapSize > 0;
+  const laps = looping ? LOOP_LAPS : 1;
 
   // iOS bounces the *document* as well as the scroller, so pinning it here is
   // what stops the whole screen sliding when there's nowhere left to go.
@@ -128,10 +147,12 @@ function FeedInner() {
   // observer on every append.
   const loadMoreRef = useRef(loadMore);
   const countRef = useRef(0);
+  const lapRef = useRef(0);
   useEffect(() => {
     loadMoreRef.current = loadMore;
-    countRef.current = posts.length;
-  }, [loadMore, posts.length]);
+    countRef.current = posts.length * laps;
+    lapRef.current = lapSize;
+  }, [loadMore, posts.length, laps, lapSize]);
 
   /**
    * Which slide is on screen. An observer beats a scroll handler here: snap
@@ -155,6 +176,22 @@ function FeedInner() {
           // Fetch while a few slides are still in hand, so a scroll never
           // lands on the end. loadMore() no-ops once there's nothing left.
           if (i >= countRef.current - 3) void loadMoreRef.current();
+
+          // Scrolled out of the first lap and into the repeat: wind the
+          // scroller back one lap, onto the identical post at the identical
+          // offset. Nothing moves on screen, and the lap just left is a full
+          // feed's worth of scrolling ahead again.
+          //
+          // `scroll-smooth` is off for the write: animating it would be the one
+          // thing that made the seam visible.
+          const lap = lapRef.current;
+          if (lap > 0 && i >= lap) {
+            const previous = root.style.scrollBehavior;
+            root.style.scrollBehavior = "auto";
+            root.scrollTop -= lap * root.clientHeight;
+            root.style.scrollBehavior = previous;
+            setActiveIndex(i - lap);
+          }
         }
       },
       { root, threshold: 0.6 },
@@ -163,7 +200,8 @@ function FeedInner() {
     const slides = root.querySelectorAll("[data-index]");
     slides.forEach((s) => io.observe(s));
     return () => io.disconnect();
-  }, [posts.length]);
+  // Slide count, not post count: a lap appearing adds slides to observe.
+  }, [posts.length, laps]);
 
   function patchLike(id: string, liked: boolean, count: number) {
     setPosts((prev) =>
@@ -245,19 +283,27 @@ function FeedInner() {
           ref={scrollerRef}
           className="relative flex-1 snap-y snap-mandatory overflow-y-scroll overscroll-y-none scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
-          {posts.map((p, i) => (
-            <div key={p.id} data-index={i} className="h-full w-full">
-              <Reel
-                post={p}
-                active={i === activeIndex}
-                signedIn={signedIn}
-                muted={muted}
-                onToggleMuted={() => setMuted((m) => !m)}
-                onLikeChange={(liked, count) => patchLike(p.id, liked, count)}
-                onCommentCountChange={(count) => patchCommentCount(p.id, count)}
-              />
-            </div>
-          ))}
+          {/* The same posts laid out `laps` times once the feed is exhausted.
+              Every copy of a post is the same post — a like or a comment on one
+              is patched by id, so all of its copies agree. */}
+          {Array.from({ length: laps }, (_, lap) =>
+            posts.map((p, i) => {
+              const index = lap * posts.length + i;
+              return (
+                <div key={`${lap}:${p.id}`} data-index={index} className="h-full w-full">
+                  <Reel
+                    post={p}
+                    active={index === activeIndex}
+                    signedIn={signedIn}
+                    muted={muted}
+                    onToggleMuted={() => setMuted((m) => !m)}
+                    onLikeChange={(liked, count) => patchLike(p.id, liked, count)}
+                    onCommentCountChange={(count) => patchCommentCount(p.id, count)}
+                  />
+                </div>
+              );
+            }),
+          )}
         </div>
       )}
 
