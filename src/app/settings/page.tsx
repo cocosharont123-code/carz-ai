@@ -200,13 +200,6 @@ export default function SettingsPage() {
                 <span>Edit profile</span>
                 <span className="opacity-50">Username, display name, picture →</span>
               </Link>
-              <Link
-                href="/membership"
-                className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 text-sm font-semibold transition hover:border-white/25 hover:bg-white/[0.05]"
-              >
-                <span>Membership</span>
-                <span className="opacity-50">{member ? "Carz+ active →" : "Not a member →"}</span>
-              </Link>
               <button
                 type="button"
                 onClick={() => signOut({ callbackUrl: "/" })}

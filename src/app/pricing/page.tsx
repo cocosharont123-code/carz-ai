@@ -64,11 +64,8 @@ export default function PricingPage() {
 
   async function joinCarzPlus() {
     if (busy) return;
-    // Already subscribed — go straight to the rewards, never re-run the join.
-    if (member) {
-      router.push("/membership");
-      return;
-    }
+    // A member has no button to press, so there is nothing to do here for one.
+    if (member) return;
     if (status !== "authenticated") {
       signIn("google", { callbackUrl: "/pricing" });
       return;
@@ -95,9 +92,9 @@ export default function PricingPage() {
         setJoinError(d?.error || "Couldn't start your membership. Try again.");
         return;
       }
-      // Subscribed — the member area now opens straight onto the rewards.
+      // Subscribed. The page rewrites itself into the member state in place:
+      // the title, the card and the header all read from `member`.
       setMember(true);
-      router.push("/membership");
     } catch {
       setJoinError("Couldn't reach the server. Try again.");
     } finally {
@@ -105,8 +102,10 @@ export default function PricingPage() {
     }
   }
 
+  // Undefined for a member: the card renders without a button, because there
+  // is nothing left to buy and nowhere left to go.
   const carzButtonText = member
-    ? "See your rewards"
+    ? undefined
     : busy
       ? "Starting…"
       : isFree

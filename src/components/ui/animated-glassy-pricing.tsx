@@ -157,7 +157,8 @@ export interface PricingCardProps {
   price: string;
   interval?: string;
   features: string[];
-  buttonText: string;
+  /** Omit to render the card with no button, for a plan already held. */
+  buttonText?: string;
   isPopular?: boolean;
   buttonVariant?: 'primary' | 'secondary';
   onSelect?: () => void;
@@ -208,7 +209,9 @@ export const PricingCard = ({
           </li>
         ))}
       </ul>
-      <RippleButton className={buttonClasses.trim()} onClick={onSelect}>{buttonText}</RippleButton>
+      {buttonText && (
+        <RippleButton className={buttonClasses.trim()} onClick={onSelect}>{buttonText}</RippleButton>
+      )}
     </div>
   );
 };
