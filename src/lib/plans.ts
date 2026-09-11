@@ -34,30 +34,59 @@ export const PLANS: Record<PlanId, Plan> = {
 };
 
 /**
- * What Carz+ costs and what it unlocks.
+ * The two paid tiers.
  *
- * One definition. The price used to be written out as a literal in eight
- * different files, which is exactly how a price ends up saying two different
- * things on two different screens.
+ * One definition each. The price used to be written out as a literal in eight
+ * files, which is how a price ends up saying two different things on two
+ * different screens — and a second tier doubles every chance of that.
  */
+
+/** Scans a day, by tier. null = no cap. */
+export const DAILY_SCANS = {
+  free: 3,
+  plus: 8,
+  max: null as number | null,
+} as const;
+
 export const CARZ_PLUS = {
+  id: "plus" as const,
+  name: "Carz+",
   monthly: 7.99,
   annual: 79.99,
-  /** Everything here is members-only. Nothing on this list is free. */
+  blurb: "For spotting regularly.",
   perks: [
-    { title: "Unlimited AI scans", desc: "No cap on car identifications, ever." },
-    { title: "Spot cars in video", desc: "Scan a video and identify every car in it." },
-    { title: "Car config", desc: "Restyle any car you spot — colour, rims, mods." },
+    { title: "8 car scans a day", desc: "Well past the three everyone gets." },
+    { title: "Car configurator", desc: "Restyle any car you spot — colour, rims, mods." },
     { title: "Garage", desc: "A photo album of every car you save." },
-    { title: "Market-value insight", desc: "See how far over or under market value a car is selling." },
+    { title: "CarzBot", desc: "Ask anything about cars, by voice or text." },
   ],
 } as const;
 
-/** "$7.99" — two decimals, because a price with one looks like a typo. */
-export const carzPlusMonthly = (): string => `$${CARZ_PLUS.monthly.toFixed(2)}`;
-export const carzPlusAnnual = (): string => `$${CARZ_PLUS.annual.toFixed(2)}`;
+export const CARZ_MAX = {
+  id: "max" as const,
+  name: "Carz MAX",
+  monthly: 12.99,
+  annual: 129.99,
+  blurb: "Everything in Carz+, without the ceiling.",
+  /** Shown under "Everything in Carz+, plus:" — these are the additions. */
+  perks: [
+    { title: "Unlimited car scans", desc: "No daily cap, ever." },
+    { title: "Market-value insight", desc: "See how far over or under market value a car is selling." },
+    { title: "Spot cars in video", desc: "Scan a video and identify every car in it." },
+  ],
+} as const;
 
-/** What the annual plan actually saves, computed rather than asserted — the
- *  old copy claimed 33% against a monthly price that has since changed. */
-export const carzPlusAnnualSaving = (): number =>
-  Math.round((1 - CARZ_PLUS.annual / (CARZ_PLUS.monthly * 12)) * 100);
+export const TIERS = [CARZ_PLUS, CARZ_MAX] as const;
+
+const money = (n: number) => `$${n.toFixed(2)}`;
+
+export const carzPlusMonthly = (): string => money(CARZ_PLUS.monthly);
+export const carzPlusAnnual = (): string => money(CARZ_PLUS.annual);
+export const carzMaxMonthly = (): string => money(CARZ_MAX.monthly);
+export const carzMaxAnnual = (): string => money(CARZ_MAX.annual);
+
+/** Computed rather than asserted, so it cannot go stale against a price. */
+export const annualSaving = (m: number, a: number): number =>
+  Math.round((1 - a / (m * 12)) * 100);
+export const carzPlusAnnualSaving = (): number => annualSaving(CARZ_PLUS.monthly, CARZ_PLUS.annual);
+export const carzMaxAnnualSaving = (): number => annualSaving(CARZ_MAX.monthly, CARZ_MAX.annual);

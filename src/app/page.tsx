@@ -2,7 +2,7 @@ import Link from "next/link";
 import { AnimatedCountdown } from "@/components/ui/animated-countdown";
 import { RELEASE_DATE, RELEASE_LABEL } from "@/config/release";
 import { EXPLORE_BUBBLES } from "@/config/explore";
-import { CARZ_PLUS, carzPlusMonthly } from "@/lib/plans";
+import { CARZ_PLUS, CARZ_MAX, carzPlusMonthly, carzMaxMonthly } from "@/lib/plans";
 
 /**
  * The launch homepage.
@@ -82,15 +82,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Carz+ */}
-      <section className="mt-20">
-        <div className="glass-card rounded-3xl p-8 text-center sm:p-10">
-          <p className="util-label text-carz">Carz+</p>
-          <h2 className="display mt-3 text-4xl sm:text-5xl">
+      {/* Membership */}
+      <section className="mt-20 grid gap-4 sm:grid-cols-2">
+        <div className="glass-card flex flex-col rounded-3xl p-7">
+          <p className="util-label text-carz">{CARZ_PLUS.name}</p>
+          <h2 className="display mt-2 text-4xl">
             {carzPlusMonthly()}
-            <span className="text-2xl opacity-60"> / month</span>
+            <span className="text-xl opacity-60"> / month</span>
           </h2>
-          <ul className="mx-auto mt-7 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-3 text-left sm:grid-cols-2">
+          <p className="mt-2 text-[13px] opacity-60">{CARZ_PLUS.blurb}</p>
+          <ul className="mt-6 flex-1 space-y-2.5 text-left">
             {CARZ_PLUS.perks.map((p) => (
               <li key={p.title} className="flex items-start gap-2.5 text-[13px]">
                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-carz" />
@@ -100,12 +101,42 @@ export default function Home() {
           </ul>
           <Link
             href="/pricing"
-            className="press mt-8 inline-flex rounded-full bg-white px-7 py-3 text-sm font-bold text-neutral-900 transition hover:opacity-90"
+            className="press glass-card mt-7 rounded-full py-3 text-center text-sm font-bold"
           >
-            See Carz+
+            Get {CARZ_PLUS.name}
+          </Link>
+        </div>
+
+        {/* MAX is Carz+ and then some, so it says so rather than repeating the
+            four lines above it — a list that restates the cheaper tier makes
+            the difference between them harder to see, not easier. */}
+        <div className="glass-card relative flex flex-col rounded-3xl p-7 ring-1 ring-white/20">
+          <p className="util-label text-rank-1">{CARZ_MAX.name}</p>
+          <h2 className="display mt-2 text-4xl">
+            {carzMaxMonthly()}
+            <span className="text-xl opacity-60"> / month</span>
+          </h2>
+          <p className="mt-2 text-[13px] opacity-60">{CARZ_MAX.blurb}</p>
+          <p className="mt-6 text-[13px] font-semibold">
+            Everything in {CARZ_PLUS.name}, plus:
+          </p>
+          <ul className="mt-3 flex-1 space-y-2.5 text-left">
+            {CARZ_MAX.perks.map((p) => (
+              <li key={p.title} className="flex items-start gap-2.5 text-[13px]">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-rank-1" />
+                <span className="opacity-90">{p.title}</span>
+              </li>
+            ))}
+          </ul>
+          <Link
+            href="/pricing"
+            className="press mt-7 rounded-full bg-white py-3 text-center text-sm font-bold text-neutral-900 transition hover:opacity-90"
+          >
+            Get {CARZ_MAX.name}
           </Link>
         </div>
       </section>
+
     </main>
   );
 }

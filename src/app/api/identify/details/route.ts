@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { PLANS } from "@/lib/plans";
 import { describeCar, IdentifyError } from "@/lib/identify";
 import { auth } from "@/auth";
-import { getProfile, isActiveMember } from "@/lib/profile-blob";
+import { getProfile, isMaxMember } from "@/lib/profile-blob";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -42,13 +42,13 @@ export async function POST(req: Request) {
   const effectivePlan = isPlanId(cookiePlan) ? cookiePlan : user.plan;
   const plan = PLANS[effectivePlan] ?? PLANS.free;
 
-  // Market-value insight is a Carz+ perk, so it is decided by membership here
-  // rather than by the plan record — which is the same for everyone and was
-  // handing valuation, reliability and collectibility to every free scan.
+  // Market-value insight is the MAX tier's, so Carz+ does not get it either —
+  // decided by membership here rather than by the plan record, which is the
+  // same for everyone.
   const session = await auth();
-  let isMember = false;
+  let isMax = false;
   if (session?.user?.email) {
-    isMember = isActiveMember(await getProfile(session.user.email));
+    isMax = isMaxMember(await getProfile(session.user.email));
   }
 
   try {
@@ -60,7 +60,7 @@ export async function POST(req: Request) {
         generation: (b.generation || "").trim(),
         trimGuess: (b.trimGuess || "").trim(),
       },
-      plan.premiumReport && isMember,
+      plan.premiumReport && isMax,
     );
 
     const status = planStatusFor(effectivePlan, user);

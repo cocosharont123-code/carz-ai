@@ -4,16 +4,16 @@ import {
   getUserId,
   getUser,
   planStatusFor,
-  atLimitFor,
+  usageToday,
   recordIdentification,
   UID_COOKIE,
   PLAN_COOKIE,
   isPlanId,
 } from "@/lib/store";
-import { PLANS } from "@/lib/plans";
+import { PLANS, DAILY_SCANS } from "@/lib/plans";
 import { identifyCar, IdentifyError } from "@/lib/identify";
 import { auth } from "@/auth";
-import { getProfile, isActiveMember } from "@/lib/profile-blob";
+import { getProfile, memberTier } from "@/lib/profile-blob";
 import { SCAN_MODE_COOKIE, effectiveScanMode } from "@/lib/scan-mode";
 
 export const runtime = "nodejs";
@@ -53,19 +53,24 @@ export async function POST(req: Request) {
   const effectivePlan = isPlanId(cookiePlan) ? cookiePlan : user.plan;
   const plan = PLANS[effectivePlan] ?? PLANS.free;
 
-  // Carz+ members get unlimited scans; free is capped at the plan's daily limit.
+  // Three ceilings, one per tier: free three a day, Carz+ eight, MAX none.
   const session = await auth();
-  let isMember = false;
-  if (session?.user?.email) {
-    const profile = await getProfile(session.user.email);
-    isMember = isActiveMember(profile);
-  }
+  const profile = session?.user?.email ? await getProfile(session.user.email) : null;
+  const tier = memberTier(profile);
+  const isMember = tier !== null;
 
-  if (!isMember && atLimitFor(effectivePlan, user)) {
+  const cap = tier === "max" ? DAILY_SCANS.max : tier === "plus" ? DAILY_SCANS.plus : DAILY_SCANS.free;
+  const usedToday = usageToday(user);
+
+  if (cap !== null && usedToday >= cap) {
     return NextResponse.json(
       {
         error: "limit_reached",
-        message: `You've used all ${plan.dailyLimit} free scans today. Get Carz+ for unlimited.`,
+        message:
+          tier === "plus"
+            ? `You've used all ${cap} scans today. Carz MAX has no daily cap.`
+            : `You've used all ${cap} free scans today. Carz+ gives you ${DAILY_SCANS.plus} a day.`,
+        tier,
         status: planStatusFor(effectivePlan, user),
       },
       { status: 402 },

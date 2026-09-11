@@ -47,7 +47,13 @@ export async function POST(req: Request) {
   // Everyone has a name the moment they sign in, so joining is never gated.
   await ensureProfile(email);
 
-  let body: { action?: string; restoreTo?: number; code?: string; interval?: string };
+  let body: {
+    action?: string;
+    restoreTo?: number;
+    code?: string;
+    interval?: string;
+    tier?: string;
+  };
   try {
     body = await req.json();
   } catch {
@@ -91,14 +97,24 @@ export async function POST(req: Request) {
 
     // 100%-off redeem unlocks Carz+ outright.
     if (body.action === "redeem") {
-      const p = await setMembership(email, true);
-      return NextResponse.json({ ok: true, member: !!p?.member, promo: true, percentOff: 100, streak: p?.streak ?? 0 });
+      const tier = body.tier === "max" ? "max" : "plus";
+      const p = await setMembership(email, true, undefined, tier);
+      return NextResponse.json({ ok: true, member: !!p?.member, tier: p?.tier ?? "plus", promo: true, percentOff: 100, streak: p?.streak ?? 0 });
     }
 
-    // Default: join Carz+ on the chosen billing interval (monthly or annual).
+    // Join, on the chosen tier and billing interval. Anything that is not the
+    // literal "max" is Carz+ — an unrecognised tier must not become the more
+    // expensive one by accident.
     const interval = body.interval === "annual" ? "annual" : "monthly";
-    const p = await setMembership(email, true, interval);
-    return NextResponse.json({ ok: true, member: !!p?.member, billing: p?.billing ?? "monthly", streak: p?.streak ?? 0 });
+    const tier = body.tier === "max" ? "max" : "plus";
+    const p = await setMembership(email, true, interval, tier);
+    return NextResponse.json({
+      ok: true,
+      member: !!p?.member,
+      tier: p?.tier ?? "plus",
+      billing: p?.billing ?? "monthly",
+      streak: p?.streak ?? 0,
+    });
   } catch (e) {
     console.error("membership write failed:", e);
     const detail = e instanceof Error ? e.message : String(e);

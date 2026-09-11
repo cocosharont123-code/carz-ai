@@ -23,7 +23,12 @@ export type Profile = {
   /** Channel cover image: a base64 thumbnail, or "" for the gradient. */
   cover?: string;
   ts: number;
-  member?: boolean; // Carz+ membership
+  member?: boolean; // any paid membership
+  /**
+   * Which one. Absent on records written before MAX existed, and those are
+   * Carz+ — the tier they were actually sold.
+   */
+  tier?: MemberTier;
   memberSince?: number;
   billing?: "monthly" | "annual"; // paid billing interval (unset ≈ monthly)
   trialEndsAt?: number; // set while on a free trial; membership lapses once passed
@@ -38,6 +43,25 @@ const TRIAL_MS = TRIAL_DAYS * 86_400_000;
 
 // A profile counts as an active member if the flag is on and, when on a trial,
 // the trial hasn't lapsed. Paid membership has no trialEndsAt, so never expires.
+export type MemberTier = "plus" | "max";
+
+/**
+ * Which membership is active, or null.
+ *
+ * A record from before MAX existed has no tier and is Carz+: that is what those
+ * people paid for, and defaulting them upward would hand out the higher tier to
+ * everyone who ever subscribed.
+ */
+export function memberTier(p: Profile | null | undefined): MemberTier | null {
+  if (!isActiveMember(p)) return null;
+  return p?.tier === "max" ? "max" : "plus";
+}
+
+/** MAX only — the tier that includes it. */
+export function isMaxMember(p: Profile | null | undefined): boolean {
+  return memberTier(p) === "max";
+}
+
 export function isActiveMember(p: Profile | null | undefined): boolean {
   if (!p?.member) return false;
   if (p.trialEndsAt && Date.now() >= p.trialEndsAt) return false;
@@ -343,12 +367,14 @@ export async function setMembership(
   email: string,
   on: boolean,
   interval?: "monthly" | "annual",
+  tier: MemberTier = "plus",
 ): Promise<Profile | null> {
   const all = await readAll();
   const key = keyFor(email);
   const p = recordIn(all, email); // joining never waits on manual setup
   p.member = on;
   if (on) {
+    p.tier = tier;
     if (!p.memberSince) p.memberSince = Date.now();
     if (interval) p.billing = interval;
     delete p.trialEndsAt; // paid membership never expires

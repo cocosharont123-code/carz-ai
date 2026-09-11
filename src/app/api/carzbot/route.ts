@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { auth } from "@/auth";
+import { getProfile, memberTier } from "@/lib/profile-blob";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -27,6 +29,17 @@ export async function POST(req: Request) {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) {
     return NextResponse.json({ error: "CarzBot isn't configured yet." }, { status: 503 });
+  }
+
+  // CarzBot is a paid feature in both tiers. It was open to everyone and
+  // unmetered, which is a bill rather than a feature.
+  const session = await auth();
+  const email = session?.user?.email;
+  if (!email) {
+    return NextResponse.json({ error: "Sign in to use CarzBot." }, { status: 401 });
+  }
+  if (!memberTier(await getProfile(email))) {
+    return NextResponse.json({ error: "CarzBot is a Carz+ feature." }, { status: 402 });
   }
 
   let body: { messages?: Turn[] };
