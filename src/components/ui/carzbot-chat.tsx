@@ -1,262 +1,323 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ArrowUp as ArrowUpIcon, Mic, Square, ScanLine, Gauge, Wrench, CircleDollarSign, GitCompare } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { SiriWave } from "@/components/ui/siri-wave";
 import { cn } from "@/lib/utils";
-import {
-    // ArrowUp is aliased back to ArrowUpIcon: lucide 1.x dropped the `*Icon`
-    // aliases, and importing the alias is a build error, not a missing glyph.
-    ScanLine,
-    Gauge,
-    Wrench,
-    CircleDollarSign,
-    GitCompare,
-    ArrowUp as ArrowUpIcon,
-} from "lucide-react";
 
 type Turn = { role: "user" | "assistant"; content: string };
 
 /** Openers. They ask the question rather than just naming a topic, because a
  *  chip that drops a bare noun into the box makes the reader write the rest. */
 const PROMPTS = [
-    { label: "What's it worth?", Icon: CircleDollarSign, prompt: "How do I work out what a used car is actually worth?" },
-    { label: "Compare two cars", Icon: GitCompare, prompt: "Compare a Porsche 911 Carrera S and an Audi R8 V10 — which is the better daily driver?" },
-    { label: "Common faults", Icon: Wrench, prompt: "What should I check before buying a used BMW M3?" },
-    { label: "Fastest for the money", Icon: Gauge, prompt: "What's the fastest car I can buy for under $40,000?" },
-    { label: "Identify a car", Icon: ScanLine, prompt: "How do I tell a Carrera S apart from a base Carrera?" },
+  { label: "What's it worth?", Icon: CircleDollarSign, prompt: "How do I work out what a used car is actually worth?" },
+  { label: "Compare two cars", Icon: GitCompare, prompt: "Compare a Porsche 911 Carrera S and an Audi R8 V10 — which is the better daily driver?" },
+  { label: "Common faults", Icon: Wrench, prompt: "What should I check before buying a used BMW M3?" },
+  { label: "Fastest for the money", Icon: Gauge, prompt: "What's the fastest car I can buy for under $40,000?" },
+  { label: "Tell two apart", Icon: ScanLine, prompt: "How do I tell a Carrera S apart from a base Carrera?" },
 ] as const;
 
-interface UseAutoResizeTextareaProps {
-    minHeight: number;
-    maxHeight?: number;
+/* --- Speech recognition ------------------------------------------------
+   Not in lib.dom under this name, and Safari only has it prefixed, so the
+   surface actually used is declared here rather than reached for through any. */
+type SpeechResultEvent = {
+  resultIndex: number;
+  results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }>;
+};
+type SpeechRecognizer = {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  start: () => void;
+  stop: () => void;
+  onresult: ((e: SpeechResultEvent) => void) | null;
+  onend: (() => void) | null;
+  onerror: (() => void) | null;
+};
+type SpeechCtor = new () => SpeechRecognizer;
+
+function speechCtor(): SpeechCtor | null {
+  if (typeof window === "undefined") return null;
+  const w = window as unknown as {
+    SpeechRecognition?: SpeechCtor;
+    webkitSpeechRecognition?: SpeechCtor;
+  };
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
-function useAutoResizeTextarea({
-    minHeight,
-    maxHeight,
-}: UseAutoResizeTextareaProps) {
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
+function useAutoResizeTextarea({ minHeight, maxHeight }: { minHeight: number; maxHeight?: number }) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-    const adjustHeight = useCallback(
-        (reset?: boolean) => {
-            const textarea = textareaRef.current;
-            if (!textarea) return;
+  const adjustHeight = useCallback(
+    (reset?: boolean) => {
+      const textarea = textareaRef.current;
+      if (!textarea) return;
+      textarea.style.height = `${minHeight}px`;
+      if (reset) return;
+      textarea.style.height = `${Math.max(
+        minHeight,
+        Math.min(textarea.scrollHeight, maxHeight ?? Number.POSITIVE_INFINITY),
+      )}px`;
+    },
+    [minHeight, maxHeight],
+  );
 
-            if (reset) {
-                textarea.style.height = `${minHeight}px`;
-                return;
-            }
-
-            // Temporarily shrink to get the right scrollHeight
-            textarea.style.height = `${minHeight}px`;
-
-            // Calculate new height
-            const newHeight = Math.max(
-                minHeight,
-                Math.min(
-                    textarea.scrollHeight,
-                    maxHeight ?? Number.POSITIVE_INFINITY
-                )
-            );
-
-            textarea.style.height = `${newHeight}px`;
-        },
-        [minHeight, maxHeight]
-    );
-
-    useEffect(() => {
-        // Set initial height
-        const textarea = textareaRef.current;
-        if (textarea) {
-            textarea.style.height = `${minHeight}px`;
-        }
-    }, [minHeight]);
-
-    // Adjust height on window resize
-    useEffect(() => {
-        const handleResize = () => adjustHeight();
-        window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
-    }, [adjustHeight]);
-
-    return { textareaRef, adjustHeight };
+  return { textareaRef, adjustHeight };
 }
 
 export function CarzBotChat() {
-    const [value, setValue] = useState("");
-    const [turns, setTurns] = useState<Turn[]>([]);
-    const [busy, setBusy] = useState(false);
-    const [error, setError] = useState("");
-    const { textareaRef, adjustHeight } = useAutoResizeTextarea({
-        minHeight: 60,
-        maxHeight: 200,
-    });
+  const [value, setValue] = useState("");
+  const [turns, setTurns] = useState<Turn[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [canListen, setCanListen] = useState(false);
+  const [error, setError] = useState("");
+  const { textareaRef, adjustHeight } = useAutoResizeTextarea({ minHeight: 56, maxHeight: 160 });
+  const threadRef = useRef<HTMLDivElement>(null);
+  const recogRef = useRef<SpeechRecognizer | null>(null);
 
-    const ask = useCallback(
-        async (text: string) => {
-            const question = text.trim();
-            if (!question || busy) return;
+  // Deferred a microtask: a synchronous state write in an effect body cascades
+  // renders, which this project lints against.
+  useEffect(() => {
+    let cancelled = false;
+    Promise.resolve()
+      .then(() => speechCtor() !== null)
+      .then((ok) => {
+        if (!cancelled) setCanListen(ok);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-            // The history sent is the one on screen plus this question, rather
-            // than state read back after setting it — setState is not immediate
-            // and the request would go out a turn behind.
-            const next: Turn[] = [...turns, { role: "user", content: question }];
-            setTurns(next);
-            setValue("");
-            adjustHeight(true);
-            setBusy(true);
-            setError("");
+  // Keep the newest turn in view. A DOM write, not a state write, so it belongs
+  // in an effect.
+  useEffect(() => {
+    const el = threadRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [turns, busy]);
 
-            try {
-                const res = await fetch("/api/carzbot", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ messages: next }),
-                });
-                const d = await res.json();
-                if (!res.ok || !d.reply) {
-                    setError(d.error || "CarzBot couldn't answer that.");
-                    return;
-                }
-                setTurns([...next, { role: "assistant", content: d.reply }]);
-            } catch {
-                setError("Network error — nothing was sent.");
-            } finally {
-                setBusy(false);
-            }
-        },
-        [turns, busy, adjustHeight],
-    );
+  const ask = useCallback(
+    async (text: string) => {
+      const question = text.trim();
+      if (!question || busy) return;
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            void ask(value);
+      // The history sent is the one on screen plus this question, rather than
+      // state read back after setting it — setState is not immediate and the
+      // request would go out a turn behind.
+      const next: Turn[] = [...turns, { role: "user", content: question }];
+      setTurns(next);
+      setValue("");
+      adjustHeight(true);
+      setBusy(true);
+      setError("");
+
+      try {
+        const res = await fetch("/api/carzbot", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messages: next }),
+        });
+        const d = await res.json();
+        if (!res.ok || !d.reply) {
+          setError(d.error || "CarzBot couldn't answer that.");
+          return;
         }
+        setTurns([...next, { role: "assistant", content: d.reply }]);
+      } catch {
+        setError("Network error — nothing was sent.");
+      } finally {
+        setBusy(false);
+      }
+    },
+    [turns, busy, adjustHeight],
+  );
+
+  const stopListening = useCallback(() => {
+    recogRef.current?.stop();
+    recogRef.current = null;
+    setListening(false);
+  }, []);
+
+  const startListening = useCallback(() => {
+    const Ctor = speechCtor();
+    if (!Ctor || busy) return;
+
+    const r = new Ctor();
+    r.lang = "en-US";
+    r.continuous = false;
+    r.interimResults = true;
+
+    let finalText = "";
+    r.onresult = (e) => {
+      let interim = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const chunk = e.results[i][0].transcript;
+        if (e.results[i].isFinal) finalText += chunk;
+        else interim += chunk;
+      }
+      setValue((finalText + interim).trimStart());
+      adjustHeight();
+    };
+    r.onerror = () => {
+      recogRef.current = null;
+      setListening(false);
+    };
+    r.onend = () => {
+      recogRef.current = null;
+      setListening(false);
+      // Speaking is the whole gesture: finishing it sends, rather than leaving
+      // the words sitting in a box waiting for a second tap.
+      if (finalText.trim()) void ask(finalText);
     };
 
-    return (
-        <div className="flex flex-col items-center w-full max-w-4xl mx-auto p-4 space-y-8">
-            {turns.length === 0 && (
-                <h1 className="text-4xl font-bold text-white">Ask CarzBot</h1>
-            )}
+    recogRef.current = r;
+    setListening(true);
+    r.start();
+  }, [busy, adjustHeight, ask]);
 
-            {turns.length > 0 && (
-                <div className="w-full space-y-3">
-                    {turns.map((t, i) => (
-                        <div
-                            key={i}
-                            className={cn(
-                                "max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap",
-                                t.role === "user"
-                                    ? "ml-auto bg-white text-neutral-900"
-                                    : "glass-card"
-                            )}
-                        >
-                            {t.content}
-                        </div>
-                    ))}
-                    {busy && (
-                        <div className="glass-card max-w-[85%] rounded-2xl px-4 py-3 text-sm opacity-70">
-                            Thinking…
-                        </div>
-                    )}
-                </div>
-            )}
+  // Never leave the microphone running when this unmounts.
+  useEffect(() => () => recogRef.current?.stop(), []);
 
-            {error && (
-                <p role="alert" className="w-full text-center text-[13px] text-neon-red">
-                    {error}
-                </p>
-            )}
+  const empty = turns.length === 0;
 
-            <div className="w-full">
-                <div className="relative bg-neutral-900 rounded-xl border border-neutral-800">
-                    <div className="overflow-y-auto">
-                        <Textarea
-                            ref={textareaRef}
-                            value={value}
-                            onChange={(e) => {
-                                setValue(e.target.value);
-                                adjustHeight();
-                            }}
-                            onKeyDown={handleKeyDown}
-                            placeholder="Ask about any car…"
-                            className={cn(
-                                "w-full px-4 py-3",
-                                "resize-none",
-                                "bg-transparent",
-                                "border-none",
-                                "text-white text-sm",
-                                "focus:outline-none",
-                                "focus-visible:ring-0 focus-visible:ring-offset-0",
-                                "placeholder:text-neutral-500 placeholder:text-sm",
-                                "min-h-[60px]"
-                            )}
-                            style={{
-                                overflow: "hidden",
-                            }}
-                        />
-                    </div>
-
-                    {/* Attach and Project are gone with v0: one uploaded files
-                        this has no use for, the other picked a project that does
-                        not exist here. Both were inert. */}
-                    <div className="flex items-center justify-end p-3">
-                        <button
-                            type="button"
-                            onClick={() => void ask(value)}
-                            disabled={busy || !value.trim()}
-                            aria-label="Send"
-                            className={cn(
-                                "px-1.5 py-1.5 rounded-lg text-sm transition-colors border border-zinc-700 hover:border-zinc-600 hover:bg-zinc-800 flex items-center justify-between gap-1 disabled:cursor-not-allowed",
-                                value.trim() && !busy
-                                    ? "bg-white text-black"
-                                    : "text-zinc-400"
-                            )}
-                        >
-                            <ArrowUpIcon
-                                className={cn(
-                                    "w-4 h-4",
-                                    value.trim() && !busy ? "text-black" : "text-zinc-400"
-                                )}
-                            />
-                            <span className="sr-only">Send</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
-                    {PROMPTS.map((p) => (
-                        <ActionButton
-                            key={p.label}
-                            icon={<p.Icon className="w-4 h-4" />}
-                            label={p.label}
-                            onClick={() => ask(p.prompt)}
-                        />
-                    ))}
-                </div>
+  return (
+    // A fixed-height column, not a growing page: the thread scrolls inside its
+    // own pane and the composer stays put. The page itself never scrolls, which
+    // is what stops the input sliding away under your thumb mid-conversation.
+    <div className="flex h-[calc(100dvh-var(--topnav-h))] flex-col">
+      <div
+        ref={threadRef}
+        className="flex-1 overflow-y-auto overscroll-contain px-4 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {empty ? (
+          <div className="flex h-full flex-col items-center justify-center gap-5 text-center">
+            {/* The wave is the bot. It is the same thing that lights up while
+                it listens and while it thinks, so the visual means something
+                rather than sitting there as decoration. */}
+            <SiriWave
+              variant="fluid-dots"
+              size={200}
+              renderScale={0.5}
+              className="bg-transparent"
+            />
+            <div>
+              <h1 className="display text-4xl">CarzBot</h1>
+              <p className="mt-1.5 text-[13px] opacity-60">Ask anything about cars.</p>
             </div>
+          </div>
+        ) : (
+          <div className="mx-auto w-full max-w-2xl space-y-3 pt-4">
+            {turns.map((t, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-relaxed",
+                  t.role === "user"
+                    ? "ml-auto bg-white text-neutral-900"
+                    : "glass-card",
+                )}
+              >
+                {t.content}
+              </div>
+            ))}
+            {busy && (
+              <div className="glass-card flex max-w-[85%] items-center gap-3 rounded-2xl px-4 py-3">
+                <SiriWave variant="wave" size={44} renderScale={0.5} className="bg-transparent" />
+                <span className="text-sm opacity-60">Thinking…</span>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="shrink-0 px-4 pb-4">
+        <div className="mx-auto w-full max-w-2xl">
+          {error && (
+            <p role="alert" className="mb-2 text-center text-[13px] text-neon-red">
+              {error}
+            </p>
+          )}
+
+          {empty && (
+            <div className="mb-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {PROMPTS.map((p) => (
+                <button
+                  key={p.label}
+                  type="button"
+                  onClick={() => void ask(p.prompt)}
+                  className="press glass-card flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold"
+                >
+                  <p.Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="glass-card rounded-3xl p-2">
+            {listening && (
+              <div className="flex items-center gap-3 px-2 pb-1 pt-1">
+                <SiriWave variant="wave" size={40} renderScale={0.5} className="bg-transparent" />
+                <span className="util-label opacity-60">Listening…</span>
+              </div>
+            )}
+
+            <Textarea
+              ref={textareaRef}
+              value={value}
+              onChange={(e) => {
+                setValue(e.target.value);
+                adjustHeight();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  void ask(value);
+                }
+              }}
+              placeholder="Ask about any car…"
+              rows={1}
+              className="min-h-[56px] w-full resize-none border-none bg-transparent px-3 py-3 text-sm shadow-none placeholder:text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
+              style={{ overflow: "hidden" }}
+            />
+
+            <div className="flex items-center justify-end gap-2 px-2 pb-1">
+              {canListen && (
+                <button
+                  type="button"
+                  onClick={listening ? stopListening : startListening}
+                  disabled={busy}
+                  aria-label={listening ? "Stop listening" : "Speak"}
+                  className={cn(
+                    "press flex h-10 w-10 items-center justify-center rounded-full transition-colors disabled:opacity-40",
+                    listening ? "bg-neon-red text-white" : "bg-white/[0.06] hover:bg-white/[0.12]",
+                  )}
+                >
+                  {listening ? <Square className="h-4 w-4" fill="currentColor" aria-hidden /> : <Mic className="h-4 w-4" aria-hidden />}
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => void ask(value)}
+                disabled={busy || !value.trim()}
+                aria-label="Send"
+                className={cn(
+                  "press flex h-10 w-10 items-center justify-center rounded-full transition-colors disabled:cursor-not-allowed",
+                  value.trim() && !busy
+                    ? "bg-white text-neutral-900"
+                    : "bg-white/[0.06] text-white/40",
+                )}
+              >
+                <ArrowUpIcon className="h-4 w-4" aria-hidden />
+              </button>
+            </div>
+          </div>
         </div>
-    );
-}
-
-interface ActionButtonProps {
-    icon: React.ReactNode;
-    label: string;
-    onClick?: () => void;
-}
-
-function ActionButton({ icon, label, onClick }: ActionButtonProps) {
-    return (
-        <button
-            type="button"
-            onClick={onClick}
-            className="flex items-center gap-2 px-4 py-2 bg-neutral-900 hover:bg-neutral-800 rounded-full border border-neutral-800 text-neutral-400 hover:text-white transition-colors"
-        >
-            {icon}
-            <span className="text-xs">{label}</span>
-        </button>
-    );
+      </div>
+    </div>
+  );
 }
