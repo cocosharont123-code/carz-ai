@@ -1,17 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CARZ_PLUS, carzPlusMonthly, carzPlusAnnual, carzPlusAnnualSaving } from "@/lib/plans";
 import { useRouter } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
-import { ModernPricingPage, type PricingCardProps } from "@/components/ui/animated-glassy-pricing";
-import { cn } from "@/lib/utils";
-import { applyDiscount, formatPrice, lookupPromo, type Promo } from "@/lib/promos";
+import { X } from "lucide-react";
+import PricingSection, { type PricingTier } from "@/components/ui/pricing-section-1";
+import { CARZ_PLUS, CARZ_MAX, annualSaving } from "@/lib/plans";
+import { applyDiscount, lookupPromo, type Promo } from "@/lib/promos";
 
+type TierId = "plus" | "max";
+
+/**
+ * Both tiers, on one page, billed either way.
+ *
+ * The page owns everything that decides what is charged — the interval, the
+ * promo, which tier — and hands the section finished numbers. The section
+ * renders; it never computes a price.
+ */
 export default function PricingPage() {
   const router = useRouter();
   const { status } = useSession();
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<TierId | null>(null);
   const [annual, setAnnual] = useState(false);
   const [promoInput, setPromoInput] = useState("");
   const [promo, setPromo] = useState<Promo | null>(null);
@@ -20,6 +29,7 @@ export default function PricingPage() {
   // Null until the membership check lands, so an existing member never sees a
   // join CTA flash before it resolves.
   const [member, setMember] = useState<boolean | null>(null);
+  const [tier, setTier] = useState<TierId | null>(null);
   const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
 
   useEffect(() => {
@@ -27,7 +37,9 @@ export default function PricingPage() {
       .then((r) => r.json())
       .then((d) => {
         setMember(!!d.member);
+        if (d.tier === "max" || d.tier === "plus") setTier(d.tier);
         if (d.billing) setBilling(d.billing);
+        if (d.billing === "annual") setAnnual(true);
       })
       .catch(() => setMember(false));
   }, [status]);
@@ -57,33 +69,46 @@ export default function PricingPage() {
     setPromoError("");
   }
 
-  const basePrice = annual ? CARZ_PLUS.annual : CARZ_PLUS.monthly;
-  const finalPrice = promo ? applyDiscount(basePrice, promo.percentOff) : basePrice;
-  const priceStr = formatPrice(finalPrice);
   const isFree = promo?.percentOff === 100;
 
-  async function joinCarzPlus() {
+  /** List price for a tier at the current interval, before any discount. */
+  const listPrice = (id: TierId) => {
+    const plan = id === "max" ? CARZ_MAX : CARZ_PLUS;
+    return annual ? plan.annual : plan.monthly;
+  };
+
+  const finalPrice = (id: TierId) => {
+    const base = listPrice(id);
+    return promo ? applyDiscount(base, promo.percentOff) : base;
+  };
+
+  async function join(id: TierId) {
     if (busy) return;
-    // A member has no button to press, so there is nothing to do here for one.
-    if (member) return;
+    if (member) return; // A member has no button to press.
     if (status !== "authenticated") {
       signIn("google", { callbackUrl: "/pricing" });
       return;
     }
-    setBusy(true);
+    setBusy(id);
+    setJoinError("");
     try {
       let d;
       if (isFree) {
-        // 100%-off code unlocks Carz+ outright.
-        d = await post({ action: "redeem", code: promo!.code });
+        // A 100%-off code unlocks the chosen tier outright.
+        d = await post({ action: "redeem", code: promo!.code, tier: id });
       } else if (annual) {
-        // Annual is a direct purchase (at the promo rate, if any).
-        d = await post({ action: "join", interval: "annual", code: promo?.code });
-      } else {
-        // Monthly starts the free trial; fall back to joining if already used.
+        d = await post({ action: "join", interval: "annual", code: promo?.code, tier: id });
+      } else if (id === "plus") {
+        // The trial is a Carz+ monthly path only: startTrial grants no tier, so
+        // routing MAX through it would sell the cheaper membership.
         d = await post({ action: "trial" });
-        if (!d?.ok && !d?.needUsername) d = await post({ action: "join", interval: "monthly", code: promo?.code });
+        if (!d?.ok && !d?.needUsername) {
+          d = await post({ action: "join", interval: "monthly", code: promo?.code, tier: id });
+        }
+      } else {
+        d = await post({ action: "join", interval: "monthly", code: promo?.code, tier: id });
       }
+
       if (d?.needUsername) {
         router.push("/profile?next=/pricing");
         return;
@@ -92,154 +117,150 @@ export default function PricingPage() {
         setJoinError(d?.error || "Couldn't start your membership. Try again.");
         return;
       }
-      // Subscribed. The page rewrites itself into the member state in place:
-      // the title, the card and the header all read from `member`.
       setMember(true);
+      setTier(d.tier === "max" ? "max" : "plus");
+      setBilling(annual ? "annual" : "monthly");
     } catch {
       setJoinError("Couldn't reach the server. Try again.");
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   }
 
-  // Undefined for a member: the card renders without a button, because there
-  // is nothing left to buy and nowhere left to go.
-  const carzButtonText = member
-    ? undefined
-    : busy
-      ? "Starting…"
-      : isFree
-        ? "Redeem — Carz+ free"
-        : promo
-          ? `Get Carz+ · $${priceStr}${annual ? "/yr" : "/mo"}`
-          : annual
-            ? "Get annual · $80/yr"
-            : "Start free trial";
+  /** What the button on a tier says, or nothing at all once it is held. */
+  function cta(id: TierId): string | undefined {
+    if (member) return undefined;
+    if (busy === id) return "Starting…";
+    const name = id === "max" ? CARZ_MAX.name : CARZ_PLUS.name;
+    if (isFree) return `Redeem ${name} free`;
+    if (id === "plus" && !annual && !promo) return "Start free trial";
+    return `Get ${name}`;
+  }
 
-  const plans: PricingCardProps[] = [
+  function note(id: TierId): string | undefined {
+    if (member) return tier === id ? "Your current plan" : undefined;
+    if (isFree) return undefined;
+    if (id === "plus" && !annual && !promo) {
+      return `7 days free, then $${CARZ_PLUS.monthly.toFixed(2)}/mo`;
+    }
+    if (annual) {
+      const plan = id === "max" ? CARZ_MAX : CARZ_PLUS;
+      return `Save ${annualSaving(plan.monthly, plan.annual)}% against monthly`;
+    }
+    return undefined;
+  }
+
+  const tiers: PricingTier[] = [
     {
-      planName: "Free",
-      description: "Get started spotting and bidding.",
-      price: "0",
-      features: ["3 car scans per day", "Spotting map", "Live leaderboard", "Car Hunt events"],
-      buttonText: "Start spotting",
-      buttonVariant: "secondary",
-      onSelect: () => router.push("/spot"),
+      id: "plus",
+      name: CARZ_PLUS.name,
+      blurb: CARZ_PLUS.blurb,
+      price: finalPrice("plus"),
+      wasPrice: promo ? listPrice("plus") : undefined,
+      interval: annual ? "yr" : "mo",
+      perks: CARZ_PLUS.perks,
+      featured: !member || tier === "plus",
+      badge: member && tier === "plus" ? "Active" : undefined,
+      cta: cta("plus"),
+      onSelect: () => void join("plus"),
+      note: note("plus"),
     },
     {
-      planName: "Carz+",
-      description: member ? "You're a member — here's everything you unlocked." : "The membership for serious spotters.",
-      price: member
-        ? (billing === "annual" ? CARZ_PLUS.annual : CARZ_PLUS.monthly).toFixed(2)
-        : priceStr,
-      interval: member ? (billing === "annual" ? "yr" : "mo") : annual ? "yr" : "mo",
-      features: [
-        member
-          ? "Active — every reward below is yours"
-          : promo
-            ? `${promo.code.toUpperCase()} applied — ${promo.percentOff}% off${isFree ? " (free)" : `, was $${formatPrice(basePrice)}`}`
-            : annual
-              ? `Billed ${carzPlusAnnual()}/year — save ${carzPlusAnnualSaving()}%`
-              : `7-day free trial, then ${carzPlusMonthly()}/mo`,
-        ...CARZ_PLUS.perks.map((p) => p.title),
-      ],
-      buttonText: carzButtonText,
-      isPopular: true,
-      buttonVariant: "primary",
-      onSelect: joinCarzPlus,
+      id: "max",
+      name: CARZ_MAX.name,
+      blurb: CARZ_MAX.blurb,
+      price: finalPrice("max"),
+      wasPrice: promo ? listPrice("max") : undefined,
+      interval: annual ? "yr" : "mo",
+      perksLead: `Everything in ${CARZ_PLUS.name}, plus:`,
+      perks: CARZ_MAX.perks,
+      featured: member ? tier === "max" : false,
+      badge: member && tier === "max" ? "Active" : undefined,
+      cta: cta("max"),
+      onSelect: () => void join("max"),
+      note: note("max"),
     },
   ];
 
-  // Members get their status, not the join controls — the billing toggle and
-  // promo box only mean anything to someone who hasn't subscribed yet.
-  const header = member ? (
-    <div className="flex flex-col items-center gap-2">
-      <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/40 bg-cyan-400/10 px-4 py-1.5 text-sm text-cyan-300">
-        <span className="font-semibold">Carz+ active</span>
-        <span className="opacity-80">
-          · {billing === "annual" ? `${carzPlusAnnual()}/yr` : `${carzPlusMonthly()}/mo`}
-        </span>
-      </div>
-      <p className="text-sm text-foreground/70">Everything below is already unlocked.</p>
-    </div>
-  ) : (
-    <div className="flex flex-col items-center gap-4">
-      <div className="blur-behind inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/5 p-1 text-sm">
-        <button
-          onClick={() => setAnnual(false)}
-          className={cn("press rounded-full px-4 py-1.5 font-medium transition", !annual ? "bg-cyan-400 text-black" : "text-foreground/70 hover:text-foreground")}
-        >
-          Monthly
-        </button>
-        <button
-          onClick={() => setAnnual(true)}
-          className={cn("press rounded-full px-4 py-1.5 font-medium transition", annual ? "bg-cyan-400 text-black" : "text-foreground/70 hover:text-foreground")}
-        >
-          Annual <span className="opacity-70">· save {carzPlusAnnualSaving()}%</span>
-        </button>
-      </div>
-
-      {/* Promo code slot */}
-      {promo ? (
-        <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/40 bg-cyan-400/10 px-3 py-1.5 text-sm text-cyan-300">
-          <span className="font-semibold uppercase tracking-wide">{promo.code}</span>
-          <span className="opacity-80">· {promo.percentOff}% off applied</span>
-          <button onClick={removePromo} className="press ml-1 opacity-70 hover:opacity-100" aria-label="Remove promo code">
-            &times;
-          </button>
-        </div>
-      ) : (
-        <div className="flex flex-col items-center gap-1">
-          <div className="flex items-center gap-2">
-            <input
-              value={promoInput}
-              onChange={(e) => {
-                setPromoInput(e.target.value);
-                setPromoError("");
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") applyPromo();
-              }}
-              placeholder="Promo code"
-              className="w-40 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-sm outline-none placeholder:text-foreground/40 focus:border-white/40"
-            />
-            <button
-              onClick={applyPromo}
-              className="press rounded-full border border-white/20 px-4 py-1.5 text-sm font-medium text-foreground/80 transition hover:border-white/40 hover:text-foreground"
-            >
-              Apply
-            </button>
-          </div>
-          {promoError && <p className="text-xs text-[color:var(--coral,#ff5a5f)]">{promoError}</p>}
-        </div>
-      )}
-      {joinError && <p className="text-xs text-[color:var(--coral,#ff5a5f)]">{joinError}</p>}
-    </div>
-  );
+  const activeName = tier === "max" ? CARZ_MAX.name : CARZ_PLUS.name;
 
   return (
-    <>
-      <ModernPricingPage
-        title={
-          member ? (
-            <>
-              Your <span className="text-cyan-400">Carz+</span> rewards
-            </>
+    <PricingSection
+      eyebrow={member ? "Membership" : "Carz membership"}
+      title={member ? "You're in" : "Choose your plan"}
+      subtitle={
+        member
+          ? `${activeName} is active on your account, billed ${billing === "annual" ? "yearly" : "monthly"}.`
+          : "Spot more cars, keep a garage, and ask CarzBot anything. Cancel whenever."
+      }
+      tiers={tiers}
+      // A member's interval is already settled, so there is nothing to switch.
+      billing={member ? undefined : { value: annual ? "1" : "0", monthlyLabel: "Monthly", annualLabel: "Yearly" }}
+      onBillingSwitch={(v) => setAnnual(v === "1")}
+      busy={busy !== null}
+    >
+      {!member && (
+        <div className="mx-auto mt-7 max-w-sm">
+          {promo ? (
+            <div className="glass-card flex min-h-11 items-center justify-between gap-3 rounded-full px-4 py-2">
+              <p className="text-sm">
+                <span className="font-bold">{promo.code.toUpperCase()}</span>
+                <span className="opacity-70">
+                  {" "}
+                  applied — {promo.percentOff}% off
+                </span>
+              </p>
+              <button
+                type="button"
+                onClick={removePromo}
+                aria-label={`Remove promo code ${promo.code.toUpperCase()}`}
+                className="press flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carz/60"
+              >
+                <X className="h-4 w-4" strokeWidth={2} aria-hidden />
+              </button>
+            </div>
           ) : (
-            <>
-              Choose your <span className="text-cyan-400">Carz</span> plan
-            </>
-          )
-        }
-        subtitle={
-          member
-            ? "You're subscribed. Every reward is live on your account right now."
-            : "Start free. Upgrade to Carz+ for unlimited scans, your garage and more."
-        }
-        plans={plans}
-        headerExtra={header}
-        showAnimatedBackground
-      />
-    </>
+            <div className="flex gap-2">
+              <label htmlFor="promo" className="sr-only">
+                Promo code
+              </label>
+              <input
+                id="promo"
+                value={promoInput}
+                onChange={(e) => {
+                  setPromoInput(e.target.value);
+                  setPromoError("");
+                }}
+                onKeyDown={(e) => e.key === "Enter" && applyPromo()}
+                placeholder="Promo code"
+                autoComplete="off"
+                autoCapitalize="none"
+                spellCheck={false}
+                className="glass-card min-h-11 flex-1 rounded-full bg-transparent px-4 text-sm outline-none placeholder:opacity-40 focus-visible:ring-2 focus-visible:ring-carz/60"
+              />
+              <button
+                type="button"
+                onClick={applyPromo}
+                className="press glass-card min-h-11 shrink-0 rounded-full px-5 text-sm font-semibold transition hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carz/60"
+              >
+                Apply
+              </button>
+            </div>
+          )}
+
+          {/* Errors are text, not a red border alone. */}
+          {promoError && (
+            <p role="alert" className="mt-2 text-center text-sm text-neon-red">
+              {promoError}
+            </p>
+          )}
+          {joinError && (
+            <p role="alert" className="mt-2 text-center text-sm text-neon-red">
+              {joinError}
+            </p>
+          )}
+        </div>
+      )}
+    </PricingSection>
   );
 }

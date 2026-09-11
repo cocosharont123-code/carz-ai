@@ -1,18 +1,22 @@
 "use client";
 
 /**
- * Reproduced as supplied, with two deviations, both forced:
+ * The pricing section.
  *
- *   - `motion/react` is imported from `framer-motion`. They are the same
- *     library under two names; framer-motion 12 is already a dependency, and
- *     installing `motion` 13 alongside it would ship two copies of the same
- *     animation runtime.
- *   - `@/components/ui/timeline-animation` did not come with the brief, so it
- *     is written to the contract these call sites imply. See that file.
+ * Structure and motion come from the supplied component: a staggered reveal
+ * keyed to the section, a vertical-cut heading, a pill switch with a sliding
+ * selection, and prices that roll between values rather than cutting.
  *
- * Its palette is its own — white ground, blue gradient, grey text — and does
- * not use this app's tokens. Left exactly as given rather than recoloured,
- * because the design rules say not to change colours unasked.
+ * Its palette does not. The original is a white ground with a blue radial
+ * gradient and grey type, which would have been the only screen in the app
+ * that looked like that. It is rebuilt on the app's own tokens — glass over
+ * the shader background, `--color-carz` for the accent — because the design
+ * rules say not to introduce colours, and a pricing page is the last screen
+ * that should look borrowed.
+ *
+ * Presentational only: every price, label and handler is passed in, so the
+ * page above it owns membership, promos and billing, and there is one place
+ * where what is charged is decided.
  */
 
 import { TimelineContent } from "@/components/ui/timeline-animation";
@@ -20,322 +24,302 @@ import { VerticalCutReveal } from "@/components/ui/vertical-cut-reveal";
 import { cn } from "@/lib/utils";
 import NumberFlow from "@number-flow/react";
 import { CheckCheck, Zap } from "lucide-react";
-import { motion } from "framer-motion";
-import { useId, useRef, useState } from "react";
+import { motion, useReducedMotion, type Variants } from "framer-motion";
+import { useId, useRef, useState, type ReactNode } from "react";
 
-const PricingSwitch = ({
+/* --- The billing switch --------------------------------------------------- */
+
+export const PricingSwitch = ({
   button1,
   button2,
+  value,
   onSwitch,
   className,
   layoutId,
+  label,
 }: {
   button1: string;
   button2: string;
+  /** "0" or "1". Controlled, so the page can restore a member's own billing. */
+  value?: string;
   onSwitch: (value: string) => void;
   className?: string;
   layoutId?: string;
+  label?: string;
 }) => {
-  const [selected, setSelected] = useState("0");
+  const [internal, setInternal] = useState("0");
+  const selected = value ?? internal;
   const uniqueId = useId();
   const switchLayoutId = layoutId || `switch-${uniqueId}`;
+  const reduceMotion = useReducedMotion() === true;
 
-  const handleSwitch = (value: string) => {
-    setSelected(value);
-    onSwitch(value);
+  const handleSwitch = (next: string) => {
+    setInternal(next);
+    onSwitch(next);
   };
+
+  const option = (key: string, text: string) => (
+    <button
+      type="button"
+      onClick={() => handleSwitch(key)}
+      aria-pressed={selected === key}
+      className={cn(
+        // h-12, not the original's h-10: 40px is under the 44pt tap minimum.
+        "press relative z-10 h-12 w-full rounded-full px-4 text-sm font-semibold transition-colors sm:h-14 sm:px-6",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carz/60",
+        selected === key ? "text-black" : "opacity-70 hover:opacity-100",
+      )}
+    >
+      {selected === key &&
+        (reduceMotion ? (
+          <span className="absolute inset-0 rounded-full bg-white" />
+        ) : (
+          <motion.span
+            layoutId={switchLayoutId}
+            className="absolute inset-0 rounded-full bg-white"
+            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+          />
+        ))}
+      <span className="relative">{text}</span>
+    </button>
+  );
 
   return (
     <div
+      role="group"
+      aria-label={label}
       className={cn(
-        "relative z-10 w-full flex rounded-full bg-neutral-50 border border-gray-200 p-1",
+        "glass-card relative z-10 grid w-full grid-cols-2 rounded-full p-1",
         className,
       )}
-      role="group"
     >
-      <button
-        type="button"
-        onClick={() => handleSwitch("0")}
-        aria-pressed={selected === "0"}
-        className={cn(
-          "relative z-10 w-full sm:h-14 h-10 rounded-full sm:px-6 px-3 sm:py-2 py-1 font-medium transition-colors",
-          selected === "0"
-            ? "text-white"
-            : "text-muted-foreground hover:text-black",
-        )}
-      >
-        {selected === "0" && (
-          <motion.span
-            layoutId={switchLayoutId}
-            className="absolute top-0 left-0 sm:h-14 h-10 w-full rounded-full border-4 shadow-sm shadow-black border-black bg-gradient-to-t from-neutral-900 via-neutral-800 to-neutral-900"
-            transition={{ type: "spring", stiffness: 500, damping: 30 }}
-          />
-        )}
-        <span className="relative">{button1}</span>
-      </button>
-
-      <button
-        type="button"
-        onClick={() => handleSwitch("1")}
-        aria-pressed={selected === "1"}
-        className={cn(
-          "relative z-10 w-full sm:h-14 h-10 flex-shrink-0 rounded-full sm:px-6 px-3 sm:py-2 py-1 font-medium transition-colors",
-          selected === "1"
-            ? "text-white"
-            : "text-muted-foreground hover:text-black",
-        )}
-      >
-        {selected === "1" && (
-          <motion.span
-            layoutId={switchLayoutId}
-            className="absolute top-0 left-0 sm:h-14 h-10 w-full rounded-full border-4 shadow-sm shadow-black border-black bg-gradient-to-t from-neutral-900 via-neutral-800 to-neutral-900"
-            transition={{ type: "spring", stiffness: 500, damping: 30 }}
-          />
-        )}
-        <span className="relative flex justify-center items-center gap-2">
-          {button2}
-        </span>
-      </button>
+      {option("0", button1)}
+      {option("1", button2)}
     </div>
   );
 };
 
-export default function PricingSection2() {
-  const [isUpdates, setIsUpdates] = useState(false);
-  const [isCorporate, setIsCorporate] = useState(false);
-  const pricingRef = useRef<HTMLDivElement>(null);
+/* --- Tiers ---------------------------------------------------------------- */
 
-  const revealVariants = {
+export type PricingTier = {
+  id: string;
+  name: string;
+  blurb: string;
+  /** What they pay today, after any discount. */
+  price: number;
+  /** Struck through beside the price when a promo is applied. */
+  wasPrice?: number;
+  interval: "mo" | "yr";
+  /** Sits above the list, e.g. "Everything in Carz+, plus:". */
+  perksLead?: string;
+  perks: readonly { readonly title: string; readonly desc?: string }[];
+  /** Ranked first visually. Paired with a text badge, never colour alone. */
+  featured?: boolean;
+  badge?: string;
+  /** Omit for a tier already held: the card then renders with no button. */
+  cta?: string;
+  onSelect?: () => void;
+  note?: string;
+};
+
+function TierCard({
+  tier,
+  index,
+  sectionRef,
+  variants,
+  busy,
+}: {
+  tier: PricingTier;
+  index: number;
+  sectionRef: React.RefObject<HTMLDivElement | null>;
+  variants: Variants;
+  busy?: boolean;
+}) {
+  return (
+    <TimelineContent
+      as="div"
+      animationNum={index}
+      timelineRef={sectionRef}
+      customVariants={variants}
+      className={cn(
+        "glass-card flex flex-col rounded-3xl p-6 sm:p-7",
+        tier.featured && "ring-1 ring-carz/40",
+      )}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="display text-xl">{tier.name}</h3>
+        {tier.badge && (
+          <span className="util-label rounded-full bg-carz/15 px-3 py-1 text-carz">
+            {tier.badge}
+          </span>
+        )}
+      </div>
+      <p className="mt-1.5 text-sm opacity-70">{tier.blurb}</p>
+
+      <div className="mt-5 flex items-baseline gap-2">
+        <span className="display text-4xl">
+          $
+          <NumberFlow value={tier.price} format={{ minimumFractionDigits: 2 }} />
+        </span>
+        <span className="text-sm opacity-60">/{tier.interval}</span>
+        {tier.wasPrice !== undefined && tier.wasPrice > tier.price && (
+          <span className="text-sm line-through opacity-40">
+            ${tier.wasPrice.toFixed(2)}
+          </span>
+        )}
+      </div>
+
+      {tier.perksLead && (
+        <p className="mt-5 text-sm font-semibold opacity-80">{tier.perksLead}</p>
+      )}
+      <ul className={cn("space-y-3", tier.perksLead ? "mt-3" : "mt-5")}>
+        {tier.perks.map((perk) => (
+          <li key={perk.title} className="flex items-start gap-3">
+            <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-carz/15">
+              <CheckCheck className="h-3 w-3 text-carz" strokeWidth={2.5} aria-hidden />
+            </span>
+            <span className="text-sm leading-snug">
+              <span className="font-semibold">{perk.title}</span>
+              {perk.desc && <span className="opacity-60"> — {perk.desc}</span>}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      {/* Pushes the button to the bottom so two cards of different heights
+          still line their calls to action up. */}
+      <div className="flex-1" />
+
+      {tier.cta && (
+        <button
+          type="button"
+          onClick={tier.onSelect}
+          disabled={busy}
+          className={cn(
+            "press mt-6 flex min-h-11 w-full items-center justify-center rounded-full px-6 py-3 text-sm font-bold transition",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carz/60",
+            "disabled:cursor-not-allowed disabled:opacity-50",
+            tier.featured
+              ? "bg-white text-black hover:opacity-90"
+              : "glass-card hover:bg-white/[0.08]",
+          )}
+        >
+          {tier.cta}
+        </button>
+      )}
+      {tier.note && (
+        <p className="mt-2.5 text-center text-xs opacity-50">{tier.note}</p>
+      )}
+    </TimelineContent>
+  );
+}
+
+/* --- The section ---------------------------------------------------------- */
+
+export default function PricingSection({
+  eyebrow,
+  title,
+  subtitle,
+  tiers,
+  billing,
+  onBillingSwitch,
+  busy,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  tiers: PricingTier[];
+  /** Omit to hide the switch, as for a member whose billing is already set. */
+  billing?: { value: string; monthlyLabel: string; annualLabel: string };
+  onBillingSwitch?: (value: string) => void;
+  busy?: boolean;
+  /** Promo box, errors, anything the page wants under the cards. */
+  children?: ReactNode;
+}) {
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  const revealVariants: Variants = {
     visible: (i: number) => ({
       y: 0,
       opacity: 1,
       filter: "blur(0px)",
-      transition: {
-        delay: i * 0.3,
-        duration: 0.5,
-      },
+      // 0.3s a step, inside the 200-350ms the rules ask for.
+      transition: { delay: i * 0.08, duration: 0.3, ease: "easeInOut" },
     }),
-    hidden: {
-      filter: "blur(10px)",
-      y: -20,
-      opacity: 0,
-    },
+    hidden: { filter: "blur(10px)", y: -20, opacity: 0 },
   };
-  const timelineVaraints = {
-    visible: (i: number) => ({
-      y: 0,
-      opacity: 1,
-      filter: "blur(0px)",
-      transition: {
-        delay: i * 0.1,
-        duration: 0.5,
-      },
-    }),
-    hidden: {
-      filter: "blur(10px)",
-      y: -20,
-      opacity: 0,
-    },
-  };
-
-  const toggleUpdates = (value: string) =>
-    setIsUpdates(Number.parseInt(value) === 1);
-  const toggleCorporate = (value: string) =>
-    setIsCorporate(Number.parseInt(value) === 1);
-
-  const calculatePrice = () => {
-    if (!isUpdates && !isCorporate) return 98; // 3 months + personal
-    if (isUpdates && !isCorporate) return 400; // forever + personal
-    if (!isUpdates && isCorporate) return 159; // 3 months + corporate
-    if (isUpdates && isCorporate) return 650; // forever + corporate
-    return 98;
-  };
-
-  const calculateOriginalPrice = () => {
-    const currentPrice = calculatePrice();
-    return Math.round(currentPrice * 1.45);
-  };
-
-  const currentPrice = calculatePrice();
-  const originalPrice = calculateOriginalPrice();
-
-  const features = [
-    "Figma Design system file",
-    "2000+ components and variants",
-    "Predefined style system",
-    "Free licensed icons",
-    "Step-by-step tutorial",
-    "Use on unlimited projects",
-    "Friendly support",
-  ];
 
   return (
-    <div
-      className="px-4 pt-10 w-full min-h-screen mx-auto relative"
-      ref={pricingRef}
-    >
-      <div className="bg-white py-16 px-4 ">
-        <div
-          className="absolute inset-0 z-0"
-          style={{
-            background:
-              "radial-gradient(125% 125% at 50% 90%, #fff 40%, #2529f8 100%)",
-          }}
-        />
-        <div className="max-w-4xl mx-auto text-center">
-          <TimelineContent
-            as="div"
-            animationNum={0}
-            timelineRef={pricingRef}
-            customVariants={revealVariants}
-            className="flex items-center justify-center mb-4"
-          >
-            <Zap className="h-5 w-5 text-blue-500 fill-blue-500 mr-2" />
-            <span className="text-blue-600 font-medium">Time to connect</span>
-          </TimelineContent>
+    <div ref={sectionRef} className="mx-auto w-full max-w-3xl px-5 py-10">
+      <div className="text-center">
+        <TimelineContent
+          as="div"
+          animationNum={0}
+          timelineRef={sectionRef}
+          customVariants={revealVariants}
+          className="flex items-center justify-center gap-2"
+        >
+          <Zap className="h-4 w-4 fill-carz text-carz" aria-hidden />
+          <span className="util-label text-carz">{eyebrow}</span>
+        </TimelineContent>
 
-          <h1 className="md:text-5xl sm:text-4xl text-3xl font-semibold text-gray-900 mb-4 leading-[120%]">
-            <VerticalCutReveal
-              splitBy="words"
-              staggerDuration={0.15}
-              staggerFrom="first"
-              reverse={true}
-              containerClassName="justify-center"
-              transition={{
-                type: "spring",
-                stiffness: 250,
-                damping: 40,
-                delay: 0.4,
-              }}
-            >
-              Let&apos;s get started
-            </VerticalCutReveal>
-          </h1>
-
-          <TimelineContent
-            as="p"
-            animationNum={1}
-            timelineRef={pricingRef}
-            customVariants={revealVariants}
-            className="text-xl text-gray-600"
+        <h1 className="display mt-4 text-4xl sm:text-5xl">
+          <VerticalCutReveal
+            splitBy="words"
+            staggerDuration={0.12}
+            staggerFrom="first"
+            reverse
+            containerClassName="justify-center"
+            transition={{ type: "spring", stiffness: 250, damping: 40, delay: 0.15 }}
           >
-            Get Module, connect, save time and money. Profit!
-          </TimelineContent>
-        </div>
+            {title}
+          </VerticalCutReveal>
+        </h1>
+
+        <TimelineContent
+          as="p"
+          animationNum={1}
+          timelineRef={sectionRef}
+          customVariants={revealVariants}
+          className="mx-auto mt-3 max-w-md text-sm leading-relaxed opacity-70"
+        >
+          {subtitle}
+        </TimelineContent>
       </div>
 
-      {/* Product Features */}
-      <div className="px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid sm:grid-cols-2 md:gap-12 gap-4 items-center">
-            <div>
-              <TimelineContent
-                as="h3"
-                animationNum={2}
-                timelineRef={pricingRef}
-                customVariants={revealVariants}
-                className="text-3xl font-medium text-gray-900 mb-2"
-              >
-                What&apos;s inside
-              </TimelineContent>
+      {billing && onBillingSwitch && (
+        <TimelineContent
+          as="div"
+          animationNum={2}
+          timelineRef={sectionRef}
+          customVariants={revealVariants}
+          className="mx-auto mt-7 max-w-xs"
+        >
+          <PricingSwitch
+            button1={billing.monthlyLabel}
+            button2={billing.annualLabel}
+            value={billing.value}
+            onSwitch={onBillingSwitch}
+            label="Billing period"
+          />
+        </TimelineContent>
+      )}
 
-              <div className="space-y-4">
-                {features.map((feature, index) => (
-                  <TimelineContent
-                    key={index}
-                    as="div"
-                    animationNum={3 + index}
-                    timelineRef={pricingRef}
-                    customVariants={timelineVaraints}
-                    className="flex items-center"
-                  >
-                    <div className="w-6 h-6 bg-blue-500 shadow-md shadow-blue-500 rounded-full flex items-center justify-center mr-3">
-                      <CheckCheck className="h-4 w-4 text-white" />
-                    </div>
-                    <span className="text-gray-700">{feature}</span>
-                  </TimelineContent>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-8">
-              <TimelineContent
-                as="div"
-                animationNum={3}
-                timelineRef={pricingRef}
-                customVariants={revealVariants}
-              >
-                <h4 className="font-semibold text-gray-900 mb-2">
-                  Access to updates
-                </h4>
-                <p className="text-sm text-gray-600 mb-2">
-                  One-time payment, updates come to the email
-                </p>
-                <PricingSwitch
-                  button1="3 Months"
-                  button2="Forever"
-                  onSwitch={toggleUpdates}
-                  className="grid grid-cols-2 w-full"
-                />
-              </TimelineContent>
-
-              <TimelineContent
-                as="div"
-                animationNum={4}
-                timelineRef={pricingRef}
-                customVariants={revealVariants}
-              >
-                <h4 className="font-semibold text-gray-900 mb-1">
-                  Lifetime license
-                </h4>
-                <p className="text-sm text-gray-600 mb-2">
-                  Select Corporate if you&apos;re part of the team
-                </p>
-                <PricingSwitch
-                  button1="Personal"
-                  button2="Corporate"
-                  onSwitch={toggleCorporate}
-                  className="grid grid-cols-2 w-full"
-                />
-              </TimelineContent>
-
-              <TimelineContent
-                as="div"
-                animationNum={5}
-                timelineRef={pricingRef}
-                customVariants={revealVariants}
-                className="text-center grid grid-cols-2 items-center gap-2 px-2"
-              >
-                <div className="flex items-center mb-4">
-                  <span className="text-5xl font-semibold text-gray-900">
-                    $
-                    <NumberFlow
-                      value={currentPrice}
-                      className="text-5xl font-semibold"
-                    />
-                  </span>
-                  <span className="text-xl text-gray-600 line-through ml-2 relative before:content-[''] before:absolute before:left-0 before:top-3.5 before:w-full before:h-0.5 before:bg-gray-800 before:z-10">
-                    $
-                    <NumberFlow
-                      value={originalPrice}
-                      className="text-xl font-semibold line-through"
-                    />
-                  </span>
-                </div>
-                <TimelineContent
-                  as="button"
-                  animationNum={6}
-                  timelineRef={pricingRef}
-                  customVariants={revealVariants}
-                  className="text-white text-xl font-semibold h-10 sm:h-16 w-full rounded-full border-4 shadow-sm shadow-blue-600 border-blue-600 bg-gradient-to-t from-blue-600 via-blue-500 to-blue-600"
-                >
-                  Purchase
-                </TimelineContent>
-              </TimelineContent>
-            </div>
-          </div>
-        </div>
+      <div className="mt-7 grid gap-4 sm:grid-cols-2">
+        {tiers.map((tier, i) => (
+          <TierCard
+            key={tier.id}
+            tier={tier}
+            index={3 + i}
+            sectionRef={sectionRef}
+            variants={revealVariants}
+            busy={busy}
+          />
+        ))}
       </div>
+
+      {children}
     </div>
   );
 }
