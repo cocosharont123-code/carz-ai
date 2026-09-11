@@ -3,8 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowUp as ArrowUpIcon,
-  Mic,
-  Square,
   Volume2,
   VolumeX,
   ScanLine,
@@ -20,8 +18,6 @@ import { cn } from "@/lib/utils";
 type Turn = {
   role: "user" | "assistant";
   content: string;
-  /** Set on an answer to a spoken question: it is read aloud, not written out. */
-  spoken?: boolean;
 };
 
 /** Openers. They ask the question rather than just naming a topic, because a
@@ -33,34 +29,6 @@ const PROMPTS = [
   { label: "Fastest for the money", Icon: Gauge, prompt: "What's the fastest car I can buy for under $40,000?" },
   { label: "Tell two apart", Icon: ScanLine, prompt: "How do I tell a Carrera S apart from a base Carrera?" },
 ] as const;
-
-/* --- Speech recognition ------------------------------------------------
-   Not in lib.dom under this name, and Safari only has it prefixed, so the
-   surface actually used is declared here rather than reached for through any. */
-type SpeechResultEvent = {
-  resultIndex: number;
-  results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }>;
-};
-type SpeechRecognizer = {
-  lang: string;
-  continuous: boolean;
-  interimResults: boolean;
-  start: () => void;
-  stop: () => void;
-  onresult: ((e: SpeechResultEvent) => void) | null;
-  onend: (() => void) | null;
-  onerror: (() => void) | null;
-};
-type SpeechCtor = new () => SpeechRecognizer;
-
-function speechCtor(): SpeechCtor | null {
-  if (typeof window === "undefined") return null;
-  const w = window as unknown as {
-    SpeechRecognition?: SpeechCtor;
-    webkitSpeechRecognition?: SpeechCtor;
-  };
-  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
-}
 
 const VOICE_KEY = "carzbot_voice";
 
@@ -107,28 +75,21 @@ export function CarzBotChat() {
   const [value, setValue] = useState("");
   const [turns, setTurns] = useState<Turn[]>([]);
   const [busy, setBusy] = useState(false);
-  const [listening, setListening] = useState(false);
-  const [canListen, setCanListen] = useState(false);
   const [error, setError] = useState("");
   const [voiceOn, setVoiceOn] = useState(true);
   const [speaking, setSpeaking] = useState(false);
   const { textareaRef, adjustHeight } = useAutoResizeTextarea({ minHeight: 56, maxHeight: 160 });
   const threadRef = useRef<HTMLDivElement>(null);
-  const recogRef = useRef<SpeechRecognizer | null>(null);
 
   // Deferred a microtask: a synchronous state write in an effect body cascades
   // renders, which this project lints against.
   useEffect(() => {
     let cancelled = false;
     Promise.resolve()
-      .then(() => ({
-        listen: speechCtor() !== null,
-        voice: localStorage.getItem(VOICE_KEY) !== "0",
-      }))
-      .then((v) => {
+      .then(() => localStorage.getItem(VOICE_KEY) !== "0")
+      .then((voice) => {
         if (cancelled) return;
-        setCanListen(v.listen);
-        setVoiceOn(v.voice);
+        setVoiceOn(voice);
       })
       .catch(() => {});
     return () => {
@@ -197,7 +158,7 @@ export function CarzBotChat() {
   }, []);
 
   const ask = useCallback(
-    async (text: string, viaVoice = false) => {
+    async (text: string) => {
       const question = text.trim();
       if (!question || busy) return;
 
@@ -223,11 +184,10 @@ export function CarzBotChat() {
           setError(d.error || "CarzBot couldn't answer that.");
           return;
         }
-        // Asked out loud, answered out loud. A spoken question gets a spoken
-        // reply rather than a wall of text to read back — the answer is still
-        // kept, so it can be replayed, just not written out.
-        setTurns([...next, { role: "assistant", content: d.reply, spoken: viaVoice }]);
-        if (viaVoice || voiceOn) speak(d.reply);
+        setTurns([...next, { role: "assistant", content: d.reply }]);
+        // Every answer is written out now. It is still read aloud too when the
+        // speaker is on, which is CarzBot talking rather than being talked to.
+        if (voiceOn) speak(d.reply);
       } catch {
         setError("Network error — nothing was sent.");
       } finally {
@@ -237,57 +197,10 @@ export function CarzBotChat() {
     [turns, busy, adjustHeight, voiceOn, speak, stopSpeaking],
   );
 
-  const stopListening = useCallback(() => {
-    recogRef.current?.stop();
-    recogRef.current = null;
-    setListening(false);
+  // Never leave a voice talking after this goes.
+  useEffect(() => () => {
+    if (canSpeak()) window.speechSynthesis.cancel();
   }, []);
-
-  const startListening = useCallback(() => {
-    const Ctor = speechCtor();
-    if (!Ctor || busy) return;
-
-    const r = new Ctor();
-    r.lang = "en-US";
-    r.continuous = false;
-    r.interimResults = true;
-
-    let finalText = "";
-    r.onresult = (e) => {
-      let interim = "";
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const chunk = e.results[i][0].transcript;
-        if (e.results[i].isFinal) finalText += chunk;
-        else interim += chunk;
-      }
-      setValue((finalText + interim).trimStart());
-      adjustHeight();
-    };
-    r.onerror = () => {
-      recogRef.current = null;
-      setListening(false);
-    };
-    r.onend = () => {
-      recogRef.current = null;
-      setListening(false);
-      // Speaking is the whole gesture: finishing it sends, rather than leaving
-      // the words sitting in a box waiting for a second tap.
-      if (finalText.trim()) void ask(finalText, true);
-    };
-
-    recogRef.current = r;
-    setListening(true);
-    r.start();
-  }, [busy, adjustHeight, ask]);
-
-  // Never leave the microphone running, or a voice talking, after this goes.
-  useEffect(
-    () => () => {
-      recogRef.current?.stop();
-      if (canSpeak()) window.speechSynthesis.cancel();
-    },
-    [],
-  );
 
   const empty = turns.length === 0;
 
@@ -316,52 +229,12 @@ export function CarzBotChat() {
             />
             <div>
               <h1 className="display text-4xl">CarzBot</h1>
-              <p className="mt-1.5 text-[13px] opacity-60">
-                {canListen ? "Tap to talk, or type below." : "Ask anything about cars."}
-              </p>
+              <p className="mt-1.5 text-[13px] opacity-60">Ask anything about cars.</p>
             </div>
-
-            {/* The way in. On an empty screen the mic is the action, not a
-                small control tucked beside the send button — that one stays for
-                mid-conversation, where the thread is what matters. */}
-            {canListen && (
-              <button
-                type="button"
-                onClick={listening ? stopListening : startListening}
-                disabled={busy}
-                aria-label={listening ? "Stop listening" : "Talk to CarzBot"}
-                className={cn(
-                  "press flex h-20 w-20 items-center justify-center rounded-full transition-colors disabled:opacity-40",
-                  listening
-                    ? "bg-neon-red text-white"
-                    : "glass-card hover:bg-white/[0.08]",
-                )}
-              >
-                {listening ? (
-                  <Square className="h-7 w-7" fill="currentColor" aria-hidden />
-                ) : (
-                  <Mic className="h-7 w-7" aria-hidden />
-                )}
-              </button>
-            )}
           </div>
         ) : (
           <div className="mx-auto w-full max-w-2xl space-y-3 pt-4">
-            {turns.map((t, i) =>
-              t.role === "assistant" && t.spoken ? (
-                <div key={i} className="glass-card flex max-w-[85%] items-center gap-3 rounded-2xl px-3 py-2.5">
-                  <SiriWave variant="wave" size={40} renderScale={0.5} className="bg-transparent" />
-                  <span className="util-label flex-1 opacity-60">Answered out loud</span>
-                  <button
-                    type="button"
-                    onClick={() => speak(t.content)}
-                    aria-label="Play the answer again"
-                    className="press flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.08] hover:bg-white/[0.14]"
-                  >
-                    <Volume2 className="h-4 w-4" aria-hidden />
-                  </button>
-                </div>
-              ) : (
+            {turns.map((t, i) => (
                 <div
                   key={i}
                   className={cn(
@@ -410,21 +283,17 @@ export function CarzBotChat() {
           )}
 
           <div className="glass-card rounded-3xl p-2">
-            {(listening || speaking) && (
+            {speaking && (
               <div className="flex items-center gap-3 px-2 pb-1 pt-1">
                 <SiriWave variant="wave" size={40} renderScale={0.5} className="bg-transparent" />
-                <span className="util-label flex-1 opacity-60">
-                  {listening ? "Listening…" : "Speaking…"}
-                </span>
-                {speaking && (
-                  <button
-                    type="button"
-                    onClick={stopSpeaking}
-                    className="press util-label rounded-full bg-white/[0.08] px-3 py-1.5 hover:bg-white/[0.14]"
-                  >
-                    Stop
-                  </button>
-                )}
+                <span className="util-label flex-1 opacity-60">Speaking…</span>
+                <button
+                  type="button"
+                  onClick={stopSpeaking}
+                  className="press util-label rounded-full bg-white/[0.08] px-3 py-1.5 hover:bg-white/[0.14]"
+                >
+                  Stop
+                </button>
               </div>
             )}
 
