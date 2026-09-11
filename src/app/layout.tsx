@@ -16,8 +16,9 @@ export const metadata: Metadata = {
     title: "Carz AI",
     statusBarStyle: "black-translucent",
   },
+  // No `icon` entry: app/favicon.ico is picked up by file convention and is
+  // drawn for tab sizes, where the full wave would be an illegible smudge.
   icons: {
-    icon: "/icon-512.png",
     apple: "/apple-touch-icon.png",
   },
 };
