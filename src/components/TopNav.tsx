@@ -17,6 +17,7 @@ import {
   LogIn,
   LogOut,
   ShieldCheck,
+  Lock,
 } from "lucide-react";
 import { EXPLORE_BUBBLES, EXPLORE_COPY } from "@/config/explore";
 import { cn } from "@/lib/utils";
@@ -235,6 +236,7 @@ function AccountRow({ onClose }: { onClose: () => void }) {
         ]
       : [{ label: "Sign in", href: "/signin", Icon: LogIn }]),
     { label: "Terms", href: "/terms", Icon: ShieldCheck },
+    { label: "Privacy", href: "/privacy", Icon: Lock },
   ];
 
   return (
