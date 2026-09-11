@@ -2,6 +2,7 @@ import { put, list } from "@vercel/blob";
 import { randomUUID } from "crypto";
 import { WANTED } from "./hunt";
 import { blobToken, blobConfigured } from "./blob-token";
+import { safeImageDataUrl } from "./safe-media";
 
 // Prize claims for Car Hunt Miami, stored in Vercel Blob so the owner can
 // review them (photo evidence + CashApp tag) and pay out the bounty.
@@ -80,7 +81,7 @@ export async function addClaim(input: {
     carName: car.name,
     bounty: car.bounty,
     cashapp,
-    image: typeof input.image === "string" && input.image.startsWith("data:") ? input.image.slice(0, 80_000) : "",
+    image: safeImageDataUrl(input.image, 80_000),
     spotter: input.spotter || "Guest",
     ts: Date.now(),
     status: "pending",

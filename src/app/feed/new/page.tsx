@@ -10,6 +10,7 @@ import { VideoEditor, EMPTY_EDIT } from "@/components/feed/video-editor";
 import type { VideoEdit } from "@/components/feed/feed-video";
 import { cn } from "@/lib/utils";
 import { GoogleSignInButton } from "@/components/google-sign-in";
+import { checkUploadPath, looksLikeVideo } from "@/lib/safe-media";
 
 const CAPTION_MAX = 300;
 /** Beyond this a clip stops being a spot and starts being a film. */
@@ -96,10 +97,39 @@ export default function NewPostPage() {
       return;
     }
 
+    // Checked before a byte moves. Three things the file has to be, in the
+    // order that fails cheapest first.
+    //
+    // 1. A name we accept. The extension travels into the public URL and into
+    //    whatever handles the file next, so .php, .jsp and the rest of the
+    //    executable list are refused here as well as on the server.
+    const nameCheck = checkUploadPath(`feed/video/${file.name}`, "video");
+    if (!nameCheck.ok) {
+      setError(nameCheck.reason);
+      return;
+    }
+
+    // 2. Bytes that are actually a video container. A file's type is whatever
+    //    it was named — reading the header is the difference between "it says
+    //    mp4" and "it is one".
+    const head = new Uint8Array(await file.slice(0, 16).arrayBuffer());
+    if (!looksLikeVideo(head)) {
+      setError("That file isn't a video.");
+      return;
+    }
+
     const objectUrl = URL.createObjectURL(file);
     setUploading(true);
     try {
+      // 3. Something the browser can actually decode. A truncated or corrupt
+      //    clip passes the header check and still will not play for anyone.
       const durationMs = await probeDuration(objectUrl);
+      if (!Number.isFinite(durationMs) || durationMs <= 0) {
+        setError("That video won't play — try re-exporting it.");
+        setUploading(false);
+        URL.revokeObjectURL(objectUrl);
+        return;
+      }
       if (durationMs > MAX_VIDEO_SECONDS * 1000) {
         setError(`Clips are ${MAX_VIDEO_SECONDS} seconds or shorter — trim it first.`);
         setUploading(false);

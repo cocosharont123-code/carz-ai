@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { auth } from "@/auth";
 import { blobToken, blobConfigured } from "@/lib/blob-token";
+import { checkUploadPath } from "@/lib/safe-media";
 
 export const runtime = "nodejs";
 
@@ -34,6 +35,16 @@ export async function POST(req: Request): Promise<NextResponse> {
           throw new Error("Sign in to upload.");
         }
         const isAudio = pathname.startsWith("feed/audio/");
+
+        // The pathname is supplied by the browser, so none of it is trusted:
+        // not the folder it claims, not its extension, not whether it tries to
+        // climb out. allowedContentTypes below only checks what the sender
+        // *says* the bytes are, which is a claim, not a fact — this checks the
+        // one part of the request that ends up in a public URL and in whatever
+        // handles the file next.
+        const check = checkUploadPath(pathname, isAudio ? "audio" : "video");
+        if (!check.ok) throw new Error(check.reason);
+
         return {
           allowedContentTypes: isAudio ? AUDIO_TYPES : VIDEO_TYPES,
           maximumSizeInBytes: isAudio ? 10 * 1024 * 1024 : 100 * 1024 * 1024,

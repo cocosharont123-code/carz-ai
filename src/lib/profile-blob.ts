@@ -1,6 +1,7 @@
 import { put, list } from "@vercel/blob";
 import { createHash } from "crypto";
 import { blobToken, blobConfigured } from "./blob-token";
+import { safeImageDataUrl } from "./safe-media";
 
 // User profiles (username + display name + picture), stored in Vercel Blob.
 // Keyed by a hash of the email so raw emails never land in the public blob.
@@ -279,8 +280,13 @@ export async function setProfile(
     }
   }
 
+  // Raster image data URLs only. The previous check accepted anything starting
+  // "data:", which included text/html and SVG — values that are documents, not
+  // pictures, stored in a shared blob and served to every other user.
   const image =
-    typeof data.image === "string" && data.image.startsWith("data:") ? data.image.slice(0, 80_000) : all[myKey]?.image ?? "";
+    data.image === undefined
+      ? (all[myKey]?.image ?? "")
+      : safeImageDataUrl(data.image, 80_000);
 
   // Undefined means "not being edited" and keeps what is stored; an empty
   // string is an explicit clear.
@@ -297,9 +303,7 @@ export async function setProfile(
   const cover =
     data.cover === undefined
       ? (all[myKey]?.cover ?? "")
-      : data.cover.startsWith("data:")
-        ? data.cover.slice(0, 120_000)
-        : "";
+      : safeImageDataUrl(data.cover, 120_000);
 
   const profile: Profile = {
     ...all[myKey], // preserve membership + streak
