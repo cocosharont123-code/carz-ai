@@ -190,10 +190,10 @@ function ExploreSheet({ onClose }: { onClose: () => void }) {
                 onClick={onClose}
                 className={cn(
                   "press glass-card relative flex min-h-[44px] items-center gap-3 rounded-2xl px-3 py-3",
-                  // Seven rows: six fill three rows of two and two rows of
-                  // three, so the last takes whatever is left of its row at
-                  // either width.
-                  item.href === "/pricing" && "col-span-2 sm:col-span-3",
+                  // Eight rows divide evenly in two columns on their own, so
+                  // the last only needs to stretch at three, where seven
+                  // preceding rows leave a gap beside it.
+                  item.href === "/pricing" && "sm:col-span-2",
                 )}
               >
                 <Icon className="h-5 w-5 shrink-0" strokeWidth={1.75} aria-hidden />

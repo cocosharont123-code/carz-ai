@@ -13,6 +13,7 @@
 //     listed, because there is nowhere to send someone.
 
 import {
+  Bot,
   Crosshair,
   Crown,
   Trophy,
@@ -60,6 +61,12 @@ export const EXPLORE_BUBBLES: ExploreItem[] = [
     description: "Identify any car from a photo",
     href: "/spot",
     icon: ScanLine,
+  },
+  {
+    label: "CarzBot",
+    description: "Ask anything about cars",
+    href: "/carzbot",
+    icon: Bot,
   },
   {
     label: "Feed",

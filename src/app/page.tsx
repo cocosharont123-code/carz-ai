@@ -3,7 +3,6 @@ import { AnimatedCountdown } from "@/components/ui/animated-countdown";
 import { RELEASE_DATE, RELEASE_LABEL } from "@/config/release";
 import { EXPLORE_BUBBLES } from "@/config/explore";
 import { CARZ_PLUS, carzPlusMonthly } from "@/lib/plans";
-import { cn } from "@/lib/utils";
 
 /**
  * The launch homepage.
@@ -66,19 +65,13 @@ export default function Home() {
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {EXPLORE_BUBBLES.map((item) => {
             const Icon = item.icon;
-            // Seven tiles: six fill whole rows at two and at four columns, so
-            // the last takes what is left of its row and the grid comes out
-            // even at both widths. It is Carz+, so the tile with the extra room
-            // is the one worth it. Laid out along the row, not stretched.
-            const fillsRow = item.href === "/pricing";
+            // Eight tiles divide evenly at both two and four columns, so
+            // nothing has to stretch to fill a row any more.
             return (
               <Link
                 key={item.label}
                 href={item.href}
-                className={cn(
-                  "press glass-card flex flex-col gap-2 rounded-2xl p-4",
-                  fillsRow && "col-span-2 sm:col-span-2 sm:flex-row sm:items-center sm:gap-4",
-                )}
+                className="press glass-card flex flex-col gap-2 rounded-2xl p-4"
               >
                 <Icon className="h-5 w-5 shrink-0" strokeWidth={1.75} aria-hidden />
                 <span className="text-[13px] font-semibold leading-tight">{item.label}</span>
