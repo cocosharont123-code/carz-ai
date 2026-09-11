@@ -914,7 +914,7 @@ export default function SpotPage() {
                   <Spec k="Top speed" v={car.topSpeed} />
                   <Spec k="Origin" v={car.countryOfOrigin} />
                   <Spec k="Parent company" v={car.parentCompany} />
-                  <Spec k="Used price" v={car.priceRangeUsed} />
+                  <Spec k="Retail" v={car.priceRangeUsed} />
                 </div>
 
                 {/* Body style, generation, trim and colour are the four the

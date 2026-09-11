@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { addBuild } from "@/lib/builds-local";
-import { BODY_COLORS, RIM_COLORS, FEATURES, bodyOption, rimOption, featureLabels } from "@/lib/customizer-options";
+import { RIM_COLORS, rimOption, describeColor, parseMods } from "@/lib/customizer-options";
+import { ColorWheel } from "@/components/ui/color-wheel";
 import { Spinner } from "@/components/ui/editorial";
 import { cn } from "@/lib/utils";
 
@@ -51,9 +52,11 @@ type Access = {
 };
 
 export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
-  const [bodyColor, setBodyColor] = useState<string>("");
+  // A hex off the wheel, not a preset. The prompt phrase and the display label
+  // are both derived from it by describeColor.
+  const [bodyHex, setBodyHex] = useState<string>("");
   const [rimColor, setRimColor] = useState<string>("");
-  const [features, setFeatures] = useState<string[]>([]);
+  const [mods, setMods] = useState<string>("");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -63,7 +66,9 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
   const [buying, setBuying] = useState(false);
   const [buyNotice, setBuyNotice] = useState("");
 
-  const anyChange = !!bodyColor || !!rimColor || features.length > 0;
+  const body = bodyHex ? describeColor(bodyHex) : null;
+  const features = parseMods(mods);
+  const anyChange = !!bodyHex || !!rimColor || features.length > 0;
 
   // Membership and quota up front, so the gate shows before anyone picks
   // colours and finds out on submit that they can't render.
@@ -108,10 +113,6 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
     }
   }
 
-  function toggleFeature(v: string) {
-    setFeatures((f) => (f.includes(v) ? f.filter((x) => x !== v) : [...f, v]));
-  }
-
   async function generate() {
     if (!anyChange || busy) return;
     setError("");
@@ -128,7 +129,9 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
           make: car.make,
           model: car.model,
           yearRange: car.yearRange,
-          bodyColor: bodyColor || undefined,
+          bodyColor: body?.value,
+          bodyLabel: body?.label,
+          bodyHex: bodyHex || undefined,
           rimColor: rimColor || undefined,
           features,
         }),
@@ -162,7 +165,6 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
    */
   async function cacheRender(image: string, historyId?: string | null) {
     try {
-      const body = bodyOption(bodyColor);
       const rim = rimOption(rimColor);
       const thumb = await shrink(image, 360, 0.55);
       addBuild({
@@ -172,10 +174,10 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
         model: car.model,
         yearRange: car.yearRange,
         bodyColor: body?.label,
-        bodyHex: body?.hex,
+        bodyHex: bodyHex || undefined,
         rimColor: rim?.label,
         rimHex: rim?.hex,
-        features: featureLabels(features),
+        features,
       });
     } catch {
       /* the render stays on screen regardless */
@@ -217,22 +219,26 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
       </p>
 
       {/* Body colour */}
-      <div className="mt-3">
+      <div className="mt-4">
         <div className="util-label opacity-60">Body colour</div>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {BODY_COLORS.map((c) => (
-            <button
-              key={c.value}
-              onClick={() => setBodyColor((v) => (v === c.value ? "" : c.value))}
-              className={cn(
-                "flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-xs transition",
-                bodyColor === c.value ? "border-carz bg-carz/10" : "border-black/20 hover:border-black/40",
-              )}
-            >
-              <span className="h-3.5 w-3.5 rounded-full border border-black/20" style={{ background: c.hex }} />
-              {c.label}
-            </button>
-          ))}
+        <div className="mt-2 flex flex-col items-center">
+          <ColorWheel value={bodyHex} onChange={setBodyHex} />
+          <div className="mt-3 flex min-h-11 items-center gap-3">
+            {body ? (
+              <>
+                <span className="text-sm font-semibold">{body.label}</span>
+                <button
+                  type="button"
+                  onClick={() => setBodyHex("")}
+                  className="press rounded-full border border-black/20 px-3 py-2 text-xs transition hover:border-black/40"
+                >
+                  Clear
+                </button>
+              </>
+            ) : (
+              <span className="text-sm opacity-50">Tap the wheel to choose a colour</span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -256,23 +262,24 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
         </div>
       </div>
 
-      {/* Features */}
+      {/* Mods */}
       <div className="mt-4">
-        <div className="util-label opacity-60">Mods</div>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {FEATURES.map((f) => (
-            <button
-              key={f.value}
-              onClick={() => toggleFeature(f.value)}
-              className={cn(
-                "rounded-full border px-3 py-1.5 text-xs transition",
-                features.includes(f.value) ? "border-carz bg-carz/10 text-carz" : "border-black/20 hover:border-black/40",
-              )}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+        <label htmlFor="mods" className="util-label opacity-60">
+          Mods
+        </label>
+        <textarea
+          id="mods"
+          value={mods}
+          onChange={(e) => setMods(e.target.value)}
+          rows={3}
+          placeholder="Lowered, wide body, carbon hood…"
+          className="mt-2 w-full resize-none rounded-xl border border-black/20 bg-transparent px-3 py-2.5 text-sm outline-none transition placeholder:opacity-40 focus:border-carz focus-visible:ring-2 focus-visible:ring-carz/40"
+        />
+        <p className="mt-1.5 text-xs opacity-50">
+          {features.length >= 8
+            ? "Only the first 8 are used."
+            : "One per line, or separated by commas."}
+        </p>
       </div>
 
       <button

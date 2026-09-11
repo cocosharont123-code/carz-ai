@@ -9,7 +9,7 @@ import {
 } from "@/lib/restyle-usage";
 import { getProfile, isActiveMember } from "@/lib/profile-blob";
 import { recordConfig } from "@/lib/config-history";
-import { bodyOption, rimOption, featureLabels } from "@/lib/customizer-options";
+import { rimOption } from "@/lib/customizer-options";
 
 export const runtime = "nodejs";
 export const maxDuration = 60; // image editing can take 15–40s
@@ -90,6 +90,8 @@ export async function POST(req: Request) {
     model?: string;
     yearRange?: string;
     bodyColor?: string;
+    bodyLabel?: string;
+    bodyHex?: string;
     rimColor?: string;
     features?: string[];
   };
@@ -130,17 +132,21 @@ export async function POST(req: Request) {
     // must not lose the render the user just spent a credit on.
     let historyId: string | null = null;
     try {
-      const body_ = bodyOption(body.bodyColor);
+      // The colour is whatever the wheel produced, so its label and hex come
+      // from the client rather than a lookup. Both are bounded here: they are
+      // written to stored history and read back into the UI.
       const rim = rimOption(body.rimColor);
+      const bodyLabel = typeof body.bodyLabel === "string" ? body.bodyLabel.slice(0, 40) : undefined;
+      const bodyHex = /^#[0-9a-fA-F]{6}$/.test(body.bodyHex ?? "") ? body.bodyHex : undefined;
       const entry = await recordConfig(email, {
         make: body.make ?? "",
         model: body.model ?? "",
         yearRange: body.yearRange ?? "",
-        bodyColor: body_?.label,
-        bodyHex: body_?.hex,
+        bodyColor: bodyLabel,
+        bodyHex,
         rimColor: rim?.label,
         rimHex: rim?.hex,
-        features: featureLabels(features),
+        features: features,
       });
       historyId = entry?.id ?? null;
     } catch (e) {
