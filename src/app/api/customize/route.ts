@@ -7,7 +7,8 @@ import {
   RESTYLE_DAILY_CAP,
   RESTYLE_EXTRA_PRICE_USD,
 } from "@/lib/restyle-usage";
-import { getProfile, isActiveMember } from "@/lib/profile-blob";
+import { getProfile, isActiveMember, isMaxMember } from "@/lib/profile-blob";
+import { watermark } from "@/lib/watermark";
 import { recordConfig } from "@/lib/config-history";
 import { rimOption } from "@/lib/customizer-options";
 
@@ -59,7 +60,10 @@ export async function POST(req: Request) {
   // Carz+ only. Checked against the stored profile, not anything the client
   // sent, and re-checked on every generation so a lapsed membership stops
   // working immediately rather than at the next daily reset.
-  if (!isActiveMember(await getProfile(email))) {
+  // Read once: the same profile decides whether they may generate at all and
+  // whether the result carries a watermark.
+  const profile = await getProfile(email);
+  if (!isActiveMember(profile)) {
     return NextResponse.json(
       {
         ok: false,
@@ -125,6 +129,21 @@ export async function POST(req: Request) {
       rimColor: body.rimColor,
       features,
     });
+    // Carz MAX renders come out clean; every other tier is stamped. Done here
+    // rather than in the page because the file is what gets saved and shared,
+    // and an overlay in the DOM is not on the file.
+    let picture = { base64: out.base64, mediaType: out.mediaType };
+    if (!isMaxMember(profile)) {
+      try {
+        picture = await watermark(out.base64, out.mediaType);
+      } catch (e) {
+        // Hand over the render they just paid a credit for rather than failing
+        // on the stamp. Loud in the log, because an unmarked render is the
+        // paywall quietly not working.
+        console.error("watermark failed, returning unmarked render:", e);
+      }
+    }
+
     // Charge only on a successful generation — a failed render costs nothing.
     const spent = await recordRestyle(email);
 
@@ -155,7 +174,8 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       ok: true,
-      image: `data:${out.mediaType};base64,${out.base64}`,
+      image: `data:${picture.mediaType};base64,${picture.base64}`,
+      watermarked: !isMaxMember(profile),
       quota: spent,
       // Kept for older clients that read a bare number.
       remaining: spent.available,
