@@ -17,7 +17,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { SiriWave } from "@/components/ui/siri-wave";
 import { cn } from "@/lib/utils";
 
-type Turn = { role: "user" | "assistant"; content: string };
+type Turn = {
+  role: "user" | "assistant";
+  content: string;
+  /** Set on an answer to a spoken question: it is read aloud, not written out. */
+  spoken?: boolean;
+};
 
 /** Openers. They ask the question rather than just naming a topic, because a
  *  chip that drops a bare noun into the box makes the reader write the rest. */
@@ -159,7 +164,7 @@ export function CarzBotChat() {
   }, []);
 
   const ask = useCallback(
-    async (text: string) => {
+    async (text: string, viaVoice = false) => {
       const question = text.trim();
       if (!question || busy) return;
 
@@ -185,8 +190,11 @@ export function CarzBotChat() {
           setError(d.error || "CarzBot couldn't answer that.");
           return;
         }
-        setTurns([...next, { role: "assistant", content: d.reply }]);
-        if (voiceOn) speak(d.reply);
+        // Asked out loud, answered out loud. A spoken question gets a spoken
+        // reply rather than a wall of text to read back — the answer is still
+        // kept, so it can be replayed, just not written out.
+        setTurns([...next, { role: "assistant", content: d.reply, spoken: viaVoice }]);
+        if (viaVoice || voiceOn) speak(d.reply);
       } catch {
         setError("Network error — nothing was sent.");
       } finally {
@@ -231,7 +239,7 @@ export function CarzBotChat() {
       setListening(false);
       // Speaking is the whole gesture: finishing it sends, rather than leaving
       // the words sitting in a box waiting for a second tap.
-      if (finalText.trim()) void ask(finalText);
+      if (finalText.trim()) void ask(finalText, true);
     };
 
     recogRef.current = r;
@@ -303,19 +311,34 @@ export function CarzBotChat() {
           </div>
         ) : (
           <div className="mx-auto w-full max-w-2xl space-y-3 pt-4">
-            {turns.map((t, i) => (
-              <div
-                key={i}
-                className={cn(
-                  "max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-relaxed",
-                  t.role === "user"
-                    ? "ml-auto bg-white text-neutral-900"
-                    : "glass-card",
-                )}
-              >
-                {t.content}
-              </div>
-            ))}
+            {turns.map((t, i) =>
+              t.role === "assistant" && t.spoken ? (
+                <div key={i} className="glass-card flex max-w-[85%] items-center gap-3 rounded-2xl px-3 py-2.5">
+                  <SiriWave variant="wave" size={40} renderScale={0.5} className="bg-transparent" />
+                  <span className="util-label flex-1 opacity-60">Answered out loud</span>
+                  <button
+                    type="button"
+                    onClick={() => speak(t.content)}
+                    aria-label="Play the answer again"
+                    className="press flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.08] hover:bg-white/[0.14]"
+                  >
+                    <Volume2 className="h-4 w-4" aria-hidden />
+                  </button>
+                </div>
+              ) : (
+                <div
+                  key={i}
+                  className={cn(
+                    "max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-relaxed",
+                    t.role === "user"
+                      ? "ml-auto bg-white text-neutral-900"
+                      : "glass-card",
+                  )}
+                >
+                  {t.content}
+                </div>
+              ),
+            )}
             {busy && (
               <div className="glass-card flex max-w-[85%] items-center gap-3 rounded-2xl px-4 py-3">
                 <SiriWave variant="wave" size={44} renderScale={0.5} className="bg-transparent" />
@@ -410,21 +433,6 @@ export function CarzBotChat() {
               >
                 {voiceOn ? <Volume2 className="h-4 w-4" aria-hidden /> : <VolumeX className="h-4 w-4" aria-hidden />}
               </button>
-
-              {canListen && (
-                <button
-                  type="button"
-                  onClick={listening ? stopListening : startListening}
-                  disabled={busy}
-                  aria-label={listening ? "Stop listening" : "Speak"}
-                  className={cn(
-                    "press flex h-10 w-10 items-center justify-center rounded-full transition-colors disabled:opacity-40",
-                    listening ? "bg-neon-red text-white" : "bg-white/[0.06] hover:bg-white/[0.12]",
-                  )}
-                >
-                  {listening ? <Square className="h-4 w-4" fill="currentColor" aria-hidden /> : <Mic className="h-4 w-4" aria-hidden />}
-                </button>
-              )}
 
               <button
                 type="button"

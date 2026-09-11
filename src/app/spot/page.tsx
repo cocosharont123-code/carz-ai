@@ -773,7 +773,6 @@ export default function SpotPage() {
   return (
     <>
       <main className="mx-auto w-full max-w-2xl px-5 py-14">
-        <div className="util-label ">Scan · identify · save</div>
         <h1 className="display mt-3 text-7xl">Spot a car</h1>
         <p className="mt-3 text-sm ">
           {isVin
