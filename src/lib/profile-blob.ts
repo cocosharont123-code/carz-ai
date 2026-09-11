@@ -371,6 +371,52 @@ export async function findByUsername(username: string): Promise<Profile | null> 
   return Object.values(all).find((p) => p.username.toLowerCase() === want) ?? null;
 }
 
+export type ProfileCard = {
+  username: string;
+  displayName: string;
+  image: string;
+  bio: string;
+  member: boolean;
+};
+
+/**
+ * Accounts matching a query, best match first.
+ *
+ * Substring rather than prefix: people search for the middle of a handle as
+ * often as the start. Exact matches lead, then handles that begin with the
+ * query, then everything else — so typing someone's full username puts them
+ * first rather than ninth.
+ */
+export async function searchProfiles(query: string, limit = 20): Promise<ProfileCard[]> {
+  if (!profilesConfigured()) return [];
+  const q = query.replace(/^@/, "").toLowerCase().trim();
+  if (!q) return [];
+
+  const score = (p: Profile): number => {
+    const u = p.username.toLowerCase();
+    const d = (p.displayName || "").toLowerCase();
+    if (u === q) return 0;
+    if (u.startsWith(q)) return 1;
+    if (d.startsWith(q)) return 2;
+    if (u.includes(q)) return 3;
+    if (d.includes(q)) return 4;
+    return 99;
+  };
+
+  return Object.values(await readAll())
+    .map((p) => ({ p, s: score(p) }))
+    .filter((x) => x.s < 99)
+    .sort((a, b) => a.s - b.s || a.p.username.localeCompare(b.p.username))
+    .slice(0, limit)
+    .map(({ p }) => ({
+      username: p.username,
+      displayName: p.displayName || p.username,
+      image: p.image || "",
+      bio: p.bio || "",
+      member: isActiveMember(p),
+    }));
+}
+
 export async function memberUsernames(): Promise<Set<string>> {
   const all = await readAll();
   const set = new Set<string>();

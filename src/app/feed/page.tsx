@@ -4,7 +4,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
-import { Plus, Camera } from "lucide-react";
+import { Plus, Camera, Search, UserRound } from "lucide-react";
 import { Spinner } from "@/components/ui/editorial";
 import { Reel } from "@/components/feed/reel";
 import type { FeedPostView } from "@/components/feed/post-card";
@@ -44,7 +44,10 @@ function FeedInner() {
   const [posts, setPosts] = useState<FeedPostView[]>([]);
   const [nextOffset, setNextOffset] = useState<number | null>(0);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [muted, setMuted] = useState(true); // audible autoplay is blocked everywhere
+  // Sound on by default. Browsers block audible autoplay, so FeedVideo falls
+  // back to muting that one element and playing anyway — a silent clip beats a
+  // stalled one, and the viewer's unmute works from their first tap onward.
+  const [muted, setMuted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [configured, setConfigured] = useState(true);
@@ -181,7 +184,25 @@ function FeedInner() {
   // spacer use, so a slide can never be taller than the space it has. `dvh`
   // rather than `vh` because mobile browser chrome collapses on scroll.
   return (
-    <div className="flex h-[calc(100dvh-var(--topnav-h))] flex-col overflow-hidden">
+    <div className="relative flex h-[calc(100dvh-var(--topnav-h))] flex-col overflow-hidden">
+      {/* Over the clip rather than above it: a bar in the flow would cost the
+          video its height, and these two are small enough to float. */}
+      <div className="pointer-events-none absolute right-3 top-3 z-30 flex items-center gap-2">
+        <Link
+          href="/search"
+          aria-label="Search accounts"
+          className="press glass-card pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full"
+        >
+          <Search className="h-[18px] w-[18px] text-white" strokeWidth={2} aria-hidden />
+        </Link>
+        <Link
+          href="/profile"
+          aria-label="Your account"
+          className="press glass-card pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full"
+        >
+          <UserRound className="h-[18px] w-[18px] text-white" strokeWidth={2} aria-hidden />
+        </Link>
+      </div>
 
       {!configured ? (
         <Centered>
@@ -247,9 +268,9 @@ function FeedInner() {
           href={composerHref}
           aria-label="Post a clip"
           title="Post a clip"
-          className="press fixed bottom-6 left-1/2 z-40 flex h-12 w-12 -translate-x-1/2 items-center justify-center rounded-full border border-white/50 bg-white text-black shadow-[0_2px_12px_rgba(0,0,0,0.6)] transition hover:scale-105"
+          className="press glass-card fixed bottom-6 left-1/2 z-40 flex h-12 w-12 -translate-x-1/2 items-center justify-center rounded-full transition hover:scale-105"
         >
-          <Plus className="h-6 w-6" strokeWidth={2.5} aria-hidden />
+          <Plus className="h-6 w-6 text-white" strokeWidth={2.5} aria-hidden />
         </Link>
       )}
     </div>

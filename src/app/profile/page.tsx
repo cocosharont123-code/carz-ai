@@ -50,6 +50,7 @@ function ProfileInner() {
   const [image, setImage] = useState("");
   // "MM-DD". No year: there is nowhere to put one.
   const [birthday, setBirthday] = useState("");
+  const [bio, setBio] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [blocked, setBlocked] = useState(false);
@@ -69,6 +70,7 @@ function ProfileInner() {
           setDisplayName(d.profile.displayName || "");
           setImage(d.profile.image || "");
           setBirthday(d.profile.birthday || "");
+          setBio(d.profile.bio || "");
         }
         // A name always exists — it just can't be *changed* while storage is
         // unreachable, so disable saving rather than letting every submit 503.
@@ -100,7 +102,7 @@ function ProfileInner() {
       const res = await fetch("/api/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, displayName, image, birthday }),
+        body: JSON.stringify({ username, displayName, image, birthday, bio }),
       });
       const d = await res.json().catch(() => null);
       if (!res.ok || !d?.ok) {
@@ -194,6 +196,23 @@ function ProfileInner() {
                 maxLength={40}
                 className="mt-2 w-full rounded-xl border border-white/15 bg-white/[0.03] px-3 py-3 text-sm  outline-none "
               />
+            </div>
+
+            <div>
+              <label className="util-label" htmlFor="bio">Bio</label>
+              <textarea
+                id="bio"
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                placeholder="A line or two about you and what you drive"
+                maxLength={200}
+                rows={3}
+                className="mt-2 w-full resize-none rounded-xl border border-white/15 bg-white/[0.03] px-3 py-3 text-sm outline-none"
+              />
+              <p className="mt-1.5 flex justify-between text-xs opacity-60">
+                <span>Shown on your channel.</span>
+                <span className="tabular-nums">{bio.length}/200</span>
+              </p>
             </div>
 
             <div>

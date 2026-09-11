@@ -103,10 +103,15 @@ export function FeedVideo({
     if (!v) return;
 
     if (active && !paused) {
-      // If the browser refuses — audible autoplay outside the muted scroller,
-      // low power mode — fall back to showing the play button rather than
-      // leaving a poster that looks broken.
-      void v.play().catch(() => setPaused(true));
+      // Sound is on by default, and browsers block audible autoplay. So try
+      // with sound, and if the browser refuses, mute this element and try once
+      // more rather than showing a play button over a video that could have
+      // been playing. A silent clip beats a stalled one; the viewer's own
+      // unmute still works, because by then they have interacted with the page.
+      void v.play().catch(() => {
+        v.muted = true;
+        void v.play().catch(() => setPaused(true));
+      });
       if (hasMusic && !muted) void a?.play().catch(() => {});
     } else {
       v.pause();
@@ -181,7 +186,7 @@ export function FeedVideo({
         loop={!endSec}
         // Off-screen slides shouldn't pull their whole file down while you scroll.
         preload={active ? "auto" : "metadata"}
-        className={cn("w-full", fill ? "h-full object-contain" : "aspect-[4/3] object-cover")}
+        className={cn("w-full", fill ? "h-full object-cover" : "aspect-[4/3] object-cover")}
         onLoadedMetadata={rewind}
         onTimeUpdate={onTimeUpdate}
         onClick={handleTap}

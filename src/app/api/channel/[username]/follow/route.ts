@@ -15,6 +15,15 @@ async function toggle(on: boolean, params: Promise<{ username: string }>) {
   if (!email) {
     return NextResponse.json({ error: "Sign in to follow." }, { status: 401 });
   }
+  // A channel cannot follow itself. The UI hides the button on your own
+  // channel, but the UI is not the thing that decides — a direct request would
+  // otherwise put you in your own follower count.
+  const { getProfile } = await import("@/lib/profile-blob");
+  const me = (await getProfile(email))?.username?.toLowerCase();
+  if (me && me === username.toLowerCase()) {
+    return NextResponse.json({ error: "You can't follow yourself." }, { status: 400 });
+  }
+
   if (!followsConfigured()) {
     return NextResponse.json({ error: "Following isn't connected yet." }, { status: 503 });
   }

@@ -62,6 +62,31 @@ function RailButton({
   );
 }
 
+/** Splits a caption so #hashtags become their own searchable links. */
+function Caption({ text }: { text: string }) {
+  // Captured split, so the tags survive in the output rather than being eaten
+  // by the separator.
+  const parts = text.split(/(#[\p{L}0-9_]+)/gu);
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.startsWith("#") && part.length > 1 ? (
+          <Link
+            key={i}
+            href={`/search?q=${encodeURIComponent(part)}`}
+            onClick={(e) => e.stopPropagation()}
+            className="font-semibold text-carz hover:underline"
+          >
+            {part}
+          </Link>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
+}
+
 export function Reel({
   post,
   active,
@@ -163,13 +188,14 @@ export function Reel({
     // No background of its own: the app gradient shows through, so a portrait
     // clip letterboxes onto colour rather than onto a black slab.
     <section className="relative h-full w-full snap-start snap-always overflow-hidden">
-      {/* Media fills the slide. `object-contain` rather than cover: a landscape
-          car shot cropped to a portrait slide loses the car.
-          Blurred while the comment sheet is up, so the clip stays visible
-          above it without competing with the text. */}
+      {/* Fills the slide edge to edge — `object-cover`, so no background shows
+          through around a portrait clip. Rounded because the phone's own screen
+          is, and a square video inside a round screen always looks pasted on.
+          Blurred while the comment sheet is up, so the clip stays visible above
+          it without competing with the text. */}
       <div
         className={cn(
-          "h-full w-full transition-[filter] duration-300",
+          "h-full w-full overflow-hidden rounded-[26px] transition-[filter] duration-300",
           commentsOpen && "blur-[6px]",
         )}
       >
@@ -188,7 +214,7 @@ export function Reel({
           <img
             src={post.imageUrl}
             alt={post.caption ? post.caption.slice(0, 120) : "A car on the feed"}
-            className="h-full w-full object-contain"
+            className="h-full w-full object-cover"
             loading={active ? "eager" : "lazy"}
           />
         )}
@@ -315,7 +341,7 @@ export function Reel({
 
         {post.caption && (
           <p className="mt-2 line-clamp-3 whitespace-pre-wrap text-[13px] leading-relaxed text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
-            {post.caption}
+            <Caption text={post.caption} />
           </p>
         )}
 
