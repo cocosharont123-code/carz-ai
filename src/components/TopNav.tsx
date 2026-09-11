@@ -201,9 +201,9 @@ function ExploreSheet({ onClose }: { onClose: () => void }) {
                 <span className="min-w-0 flex-1 text-[13px] font-semibold leading-tight">
                   {item.label}
                 </span>
-                {item.membersOnly && (
+                {item.tier && (
                   <span className="util-label shrink-0 text-[9px] text-carz">
-                    {EXPLORE_COPY.membersBadge}
+                    {EXPLORE_COPY.tierBadge[item.tier]}
                   </span>
                 )}
               </Link>

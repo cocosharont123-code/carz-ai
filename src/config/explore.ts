@@ -12,6 +12,8 @@
 //     page — the customizer, the value chart, the hotspots map — are not
 //     listed, because there is nowhere to send someone.
 
+import { CARZ_PLUS, CARZ_MAX } from "@/lib/plans";
+import type { MemberTier } from "@/lib/profile-blob";
 import {
   Bot,
   Crosshair,
@@ -31,10 +33,10 @@ export type ExploreItem = {
   description: string;
   href: string;
   icon: LucideIcon;
-  /** Shown as the existing Carz+ label. The link still works — the destination
-   *  already gates itself, and a second copy of that logic here could only
-   *  ever disagree with the first. */
-  membersOnly?: boolean;
+  /** Which tier this needs, shown as a badge. The link still works — the
+   *  destination already gates itself, and a second copy of that logic here
+   *  could only ever disagree with the first. */
+  tier?: MemberTier;
 };
 
 export const EXPLORE_COPY = {
@@ -44,8 +46,9 @@ export const EXPLORE_COPY = {
   searchPlaceholder: "Search: spot, auctions, garage…",
   searchLabel: "Search features",
   empty: "Nothing matches. Try “spot” or “auctions”.",
-  /** Sits on a members-only bubble. Same wording the gate itself uses. */
-  membersBadge: "Carz+",
+  /** Read from the plans themselves, so a renamed tier cannot leave a stale
+   *  badge behind on the menu. */
+  tierBadge: { plus: CARZ_PLUS.name, max: CARZ_MAX.name } as Record<MemberTier, string>,
 } as const;
 
 /**
@@ -79,7 +82,7 @@ export const EXPLORE_BUBBLES: ExploreItem[] = [
     description: "A photo album of cars you saved",
     href: "/garage",
     icon: Images,
-    membersOnly: true,
+    tier: "plus",
   },
   // Its own entry, not folded into Garage. They are tabs on one page, but
   // Garage is members-only and the leaderboard is not — pairing them put a
@@ -95,14 +98,14 @@ export const EXPLORE_BUBBLES: ExploreItem[] = [
     description: "Car meets and new supercar launches",
     href: "/events",
     icon: Ticket,
-    membersOnly: true,
+    tier: "max",
   },
   {
     label: "Hunt",
     description: "Find a wanted car, win the bounty",
     href: "/hunt",
     icon: Crosshair,
-    membersOnly: true,
+    tier: "plus",
   },
   // Last, because it is the one tile that sells something rather than doing
   // something. Named for both tiers under the rule above: they are one page

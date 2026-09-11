@@ -71,6 +71,7 @@ export const CARZ_MAX = {
     { title: "Unlimited car scans", desc: "No daily cap, ever." },
     { title: "Market-value insight", desc: "See how far over or under market value a car is selling." },
     { title: "Spot cars in video", desc: "Scan a video and identify every car in it." },
+    { title: "Events and drops", desc: "Car meets near you, and every new supercar launch." },
   ],
 } as const;
 

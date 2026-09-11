@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
+import { getProfile, isMaxMember } from "@/lib/profile-blob";
 
 export const runtime = "nodejs";
 export const maxDuration = 45;
@@ -49,7 +51,29 @@ async function placeFromCoords(lat: number, lng: number): Promise<string> {
   }
 }
 
+// Carz MAX only. Checked against the stored profile rather than anything the
+// client sent, and on every request, so a lapsed membership stops working at
+// once. Until now the menu showed a members badge on this and the route was
+// open to anyone who knew the URL.
+async function requireMax() {
+  const session = await auth();
+  const email = session?.user?.email;
+  if (!email) {
+    return NextResponse.json({ error: "Sign in to see events.", events: [] }, { status: 401 });
+  }
+  if (!isMaxMember(await getProfile(email))) {
+    return NextResponse.json(
+      { error: "Events are a Carz MAX feature.", events: [] },
+      { status: 402 },
+    );
+  }
+  return null;
+}
+
 export async function POST(req: Request) {
+  const denied = await requireMax();
+  if (denied) return denied;
+
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) return NextResponse.json({ error: "Server has no ANTHROPIC_API_KEY.", events: [] }, { status: 500 });
 
