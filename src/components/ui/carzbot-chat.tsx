@@ -272,8 +272,34 @@ export function CarzBotChat() {
             />
             <div>
               <h1 className="display text-4xl">CarzBot</h1>
-              <p className="mt-1.5 text-[13px] opacity-60">Ask anything about cars.</p>
+              <p className="mt-1.5 text-[13px] opacity-60">
+                {canListen ? "Tap to talk, or type below." : "Ask anything about cars."}
+              </p>
             </div>
+
+            {/* The way in. On an empty screen the mic is the action, not a
+                small control tucked beside the send button — that one stays for
+                mid-conversation, where the thread is what matters. */}
+            {canListen && (
+              <button
+                type="button"
+                onClick={listening ? stopListening : startListening}
+                disabled={busy}
+                aria-label={listening ? "Stop listening" : "Talk to CarzBot"}
+                className={cn(
+                  "press flex h-20 w-20 items-center justify-center rounded-full transition-colors disabled:opacity-40",
+                  listening
+                    ? "bg-neon-red text-white"
+                    : "glass-card hover:bg-white/[0.08]",
+                )}
+              >
+                {listening ? (
+                  <Square className="h-7 w-7" fill="currentColor" aria-hidden />
+                ) : (
+                  <Mic className="h-7 w-7" aria-hidden />
+                )}
+              </button>
+            )}
           </div>
         ) : (
           <div className="mx-auto w-full max-w-2xl space-y-3 pt-4">
