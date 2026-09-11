@@ -136,12 +136,45 @@ export function CarzBotChat() {
     };
   }, []);
 
+  /**
+   * How much of the screen the software keyboard is covering.
+   *
+   * `100dvh` does not shrink when the keyboard opens on iOS — the keyboard sits
+   * over the visual viewport while the layout viewport stays the size it was.
+   * So the column kept its full height, the composer ended up underneath the
+   * keyboard, and Safari did the only thing left to it: scrolled the whole
+   * document up to bring the focused field into view. That is the page sliding
+   * away.
+   *
+   * Measuring the overlap and taking it off the column's height fixes the
+   * cause. The composer rises to sit on the keyboard, the thread above it gets
+   * shorter, and the document never has a reason to move.
+   */
+  const [keyboard, setKeyboard] = useState(0);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const measure = () => {
+      const overlap = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      setKeyboard(overlap);
+      // Undo any shift Safari already applied before this ran.
+      if (overlap > 0 && window.scrollY !== 0) window.scrollTo(0, 0);
+    };
+    vv.addEventListener("resize", measure);
+    vv.addEventListener("scroll", measure);
+    return () => {
+      vv.removeEventListener("resize", measure);
+      vv.removeEventListener("scroll", measure);
+    };
+  }, []);
+
   // Keep the newest turn in view. A DOM write, not a state write, so it belongs
-  // in an effect.
+  // in an effect. `keyboard` is a dependency because the column shrinking is
+  // exactly when the newest turn would otherwise slide out of sight.
   useEffect(() => {
     const el = threadRef.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [turns, busy]);
+  }, [turns, busy, keyboard]);
 
   const stopSpeaking = useCallback(() => {
     if (canSpeak()) window.speechSynthesis.cancel();
@@ -262,7 +295,10 @@ export function CarzBotChat() {
     // A fixed-height column, not a growing page: the thread scrolls inside its
     // own pane and the composer stays put. The page itself never scrolls, which
     // is what stops the input sliding away under your thumb mid-conversation.
-    <div className="flex h-[calc(100dvh-var(--topnav-h))] flex-col">
+    <div
+      className="flex flex-col"
+      style={{ height: `calc(100dvh - var(--topnav-h) - ${keyboard}px)` }}
+    >
       <div
         ref={threadRef}
         className="flex-1 overflow-y-auto overscroll-contain px-4 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
