@@ -1,8 +1,8 @@
 // The Privacy Policy, as structured data rather than markup, so the page can
 // number sections and render them anywhere without duplicating the text.
 //
-// Reproduced verbatim from the copy supplied by Carzfinder LLC. Do not
-// paraphrase, tighten, or "fix" anything here — it is a published legal
+// Reproduced verbatim from the copy supplied by Carz Labs LLC. Do not
+// paraphrase, tighten, or "fix" anything here. It is a published legal
 // statement about what the app does with people's data, and editing it to
 // match the code would be changing the promise rather than keeping it.
 //
@@ -14,16 +14,17 @@ import type { TermsBlock } from "./terms";
 
 export type PrivacySection = { title: string; blocks: TermsBlock[] };
 
+export const PRIVACY_VERSION = "2026-09-11.1";
 export const PRIVACY_UPDATED = "September 11, 2026";
-export const PRIVACY_ENTITY = "Carzfinder LLC";
+export const PRIVACY_ENTITY = "Carz Labs LLC";
 export const PRIVACY_CONTACT = "privacy@carz.dev";
 
 export const PRIVACY_INTRO =
-  'carz.dev ("we," "us," "our," "Carzfinder LLC") operates the carz.dev website and mobile application (the "App"). This Privacy Policy explains how we collect, use, and protect your information when you use the App.';
+  'carz.dev ("we," "us," "our," "Carz Labs LLC") operates the carz.dev website and mobile application (the "App"). This Privacy Policy explains how we collect, use, and protect your information when you use the App.';
 
 export const PRIVACY_SECTIONS: PrivacySection[] = [
   {
-    title: "Age Requirement — 18+ Only",
+    title: "Age Requirement: 18+ Only",
     blocks: [
       {
         kind: "p",
