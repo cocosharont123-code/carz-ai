@@ -107,35 +107,49 @@ export function CarzBotChat() {
    * document up to bring the focused field into view. That is the page sliding
    * away.
    *
-   * Measuring the overlap and taking it off the column's height fixes the
-   * cause. The composer rises to sit on the keyboard, the thread above it gets
-   * shorter, and the document never has a reason to move.
+   * Written straight to the element rather than held in state. visualViewport
+   * fires continuously while a keyboard animates in and while the page settles,
+   * and routing that through setState re-rendered the entire thread on every
+   * one of those events — which is what made typing lag. A style write on one
+   * node costs nothing and React never hears about it.
    */
-  const [keyboard, setKeyboard] = useState(0);
+  const shellRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const vv = window.visualViewport;
     if (!vv) return;
-    const measure = () => {
-      const overlap = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      setKeyboard(overlap);
+    let frame = 0;
+    const apply = () => {
+      frame = 0;
+      const shell = shellRef.current;
+      if (!shell) return;
+      const overlap = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+      shell.style.height = `calc(100dvh - var(--topnav-h) - ${overlap}px)`;
+      // The column just got shorter, which is exactly when the newest turn
+      // would slide out of sight.
+      const thread = threadRef.current;
+      if (thread) thread.scrollTop = thread.scrollHeight;
       // Undo any shift Safari already applied before this ran.
       if (overlap > 0 && window.scrollY !== 0) window.scrollTo(0, 0);
     };
-    vv.addEventListener("resize", measure);
-    vv.addEventListener("scroll", measure);
+    // One write per frame at most, however many events arrive.
+    const onChange = () => {
+      if (!frame) frame = requestAnimationFrame(apply);
+    };
+    vv.addEventListener("resize", onChange);
+    vv.addEventListener("scroll", onChange);
     return () => {
-      vv.removeEventListener("resize", measure);
-      vv.removeEventListener("scroll", measure);
+      vv.removeEventListener("resize", onChange);
+      vv.removeEventListener("scroll", onChange);
+      if (frame) cancelAnimationFrame(frame);
     };
   }, []);
 
   // Keep the newest turn in view. A DOM write, not a state write, so it belongs
-  // in an effect. `keyboard` is a dependency because the column shrinking is
-  // exactly when the newest turn would otherwise slide out of sight.
+  // in an effect.
   useEffect(() => {
     const el = threadRef.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [turns, busy, keyboard]);
+  }, [turns, busy]);
 
   const stopSpeaking = useCallback(() => {
     if (canSpeak()) window.speechSynthesis.cancel();
@@ -208,10 +222,7 @@ export function CarzBotChat() {
     // A fixed-height column, not a growing page: the thread scrolls inside its
     // own pane and the composer stays put. The page itself never scrolls, which
     // is what stops the input sliding away under your thumb mid-conversation.
-    <div
-      className="flex flex-col"
-      style={{ height: `calc(100dvh - var(--topnav-h) - ${keyboard}px)` }}
-    >
+    <div ref={shellRef} className="flex h-[calc(100dvh-var(--topnav-h))] flex-col">
       <div
         ref={threadRef}
         className="flex-1 overflow-y-auto overscroll-contain px-4 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"

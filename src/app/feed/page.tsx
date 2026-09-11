@@ -41,10 +41,7 @@ export default function FeedPage() {
 
 function FeedLoading() {
   return (
-    <div
-      className="fixed inset-x-0 bottom-0 flex items-center justify-center"
-      style={{ top: "var(--topnav-h)" }}
-    >
+    <div className="flex h-[calc(100dvh-var(--topnav-h))] items-center justify-center">
       <Spinner className="h-6 w-6" />
     </div>
   );
@@ -220,18 +217,15 @@ function FeedInner() {
 
   const composerHref = signedIn ? "/feed/new" : "/signin?callbackUrl=/feed/new";
 
-  // Pinned to the viewport rather than sized by arithmetic. It used to be
-  // 100dvh minus the bar, which only lands exactly right if the spacer above it
-  // in the flow is exactly the same height — and any mismatch, or a browser
-  // without dvh, leaves a strip of the shader background showing under the last
-  // slide. Anchoring top to the bar and bottom to the viewport cannot be off:
-  // there is no sum to get wrong, and no dependence on what came before it in
-  // the document.
+  // A fixed-height column, and one slide is exactly one screen. The viewport
+  // minus the fixed top bar: measured from the same --topnav-h the bar and its
+  // spacer use, so a slide can never be taller than the space it has. `dvh`
+  // rather than `vh` because mobile browser chrome collapses on scroll.
+  //
+  // In the flow, not fixed. Taking it out of the flow made the whole page blank,
+  // and a feed that is 1px short is better than one that is not there.
   return (
-    <div
-      className="fixed inset-x-0 bottom-0 z-0 flex flex-col overflow-hidden"
-      style={{ top: "var(--topnav-h)" }}
-    >
+    <div className="relative flex h-[calc(100dvh-var(--topnav-h))] flex-col overflow-hidden">
       {/* Over the clip rather than above it: a bar in the flow would cost the
           video its height, and these two are small enough to float. */}
       <div className="pointer-events-none absolute right-3 top-3 z-30 flex items-center gap-2">
