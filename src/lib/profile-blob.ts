@@ -17,6 +17,10 @@ export type Profile = {
    * is no field to put one in, so none can be collected by accident.
    */
   birthday?: string;
+  /** Channel bio — a couple of lines under the name. */
+  bio?: string;
+  /** Channel cover image: a base64 thumbnail, or "" for the gradient. */
+  cover?: string;
   ts: number;
   member?: boolean; // Carz+ membership
   memberSince?: number;
@@ -253,7 +257,14 @@ export function validateBirthday(raw: string): { ok: boolean; value?: string } {
 
 export async function setProfile(
   email: string,
-  data: { username: string; displayName?: string; image?: string; birthday?: string },
+  data: {
+    username: string;
+    displayName?: string;
+    image?: string;
+    birthday?: string;
+    bio?: string;
+    cover?: string;
+  },
 ): Promise<{ ok: boolean; error?: string; profile?: Profile }> {
   const v = validateUsername(data.username);
   if (!v.ok) return { ok: false, error: v.error };
@@ -280,9 +291,21 @@ export async function setProfile(
     birthday = b.value ?? "";
   }
 
+  // Undefined leaves what is stored; an empty string is an explicit clear.
+  const bio =
+    data.bio === undefined ? (all[myKey]?.bio ?? "") : data.bio.trim().slice(0, 200);
+  const cover =
+    data.cover === undefined
+      ? (all[myKey]?.cover ?? "")
+      : data.cover.startsWith("data:")
+        ? data.cover.slice(0, 120_000)
+        : "";
+
   const profile: Profile = {
     ...all[myKey], // preserve membership + streak
     username: v.value,
+    bio,
+    cover,
     displayName: (data.displayName || "").trim().slice(0, 40) || v.value,
     image,
     birthday,
@@ -333,6 +356,21 @@ export async function setMembership(
 
 // Usernames (lowercased) of everyone currently holding active Carz+ membership.
 // Used to badge spotters on the shared leaderboard.
+/**
+ * A profile by its public username, case-insensitively.
+ *
+ * Usernames are unique (setProfile enforces it), so this is a lookup rather
+ * than a search. Returns null when nobody holds the name — a channel URL is
+ * user input and "no such channel" is a normal answer, not an error.
+ */
+export async function findByUsername(username: string): Promise<Profile | null> {
+  if (!profilesConfigured()) return null;
+  const want = username.replace(/^@/, "").toLowerCase().trim();
+  if (!want) return null;
+  const all = await readAll();
+  return Object.values(all).find((p) => p.username.toLowerCase() === want) ?? null;
+}
+
 export async function memberUsernames(): Promise<Set<string>> {
   const all = await readAll();
   const set = new Set<string>();

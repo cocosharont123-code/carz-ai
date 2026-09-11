@@ -273,6 +273,26 @@ export function toPublicComment(c: FeedComment, viewerHash: string | null): Publ
  * One page of the feed, newest first. Offset-based: posts are stored newest
  * first and only ever prepended, so an offset stays meaningful between calls.
  */
+/**
+ * One channel's videos, newest first.
+ *
+ * Matched on authorName rather than the hash, because the hash is never sent
+ * to a client and a channel URL is a username. The consequence is worth
+ * knowing: posts keep the name they were made under, so anything posted
+ * before a rename stays on the old channel.
+ */
+export async function listPostsByAuthor(
+  authorName: string,
+  viewerHash: string | null,
+): Promise<PublicPost[]> {
+  const want = authorName.replace(/^@/, "").toLowerCase();
+  return (await readAll())
+    .filter((p) => p.mediaKind === "video" && !!p.videoUrl)
+    .filter((p) => p.authorName.replace(/^@/, "").toLowerCase() === want)
+    .sort((a, b) => b.createdAt - a.createdAt)
+    .map((p) => toPublicPost(p, viewerHash));
+}
+
 export async function listPosts(
   viewerHash: string | null,
   opts: { offset?: number; limit?: number } = {},

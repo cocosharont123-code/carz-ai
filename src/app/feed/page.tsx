@@ -1,18 +1,46 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 import { Plus, Camera } from "lucide-react";
 import { Spinner } from "@/components/ui/editorial";
 import { Reel } from "@/components/feed/reel";
 import type { FeedPostView } from "@/components/feed/post-card";
 
+/** Puts one post at the head of the list, leaving the rest in order. */
+function leadWith(posts: FeedPostView[], id: string): FeedPostView[] {
+  const i = posts.findIndex((p) => p.id === id);
+  if (i <= 0) return posts;
+  return [posts[i], ...posts.slice(0, i), ...posts.slice(i + 1)];
+}
+
 export default function FeedPage() {
+  // useSearchParams opts a route into client rendering unless it sits under a
+  // Suspense boundary. The fallback is the scroller's own loading state, so a
+  // cold load looks the same either way.
+  return (
+    <Suspense fallback={<FeedLoading />}>
+      <FeedInner />
+    </Suspense>
+  );
+}
+
+function FeedLoading() {
+  return (
+    <div className="flex h-[calc(100dvh-var(--topnav-h))] items-center justify-center">
+      <Spinner className="h-6 w-6" />
+    </div>
+  );
+}
+
+function FeedInner() {
   const { status: authStatus } = useSession();
   const signedIn = authStatus === "authenticated";
 
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const startId = useSearchParams().get("start");
   const [posts, setPosts] = useState<FeedPostView[]>([]);
   const [nextOffset, setNextOffset] = useState<number | null>(0);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -57,7 +85,11 @@ export default function FeedPage() {
       .then((page) => {
         if (cancelled) return;
         setConfigured(page.configured);
-        setPosts(page.posts);
+        // Opened from a channel thumbnail: that video leads, and the rest of
+        // the feed follows it. Reordering beats scrolling to an index — the
+        // clip may not be on the first page at all, and a scroller that jumps
+        // after paint is exactly the thing that feels cheap.
+        setPosts(startId ? leadWith(page.posts, startId) : page.posts);
         setNextOffset(page.nextOffset);
       })
       .catch((e: Error) => !cancelled && setError(e.message))
@@ -65,7 +97,10 @@ export default function FeedPage() {
     return () => {
       cancelled = true;
     };
-  }, [load, authStatus]);
+  // startId is a dependency, not an omission: arriving from a different
+  // thumbnail has to reorder the feed around the new video rather than keep
+  // showing the one before it.
+  }, [load, authStatus, startId]);
 
   const loadMore = useCallback(async () => {
     if (nextOffset === null || loadingMore) return;

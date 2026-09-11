@@ -292,8 +292,21 @@ export function Reel({
         aria-hidden={commentsOpen || undefined}
         inert={commentsOpen}
       >
-        <Link href={`/feed/${post.id}`} className="flex items-center gap-2">
-          <Avatar src={post.authorImage} size={28} />
+        {/* The creator, not the post. Tapping a face should go to whose face
+            it is — the post already fills the screen you are on.
+            `viewTransitionName` pairs this circle with the one in the channel
+            header, so the avatar travels between the two rather than two
+            unrelated pictures cross-fading. */}
+        <Link
+          href={`/channel/${encodeURIComponent(post.authorName.replace(/^@/, ""))}`}
+          className="flex items-center gap-2"
+        >
+          <span
+            className="shrink-0"
+            style={{ viewTransitionName: `avatar-${post.authorName.replace(/^@/, "")}` }}
+          >
+            <Avatar src={post.authorImage} size={28} />
+          </span>
           <span className="truncate text-[13px] font-bold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
             {post.authorName}
           </span>
