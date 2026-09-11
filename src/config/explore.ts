@@ -105,9 +105,11 @@ export const EXPLORE_BUBBLES: ExploreItem[] = [
     membersOnly: true,
   },
   // Last, because it is the one tile that sells something rather than doing
-  // something.
+  // something. Named for both tiers under the rule above: they are one page
+  // with a choice on it, not two features, and a menu that only says "Carz+"
+  // is a menu MAX cannot be found from.
   {
-    label: "Carz+",
+    label: "Carz+ & Carz MAX",
     description: "Everything membership unlocks",
     href: "/pricing",
     icon: Crown,
