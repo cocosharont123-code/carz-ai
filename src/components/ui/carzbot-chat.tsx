@@ -1,7 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowUp as ArrowUpIcon, Mic, Square, ScanLine, Gauge, Wrench, CircleDollarSign, GitCompare } from "lucide-react";
+import {
+  ArrowUp as ArrowUpIcon,
+  Mic,
+  Square,
+  Volume2,
+  VolumeX,
+  ScanLine,
+  Gauge,
+  Wrench,
+  CircleDollarSign,
+  GitCompare,
+} from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { SiriWave } from "@/components/ui/siri-wave";
 import { cn } from "@/lib/utils";
@@ -46,6 +57,27 @@ function speechCtor(): SpeechCtor | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
+const VOICE_KEY = "carzbot_voice";
+
+/** Whether the browser can speak at all. */
+function canSpeak(): boolean {
+  return typeof window !== "undefined" && "speechSynthesis" in window;
+}
+
+/**
+ * An English voice, preferring one the platform calls high quality.
+ *
+ * getVoices() is empty until the list loads on some browsers, so this returns
+ * null rather than waiting — an utterance with no voice set still speaks in the
+ * system default, which is the right fallback.
+ */
+function pickVoice(): SpeechSynthesisVoice | null {
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return null;
+  const english = voices.filter((v) => v.lang.toLowerCase().startsWith("en"));
+  return english.find((v) => /natural|premium|enhanced|siri/i.test(v.name)) ?? english[0] ?? null;
+}
+
 function useAutoResizeTextarea({ minHeight, maxHeight }: { minHeight: number; maxHeight?: number }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -73,6 +105,8 @@ export function CarzBotChat() {
   const [listening, setListening] = useState(false);
   const [canListen, setCanListen] = useState(false);
   const [error, setError] = useState("");
+  const [voiceOn, setVoiceOn] = useState(true);
+  const [speaking, setSpeaking] = useState(false);
   const { textareaRef, adjustHeight } = useAutoResizeTextarea({ minHeight: 56, maxHeight: 160 });
   const threadRef = useRef<HTMLDivElement>(null);
   const recogRef = useRef<SpeechRecognizer | null>(null);
@@ -82,9 +116,14 @@ export function CarzBotChat() {
   useEffect(() => {
     let cancelled = false;
     Promise.resolve()
-      .then(() => speechCtor() !== null)
-      .then((ok) => {
-        if (!cancelled) setCanListen(ok);
+      .then(() => ({
+        listen: speechCtor() !== null,
+        voice: localStorage.getItem(VOICE_KEY) !== "0",
+      }))
+      .then((v) => {
+        if (cancelled) return;
+        setCanListen(v.listen);
+        setVoiceOn(v.voice);
       })
       .catch(() => {});
     return () => {
@@ -99,6 +138,26 @@ export function CarzBotChat() {
     if (el) el.scrollTop = el.scrollHeight;
   }, [turns, busy]);
 
+  const stopSpeaking = useCallback(() => {
+    if (canSpeak()) window.speechSynthesis.cancel();
+    setSpeaking(false);
+  }, []);
+
+  const speak = useCallback((text: string) => {
+    if (!canSpeak() || !text.trim()) return;
+    // Anything still queued belongs to an older answer.
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    const v = pickVoice();
+    if (v) u.voice = v;
+    u.lang = v?.lang ?? "en-US";
+    u.rate = 1.02;
+    u.onend = () => setSpeaking(false);
+    u.onerror = () => setSpeaking(false);
+    setSpeaking(true);
+    window.speechSynthesis.speak(u);
+  }, []);
+
   const ask = useCallback(
     async (text: string) => {
       const question = text.trim();
@@ -107,6 +166,7 @@ export function CarzBotChat() {
       // The history sent is the one on screen plus this question, rather than
       // state read back after setting it — setState is not immediate and the
       // request would go out a turn behind.
+      stopSpeaking(); // the previous answer is no longer the current one
       const next: Turn[] = [...turns, { role: "user", content: question }];
       setTurns(next);
       setValue("");
@@ -126,13 +186,14 @@ export function CarzBotChat() {
           return;
         }
         setTurns([...next, { role: "assistant", content: d.reply }]);
+        if (voiceOn) speak(d.reply);
       } catch {
         setError("Network error — nothing was sent.");
       } finally {
         setBusy(false);
       }
     },
-    [turns, busy, adjustHeight],
+    [turns, busy, adjustHeight, voiceOn, speak, stopSpeaking],
   );
 
   const stopListening = useCallback(() => {
@@ -178,8 +239,14 @@ export function CarzBotChat() {
     r.start();
   }, [busy, adjustHeight, ask]);
 
-  // Never leave the microphone running when this unmounts.
-  useEffect(() => () => recogRef.current?.stop(), []);
+  // Never leave the microphone running, or a voice talking, after this goes.
+  useEffect(
+    () => () => {
+      recogRef.current?.stop();
+      if (canSpeak()) window.speechSynthesis.cancel();
+    },
+    [],
+  );
 
   const empty = turns.length === 0;
 
@@ -258,10 +325,21 @@ export function CarzBotChat() {
           )}
 
           <div className="glass-card rounded-3xl p-2">
-            {listening && (
+            {(listening || speaking) && (
               <div className="flex items-center gap-3 px-2 pb-1 pt-1">
                 <SiriWave variant="wave" size={40} renderScale={0.5} className="bg-transparent" />
-                <span className="util-label opacity-60">Listening…</span>
+                <span className="util-label flex-1 opacity-60">
+                  {listening ? "Listening…" : "Speaking…"}
+                </span>
+                {speaking && (
+                  <button
+                    type="button"
+                    onClick={stopSpeaking}
+                    className="press util-label rounded-full bg-white/[0.08] px-3 py-1.5 hover:bg-white/[0.14]"
+                  >
+                    Stop
+                  </button>
+                )}
               </div>
             )}
 
@@ -285,6 +363,28 @@ export function CarzBotChat() {
             />
 
             <div className="flex items-center justify-end gap-2 px-2 pb-1">
+              <button
+                type="button"
+                onClick={() => {
+                  const next = !voiceOn;
+                  setVoiceOn(next);
+                  if (!next) stopSpeaking();
+                  try {
+                    localStorage.setItem(VOICE_KEY, next ? "1" : "0");
+                  } catch {
+                    /* a device that refuses storage still gets the toggle */
+                  }
+                }}
+                aria-pressed={voiceOn}
+                aria-label={voiceOn ? "Mute CarzBot" : "Let CarzBot speak"}
+                className={cn(
+                  "press flex h-10 w-10 items-center justify-center rounded-full transition-colors",
+                  voiceOn ? "bg-white/[0.12]" : "bg-white/[0.06] text-white/40",
+                )}
+              >
+                {voiceOn ? <Volume2 className="h-4 w-4" aria-hidden /> : <VolumeX className="h-4 w-4" aria-hidden />}
+              </button>
+
               {canListen && (
                 <button
                   type="button"
