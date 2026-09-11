@@ -3,12 +3,13 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useSession, signIn } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { Video, X } from "lucide-react";
 import { PageMasthead, Button, Spinner } from "@/components/ui/editorial";
 import { VideoEditor, EMPTY_EDIT } from "@/components/feed/video-editor";
 import type { VideoEdit } from "@/components/feed/feed-video";
 import { cn } from "@/lib/utils";
+import { GoogleSignInButton } from "@/components/google-sign-in";
 
 const CAPTION_MAX = 300;
 /** Beyond this a clip stops being a spot and starts being a film. */
@@ -179,13 +180,7 @@ export default function NewPostPage() {
             <p className="mx-auto mt-1.5 max-w-sm text-[13px] opacity-60">
               You need an account to share a car on the feed.
             </p>
-            <button
-              type="button"
-              onClick={() => signIn("google", { callbackUrl: "/feed/new" })}
-              className="press mt-5 inline-flex rounded-full bg-black px-6 py-2.5 text-sm font-bold text-white transition hover:opacity-90"
-            >
-              Sign in
-            </button>
+            <GoogleSignInButton callbackUrl="/feed/new" />
           </div>
         </main>
       </>

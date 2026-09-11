@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Car, Inbox } from "lucide-react";
-import { signIn, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import { GoogleSignInButton } from "@/components/google-sign-in";
 
 type Claim = {
   id: string;
@@ -48,12 +49,7 @@ export default function ClaimsPage() {
           <div className="mt-8 rounded-3xl border border-foreground/[0.06] bg-card text-card-foreground p-8 text-center">
             <h3 className="text-lg font-bold">Owner only</h3>
             <p className="mt-1 text-sm ">Sign in with the owner account to see claims.</p>
-            <button
-              onClick={() => signIn("google", { callbackUrl: "/hunt/claims" })}
-              className="mt-4 rounded-xl bg-white px-5 py-2.5 font-semibold text-[#1f1f1f]"
-            >
-              Continue with Google
-            </button>
+            <GoogleSignInButton callbackUrl="/hunt/claims" />
           </div>
         ) : !isOwner ? (
           <div className="mt-8 rounded-3xl border border-neon-red/30 bg-neon-red/10 p-6 text-center text-sm text-neon-red">

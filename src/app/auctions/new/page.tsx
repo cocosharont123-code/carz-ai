@@ -2,9 +2,10 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useSession, signIn } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { Car, KeyRound } from "lucide-react";
 import { Spinner } from "@/components/ui/editorial";
+import { GoogleSignInButton } from "@/components/google-sign-in";
 
 function downscale(dataUrl: string, max = 900, quality = 0.7): Promise<string> {
   return new Promise((resolve) => {
@@ -218,12 +219,7 @@ function NewAuctionInner() {
           <div className="mt-8 rounded-3xl border border-foreground/[0.06] bg-card text-card-foreground p-8 text-center">
             <KeyRound className="mx-auto h-9 w-9 opacity-50" strokeWidth={1.5} aria-hidden />
             <h3 className="mt-3 text-lg font-bold">Sign in to list a car</h3>
-            <button
-              onClick={() => signIn("google", { callbackUrl: "/auctions/new" })}
-              className="mt-4 inline-flex bg-white px-5 py-2.5 font-semibold text-[#1f1f1f] transition hover:brightness-95"
-            >
-              Continue with Google
-            </button>
+            <GoogleSignInButton callbackUrl="/auctions/new" />
           </div>
         ) : (
           <div className="mt-8 space-y-5">

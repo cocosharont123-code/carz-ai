@@ -2,10 +2,11 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useSession, signIn } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { Avatar } from "@/components/default-avatar";
 import { DeleteAccount } from "@/components/delete-account";
 import { Button, PageMasthead, Skeleton } from "@/components/ui/editorial";
+import { GoogleSignInButton } from "@/components/google-sign-in";
 
 function downscale(dataUrl: string, max = 256, quality = 0.7): Promise<string> {
   return new Promise((resolve) => {
@@ -125,12 +126,7 @@ function ProfileInner() {
           <div className="mt-8 rounded-2xl border border-white/10 bg-card text-card-foreground p-10 text-center">
             <h3 className="display text-3xl">Sign in</h3>
             <p className="mx-auto mt-2 max-w-sm text-sm ">Set up your profile to appear on the board.</p>
-            <button
-              onClick={() => signIn("google", { callbackUrl: "/profile" })}
-              className="mt-6 inline-flex bg-white px-5 py-2.5 font-semibold text-[#1f1f1f] transition hover:brightness-95"
-            >
-              Continue with Google
-            </button>
+            <GoogleSignInButton callbackUrl="/profile" />
           </div>
         ) : (
           <div className="mt-8 space-y-7">
