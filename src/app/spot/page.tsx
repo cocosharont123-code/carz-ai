@@ -924,7 +924,13 @@ export default function SpotPage() {
                     solid as the engine. */}
                 {(car.bodyStyle || car.generation || car.trimGuess || car.color) && (
                   <details className="group mt-3">
-                    <summary className="press flex min-h-11 cursor-pointer list-none items-center justify-between rounded-xl bg-black/[0.05] px-4 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+                    {/* Liquid glass, mixed for this surface rather than the
+                        .glass-card utility: that one is built for the black
+                        shader background and forces near-white text, which on
+                        this near-white card would be an invisible label. Same
+                        language — translucent, blurred, lit along the top edge
+                        — over a light panel, so the text stays readable. */}
+                    <summary className="press flex min-h-11 cursor-pointer list-none items-center justify-between rounded-xl border border-black/10 bg-gradient-to-b from-white/80 to-white/40 px-4 text-sm font-semibold shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9),0_6px_16px_-10px_rgba(0,0,0,0.45)] backdrop-blur-md transition-colors hover:from-white/95 hover:to-white/55 [&::-webkit-details-marker]:hidden">
                       <span>More info</span>
                       <ChevronDown
                         className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180"
@@ -939,14 +945,6 @@ export default function SpotPage() {
                       <Spec k="Color" v={car.color} />
                     </div>
                   </details>
-                )}
-
-                {car.funFacts.length > 0 && (
-                  <ul className="mt-4 list-disc space-y-1 pl-5 text-sm">
-                    {car.funFacts.map((f, i) => (
-                      <li key={i}>{f}</li>
-                    ))}
-                  </ul>
                 )}
 
                 {/* Keyed on the identification so a re-scan remounts it and the

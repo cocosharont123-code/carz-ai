@@ -37,7 +37,6 @@ export type CarReport = {
   zeroToSixty: string;
   topSpeed: string;
   priceRangeUsed: string;
-  funFacts: string[];
   confidence: "high" | "medium" | "low";
   notes: string;
   // Added info
@@ -216,11 +215,6 @@ const SPECS_SCHEMA = objSchema({
   zeroToSixty: { type: "string", description: "0-60 mph time, approx" },
   topSpeed: { type: "string" },
   priceRangeUsed: { type: "string", description: "Approx used market price range (USD)" },
-  funFacts: {
-    type: "array",
-    items: { type: "string" },
-    description: "Exactly 2 fun facts, each ONE short punchy sentence (max ~12 words). No preamble.",
-  },
   parentCompany: {
     type: "string",
     description: "Corporate parent/group that owns the brand, e.g. 'Volkswagen Group' for Porsche.",
@@ -805,7 +799,6 @@ export async function describeCar(
     zeroToSixty: specs.zeroToSixty ?? "",
     topSpeed: specs.topSpeed ?? "",
     priceRangeUsed: specs.priceRangeUsed ?? "",
-    funFacts: Array.isArray(specs.funFacts) ? specs.funFacts : [],
     parentCompany: specs.parentCompany ?? "",
     rarityScore: typeof specs.rarityScore === "number" ? specs.rarityScore : 0,
     rarityReason: specs.rarityReason ?? "",
@@ -848,7 +841,6 @@ function normalize(input: Partial<CarReport>): CarReport {
     zeroToSixty: input.zeroToSixty ?? "",
     topSpeed: input.topSpeed ?? "",
     priceRangeUsed: input.priceRangeUsed ?? "",
-    funFacts: Array.isArray(input.funFacts) ? input.funFacts : [],
     confidence: (input.confidence as CarReport["confidence"]) ?? "low",
     notes: input.notes ?? "",
     parentCompany: input.parentCompany ?? "",
