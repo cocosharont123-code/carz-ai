@@ -123,7 +123,7 @@ export function CarzBotChat() {
       const shell = shellRef.current;
       if (!shell) return;
       const overlap = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
-      shell.style.height = `calc(100dvh - var(--topnav-h) - ${overlap}px)`;
+      shell.style.height = `calc(100dvh - var(--nav-h) - ${overlap}px)`;
       // The column just got shorter, which is exactly when the newest turn
       // would slide out of sight.
       const thread = threadRef.current;
@@ -222,7 +222,7 @@ export function CarzBotChat() {
     // A fixed-height column, not a growing page: the thread scrolls inside its
     // own pane and the composer stays put. The page itself never scrolls, which
     // is what stops the input sliding away under your thumb mid-conversation.
-    <div ref={shellRef} className="flex h-[calc(100dvh-var(--topnav-h))] flex-col">
+    <div ref={shellRef} className="flex h-[calc(100dvh-var(--nav-h))] flex-col">
       <div
         ref={threadRef}
         className="flex-1 overflow-y-auto overscroll-contain px-4 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"

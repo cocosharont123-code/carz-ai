@@ -203,14 +203,14 @@ export function CommentSheet({
       <div
         onClick={onClose}
         aria-hidden
-        className="fixed inset-0 z-40 bg-black/40"
+        className="fixed inset-0 z-[65] bg-black/40"
       />
 
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Comments"
-        className="fixed inset-x-0 bottom-0 z-50 flex h-[58dvh] flex-col rounded-t-3xl border-t border-white/15 bg-card text-card-foreground shadow-[0_-16px_40px_-12px_rgba(0,0,0,0.9)]"
+        className="fixed inset-x-0 bottom-0 z-[70] flex h-[58dvh] flex-col rounded-t-3xl border-t border-white/15 bg-card text-card-foreground shadow-[0_-16px_40px_-12px_rgba(0,0,0,0.9)]"
       >
         {/* Grabber — signals the sheet is a layer, not a page. */}
         <div className="flex justify-center pt-2.5">

@@ -23,20 +23,25 @@ import { EXPLORE_BUBBLES, EXPLORE_COPY } from "@/config/explore";
 import { cn } from "@/lib/utils";
 
 /**
- * The fixed top bar: five icon targets, no labels, on every page.
+ * The fixed bottom bar: five icon targets plus the menu, no labels, on every
+ * page. Exactly what sat at the top, moved down and rebuilt in glass.
  *
- * It renders its own spacer rather than the root layout adding a global
- * padding rule, so the height and the offset can never drift apart — and a
- * route that hides the bar gets no phantom gap.
+ * It renders its own spacer rather than the root layout adding a global padding
+ * rule, so the height and the offset can never drift apart — and a route that
+ * hides the bar gets no phantom gap. The spacer only works if this is rendered
+ * after the page content, which is why the layout puts it there.
  */
 
-// --topnav-h is defined in globals.css and is what the feed measures its own
-// height against, so the bar and the space under it cannot drift apart.
+// --nav-h is defined in globals.css and is what the feed and CarzBot measure
+// their own height against, so the bar and the space kept clear of it cannot
+// drift apart.
 const BAR_H = "h-14";
-const SAFE_TOP = { paddingTop: "env(safe-area-inset-top)" } as const;
-const SPACER_H = { height: "var(--topnav-h)" } as const;
+// The home-indicator strip on a phone. Padding rather than margin, so the glass
+// runs to the physical bottom edge and only the targets sit above the inset.
+const SAFE_BOTTOM = { paddingBottom: "env(safe-area-inset-bottom)" } as const;
+const SPACER_H = { height: "var(--nav-h)" } as const;
 
-export function TopNav() {
+export function BottomNav() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -91,14 +96,12 @@ export function TopNav() {
 
   return (
     <>
-      <header
-        style={SAFE_TOP}
-        className={cn(
-          "fixed inset-x-0 top-0 z-[60] bg-black/50 backdrop-blur-xl",
-          "border-b border-white/10",
-        )}
+      <nav
+        style={SAFE_BOTTOM}
+        className="glass-bar fixed inset-x-0 bottom-0 z-[60]"
+        aria-label="Main"
       >
-        <nav className={cn("flex items-stretch justify-around", BAR_H)} aria-label="Main">
+        <div className={cn("flex items-stretch justify-around", BAR_H)}>
           {items.map(({ key, label, href, Icon, active }) => (
             <Link
               key={key}
@@ -138,18 +141,21 @@ export function TopNav() {
             )}
           </button>
 
-        </nav>
-      </header>
+        </div>
+      </nav>
 
       {menuOpen && <ExploreSheet onClose={() => setMenuOpen(false)} />}
 
-      {/* Holds the page down by exactly the bar's height. */}
-      <div style={SPACER_H} aria-hidden />
+      {/* Holds the page clear of the bar by exactly its height. shrink-0
+          because this is a flex item in the layout's column and a spacer that
+          can be squashed is not a spacer. */}
+      <div style={SPACER_H} className="shrink-0" aria-hidden />
     </>
   );
 }
 
-/** The tab indicator: a short bar on the very top edge of the active target. */
+/** The tab indicator: a short bar on the top edge of the active target — the
+ *  edge facing the content, which is where it was when the bar was up there. */
 function ActiveBar({ on }: { on: boolean }) {
   if (!on) return null;
   return (
@@ -161,7 +167,7 @@ function ActiveBar({ on }: { on: boolean }) {
 }
 
 /**
- * The hamburger's sheet: the Explore hub, slid down under the bar.
+ * The hamburger's sheet: the Explore hub, raised up off the bar.
  *
  * It renders the same config the /explore page does, so there is one list of
  * what this app can do rather than two that drift.
@@ -173,13 +179,13 @@ function ExploreSheet({ onClose }: { onClose: () => void }) {
         onClick={onClose}
         aria-hidden
         className="fixed inset-0 z-[55] bg-black/25"
-        style={{ top: "var(--topnav-h)" }}
+        style={{ bottom: "var(--nav-h)" }}
       />
       <div
         role="dialog"
         aria-label="Explore"
-        className="fixed inset-x-0 z-[58] max-h-[70dvh] overflow-y-auto border-b border-white/10 bg-black/40 px-5 pb-6 pt-5 backdrop-blur-2xl"
-        style={{ top: "var(--topnav-h)" }}
+        className="fixed inset-x-0 z-[58] max-h-[70dvh] overflow-y-auto rounded-t-3xl border-t border-white/10 bg-black/40 px-5 pb-6 pt-5 backdrop-blur-2xl"
+        style={{ bottom: "var(--nav-h)" }}
       >
         <div className="grid grid-cols-2 gap-x-3 gap-y-3 sm:grid-cols-3">
           {EXPLORE_BUBBLES.map((item) => {

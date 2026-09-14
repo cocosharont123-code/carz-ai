@@ -41,7 +41,7 @@ export default function FeedPage() {
 
 function FeedLoading() {
   return (
-    <div className="flex h-[calc(100dvh-var(--topnav-h))] items-center justify-center">
+    <div className="flex h-[calc(100dvh-var(--nav-h))] items-center justify-center">
       <Spinner className="h-6 w-6" />
     </div>
   );
@@ -218,14 +218,14 @@ function FeedInner() {
   const composerHref = signedIn ? "/feed/new" : "/signin?callbackUrl=/feed/new";
 
   // A fixed-height column, and one slide is exactly one screen. The viewport
-  // minus the fixed top bar: measured from the same --topnav-h the bar and its
+  // minus the fixed nav bar: measured from the same --nav-h the bar and its
   // spacer use, so a slide can never be taller than the space it has. `dvh`
   // rather than `vh` because mobile browser chrome collapses on scroll.
   //
   // In the flow, not fixed. Taking it out of the flow made the whole page blank,
   // and a feed that is 1px short is better than one that is not there.
   return (
-    <div className="relative flex h-[calc(100dvh-var(--topnav-h))] flex-col overflow-hidden">
+    <div className="relative flex h-[calc(100dvh-var(--nav-h))] flex-col overflow-hidden">
       {/* Over the clip rather than above it: a bar in the flow would cost the
           video its height, and these two are small enough to float. */}
       <div className="pointer-events-none absolute right-3 top-3 z-30 flex items-center gap-2">
@@ -317,7 +317,10 @@ function FeedInner() {
           href={composerHref}
           aria-label="Post a clip"
           title="Post a clip"
-          className="press glass-card fixed bottom-6 left-1/2 z-40 flex h-12 w-12 -translate-x-1/2 items-center justify-center rounded-full transition hover:scale-105"
+          /* Clear of the nav rather than over it: the same 1.5rem gap it
+             used to keep from the bottom of the screen, now from the bar. */
+          style={{ bottom: "calc(1.5rem + var(--nav-h))" }}
+          className="press glass-card fixed left-1/2 z-40 flex h-12 w-12 -translate-x-1/2 items-center justify-center rounded-full transition hover:scale-105"
         >
           <Plus className="h-6 w-6 text-white" strokeWidth={2.5} aria-hidden />
         </Link>

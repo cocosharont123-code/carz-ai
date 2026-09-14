@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { GlobalShaderBg } from "@/components/global-shader-bg";
-import { TopNav } from "@/components/TopNav";
+import { BottomNav } from "@/components/bottom-nav";
 
 // UI type is the Apple system font stack (no downloaded Google Fonts).
 
@@ -46,12 +46,14 @@ export default function RootLayout({
         />
         <GlobalShaderBg />
         <div className="relative z-10 flex min-h-full flex-1 flex-col">
-          {/* Inside Providers on purpose: TopNav reads the session, and being a
-              child of the Terms gate means it stays hidden behind the blocking
-              terms screen rather than floating over it. */}
+          {/* Inside Providers on purpose: the nav reads the session, and being
+              a child of the legal gate means it stays hidden behind the blocking
+              terms screen rather than floating over it. After the children, not
+              before: the bar is fixed to the bottom and the spacer it renders
+              has to come last in the flow to hold the page clear of it. */}
           <Providers>
-            <TopNav />
             {children}
+            <BottomNav />
           </Providers>
         </div>
       </body>

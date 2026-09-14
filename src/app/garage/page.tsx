@@ -77,7 +77,7 @@ function Lightbox({
       role="dialog"
       aria-modal="true"
       aria-label={`${car.make} ${car.model}`}
-      className="fixed inset-0 z-[60] flex flex-col bg-black/95"
+      className="fixed inset-0 z-[70] flex flex-col bg-black/95"
       onClick={onClose}
     >
       <div className="flex items-center justify-between p-4">
