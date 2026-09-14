@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { AnimatedCountdown } from "@/components/ui/animated-countdown";
-import { RELEASE_DATE, RELEASE_LABEL } from "@/config/release";
+import { RELEASE_LABEL } from "@/config/release";
 import { EXPLORE_BUBBLES } from "@/config/explore";
 import { CARZ_PLUS, CARZ_MAX, carzPlusMonthly, carzMaxMonthly } from "@/lib/plans";
 
@@ -29,21 +28,12 @@ export default function Home() {
         </p>
       </section>
 
-      {/* Countdown */}
-      <section className="mt-12" aria-label={`Countdown to ${RELEASE_LABEL}`}>
-        <div className="flex justify-center">
-          <AnimatedCountdown
-            targetDate={RELEASE_DATE}
-            variant="modern"
-            size="lg"
-            ariaLabel={`Time until the Carz AI app launches on ${RELEASE_LABEL}`}
-            completionMessage="Carz AI is live on the App Store."
-          />
-        </div>
-        <p className="mt-5 text-center text-[13px] opacity-60">
-          Until Carz AI lands on the App Store.
-        </p>
-        <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+      {/* The two ways in. The countdown that used to sit above these is gone;
+          "Until Carz AI lands on the App Store" went with it, being a caption
+          for a clock that is no longer there. The release date still appears in
+          the eyebrow above. */}
+      <section className="mt-12" aria-label="Get started">
+        <div className="flex flex-wrap items-center justify-center gap-3">
           <Link
             href="/feed"
             className="press rounded-full bg-white px-7 py-3 text-sm font-bold text-neutral-900 transition hover:opacity-90"
