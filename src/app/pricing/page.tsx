@@ -70,6 +70,9 @@ export default function PricingPage() {
   }
 
   const isFree = promo?.percentOff === 100;
+  // The one thing a member can still do here. A MAX member has nothing above
+  // them, so for them the page really is read-only.
+  const canUpgrade = member === true && tier === "plus";
 
   /** List price for a tier at the current interval, before any discount. */
   const listPrice = (id: TierId) => {
@@ -84,7 +87,9 @@ export default function PricingPage() {
 
   async function join(id: TierId) {
     if (busy) return;
-    if (member) return; // A member has no button to press.
+    // The tier already held has no button. Upgrading from Carz+ to MAX does,
+    // and takes the same join path — setMembership overwrites the tier.
+    if (member && !(canUpgrade && id === "max")) return;
     if (status !== "authenticated") {
       signIn("google", { callbackUrl: "/pricing" });
       return;
@@ -129,8 +134,11 @@ export default function PricingPage() {
 
   /** What the button on a tier says, or nothing at all once it is held. */
   function cta(id: TierId): string | undefined {
+    if (busy === id) return member ? "Upgrading…" : "Starting…";
+    if (canUpgrade && id === "max") {
+      return isFree ? `Upgrade to ${CARZ_MAX.name} free` : `Upgrade to ${CARZ_MAX.name}`;
+    }
     if (member) return undefined;
-    if (busy === id) return "Starting…";
     const name = id === "max" ? CARZ_MAX.name : CARZ_PLUS.name;
     if (isFree) return `Redeem ${name} free`;
     if (id === "plus" && !annual && !promo) return "Start free trial";
@@ -138,7 +146,14 @@ export default function PricingPage() {
   }
 
   function note(id: TierId): string | undefined {
-    if (member) return tier === id ? "Your current plan" : undefined;
+    if (member) {
+      if (tier === id) return "Your current plan";
+      // Upgrading keeps the interval they are already billed on.
+      if (canUpgrade && id === "max") {
+        return `Billed ${billing === "annual" ? "yearly" : "monthly"}, like your Carz+`;
+      }
+      return undefined;
+    }
     if (isFree) return undefined;
     if (id === "plus" && !annual && !promo) {
       return `7 days free, then $${CARZ_PLUS.monthly.toFixed(2)}/mo`;
@@ -174,7 +189,7 @@ export default function PricingPage() {
       interval: annual ? "yr" : "mo",
       perksLead: `Everything in ${CARZ_PLUS.name}, plus:`,
       perks: CARZ_MAX.perks,
-      featured: member ? tier === "max" : false,
+      featured: member ? tier === "max" || canUpgrade : false,
       badge: member && tier === "max" ? "Active" : undefined,
       cta: cta("max"),
       onSelect: () => void join("max"),
@@ -190,7 +205,9 @@ export default function PricingPage() {
       title={member ? "You're in" : "Choose your plan"}
       subtitle={
         member
-          ? `${activeName} is active on your account, billed ${billing === "annual" ? "yearly" : "monthly"}.`
+          ? canUpgrade
+            ? `${activeName} is active, billed ${billing === "annual" ? "yearly" : "monthly"}. Carz MAX is one tap up.`
+            : `${activeName} is active on your account, billed ${billing === "annual" ? "yearly" : "monthly"}.`
           : "Spot more cars, keep a garage, and ask CarzBot anything. Cancel whenever."
       }
       tiers={tiers}
