@@ -28,27 +28,6 @@ export default function Home() {
         </p>
       </section>
 
-      {/* The two ways in. The countdown that used to sit above these is gone;
-          "Until Carz AI lands on the App Store" went with it, being a caption
-          for a clock that is no longer there. The release date still appears in
-          the eyebrow above. */}
-      <section className="mt-12" aria-label="Get started">
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          <Link
-            href="/feed"
-            className="press rounded-full bg-white px-7 py-3 text-sm font-bold text-neutral-900 transition hover:opacity-90"
-          >
-            Use it on the web now
-          </Link>
-          <Link
-            href="/spot"
-            className="press glass-card rounded-full px-7 py-3 text-sm font-bold transition"
-          >
-            Scan a car
-          </Link>
-        </div>
-      </section>
-
       {/* What it does — the app's own feature list, not a second copy of it. */}
       <section className="mt-20">
         <h2 className="util-label text-center opacity-60">Everything in Carz</h2>
