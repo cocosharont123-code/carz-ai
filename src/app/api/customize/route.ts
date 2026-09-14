@@ -7,7 +7,7 @@ import {
   RESTYLE_DAILY_CAP,
   RESTYLE_EXTRA_PRICE_USD,
 } from "@/lib/restyle-usage";
-import { getProfile, isActiveMember, isMaxMember } from "@/lib/profile-blob";
+import { getProfile, isMaxMember } from "@/lib/profile-blob";
 import { watermark } from "@/lib/watermark";
 import { recordConfig } from "@/lib/config-history";
 import { rimOption } from "@/lib/customizer-options";
@@ -31,7 +31,8 @@ export async function GET() {
       extraPriceUsd: RESTYLE_EXTRA_PRICE_USD,
     });
   }
-  const member = isActiveMember(await getProfile(email));
+  // Carz MAX only, so the status the UI gates on has to mean MAX too.
+  const member = isMaxMember(await getProfile(email));
   return NextResponse.json({
     configured: restyleConfigured(),
     signedIn: true,
@@ -57,17 +58,15 @@ export async function POST(req: Request) {
     );
   }
 
-  // Carz+ only. Checked against the stored profile, not anything the client
+  // Carz MAX only. Checked against the stored profile, not anything the client
   // sent, and re-checked on every generation so a lapsed membership stops
   // working immediately rather than at the next daily reset.
-  // Read once: the same profile decides whether they may generate at all and
-  // whether the result carries a watermark.
   const profile = await getProfile(email);
-  if (!isActiveMember(profile)) {
+  if (!isMaxMember(profile)) {
     return NextResponse.json(
       {
         ok: false,
-        error: "The car customizer is a Carz+ feature.",
+        error: "The car customizer is a Carz MAX feature.",
         needMembership: true,
       },
       { status: 402 },

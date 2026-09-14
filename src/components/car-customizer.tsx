@@ -184,23 +184,23 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
     }
   }
 
-  // Members only. Shown instead of the controls, so nobody picks a look and
+  // Carz MAX only. Shown instead of the controls, so nobody picks a look and
   // then discovers on submit that it was never available to them.
   if (access && access.signedIn && !access.member) {
     return (
       <div className="mt-6 border-t border-black/15 pt-5">
         <h3 className="text-xs font-bold uppercase tracking-wide text-carz">Customize this car</h3>
         <div className="mt-3 rounded-2xl border border-black/15 bg-black/[0.04] p-5 text-center">
-          <p className="text-sm font-bold">The customizer is a Carz+ feature</p>
+          <p className="text-sm font-bold">The customizer is a Carz MAX feature</p>
           <p className="mx-auto mt-1.5 max-w-sm text-[13px] opacity-70">
-            Members get {access.cap} AI repaints a day. Extras are $
+            Carz MAX gets {access.cap} AI repaints a day. Extras are $
             {access.extraPriceUsd.toFixed(2)} each.
           </p>
           <Link
             href="/pricing"
             className="press mt-4 inline-flex rounded-full bg-black px-6 py-2.5 text-sm font-bold text-white transition hover:opacity-90"
           >
-            Get Carz+
+            Get Carz MAX
           </Link>
         </div>
       </div>

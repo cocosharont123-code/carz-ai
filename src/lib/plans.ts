@@ -54,9 +54,8 @@ export const CARZ_PLUS = {
   blurb: "For spotting regularly.",
   perks: [
     { title: "8 car scans a day", desc: "Well past the three everyone gets." },
-    { title: "Car configurator", desc: "Restyle any car you spot — colour, rims, mods." },
     { title: "Garage", desc: "A photo album of every car you save." },
-    { title: "CarzBot", desc: "Ask anything about cars, by voice or text." },
+    { title: "CarzBot", desc: "Ask anything about cars." },
   ],
 } as const;
 
@@ -72,6 +71,7 @@ export const CARZ_MAX = {
     { title: "Market-value insight", desc: "See how far over or under market value a car is selling." },
     { title: "Spot cars in video", desc: "Scan a video and identify every car in it." },
     { title: "Events and drops", desc: "Car meets near you, and every new supercar launch." },
+    { title: "Car configurator", desc: "Restyle any car you spot — colour, rims, mods." },
   ],
 } as const;
 

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { getProfile, isActiveMember } from "@/lib/profile-blob";
+import { getProfile, isMaxMember } from "@/lib/profile-blob";
 import { grantRestyleCredits, RESTYLE_EXTRA_PRICE_USD } from "@/lib/restyle-usage";
 
 export const runtime = "nodejs";
@@ -25,11 +25,15 @@ export async function POST() {
     );
   }
 
-  // Extras top up a Carz+ allowance, so they're members-only too — otherwise
-  // 50 cents would buy a way around the membership gate entirely.
-  if (!isActiveMember(await getProfile(email))) {
+  // Extras top up a Carz MAX allowance, so they carry the same gate — otherwise
+  // 50 cents would buy a way around the membership gate entirely. They also had
+  // to move with the customizer, or this would sell something the buyer could
+  // not use.
+  // These credits buy extra restyles, and only Carz MAX can restyle, so this
+  // has to move with it or it sells something the buyer cannot use.
+  if (!isMaxMember(await getProfile(email))) {
     return NextResponse.json(
-      { ok: false, error: "The car customizer is a Carz+ feature.", needMembership: true },
+      { ok: false, error: "The car customizer is a Carz MAX feature.", needMembership: true },
       { status: 402 },
     );
   }
