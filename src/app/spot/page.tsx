@@ -6,6 +6,7 @@ import { ImagePlus, Upload, Trash2, X, TrafficCone, Check, BookmarkPlus, Chevron
 import { Button } from "@/components/ui/button";
 import { Button as GlassButton } from "@/components/ui/editorial";
 import { ProgressiveFluxLoader } from "@/components/ui/progressive-flux-loader";
+import { ThinkingOrb, type OrbState } from "thinking-orbs";
 import { Input } from "@/components/ui/input";
 import { useImageUpload } from "@/components/hooks/use-image-upload";
 import { CarCustomizer } from "@/components/car-customizer";
@@ -93,10 +94,14 @@ function ScanningButton({
   progress,
   phases = SCAN_PHASES,
   hint = "Reading badges, lights and body lines — this takes a few seconds",
+  orbState = "shaping",
 }: {
   progress: number;
   phases?: { at: number; label: string }[];
   hint?: string;
+  /** Which kind of work is running, so the orb says something rather than
+   *  only spinning. */
+  orbState?: OrbState;
 }) {
   return (
     <div
@@ -113,13 +118,27 @@ function ScanningButton({
         } as React.CSSProperties
       }
     >
-      <ProgressiveFluxLoader
-        value={progress}
-        phases={phases}
-        className="max-w-none gap-4"
-        textClassName="text-xl font-bold text-white sm:text-2xl"
-        barClassName="h-3 bg-white/10"
-      />
+      <div className="flex items-center gap-4">
+        {/* aria-label is blanked on purpose: the panel around it is already a
+            live region announcing the phase, and the orb would otherwise be a
+            second thing for a screen reader to read out. */}
+        <ThinkingOrb
+          state={orbState}
+          size={64}
+          theme="dark"
+          aria-label=""
+          className="shrink-0"
+        />
+        <div className="min-w-0 flex-1">
+          <ProgressiveFluxLoader
+            value={progress}
+            phases={phases}
+            className="max-w-none gap-4"
+            textClassName="text-xl font-bold text-white sm:text-2xl"
+            barClassName="h-3 bg-white/10"
+          />
+        </div>
+      </div>
       <p className="mt-4 text-center text-xs opacity-60">{hint}</p>
     </div>
   );
@@ -799,6 +818,10 @@ export default function SpotPage() {
             <ScanningButton
               progress={scanProgress}
               phases={isVin ? VIN_PHASES : SCAN_PHASES}
+              // Each pipeline is doing a different kind of work, and the orb
+              // has a state for each: a VIN is located and read, Precise takes
+              // a second look and adjudicates, Lightning reads the silhouette.
+              orbState={isVin ? "searching" : scanMode === "precise" ? "solving" : "shaping"}
               hint={
                 isVin
                   ? "Reading seventeen characters and checking them against the VIN's own checksum"

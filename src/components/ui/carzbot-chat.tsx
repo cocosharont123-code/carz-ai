@@ -230,9 +230,9 @@ export function CarzBotChat() {
       >
         {empty ? (
           <div className="flex h-full flex-col items-center justify-center gap-5 text-center">
-            {/* The wave is the bot. It is the same thing that lights up while
-                it listens and while it thinks, so the visual means something
-                rather than sitting there as decoration. */}
+            {/* The wave is the bot: the empty state's portrait of it. It no
+                longer appears anywhere else — there is no listening state, and
+                the thinking row has the orb. */}
             <SiriWave
               variant="fluid-dots"
               size={200}
@@ -304,10 +304,14 @@ export function CarzBotChat() {
           )}
 
           <div className="glass-card rounded-3xl p-2">
+            {/* No animation while it talks. The wave that used to ride here
+                was left over from when you could speak to CarzBot; typing and
+                then being shown a voice animation reads as the wrong app. The
+                Stop control stays, because speech that cannot be interrupted
+                is worse than speech you did not ask for. */}
             {speaking && (
-              <div className="flex items-center gap-3 px-2 pb-1 pt-1">
-                <SiriWave variant="wave" size={40} renderScale={0.5} className="bg-transparent" />
-                <span className="util-label flex-1 opacity-60">Speaking…</span>
+              <div className="flex items-center gap-3 px-3 pb-1 pt-1">
+                <span className="util-label flex-1 opacity-50">Speaking</span>
                 <button
                   type="button"
                   onClick={stopSpeaking}

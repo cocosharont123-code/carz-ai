@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
@@ -47,49 +47,22 @@ export function BottomNav() {
   // Held open past the close so the sheet can animate out. A panel that fades
   // in and then vanishes on the way back reads as half-finished.
   const [menuClosing, setMenuClosing] = useState(false);
-  const bubbleRef = useRef<HTMLElement>(null);
-
-  /**
-   * Hold the bubble still while the page scrolls.
+  /*
+   * No visualViewport pinning here, deliberately.
    *
-   * position:fixed alone is not enough on iOS. Fixed elements are placed
-   * against the layout viewport, and Safari grows and shrinks that as the URL
-   * bar collapses and returns — so a bubble pinned to the bottom visibly slides
-   * during a scroll even though nothing in the page moved.
+   * There was: the bubble was translated every frame by the gap between the
+   * layout and visual viewports, to stop it drifting on scroll. The drift it
+   * was written for turned out to be a CSS cascade bug — .glass-bubble
+   * declared position:relative unlayered and beat Tailwind's own .fixed, so
+   * the nav was never fixed at all. With that fixed, position:fixed holds the
+   * bubble on its own.
    *
-   * visualViewport reports what is actually on screen. The gap between the two
-   * viewports is exactly how far the bubble has drifted, so pushing it back by
-   * that much leaves it where it was put.
-   *
-   * Written straight to the element, once per frame at most, and never through
-   * state: this fires continuously while scrolling, and a re-render per event
-   * would make every page stutter.
+   * Leaving the correction in made things worse rather than redundant. iOS
+   * already lifts fixed elements off an open keyboard, so the translate
+   * doubled it and the bubble climbed the screen on CarzBot; and recomputing a
+   * transform on every scroll and viewport event is work on a component that
+   * is on every page, which is the lag.
    */
-  useEffect(() => {
-    const vv = window.visualViewport;
-    if (!vv) return; // Plain position:fixed is already correct without it.
-    let frame = 0;
-    const apply = () => {
-      frame = 0;
-      const el = bubbleRef.current;
-      if (!el) return;
-      const drift = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
-      el.style.transform = drift ? `translateY(-${drift}px)` : "";
-    };
-    const onChange = () => {
-      if (!frame) frame = requestAnimationFrame(apply);
-    };
-    vv.addEventListener("resize", onChange);
-    vv.addEventListener("scroll", onChange);
-    window.addEventListener("scroll", onChange, { passive: true });
-    apply();
-    return () => {
-      vv.removeEventListener("resize", onChange);
-      vv.removeEventListener("scroll", onChange);
-      window.removeEventListener("scroll", onChange);
-      if (frame) cancelAnimationFrame(frame);
-    };
-  }, []);
 
   const closeMenu = useCallback(() => {
     setMenuOpen((open) => {
@@ -165,7 +138,6 @@ export function BottomNav() {
       <GlassFilter scale={26} />
 
       <nav
-        ref={bubbleRef}
         style={BUBBLE_OFFSET}
         className="glass-bubble fixed left-1/2 z-[60] -ml-[min(13rem,calc(50vw-0.75rem))] w-[min(26rem,calc(100vw-1.5rem))] rounded-full px-1"
         aria-label="Main"
