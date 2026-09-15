@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import NumberFlow from "@number-flow/react";
 import { CheckCheck, Zap } from "lucide-react";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
+import { BorderBeam } from "border-beam";
 import { useId, useRef, useState, type ReactNode } from "react";
 
 /* --- The billing switch --------------------------------------------------- */
@@ -135,15 +136,17 @@ function TierCard({
   variants: Variants;
   busy?: boolean;
 }) {
-  return (
+  const card = (
     <TimelineContent
       as="div"
       animationNum={index}
       timelineRef={sectionRef}
       customVariants={variants}
       className={cn(
-        "glass-card flex flex-col rounded-3xl p-6 sm:p-7",
-        tier.featured && "ring-1 ring-carz/40",
+        "glass-card flex h-full flex-col rounded-3xl p-6 sm:p-7",
+        // Only when it is not already ringed by the beam, or the two stack up
+        // into a double outline.
+        tier.featured ? "ring-0" : undefined,
       )}
     >
       <div className="flex items-center justify-between gap-3">
@@ -211,6 +214,25 @@ function TierCard({
         <p className="mt-2.5 text-center text-xs opacity-50">{tier.note}</p>
       )}
     </TimelineContent>
+  );
+
+  // The beam replaces the static ring the featured card used to carry — the
+  // same job, moving. "ocean" rather than the default rainbow: the app has one
+  // accent and it is cyan, and a pricing page is the last place to introduce a
+  // second palette. It pauses whenever this is not the offer on the table, so
+  // nothing animates for the sake of it.
+  if (!tier.featured) return card;
+  return (
+    <BorderBeam
+      size="md"
+      colorVariant="ocean"
+      theme="dark"
+      strength={0.7}
+      borderRadius={24}
+      className="h-full"
+    >
+      {card}
+    </BorderBeam>
   );
 }
 

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { SiriWave } from "@/components/ui/siri-wave";
+import { ThinkingOrb } from "thinking-orbs";
 import { cn } from "@/lib/utils";
 
 type Turn = {
@@ -260,8 +261,17 @@ export function CarzBotChat() {
               ),
             )}
             {busy && (
-              <div className="glass-card flex max-w-[85%] items-center gap-3 rounded-2xl px-4 py-3">
-                <SiriWave variant="wave" size={44} renderScale={0.5} className="bg-transparent" />
+              <div
+                role="status"
+                aria-live="polite"
+                className="glass-card flex max-w-[85%] items-center gap-3 rounded-2xl px-4 py-3"
+              >
+                {/* "searching" rather than the default: what it is waiting on
+                    is a lookup about a car, and the orb says which kind of
+                    work is happening instead of only that work is happening.
+                    64 and 20 are separate tuned designs, not a scale, so this
+                    takes the chat-avatar one as shipped. */}
+                <ThinkingOrb state="searching" size={64} theme="dark" aria-label="" />
                 <span className="text-sm opacity-60">Thinking…</span>
               </div>
             )}
