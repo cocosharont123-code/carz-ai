@@ -12,7 +12,12 @@ import { CARZ_PLUS, CARZ_MAX, carzPlusMonthly, carzMaxMonthly } from "@/lib/plan
  */
 export default function Home() {
   return (
-    <main className="mx-auto w-full max-w-5xl px-5 pb-24 pt-10">
+    // pb-2, not pb-24. That 6rem was written when the nav was at the top of
+    // the screen and the page had to end well clear of the bottom on its own.
+    // The nav is at the bottom now and renders its own spacer, --nav-h, so a
+    // page that also pads for it is padding twice — which is the scroll past
+    // the end of the Carz MAX card.
+    <main className="mx-auto w-full max-w-5xl px-5 pb-2 pt-10">
       {/* Hero. The headline and nothing else — the release eyebrow and the
           paragraph under it are gone, so the tiles come straight off the type
           rather than sitting two blocks below it. */}
@@ -100,7 +105,6 @@ export default function Home() {
           </Link>
         </div>
       </section>
-
     </main>
   );
 }
