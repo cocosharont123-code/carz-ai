@@ -45,7 +45,10 @@ export default function RootLayout({
           }}
         />
         <GlobalShaderBg />
-        <div className="relative z-10 flex min-h-full flex-1 flex-col">
+        <div
+          className="relative z-10 flex min-h-full flex-1 flex-col"
+          style={{ paddingTop: "var(--safe-top)" }}
+        >
           {/* Inside Providers on purpose: the nav reads the session, and being
               a child of the legal gate means it stays hidden behind the blocking
               terms screen rather than floating over it. After the children, not

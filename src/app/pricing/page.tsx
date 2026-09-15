@@ -70,9 +70,12 @@ export default function PricingPage() {
   }
 
   const isFree = promo?.percentOff === 100;
-  // The one thing a member can still do here. A MAX member has nothing above
-  // them, so for them the page really is read-only.
-  const canUpgrade = member === true && tier === "plus";
+  // A member whose tier did not come back is treated as Carz+ rather than as
+  // nothing: the failure mode then is offering an upgrade they may not need,
+  // not stranding them on a page with no controls at all.
+  const heldTier: TierId | null = member ? (tier ?? "plus") : null;
+  // A MAX member has nothing above them, so for them the page is read-only.
+  const canUpgrade = member === true && heldTier === "plus";
 
   /** List price for a tier at the current interval, before any discount. */
   const listPrice = (id: TierId) => {
@@ -132,6 +135,25 @@ export default function PricingPage() {
     }
   }
 
+  async function cancel() {
+    if (busy) return;
+    setBusy("plus");
+    setJoinError("");
+    try {
+      const d = await post({ action: "cancel" });
+      if (!d?.ok) {
+        setJoinError(d?.error || "Couldn't cancel. Try again.");
+        return;
+      }
+      setMember(false);
+      setTier(null);
+    } catch {
+      setJoinError("Couldn't reach the server. Try again.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   /** What the button on a tier says, or nothing at all once it is held. */
   function cta(id: TierId): string | undefined {
     if (busy === id) return member ? "Upgrading…" : "Starting…";
@@ -147,7 +169,7 @@ export default function PricingPage() {
 
   function note(id: TierId): string | undefined {
     if (member) {
-      if (tier === id) return "Your current plan";
+      if (heldTier === id) return "Your current plan";
       // Upgrading keeps the interval they are already billed on.
       if (canUpgrade && id === "max") {
         return `Billed ${billing === "annual" ? "yearly" : "monthly"}, like your Carz+`;
@@ -174,8 +196,8 @@ export default function PricingPage() {
       wasPrice: promo ? listPrice("plus") : undefined,
       interval: annual ? "yr" : "mo",
       perks: CARZ_PLUS.perks,
-      featured: !member || tier === "plus",
-      badge: member && tier === "plus" ? "Active" : undefined,
+      featured: !member || heldTier === "plus",
+      badge: member && heldTier === "plus" ? "Active" : undefined,
       cta: cta("plus"),
       onSelect: () => void join("plus"),
       note: note("plus"),
@@ -189,20 +211,20 @@ export default function PricingPage() {
       interval: annual ? "yr" : "mo",
       perksLead: `Everything in ${CARZ_PLUS.name}, plus:`,
       perks: CARZ_MAX.perks,
-      featured: member ? tier === "max" || canUpgrade : false,
-      badge: member && tier === "max" ? "Active" : undefined,
+      featured: member ? heldTier === "max" || canUpgrade : false,
+      badge: member && heldTier === "max" ? "Active" : undefined,
       cta: cta("max"),
       onSelect: () => void join("max"),
       note: note("max"),
     },
   ];
 
-  const activeName = tier === "max" ? CARZ_MAX.name : CARZ_PLUS.name;
+  const activeName = heldTier === "max" ? CARZ_MAX.name : CARZ_PLUS.name;
 
   return (
     <PricingSection
-      eyebrow={member ? "Membership" : "Carz membership"}
-      title={member ? "You're in" : "Choose your plan"}
+      eyebrow={member === true ? "Membership" : "Carz membership"}
+      title={member === true ? "You're in" : "Choose your plan"}
       subtitle={
         member
           ? canUpgrade
@@ -216,6 +238,24 @@ export default function PricingPage() {
       onBillingSwitch={(v) => setAnnual(v === "1")}
       busy={busy !== null}
     >
+      {member === true && (
+        <div className="mx-auto mt-7 max-w-sm text-center">
+          <button
+            type="button"
+            onClick={() => void cancel()}
+            disabled={busy !== null}
+            className="press min-h-11 rounded-full px-5 text-sm opacity-60 transition hover:opacity-100 disabled:opacity-30"
+          >
+            {busy ? "Cancelling…" : "Cancel membership"}
+          </button>
+          {joinError && (
+            <p role="alert" className="mt-2 text-sm text-neon-red">
+              {joinError}
+            </p>
+          )}
+        </div>
+      )}
+
       {!member && (
         <div className="mx-auto mt-7 max-w-sm">
           {promo ? (

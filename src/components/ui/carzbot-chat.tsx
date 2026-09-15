@@ -3,8 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowUp as ArrowUpIcon,
-  Volume2,
-  VolumeX,
   ScanLine,
   Gauge,
   Wrench,
@@ -31,27 +29,8 @@ const PROMPTS = [
   { label: "Tell two apart", Icon: ScanLine, prompt: "How do I tell a Carrera S apart from a base Carrera?" },
 ] as const;
 
-const VOICE_KEY = "carzbot_voice";
 
 /** Whether the browser can speak at all. */
-function canSpeak(): boolean {
-  return typeof window !== "undefined" && "speechSynthesis" in window;
-}
-
-/**
- * An English voice, preferring one the platform calls high quality.
- *
- * getVoices() is empty until the list loads on some browsers, so this returns
- * null rather than waiting — an utterance with no voice set still speaks in the
- * system default, which is the right fallback.
- */
-function pickVoice(): SpeechSynthesisVoice | null {
-  const voices = window.speechSynthesis.getVoices();
-  if (!voices.length) return null;
-  const english = voices.filter((v) => v.lang.toLowerCase().startsWith("en"));
-  return english.find((v) => /natural|premium|enhanced|siri/i.test(v.name)) ?? english[0] ?? null;
-}
-
 function useAutoResizeTextarea({ minHeight, maxHeight }: { minHeight: number; maxHeight?: number }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -77,26 +56,8 @@ export function CarzBotChat() {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [voiceOn, setVoiceOn] = useState(true);
-  const [speaking, setSpeaking] = useState(false);
   const { textareaRef, adjustHeight } = useAutoResizeTextarea({ minHeight: 56, maxHeight: 160 });
   const threadRef = useRef<HTMLDivElement>(null);
-
-  // Deferred a microtask: a synchronous state write in an effect body cascades
-  // renders, which this project lints against.
-  useEffect(() => {
-    let cancelled = false;
-    Promise.resolve()
-      .then(() => localStorage.getItem(VOICE_KEY) !== "0")
-      .then((voice) => {
-        if (cancelled) return;
-        setVoiceOn(voice);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   /**
    * How much of the screen the software keyboard is covering.
@@ -124,7 +85,7 @@ export function CarzBotChat() {
       const shell = shellRef.current;
       if (!shell) return;
       const overlap = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
-      shell.style.height = `calc(100dvh - var(--nav-h) - ${overlap}px)`;
+      shell.style.height = `calc(100dvh - var(--nav-h) - var(--safe-top) - ${overlap}px)`;
       // The column just got shorter, which is exactly when the newest turn
       // would slide out of sight.
       const thread = threadRef.current;
@@ -152,26 +113,6 @@ export function CarzBotChat() {
     if (el) el.scrollTop = el.scrollHeight;
   }, [turns, busy]);
 
-  const stopSpeaking = useCallback(() => {
-    if (canSpeak()) window.speechSynthesis.cancel();
-    setSpeaking(false);
-  }, []);
-
-  const speak = useCallback((text: string) => {
-    if (!canSpeak() || !text.trim()) return;
-    // Anything still queued belongs to an older answer.
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    const v = pickVoice();
-    if (v) u.voice = v;
-    u.lang = v?.lang ?? "en-US";
-    u.rate = 1.02;
-    u.onend = () => setSpeaking(false);
-    u.onerror = () => setSpeaking(false);
-    setSpeaking(true);
-    window.speechSynthesis.speak(u);
-  }, []);
-
   const ask = useCallback(
     async (text: string) => {
       const question = text.trim();
@@ -180,7 +121,6 @@ export function CarzBotChat() {
       // The history sent is the one on screen plus this question, rather than
       // state read back after setting it — setState is not immediate and the
       // request would go out a turn behind.
-      stopSpeaking(); // the previous answer is no longer the current one
       const next: Turn[] = [...turns, { role: "user", content: question }];
       setTurns(next);
       setValue("");
@@ -200,22 +140,14 @@ export function CarzBotChat() {
           return;
         }
         setTurns([...next, { role: "assistant", content: d.reply }]);
-        // Every answer is written out now. It is still read aloud too when the
-        // speaker is on, which is CarzBot talking rather than being talked to.
-        if (voiceOn) speak(d.reply);
       } catch {
         setError("Network error — nothing was sent.");
       } finally {
         setBusy(false);
       }
     },
-    [turns, busy, adjustHeight, voiceOn, speak, stopSpeaking],
+    [turns, busy, adjustHeight],
   );
-
-  // Never leave a voice talking after this goes.
-  useEffect(() => () => {
-    if (canSpeak()) window.speechSynthesis.cancel();
-  }, []);
 
   const empty = turns.length === 0;
 
@@ -223,7 +155,7 @@ export function CarzBotChat() {
     // A fixed-height column, not a growing page: the thread scrolls inside its
     // own pane and the composer stays put. The page itself never scrolls, which
     // is what stops the input sliding away under your thumb mid-conversation.
-    <div ref={shellRef} className="flex h-[calc(100dvh-var(--nav-h))] flex-col">
+    <div ref={shellRef} className="flex h-[calc(100dvh-var(--nav-h)-var(--safe-top))] flex-col">
       <div
         ref={threadRef}
         className="flex-1 overflow-y-auto overscroll-contain px-4 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -304,24 +236,6 @@ export function CarzBotChat() {
           )}
 
           <div className="glass-card rounded-3xl p-2">
-            {/* No animation while it talks. The wave that used to ride here
-                was left over from when you could speak to CarzBot; typing and
-                then being shown a voice animation reads as the wrong app. The
-                Stop control stays, because speech that cannot be interrupted
-                is worse than speech you did not ask for. */}
-            {speaking && (
-              <div className="flex items-center gap-3 px-3 pb-1 pt-1">
-                <span className="util-label flex-1 opacity-50">Speaking</span>
-                <button
-                  type="button"
-                  onClick={stopSpeaking}
-                  className="press util-label rounded-full bg-white/[0.08] px-3 py-1.5 hover:bg-white/[0.14]"
-                >
-                  Stop
-                </button>
-              </div>
-            )}
-
             <Textarea
               ref={textareaRef}
               value={value}
@@ -342,27 +256,6 @@ export function CarzBotChat() {
             />
 
             <div className="flex items-center justify-end gap-2 px-2 pb-1">
-              <button
-                type="button"
-                onClick={() => {
-                  const next = !voiceOn;
-                  setVoiceOn(next);
-                  if (!next) stopSpeaking();
-                  try {
-                    localStorage.setItem(VOICE_KEY, next ? "1" : "0");
-                  } catch {
-                    /* a device that refuses storage still gets the toggle */
-                  }
-                }}
-                aria-pressed={voiceOn}
-                aria-label={voiceOn ? "Mute CarzBot" : "Let CarzBot speak"}
-                className={cn(
-                  "press flex h-10 w-10 items-center justify-center rounded-full transition-colors",
-                  voiceOn ? "bg-white/[0.12]" : "bg-white/[0.06] text-white/40",
-                )}
-              >
-                {voiceOn ? <Volume2 className="h-4 w-4" aria-hidden /> : <VolumeX className="h-4 w-4" aria-hidden />}
-              </button>
 
               <button
                 type="button"

@@ -41,7 +41,7 @@ export default function FeedPage() {
 
 function FeedLoading() {
   return (
-    <div className="flex h-[calc(100dvh-var(--nav-h))] items-center justify-center">
+    <div className="flex h-[calc(100dvh-var(--nav-h)-var(--safe-top))] items-center justify-center">
       <Spinner className="h-6 w-6" />
     </div>
   );
@@ -225,7 +225,7 @@ function FeedInner() {
   // In the flow, not fixed. Taking it out of the flow made the whole page blank,
   // and a feed that is 1px short is better than one that is not there.
   return (
-    <div className="relative flex h-[calc(100dvh-var(--nav-h))] flex-col overflow-hidden">
+    <div className="relative flex h-[calc(100dvh-var(--nav-h)-var(--safe-top))] flex-col overflow-hidden">
       {/* Over the clip rather than above it: a bar in the flow would cost the
           video its height, and these two are small enough to float. */}
       <div className="pointer-events-none absolute right-3 top-3 z-30 flex items-center gap-2">

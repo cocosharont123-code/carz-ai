@@ -8,6 +8,7 @@ import {
   touchStreak,
   restoreStreak,
   isActiveMember,
+  memberTier,
   profilesConfigured,
 } from "@/lib/profile-blob";
 import { lookupPromo } from "@/lib/promos";
@@ -28,6 +29,10 @@ export async function GET() {
     signedIn: true,
     hasUsername: !!p?.username,
     member: active,
+    // Never sent before, so the pricing page could not tell a Carz+ member
+    // from a MAX one — and with the tier unknown it offered neither the
+    // upgrade nor anything else, leaving a member on a page of dead cards.
+    tier: memberTier(p),
     memberSince: p?.memberSince ?? null,
     billing: p?.billing ?? "monthly",
     trialEndsAt: active && p?.trialEndsAt ? p.trialEndsAt : null,
@@ -79,6 +84,14 @@ export async function POST(req: Request) {
     if (body.action === "restore") {
       const p = await restoreStreak(email, Number(body.restoreTo) || 0);
       return NextResponse.json({ ok: true, streak: p?.streak ?? 0 });
+    }
+
+    // Leaving. There was no way out of a membership at all: once the flag was
+    // set the pricing page said "You're in" and offered nothing, which is a
+    // dead end rather than a state.
+    if (body.action === "cancel") {
+      const p = await setMembership(email, false);
+      return NextResponse.json({ ok: true, member: !!p?.member, tier: null });
     }
 
     if (body.action === "trial") {

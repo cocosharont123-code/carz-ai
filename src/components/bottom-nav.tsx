@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   Lock,
   ChevronDown,
+  Crown,
 } from "lucide-react";
 import { EXPLORE_BUBBLES, EXPLORE_COPY } from "@/config/explore";
 import { GlassFilter } from "@/components/ui/liquid-glass";
@@ -246,7 +247,10 @@ function ExploreSheet({ onClose, closing }: { onClose: () => void; closing: bool
         )}
         style={{ bottom: "calc(var(--nav-h) + 0.25rem)" }}
       >
-        <div className="grid grid-cols-2 gap-x-3 gap-y-3 sm:grid-cols-3">
+        {/* auto-rows-fr so every row is the same height. Without it a label
+            that wraps to two lines — "Events & Drops", "Leaderboard" at narrow
+            widths — makes its whole row taller than the others. */}
+        <div className="grid auto-rows-fr grid-cols-2 gap-x-3 gap-y-3 sm:grid-cols-3">
           {EXPLORE_BUBBLES.map((item) => {
             const Icon = item.icon;
             return (
@@ -266,10 +270,17 @@ function ExploreSheet({ onClose, closing }: { onClose: () => void; closing: bool
                 <span className="min-w-0 flex-1 text-[13px] font-semibold leading-tight">
                   {item.label}
                 </span>
+                {/* A crown rather than the tier's name. "Carz MAX" spelled out
+                    took a third of the tile and pushed the labels into a second
+                    line; the mark says the same thing — this one is paid — and
+                    the tier itself is on the page you land on. Titled, not just
+                    coloured, so it is not colour alone carrying the meaning. */}
                 {item.tier && (
-                  <span className="util-label shrink-0 text-[9px] text-carz">
-                    {EXPLORE_COPY.tierBadge[item.tier]}
-                  </span>
+                  <Crown
+                    className="h-4 w-4 shrink-0 text-carz"
+                    strokeWidth={2}
+                    aria-label={`${EXPLORE_COPY.tierBadge[item.tier]} feature`}
+                  />
                 )}
               </Link>
             );

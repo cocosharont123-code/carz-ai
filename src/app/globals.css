@@ -9,6 +9,11 @@
    bubble's own offset and every full-screen page measure from these, so the
    nav and the space kept clear of it cannot drift apart. */
 :root {
+  /* The notch / status-bar strip. viewportFit is "cover" and the iOS status
+     bar is translucent, so without this the top of every page renders beneath
+     it and reads as blurred out. The nav used to reserve this space when it
+     was at the top; nothing did once it moved to the bottom. */
+  --safe-top: env(safe-area-inset-top);
   --nav-gap: 0.75rem;
   --nav-bubble-h: 3.5rem;
   --nav-h: calc(var(--nav-bubble-h) + var(--nav-gap) * 2 + env(safe-area-inset-bottom));

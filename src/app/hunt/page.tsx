@@ -5,6 +5,7 @@ import { WANTED, HUNT_RULE, getHunt, joinHunt, totalEarned, type HuntState } fro
 import { Button, LiveDot } from "@/components/ui/editorial";
 import { MemberGate } from "@/components/member-gate";
 import { cn } from "@/lib/utils";
+import { ThinkingOrb } from "thinking-orbs";
 
 const money = (n: number) => "$" + n.toLocaleString("en-US");
 const count = (n: number) => n.toLocaleString("en-US");
@@ -69,24 +70,57 @@ function HuntInner() {
     };
   }, []);
 
+  /**
+   * Entering the hunt.
+   *
+   * Held on screen for a minimum beat rather than however long the request
+   * happens to take. Joining is the one irreversible thing on this page, and a
+   * button that simply flips state gives no sense that anything was committed —
+   * the wait is what makes it feel like being entered into something.
+   *
+   * The floor and the request run together, so a slow network is not the floor
+   * plus the request: whichever takes longer is what you wait for.
+   */
   async function enter() {
     if (joining) return;
     setJoining(true);
     setError("");
+    const floor = new Promise((r) => setTimeout(r, 1500));
     try {
-      const res = await fetch("/api/hunt/enter", { method: "POST" });
-      const d = await res.json();
-      if (!res.ok) {
-        setError(d.error || "Couldn't enter the hunt.");
+      const request = (async () => {
+        const res = await fetch("/api/hunt/enter", { method: "POST" });
+        return { ok: res.ok, d: await res.json() };
+      })();
+      const [, result] = await Promise.all([floor, request]);
+      if (!result.ok) {
+        setError(result.d.error || "Couldn't enter the hunt.");
         return;
       }
-      setStatus(d);
+      setStatus(result.d);
       setHunt(joinHunt()); // this device's own board state
     } catch {
+      await floor; // a failure should not snap back faster than a success
       setError("Network error — you weren't entered.");
     } finally {
       setJoining(false);
     }
+  }
+
+  if (joining) {
+    return (
+      <div
+        role="status"
+        aria-live="polite"
+        aria-busy="true"
+        className="fixed inset-0 z-[80] flex flex-col items-center justify-center gap-6 bg-black/85 backdrop-blur-xl"
+      >
+        <ThinkingOrb state="connecting" size={64} theme="dark" aria-label="" />
+        <div className="text-center">
+          <p className="display text-2xl">Entering the hunt</p>
+          <p className="mt-2 text-[13px] opacity-60">Putting your name on the board…</p>
+        </div>
+      </div>
+    );
   }
 
   const earned = hunt ? totalEarned(hunt) : 0;
