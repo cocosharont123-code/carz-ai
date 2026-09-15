@@ -18,6 +18,7 @@ import {
   LogOut,
   ShieldCheck,
   Lock,
+  ChevronDown,
 } from "lucide-react";
 import { EXPLORE_BUBBLES, EXPLORE_COPY } from "@/config/explore";
 import { GlassFilter } from "@/components/ui/liquid-glass";
@@ -291,6 +292,23 @@ function ExploreSheet({ onClose, closing }: { onClose: () => void; closing: bool
 function AccountRow({ onClose }: { onClose: () => void }) {
   const { status } = useSession();
   const signedIn = status === "authenticated";
+  const [open, setOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
+
+  // Same hold-past-close the Explore sheet uses, so the rows animate away
+  // rather than blinking out.
+  useEffect(() => {
+    if (!closing) return;
+    const t = window.setTimeout(() => setClosing(false), 200);
+    return () => window.clearTimeout(t);
+  }, [closing]);
+
+  function toggle() {
+    setOpen((was) => {
+      if (was) setClosing(true);
+      return !was;
+    });
+  }
 
   const links = [
     ...(signedIn
@@ -304,30 +322,65 @@ function AccountRow({ onClose }: { onClose: () => void }) {
   ];
 
   return (
-    <div className="mt-4 flex flex-wrap items-center justify-center gap-1 border-t border-white/10 pt-3">
-      {links.map(({ label, href, Icon }) => (
-        <Link
-          key={label}
-          href={href}
-          onClick={onClose}
-          className="press util-label flex min-h-[44px] items-center gap-2 rounded-full px-3 opacity-70 transition-opacity hover:opacity-100"
+    <div className="mt-3">
+      {/* One button instead of a rule with five small links strung under it.
+          The chevron turns rather than swapping icon, so it reads as the same
+          control in two states. */}
+      <button
+        type="button"
+        onClick={toggle}
+        aria-expanded={open}
+        aria-controls="nav-more"
+        className="press glass-card group flex min-h-11 w-full items-center justify-center gap-2 rounded-full text-[13px] font-semibold transition hover:bg-white/[0.08]"
+      >
+        More
+        <ChevronDown
+          className={cn(
+            "h-4 w-4 transition-transform duration-300",
+            open && "rotate-180",
+          )}
+          strokeWidth={2}
+          aria-hidden
+        />
+      </button>
+
+      {(open || closing) && (
+        <div
+          id="nav-more"
+          className={cn(
+            "mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3",
+            closing ? "nav-sheet-out" : "nav-sheet-in",
+          )}
         >
-          <Icon className="h-4 w-4" strokeWidth={2} aria-hidden />
-          {label}
-        </Link>
-      ))}
-      {signedIn && (
-        <button
-          type="button"
-          onClick={() => {
-            onClose();
-            void signOut();
-          }}
-          className="press util-label flex min-h-[44px] items-center gap-2 rounded-full px-3 opacity-70 transition-opacity hover:opacity-100"
-        >
-          <LogOut className="h-4 w-4" strokeWidth={2} aria-hidden />
-          Sign out
-        </button>
+          {links.map(({ label, href, Icon }) => (
+            <Link
+              key={label}
+              href={href}
+              onClick={onClose}
+              className="press glass-card flex min-h-[44px] items-center gap-3 rounded-2xl px-3 py-3"
+            >
+              <Icon className="h-5 w-5 shrink-0" strokeWidth={1.75} aria-hidden />
+              <span className="min-w-0 flex-1 text-[13px] font-semibold leading-tight">
+                {label}
+              </span>
+            </Link>
+          ))}
+          {signedIn && (
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                void signOut();
+              }}
+              className="press glass-card flex min-h-[44px] items-center gap-3 rounded-2xl px-3 py-3 text-left"
+            >
+              <LogOut className="h-5 w-5 shrink-0" strokeWidth={1.75} aria-hidden />
+              <span className="min-w-0 flex-1 text-[13px] font-semibold leading-tight">
+                Sign out
+              </span>
+            </button>
+          )}
+        </div>
       )}
     </div>
   );
