@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
@@ -20,6 +20,7 @@ import {
   Lock,
 } from "lucide-react";
 import { EXPLORE_BUBBLES, EXPLORE_COPY } from "@/config/explore";
+import { GlassFilter } from "@/components/ui/liquid-glass";
 import { cn } from "@/lib/utils";
 
 /**
@@ -43,6 +44,9 @@ const BUBBLE_OFFSET = {
 export function BottomNav() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  // Held open past the close so the sheet can animate out. A panel that fades
+  // in and then vanishes on the way back reads as half-finished.
+  const [menuClosing, setMenuClosing] = useState(false);
   const bubbleRef = useRef<HTMLElement>(null);
 
   /**
@@ -87,14 +91,28 @@ export function BottomNav() {
     };
   }, []);
 
+  const closeMenu = useCallback(() => {
+    setMenuOpen((open) => {
+      if (open) setMenuClosing(true);
+      return false;
+    });
+  }, []);
+
+  // Unmount once the exit animation has played. Matches .nav-sheet-out.
+  useEffect(() => {
+    if (!menuClosing) return;
+    const t = window.setTimeout(() => setMenuClosing(false), 200);
+    return () => window.clearTimeout(t);
+  }, [menuClosing]);
+
   useEffect(() => {
     if (!menuOpen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setMenuOpen(false);
+      if (e.key === "Escape") closeMenu();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [menuOpen]);
+  }, [menuOpen, closeMenu]);
 
   const items = [
     {
@@ -134,31 +152,54 @@ export function BottomNav() {
     },
   ];
 
-  const menuActive = menuOpen;
+  // The lens sits under whichever target is current. Its width is a fraction of
+  // the row taken from the target count, so moving it is one transform and
+  // nothing has to be measured while it travels. The menu is the last target.
+  const targetCount = items.length + 1;
+  const activeIndex = menuOpen ? items.length : items.findIndex((i) => i.active);
 
   return (
     <>
+      {/* Defines #glass-distortion for the bubble's backdrop. Mounted here
+          because the nav is the one component on every page. */}
+      <GlassFilter scale={26} />
+
       <nav
         ref={bubbleRef}
         style={BUBBLE_OFFSET}
-        className="glass-bubble fixed left-1/2 z-[60] -ml-[min(22rem,calc(50vw-0.75rem))] w-[min(44rem,calc(100vw-1.5rem))] rounded-full px-1"
+        className="glass-bubble fixed left-1/2 z-[60] -ml-[min(13rem,calc(50vw-0.75rem))] w-[min(26rem,calc(100vw-1.5rem))] rounded-full px-1"
         aria-label="Main"
       >
-        <div className={cn("flex items-stretch justify-around", BAR_H)}>
+        <div className={cn("relative flex items-stretch justify-around", BAR_H)}>
+          {/* The travelling highlight. Hidden rather than removed when nothing
+              is current, so it fades instead of snapping back from an edge. */}
+          <span
+            aria-hidden
+            className="nav-lens pointer-events-none absolute inset-y-1.5 left-0 rounded-full"
+            style={{
+              width: `calc(100% / ${targetCount})`,
+              transform: `translateX(${Math.max(activeIndex, 0) * 100}%)`,
+              opacity: activeIndex < 0 ? 0 : 1,
+            }}
+          />
           {items.map(({ key, label, href, Icon, active }) => (
             <Link
               key={key}
               href={href}
               aria-label={label}
               aria-current={active ? "page" : undefined}
-              onClick={() => setMenuOpen(false)}
-              className="press relative flex min-h-[44px] min-w-[44px] flex-1 items-center justify-center"
+              onClick={closeMenu}
+              className="press group relative flex min-h-[44px] min-w-[44px] flex-1 items-center justify-center rounded-full"
             >
-              <ActiveBar on={active} />
               <Icon
-                size={26}
-                strokeWidth={2}
-                className={cn("text-white transition-opacity", active ? "opacity-100" : "opacity-70")}
+                size={24}
+                strokeWidth={active ? 2.25 : 2}
+                className={cn(
+                  "relative text-white transition-[opacity,transform] duration-300",
+                  active
+                    ? "-translate-y-px opacity-100 drop-shadow-[0_1px_6px_rgba(255,255,255,0.35)]"
+                    : "opacity-60 group-hover:opacity-90",
+                )}
                 aria-hidden
               />
             </Link>
@@ -166,19 +207,23 @@ export function BottomNav() {
 
           <button
             type="button"
-            onClick={() => setMenuOpen((o) => !o)}
+            onClick={() => (menuOpen ? closeMenu() : setMenuOpen(true))}
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             aria-expanded={menuOpen}
-            className="press relative flex min-h-[44px] min-w-[44px] flex-1 items-center justify-center"
+            className="press group relative flex min-h-[44px] min-w-[44px] flex-1 items-center justify-center rounded-full"
           >
-            <ActiveBar on={menuActive} />
             {menuOpen ? (
-              <X size={26} strokeWidth={2} className="text-white" aria-hidden />
+              <X
+                size={24}
+                strokeWidth={2.25}
+                className="relative -translate-y-px text-white drop-shadow-[0_1px_6px_rgba(255,255,255,0.35)]"
+                aria-hidden
+              />
             ) : (
               <Menu
-                size={26}
+                size={24}
                 strokeWidth={2}
-                className={cn("text-white transition-opacity", menuActive ? "opacity-100" : "opacity-70")}
+                className="relative text-white opacity-60 transition-opacity duration-300 group-hover:opacity-90"
                 aria-hidden
               />
             )}
@@ -187,7 +232,9 @@ export function BottomNav() {
         </div>
       </nav>
 
-      {menuOpen && <ExploreSheet onClose={() => setMenuOpen(false)} />}
+      {(menuOpen || menuClosing) && (
+        <ExploreSheet onClose={closeMenu} closing={!menuOpen} />
+      )}
 
       {/* Holds the page clear of the bar by exactly its height. shrink-0
           because this is a flex item in the layout's column and a spacer that
@@ -197,39 +244,34 @@ export function BottomNav() {
   );
 }
 
-/** The tab indicator. A dot under the icon rather than a bar on the edge: the
- *  bubble has no edge to sit against any more, and a bar butted up inside a
- *  pill reads as a rendering fault rather than a marker. */
-function ActiveBar({ on }: { on: boolean }) {
-  if (!on) return null;
-  return (
-    <span
-      aria-hidden
-      className="absolute bottom-1.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-white"
-    />
-  );
-}
-
 /**
  * The hamburger's sheet: the Explore hub, floating above the bubble.
  *
  * It renders the same config the /explore page does, so there is one list of
  * what this app can do rather than two that drift.
  */
-function ExploreSheet({ onClose }: { onClose: () => void }) {
+function ExploreSheet({ onClose, closing }: { onClose: () => void; closing: boolean }) {
   return (
     <>
       <div
         onClick={onClose}
         aria-hidden
-        className="fixed inset-0 z-[55] bg-black/25"
+        className={cn(
+          "fixed inset-0 z-[55] bg-black/25",
+          closing ? "nav-veil-out" : "nav-veil-in",
+        )}
         style={{ bottom: "var(--nav-h)" }}
       />
       <div
         role="dialog"
         aria-label="Explore"
-        className="fixed left-1/2 z-[58] -ml-[min(22rem,calc(50vw-0.75rem))] max-h-[70dvh] w-[min(44rem,calc(100vw-1.5rem))] overflow-y-auto rounded-3xl border border-white/10 bg-black/50 px-5 pb-5 pt-5 backdrop-blur-2xl"
-        style={{ bottom: "var(--nav-h)" }}
+        className={cn(
+          "fixed left-1/2 z-[58] -ml-[min(13rem,calc(50vw-0.75rem))] max-h-[70dvh] w-[min(26rem,calc(100vw-1.5rem))]",
+          "overflow-y-auto rounded-[28px] border border-white/12 bg-black/55 px-4 pb-4 pt-4 backdrop-blur-2xl",
+          "shadow-[0_24px_60px_-18px_rgba(0,0,0,0.9)]",
+          closing ? "nav-sheet-out" : "nav-sheet-in",
+        )}
+        style={{ bottom: "calc(var(--nav-h) + 0.25rem)" }}
       >
         <div className="grid grid-cols-2 gap-x-3 gap-y-3 sm:grid-cols-3">
           {EXPLORE_BUBBLES.map((item) => {

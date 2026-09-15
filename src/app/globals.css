@@ -490,23 +490,106 @@ body {
   -webkit-backdrop-filter: blur(var(--blur-behind)) saturate(180%);
   pointer-events: none;
 }
-/* The nav bubble's glass. The same material as .glass-card, lit a little
-   harder: it floats free on the page rather than being tucked against an edge,
-   so the specular rim has to read all the way round and the shadow has to lift
-   it off whatever is passing underneath. */
+/* The nav bubble's glass. The same material as .glass-card, lit harder: it
+   floats free on the page rather than being tucked against an edge, so the
+   specular rim has to read all the way round.
+   
+   Three shadows rather than one. A tight contact shadow to seat it, a wide
+   ambient one to lift it off whatever is scrolling underneath, and a faint
+   coloured bloom so it picks up the neon behind it instead of reading as a
+   grey slab on a bright background. */
 .glass-bubble {
   isolation: isolate;
-  --blur-behind: 24px;
+  --blur-behind: 28px;
   color: oklch(0.985 0 0);
   background:
-    linear-gradient(140deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05) 55%, rgba(255, 255, 255, 0.03));
+    linear-gradient(140deg, rgba(255, 255, 255, 0.17), rgba(255, 255, 255, 0.055) 52%, rgba(255, 255, 255, 0.03));
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.35),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.38),
     inset 0 -1px 1px 0 rgba(255, 255, 255, 0.07),
-    inset 0 0 24px 0 rgba(255, 255, 255, 0.06),
-    0 18px 40px -12px rgba(0, 0, 0, 0.85);
+    inset 0 0 26px 0 rgba(255, 255, 255, 0.055),
+    0 2px 6px -1px rgba(0, 0, 0, 0.5),
+    0 20px 44px -14px rgba(0, 0, 0, 0.85),
+    0 0 30px -18px rgba(0, 229, 255, 0.5);
 }
+
+/* The specular rim. A real glass edge is not evenly lit — it catches hardest
+   where the light lands, top-left here, and falls off to nothing before it
+   comes round again. One hairline ring, masked to the border, does more for
+   the material than any amount of extra blur. */
+.glass-bubble::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.55),
+    rgba(255, 255, 255, 0.06) 38%,
+    rgba(255, 255, 255, 0) 62%,
+    rgba(255, 255, 255, 0.12)
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* The travelling lens: the brighter pane of glass that sits under whichever
+   target is current and slides to the next one.
+   
+   A moving highlight rather than a marker that blinks out here and in there —
+   the eye follows one object across the bar and the bar stays one object. Its
+   width is a fraction of the row set from the target count, so nothing has to
+   be measured and no layout is read during the animation. */
+.nav-lens {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.10));
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 0 rgba(255, 255, 255, 0.08),
+    0 2px 10px -2px rgba(0, 0, 0, 0.45);
+  transition:
+    transform 420ms var(--ease-apple),
+    opacity 220ms var(--ease-apple);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Still moves — it has to, or it marks the wrong target — but without the
+     travel that is the thing being asked to stop. */
+  .nav-lens { transition: opacity 120ms linear; }
+}
+
+/* The Explore sheet, coming up off the bubble it was opened from and going
+   back down into it. Motion that says where the panel came from, which is the
+   only reason it is animated at all. */
+@keyframes navSheetIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.965); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes navSheetOut {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: translateY(10px) scale(0.975); }
+}
+@keyframes navVeilIn  { from { opacity: 0 } to { opacity: 1 } }
+@keyframes navVeilOut { from { opacity: 1 } to { opacity: 0 } }
+
+.nav-sheet-in   { animation: navSheetIn 320ms var(--ease-apple) both; transform-origin: bottom center; }
+.nav-sheet-out  { animation: navSheetOut 200ms var(--ease-apple) both; transform-origin: bottom center; }
+.nav-veil-in    { animation: navVeilIn 240ms var(--ease-apple) both; }
+.nav-veil-out   { animation: navVeilOut 180ms var(--ease-apple) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-sheet-in, .nav-sheet-out, .nav-veil-in, .nav-veil-out { animation-duration: 1ms; }
+}
+/* Blur alone reads as frosted plastic. #glass-distortion (mounted by the nav)
+   pushes the already-blurred backdrop around with a displacement map, so the
+   neon behind the bubble bends through it the way it would through a lens.
+   Only where it is supported: the fallback is the plain blur, which is what
+   this was before. */
 .glass-bubble::before {
   content: "";
   position: absolute;
@@ -516,6 +599,11 @@ body {
   backdrop-filter: blur(var(--blur-behind)) saturate(180%);
   -webkit-backdrop-filter: blur(var(--blur-behind)) saturate(180%);
   pointer-events: none;
+}
+@supports (filter: url("#glass-distortion")) {
+  .glass-bubble::before {
+    filter: url("#glass-distortion");
+  }
 }
 
 .glass-card:hover {
