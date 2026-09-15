@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { RELEASE_LABEL } from "@/config/release";
 import { EXPLORE_BUBBLES } from "@/config/explore";
 import { CARZ_PLUS, CARZ_MAX, carzPlusMonthly, carzMaxMonthly } from "@/lib/plans";
 
@@ -14,24 +13,20 @@ import { CARZ_PLUS, CARZ_MAX, carzPlusMonthly, carzMaxMonthly } from "@/lib/plan
 export default function Home() {
   return (
     <main className="mx-auto w-full max-w-5xl px-5 pb-24 pt-10">
-      {/* Hero */}
+      {/* Hero. The headline and nothing else — the release eyebrow and the
+          paragraph under it are gone, so the tiles come straight off the type
+          rather than sitting two blocks below it. */}
       <section className="text-center">
-        <p className="util-label text-carz">On the App Store {RELEASE_LABEL}</p>
-        <h1 className="display mt-4 text-6xl leading-[0.95] sm:text-7xl md:text-8xl">
+        <h1 className="display text-6xl leading-[0.95] sm:text-7xl md:text-8xl">
           Snap any car.
           <br />
           Know everything.
         </h1>
-        <p className="mx-auto mt-5 max-w-xl text-[15px] leading-relaxed opacity-70">
-          Point your camera at a car and get the make, model, year, specs, rarity and what
-          it&apos;s worth — in seconds.
-        </p>
       </section>
 
       {/* What it does — the app's own feature list, not a second copy of it. */}
-      <section className="mt-20">
-        <h2 className="util-label text-center opacity-60">Everything in Carz</h2>
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <section className="mt-8 sm:mt-10">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {EXPLORE_BUBBLES.map((item) => {
             const Icon = item.icon;
             // Eight tiles divide evenly at both two and four columns, so
