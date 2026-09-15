@@ -17,9 +17,9 @@ import { cn } from "@/lib/utils";
  * thing not to do with it.
  */
 
-function GoogleIcon() {
+function GoogleIcon({ className }: { className?: string }) {
   return (
-    <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" aria-hidden>
+    <svg className={cn("h-5 w-5 shrink-0", className)} viewBox="0 0 24 24" aria-hidden>
       <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1Z" />
       <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23Z" />
       <path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84Z" />
@@ -34,6 +34,7 @@ export function GoogleSignInButton({
   full = false,
   disabled,
   className,
+  variant = "pill",
 }: {
   /** Where to land after signing in. */
   callbackUrl?: string;
@@ -42,11 +43,43 @@ export function GoogleSignInButton({
   full?: boolean;
   disabled?: boolean;
   className?: string;
+  /**
+   * "pill" is the inline form, for the four places a page stops and asks you
+   * to sign in before going on. "squircle" is the big one, for a screen whose
+   * entire purpose is this button — the mark stacked over the label in a tile
+   * you cannot miss.
+   */
+  variant?: "pill" | "squircle";
 }) {
+  const onClick = () => signIn("google", callbackUrl ? { callbackUrl } : undefined);
+
+  if (variant === "squircle") {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={disabled}
+        className={cn(
+          // A radius this large against this height is what reads as a
+          // squircle — a continuous corner rather than a quarter circle stuck
+          // between two straight edges.
+          "press glass-bubble group flex w-full flex-col items-center justify-center gap-4",
+          "aspect-[5/4] max-h-[16rem] rounded-[28%] px-6",
+          "transition-colors hover:bg-white/[0.06]",
+          "disabled:cursor-not-allowed disabled:opacity-40",
+          className,
+        )}
+      >
+        <GoogleIcon className="h-11 w-11" />
+        <span className="text-[15px] font-semibold">{label}</span>
+      </button>
+    );
+  }
+
   return (
     <button
       type="button"
-      onClick={() => signIn("google", callbackUrl ? { callbackUrl } : undefined)}
+      onClick={onClick}
       disabled={disabled}
       className={cn(
         "press glass-card inline-flex items-center justify-center gap-3 rounded-full px-6 py-3.5",
