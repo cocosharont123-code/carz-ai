@@ -4,13 +4,14 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Height of the fixed nav bar, home indicator included. The bar's spacer and
-   any full-screen page that has to sit clear of it both measure from this, so
-   the bar and the space reserved for it cannot drift apart. The bar is at the
-   bottom, hence the bottom inset — on a phone that is the home-indicator strip,
-   on everything else it is zero. */
+/* What the nav takes up at the bottom of the screen: the bubble itself, the
+   gap it floats above the edge, and the home-indicator strip under that. The
+   bubble's own offset and every full-screen page measure from these, so the
+   nav and the space kept clear of it cannot drift apart. */
 :root {
-  --nav-h: calc(3.5rem + env(safe-area-inset-bottom));
+  --nav-gap: 0.75rem;
+  --nav-bubble-h: 3.5rem;
+  --nav-h: calc(var(--nav-bubble-h) + var(--nav-gap) * 2 + env(safe-area-inset-bottom));
 }
 
 /* Leaderboard crown + trend colors used by leaderboard-rankings.tsx */
@@ -475,28 +476,30 @@ body {
   -webkit-backdrop-filter: blur(var(--blur-behind)) saturate(180%);
   pointer-events: none;
 }
-/* The nav bar's glass. Same material as .glass-card — same translucency, same
-   specular top edge, same backdrop blur — but edge to edge: no radius, and a
-   border only along the top, because the other three sides are screen edges.
-   The drop shadow is cast upward, since what it sits over is above it. */
-.glass-bar {
+/* The nav bubble's glass. The same material as .glass-card, lit a little
+   harder: it floats free on the page rather than being tucked against an edge,
+   so the specular rim has to read all the way round and the shadow has to lift
+   it off whatever is passing underneath. */
+.glass-bubble {
   position: relative;
   isolation: isolate;
-  --blur-behind: 20px;
+  --blur-behind: 24px;
   color: oklch(0.985 0 0);
   background:
-    linear-gradient(to top, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.04) 60%, rgba(255, 255, 255, 0.02));
-  border-top: 1px solid rgba(255, 255, 255, 0.16);
+    linear-gradient(140deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05) 55%, rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.30),
-    inset 0 0 20px 0 rgba(255, 255, 255, 0.05),
-    0 -10px 30px -12px rgba(0, 0, 0, 0.7);
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.35),
+    inset 0 -1px 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 0 24px 0 rgba(255, 255, 255, 0.06),
+    0 18px 40px -12px rgba(0, 0, 0, 0.85);
 }
-.glass-bar::before {
+.glass-bubble::before {
   content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
+  border-radius: inherit;
   backdrop-filter: blur(var(--blur-behind)) saturate(180%);
   -webkit-backdrop-filter: blur(var(--blur-behind)) saturate(180%);
   pointer-events: none;

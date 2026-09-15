@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
@@ -23,27 +23,69 @@ import { EXPLORE_BUBBLES, EXPLORE_COPY } from "@/config/explore";
 import { cn } from "@/lib/utils";
 
 /**
- * The fixed bottom bar: five icon targets plus the menu, no labels, on every
- * page. Exactly what sat at the top, moved down and rebuilt in glass.
+ * The nav: a glass bubble floating at the bottom of the screen, carrying five
+ * icon targets plus the menu. Same targets, same order, same menu as always.
  *
  * It renders its own spacer rather than the root layout adding a global padding
  * rule, so the height and the offset can never drift apart — and a route that
- * hides the bar gets no phantom gap. The spacer only works if this is rendered
+ * hides the nav gets no phantom gap. The spacer only works if this is rendered
  * after the page content, which is why the layout puts it there.
  */
 
-// --nav-h is defined in globals.css and is what the feed and CarzBot measure
-// their own height against, so the bar and the space kept clear of it cannot
-// drift apart.
+// All from globals.css, so the bubble's own offset, the space pages keep clear
+// and the sheet that opens off it cannot disagree about where the nav is.
 const BAR_H = "h-14";
-// The home-indicator strip on a phone. Padding rather than margin, so the glass
-// runs to the physical bottom edge and only the targets sit above the inset.
-const SAFE_BOTTOM = { paddingBottom: "env(safe-area-inset-bottom)" } as const;
 const SPACER_H = { height: "var(--nav-h)" } as const;
+const BUBBLE_OFFSET = {
+  bottom: "calc(var(--nav-gap) + env(safe-area-inset-bottom))",
+} as const;
 
 export function BottomNav() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const bubbleRef = useRef<HTMLElement>(null);
+
+  /**
+   * Hold the bubble still while the page scrolls.
+   *
+   * position:fixed alone is not enough on iOS. Fixed elements are placed
+   * against the layout viewport, and Safari grows and shrinks that as the URL
+   * bar collapses and returns — so a bubble pinned to the bottom visibly slides
+   * during a scroll even though nothing in the page moved.
+   *
+   * visualViewport reports what is actually on screen. The gap between the two
+   * viewports is exactly how far the bubble has drifted, so pushing it back by
+   * that much leaves it where it was put.
+   *
+   * Written straight to the element, once per frame at most, and never through
+   * state: this fires continuously while scrolling, and a re-render per event
+   * would make every page stutter.
+   */
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return; // Plain position:fixed is already correct without it.
+    let frame = 0;
+    const apply = () => {
+      frame = 0;
+      const el = bubbleRef.current;
+      if (!el) return;
+      const drift = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+      el.style.transform = drift ? `translateY(-${drift}px)` : "";
+    };
+    const onChange = () => {
+      if (!frame) frame = requestAnimationFrame(apply);
+    };
+    vv.addEventListener("resize", onChange);
+    vv.addEventListener("scroll", onChange);
+    window.addEventListener("scroll", onChange, { passive: true });
+    apply();
+    return () => {
+      vv.removeEventListener("resize", onChange);
+      vv.removeEventListener("scroll", onChange);
+      window.removeEventListener("scroll", onChange);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, []);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -97,8 +139,9 @@ export function BottomNav() {
   return (
     <>
       <nav
-        style={SAFE_BOTTOM}
-        className="glass-bar fixed inset-x-0 bottom-0 z-[60]"
+        ref={bubbleRef}
+        style={BUBBLE_OFFSET}
+        className="glass-bubble fixed left-1/2 z-[60] -ml-[min(22rem,calc(50vw-0.75rem))] w-[min(44rem,calc(100vw-1.5rem))] rounded-full px-1"
         aria-label="Main"
       >
         <div className={cn("flex items-stretch justify-around", BAR_H)}>
@@ -154,20 +197,21 @@ export function BottomNav() {
   );
 }
 
-/** The tab indicator: a short bar on the top edge of the active target — the
- *  edge facing the content, which is where it was when the bar was up there. */
+/** The tab indicator. A dot under the icon rather than a bar on the edge: the
+ *  bubble has no edge to sit against any more, and a bar butted up inside a
+ *  pill reads as a rendering fault rather than a marker. */
 function ActiveBar({ on }: { on: boolean }) {
   if (!on) return null;
   return (
     <span
       aria-hidden
-      className="absolute left-1/2 top-0 h-[3px] w-6 -translate-x-1/2 rounded-full bg-white"
+      className="absolute bottom-1.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-white"
     />
   );
 }
 
 /**
- * The hamburger's sheet: the Explore hub, raised up off the bar.
+ * The hamburger's sheet: the Explore hub, floating above the bubble.
  *
  * It renders the same config the /explore page does, so there is one list of
  * what this app can do rather than two that drift.
@@ -184,7 +228,7 @@ function ExploreSheet({ onClose }: { onClose: () => void }) {
       <div
         role="dialog"
         aria-label="Explore"
-        className="fixed inset-x-0 z-[58] max-h-[70dvh] overflow-y-auto rounded-t-3xl border-t border-white/10 bg-black/40 px-5 pb-6 pt-5 backdrop-blur-2xl"
+        className="fixed left-1/2 z-[58] -ml-[min(22rem,calc(50vw-0.75rem))] max-h-[70dvh] w-[min(44rem,calc(100vw-1.5rem))] overflow-y-auto rounded-3xl border border-white/10 bg-black/50 px-5 pb-5 pt-5 backdrop-blur-2xl"
         style={{ bottom: "var(--nav-h)" }}
       >
         <div className="grid grid-cols-2 gap-x-3 gap-y-3 sm:grid-cols-3">
