@@ -435,7 +435,6 @@ body {
    reads as blur. Keeping the filter on a ::before leaves the text crisp.
    Set --blur-behind to tune the radius. */
 .blur-behind {
-  position: relative;
   isolation: isolate; /* keeps the -1 layer behind this box, not the page */
 }
 .blur-behind::before {
@@ -449,10 +448,25 @@ body {
   pointer-events: none;
 }
 
+/* These three each need a positioned box for their ::before to fill, but only
+   as a default. Declared unlayered, `position: relative` beat Tailwind's own
+   `fixed` and `absolute` — unlayered CSS wins over anything inside a cascade
+   layer whatever its specificity — so a `glass-card fixed` element silently
+   stayed in the flow. Inside @layer components it is only the fallback, and
+   the utilities layer, which comes after, overrides it.
+
+   Do not move these back out of the layer. */
+@layer components {
+  .blur-behind,
+  .glass-card,
+  .glass-bubble {
+    position: relative;
+  }
+}
+
 /* Liquid glass bubble — translucent, blurred, floats on the black/neon background.
    Unlike the milky .bg-card (near-black text), glass is see-through so text is white. */
 .glass-card {
-  position: relative;
   isolation: isolate;
   --blur-behind: 20px;
   color: oklch(0.985 0 0);
@@ -481,7 +495,6 @@ body {
    so the specular rim has to read all the way round and the shadow has to lift
    it off whatever is passing underneath. */
 .glass-bubble {
-  position: relative;
   isolation: isolate;
   --blur-behind: 24px;
   color: oklch(0.985 0 0);
