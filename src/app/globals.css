@@ -14,9 +14,20 @@
      it and reads as blurred out. The nav used to reserve this space when it
      was at the top; nothing did once it moved to the bottom. */
   --safe-top: env(safe-area-inset-top);
-  --nav-gap: 0.75rem;
+  /* Deliberately free of env(safe-area-inset-bottom).
+     
+     That value is not a constant on iOS: Safari reports 0 while its bottom
+     toolbar is showing and around 34px once the toolbar collapses, which it
+     does the moment a page becomes tall enough to scroll. Anything positioned
+     from it therefore jumps the instant a page finishes loading its content —
+     which is the nav being shoved upward a beat after opening Garage.
+     
+     A constant gap instead. 1.5rem clears the home-indicator bar on the phones
+     that have one, and on everything else it is simply the gap the bubble
+     floats above the edge. The nav never moves again. */
+  --nav-gap: 1.5rem;
   --nav-bubble-h: 3.5rem;
-  --nav-h: calc(var(--nav-bubble-h) + var(--nav-gap) * 2 + env(safe-area-inset-bottom));
+  --nav-h: calc(var(--nav-bubble-h) + var(--nav-gap) * 2);
 }
 
 /* Leaderboard crown + trend colors used by leaderboard-rankings.tsx */

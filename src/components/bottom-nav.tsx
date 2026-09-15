@@ -39,9 +39,9 @@ import { cn } from "@/lib/utils";
 // and the sheet that opens off it cannot disagree about where the nav is.
 const BAR_H = "h-14";
 const SPACER_H = { height: "var(--nav-h)" } as const;
-const BUBBLE_OFFSET = {
-  bottom: "calc(var(--nav-gap) + env(safe-area-inset-bottom))",
-} as const;
+// One constant, no env(). See the note on --nav-gap: the bottom inset changes
+// under you on iOS, and a bubble positioned from it moves when it does.
+const BUBBLE_OFFSET = { bottom: "var(--nav-gap)" } as const;
 
 export function BottomNav() {
   const pathname = usePathname();
