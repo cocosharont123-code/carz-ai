@@ -21,6 +21,17 @@ import type { FeedPostView } from "@/components/feed/post-card";
  */
 const LOOP_LAPS = 2;
 
+/**
+ * How far either side of the current slide a clip stays mounted.
+ *
+ * One. The slide on screen, the one above it and the one below — enough that a
+ * swipe never lands on an unmounted slide, and no more. Everything beyond keeps
+ * its box, so the scroll height and the snap points are unchanged, but holds no
+ * <video> at all: a feed that mounts every clip is a feed holding a hundred
+ * media elements, which is where the jank comes from on a phone.
+ */
+const WINDOW = 1;
+
 /** Puts one post at the head of the list, leaving the rest in order. */
 function leadWith(posts: FeedPostView[], id: string): FeedPostView[] {
   const i = posts.findIndex((p) => p.id === id);
@@ -41,7 +52,13 @@ export default function FeedPage() {
 
 function FeedLoading() {
   return (
-    <div className="flex h-[calc(100dvh-var(--nav-h)-var(--safe-top))] items-center justify-center">
+    <div
+      className="flex h-[100dvh] items-center justify-center"
+      style={{
+        marginTop: "calc(-1 * var(--safe-top))",
+        marginBottom: "calc(-1 * var(--nav-h))",
+      }}
+    >
       <Spinner className="h-6 w-6" />
     </div>
   );
@@ -217,15 +234,22 @@ function FeedInner() {
 
   const composerHref = signedIn ? "/feed/new" : "/signin?callbackUrl=/feed/new";
 
-  // A fixed-height column, and one slide is exactly one screen. The viewport
-  // minus the fixed nav bar: measured from the same --nav-h the bar and its
-  // spacer use, so a slide can never be taller than the space it has. `dvh`
-  // rather than `vh` because mobile browser chrome collapses on scroll.
+  // One slide is exactly one screen — the whole screen, not the screen minus
+  // the furniture. The column this sits in pads for the status bar above and
+  // reserves the nav's height below; the negative margins give both back, so
+  // the video runs corner to corner and the nav bubble floats over it rather
+  // than beside it.
   //
-  // In the flow, not fixed. Taking it out of the flow made the whole page blank,
-  // and a feed that is 1px short is better than one that is not there.
+  // Still in the flow rather than fixed: taking it out of the flow once made
+  // the whole page blank, and this achieves the same geometry without it.
   return (
-    <div className="relative flex h-[calc(100dvh-var(--nav-h)-var(--safe-top))] flex-col overflow-hidden">
+    <div
+      className="relative flex h-[100dvh] flex-col overflow-hidden"
+      style={{
+        marginTop: "calc(-1 * var(--safe-top))",
+        marginBottom: "calc(-1 * var(--nav-h))",
+      }}
+    >
       {/* Over the clip rather than above it: a bar in the flow would cost the
           video its height, and these two are small enough to float. */}
       <div className="pointer-events-none absolute right-3 top-3 z-30 flex items-center gap-2">
@@ -292,17 +316,33 @@ function FeedInner() {
           {Array.from({ length: laps }, (_, lap) =>
             posts.map((p, i) => {
               const index = lap * posts.length + i;
+              const distance = Math.abs(index - activeIndex);
+              const mounted = distance <= WINDOW;
               return (
-                <div key={`${lap}:${p.id}`} data-index={index} className="h-full w-full">
-                  <Reel
-                    post={p}
-                    active={index === activeIndex}
-                    signedIn={signedIn}
-                    muted={muted}
-                    onToggleMuted={() => setMuted((m) => !m)}
-                    onLikeChange={(liked, count) => patchLike(p.id, liked, count)}
-                    onCommentCountChange={(count) => patchCommentCount(p.id, count)}
-                  />
+                // The box exists whether or not anything is in it, so the
+                // scroll height and every snap point stay exactly where they
+                // were and scrolling never has to be corrected.
+                <div
+                  key={`${lap}:${p.id}`}
+                  data-index={index}
+                  className="h-full w-full snap-start snap-always"
+                >
+                  {mounted ? (
+                    <Reel
+                      post={p}
+                      active={index === activeIndex}
+                      buffer={distance === 1}
+                      signedIn={signedIn}
+                      muted={muted}
+                      onToggleMuted={() => setMuted((m) => !m)}
+                      onLikeChange={(liked, count) => patchLike(p.id, liked, count)}
+                      onCommentCountChange={(count) => patchCommentCount(p.id, count)}
+                    />
+                  ) : (
+                    // Not reachable without passing through a mounted slide
+                    // first, so it is never seen — it only has to hold height.
+                    <div className="h-full w-full" aria-hidden />
+                  )}
                 </div>
               );
             }),
@@ -311,18 +351,17 @@ function FeedInner() {
       )}
 
       {/* Composer. Floats over the scroller rather than inside it, so it stays
-          put while slides move underneath. */}
+          put while slides move underneath. Scale on press only — a transform,
+          which the compositor can run without touching layout or paint. */}
       {configured && (
         <Link
           href={composerHref}
           aria-label="Post a clip"
           title="Post a clip"
-          /* Clear of the nav rather than over it: the same 1.5rem gap it
-             used to keep from the bottom of the screen, now from the bar. */
-          style={{ bottom: "calc(1.5rem + var(--nav-h))" }}
-          className="press glass-card fixed left-1/2 z-40 flex h-12 w-12 -translate-x-1/2 items-center justify-center rounded-full transition hover:scale-105"
+          style={{ bottom: "calc(1.25rem + var(--nav-h))" }}
+          className="glass-bubble fixed left-1/2 z-40 flex h-16 w-16 -translate-x-1/2 items-center justify-center rounded-full transition-transform duration-200 will-change-transform hover:scale-105 active:scale-90"
         >
-          <Plus className="h-6 w-6 text-white" strokeWidth={2.5} aria-hidden />
+          <Plus className="h-8 w-8 text-white" strokeWidth={2.5} aria-hidden />
         </Link>
       )}
     </div>

@@ -90,6 +90,7 @@ function Caption({ text }: { text: string }) {
 export function Reel({
   post,
   active,
+  buffer = false,
   signedIn,
   muted,
   onToggleMuted,
@@ -98,6 +99,8 @@ export function Reel({
 }: {
   post: FeedPostView;
   active: boolean;
+  /** Preload the file even while off-screen. */
+  buffer?: boolean;
   signedIn: boolean;
   muted: boolean;
   onToggleMuted: () => void;
@@ -187,15 +190,16 @@ export function Reel({
   return (
     // No background of its own: the app gradient shows through, so a portrait
     // clip letterboxes onto colour rather than onto a black slab.
-    <section className="relative h-full w-full snap-start snap-always overflow-hidden">
-      {/* Fills the slide edge to edge — `object-cover`, so no background shows
-          through around a portrait clip. Rounded because the phone's own screen
-          is, and a square video inside a round screen always looks pasted on.
+    <section className="relative h-full w-full overflow-hidden">
+      {/* Edge to edge, corner to corner — `object-cover`, so nothing shows
+          through around a portrait clip and nothing is letterboxed. The rounded
+          frame this used to carry is gone: the video is the screen now, and a
+          radius only works when there is something behind it to see.
           Blurred while the comment sheet is up, so the clip stays visible above
           it without competing with the text. */}
       <div
         className={cn(
-          "h-full w-full overflow-hidden rounded-[26px] transition-[filter] duration-300",
+          "h-full w-full overflow-hidden transition-[filter] duration-300",
           commentsOpen && "blur-[6px]",
         )}
       >
@@ -205,6 +209,7 @@ export function Reel({
             posterUrl={post.imageUrl}
             edit={post.edit}
             active={active}
+            buffer={buffer}
             muted={muted}
             onDoubleTap={doubleTapLike}
             fill
@@ -219,6 +224,20 @@ export function Reel({
           />
         )}
       </div>
+
+      {/* Just enough to lift the status bar and the nav off the video, and no
+          more — a fade rather than a scrim, so the clip itself is not dimmed.
+          Inside the slide rather than over the scroller, which puts it beneath
+          this reel's own controls: a fade painted above them would tint the
+          rail it exists to make legible. Click-through, always. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/55 via-black/15 to-transparent"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/65 via-black/20 to-transparent"
+      />
 
       {/* The double-tap heart. Purely decorative and click-through, so it can
           never swallow the next tap. */}

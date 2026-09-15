@@ -33,6 +33,7 @@ export function FeedVideo({
   posterUrl,
   edit,
   active = true,
+  buffer = false,
   muted = false,
   fill = false,
   onDoubleTap,
@@ -43,6 +44,9 @@ export function FeedVideo({
   edit: VideoEdit;
   /** This slide is the one on screen. Off-screen slides stay paused. */
   active?: boolean;
+  /** Fetch the whole file even though this is not the slide on screen, so the
+   *  next swipe starts on already-buffered data instead of a loading flash. */
+  buffer?: boolean;
   muted?: boolean;
   /** Fill the parent instead of holding a 4:3 box. */
   fill?: boolean;
@@ -184,8 +188,10 @@ export function FeedVideo({
         poster={posterUrl || undefined}
         playsInline
         loop={!endSec}
-        // Off-screen slides shouldn't pull their whole file down while you scroll.
-        preload={active ? "auto" : "metadata"}
+        // The slide on screen and its immediate neighbours fetch in full, so a
+        // swipe lands on buffered data. Anything further out takes metadata
+        // only — pulling every file would be the whole feed over the wire.
+        preload={active || buffer ? "auto" : "metadata"}
         className={cn("w-full", fill ? "h-full object-cover" : "aspect-[4/3] object-cover")}
         onLoadedMetadata={rewind}
         onTimeUpdate={onTimeUpdate}
