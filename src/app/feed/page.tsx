@@ -358,7 +358,15 @@ function FeedInner() {
           href={composerHref}
           aria-label="Post a clip"
           title="Post a clip"
-          style={{ bottom: "calc(1.25rem + var(--nav-h))" }}
+          /* Measured off the bubble's own top edge, not off --nav-h.
+             --nav-h is the space reserved for the nav, which is the bubble
+             plus a gap above it and another below — offsetting from it put
+             this a further 2.75rem up, floating in the middle of nowhere.
+             The bubble's top is its gap plus its height; half a rem past that
+             sits the button just clear of it. */
+          style={{
+            bottom: "calc(var(--nav-gap) + var(--nav-bubble-h) + 0.5rem)",
+          }}
           className="glass-bubble fixed left-1/2 z-40 flex h-16 w-16 -translate-x-1/2 items-center justify-center rounded-full transition-transform duration-200 will-change-transform hover:scale-105 active:scale-90"
         >
           <Plus className="h-8 w-8 text-white" strokeWidth={2.5} aria-hidden />
