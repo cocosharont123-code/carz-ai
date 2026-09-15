@@ -38,7 +38,14 @@ export function MemberGate({
     return (
       <>
         {tabs}
-        <main className="mx-auto w-full max-w-lg px-5 py-16 text-center">
+        {/* Holds the page's height while the membership check runs. A single
+            line of text here collapsed the page to nothing and then let it
+            spring back to full size a moment later, which is a reflow the
+            reader sees whether or not the nav moves with it. */}
+        <main
+          className="mx-auto flex w-full max-w-lg items-start justify-center px-5 py-16 text-center"
+          style={{ minHeight: "calc(100dvh - var(--nav-h) - var(--safe-top))" }}
+        >
           <div className="util-label opacity-50">Loading…</div>
         </main>
       </>

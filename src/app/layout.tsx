@@ -45,8 +45,21 @@ export default function RootLayout({
           }}
         />
         <GlobalShaderBg />
+        {/* min-height one pixel past the viewport, on purpose.
+            
+            Safari slides its bottom toolbar in the moment a page becomes tall
+            enough to scroll, and that shrinks the visual viewport — which a
+            position:fixed bottom element correctly follows by moving up. So a
+            page that loads short and then grows makes the nav jump, which is
+            what opening Garage did: the member check renders one line of text,
+            then the gallery arrives and the page is suddenly scrollable.
+            
+            Being scrollable from the first paint means the toolbar is already
+            where it is going to be, so nothing moves when the content lands.
+            One pixel is not reachable by a drag — body already sets
+            overscroll-behavior-y: none — it only settles the toolbar. */}
         <div
-          className="relative z-10 flex min-h-full flex-1 flex-col"
+          className="relative z-10 flex min-h-[calc(100dvh+1px)] flex-1 flex-col"
           style={{ paddingTop: "var(--safe-top)" }}
         >
           {/* Inside Providers on purpose: the nav reads the session, and being
