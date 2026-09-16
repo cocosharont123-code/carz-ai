@@ -26,6 +26,7 @@ function rarityLabel(s: number): string {
 }
 
 export default function LeaderboardPage() {
+  const [open, setOpen] = useState<RareCar | null>(null);
   const [loading, setLoading] = useState(true);
   const [configured, setConfigured] = useState(true);
   const [cars, setCars] = useState<RareCar[]>([]);
@@ -92,9 +93,17 @@ export default function LeaderboardPage() {
                   <span className={cn("display", top ? "text-3xl" : "text-2xl")}>
                     {i + 1}
                   </span>
-                  <div className={cn("overflow-hidden rounded-lg", top ? "h-14 w-16" : "h-12 w-14")}>
+                  <button
+                    type="button"
+                    onClick={() => setOpen(c)}
+                    aria-label={`See ${c.make} ${c.model} and its rarity`}
+                    className={cn(
+                      "press overflow-hidden rounded-lg transition-transform hover:scale-105",
+                      top ? "h-14 w-16" : "h-12 w-14",
+                    )}
+                  >
                     <CarPhoto src={c.image} alt={`${c.make} ${c.model}`} className="h-full w-full" color />
-                  </div>
+                  </button>
                   <div className="min-w-0">
                     <p className={cn("truncate font-semibold", top && "text-lg")}>
                       {c.make} {c.model}
@@ -135,6 +144,97 @@ export default function LeaderboardPage() {
           </div>
         )}
       </main>
+
+      {open && <CarViewer car={open} onClose={() => setOpen(null)} />}
+    </>
+  );
+}
+
+/**
+ * One car, big, with what made it rare underneath.
+ *
+ * The board can only afford a thumbnail per row, which is too small to see the
+ * car that earned the score beside it. Tapping one opens it at a size worth
+ * looking at, and puts the meter directly under the photo so the number and the
+ * thing it is about are read together.
+ */
+function CarViewer({ car, onClose }: { car: RareCar; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const raw = Math.max(0, Math.round(car.rarityScore));
+  const ultra = raw >= 100;
+  const fill = Math.min(100, raw);
+
+  return (
+    <>
+      <div onClick={onClose} aria-hidden className="fixed inset-0 z-[75] bg-black/70 backdrop-blur-sm" />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${car.make} ${car.model}`}
+        className="nav-sheet-in fixed inset-x-0 bottom-0 z-[80] mx-auto w-full max-w-sm px-4 pb-8"
+        style={{ bottom: "calc(var(--nav-h) + 0.5rem)" }}
+      >
+        <div className="glass-bubble rounded-[32px] p-4">
+          {/* The squircle. A radius this large against the photo's own size is
+              what reads as a continuous corner rather than a rounded box. */}
+          <div className="aspect-square w-full overflow-hidden rounded-[26%]">
+            <CarPhoto src={car.image} alt={`${car.make} ${car.model}`} className="h-full w-full" color />
+          </div>
+
+          <p className="mt-4 truncate text-center text-lg font-bold">
+            {car.make} {car.model}
+          </p>
+          {car.yearRange && (
+            <p className="mt-0.5 text-center text-[13px] opacity-60">{car.yearRange}</p>
+          )}
+
+          {/* The meter, directly under the photo. */}
+          <div
+            className={cn(
+              "mt-4 rounded-2xl p-3.5",
+              ultra
+                ? "bg-gradient-to-r from-neon-red/20 via-neon-green/12 to-neon-blue/20"
+                : "bg-white/[0.06]",
+            )}
+          >
+            <div className="flex items-baseline justify-between">
+              <span className="util-label opacity-70">Rarity</span>
+              <span className="text-sm font-bold">
+                {raw}/100 · <span className="text-neon-red">{rarityLabel(raw)}</span>
+              </span>
+            </div>
+            <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-black/40">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-[width] duration-500",
+                  ultra
+                    ? "bg-gradient-to-r from-neon-red via-neon-green to-neon-blue"
+                    : "bg-carz",
+                )}
+                style={{ width: `${fill}%` }}
+              />
+            </div>
+            {car.rarityReason && (
+              <p className="mt-2.5 text-[13px] leading-relaxed opacity-75">{car.rarityReason}</p>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="press mt-4 min-h-11 w-full rounded-full bg-white text-sm font-bold text-black"
+          >
+            Close
+          </button>
+        </div>
+      </div>
     </>
   );
 }
