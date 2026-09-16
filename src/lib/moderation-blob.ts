@@ -1,6 +1,10 @@
 import { put, list } from "@vercel/blob";
 import { createHash } from "crypto";
 import { blobToken, blobConfigured } from "./blob-token";
+// Re-exported so the route keeps importing moderation from one place, while the
+// client imports the reasons from a module that carries no server deps.
+export { REPORT_REASONS, isReportReason, type ReportReason } from "./report-reasons";
+import type { ReportReason } from "./report-reasons";
 
 /**
  * Blocks, saves and reports.
@@ -30,21 +34,6 @@ export type Report = {
   byHash: string;
   at: number;
 };
-
-export const REPORT_REASONS = [
-  "Not a car",
-  "Stolen or misused footage",
-  "Dangerous driving",
-  "Harassment or hate",
-  "Spam or a scam",
-  "Something else",
-] as const;
-
-export type ReportReason = (typeof REPORT_REASONS)[number];
-
-export function isReportReason(v: unknown): v is ReportReason {
-  return typeof v === "string" && (REPORT_REASONS as readonly string[]).includes(v);
-}
 
 type Viewer = {
   /** Usernames, lowercased and without the @. */

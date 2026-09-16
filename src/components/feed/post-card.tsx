@@ -27,6 +27,12 @@ export type FeedPostView = {
   commentCount: number;
   likedByYou: boolean;
   youAreAuthor: boolean;
+  /** Whether the viewer already follows whoever made this. */
+  youFollowAuthor: boolean;
+  /** Reposting has no store behind it yet, so these are always 0 and false
+   *  from the server. The rail keeps its own optimistic copy. */
+  repostCount: number;
+  repostedByYou: boolean;
 };
 
 const MINUTE = 60_000;

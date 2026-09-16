@@ -1,13 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
-import { Heart, MessageCircle, Share2, Check, Music, Volume2, VolumeX } from "lucide-react";
+import {
+  Heart,
+  MessageCircle,
+  Share2,
+  Repeat2,
+  Check,
+  Music,
+  Volume2,
+  VolumeX,
+  MoreHorizontal,
+  Plus,
+  Car,
+  Flag,
+  Bookmark,
+  UserX,
+} from "lucide-react";
 import { Avatar } from "@/components/default-avatar";
 import { FeedVideo } from "@/components/feed/feed-video";
 import { CommentSheet } from "@/components/feed/comment-sheet";
 import { timeAgo, type FeedPostView } from "@/components/feed/post-card";
 import { cn } from "@/lib/utils";
+import { REPORT_REASONS } from "@/lib/report-reasons";
 
 /**
  * One action on the right rail. White on the media rather than a chip: there is
@@ -33,9 +49,14 @@ function RailButton({
 }) {
   const inner = (
     <>
+      {/* No disc behind the icon. A drop shadow carries it over a bright
+          frame instead, which is what the black circle was there to do and
+          costs nothing over a dark one. The 44pt target is on the button, not
+          on anything you can see. */}
       <span
         className={cn(
-          "flex h-11 w-11 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-sm transition",
+          "flex h-11 w-11 items-center justify-center text-white transition-colors",
+          "drop-shadow-[0_1px_4px_rgba(0,0,0,0.85)]",
           active && "text-neon-red",
         )}
       >
@@ -122,7 +143,15 @@ export function Reel({
   onLikeChange: (liked: boolean, count: number) => void;
   onCommentCountChange?: (count: number) => void;
 }) {
+  const handle = post.authorName.replace(/^@/, "");
   const [copied, setCopied] = useState(false);
+  const [following, setFollowing] = useState(post.youFollowAuthor);
+  const [followBusy, setFollowBusy] = useState(false);
+  const [reposted, setReposted] = useState(post.repostedByYou);
+  const [menuOpen, setMenuOpen] = useState(false);
+  // Two taps on the avatar follow. The first is still the link to their
+  // channel, so this only has to notice the second and cancel the navigation.
+  const lastAvatarTap = useRef(0);
   const [likeBusy, setLikeBusy] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
   // Keyed so a second double-tap restarts the animation rather than being
@@ -169,6 +198,54 @@ export function Reel({
 
   function like() {
     void toggleLike(!post.likedByYou);
+  }
+
+  async function toggleFollow() {
+    if (followBusy || post.youAreAuthor) return;
+    if (!signedIn) {
+      say("Sign in to follow");
+      return;
+    }
+    const next = !following;
+    setFollowing(next); // optimistic
+    setFollowBusy(true);
+    try {
+      const res = await fetch(`/api/channel/${encodeURIComponent(handle)}/follow`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ follow: next }),
+      });
+      if (!res.ok) {
+        setFollowing(!next);
+        say("Couldn't save that");
+        return;
+      }
+      say(next ? `Following ${post.authorName}` : `Unfollowed ${post.authorName}`);
+    } catch {
+      setFollowing(!next);
+      say("Network error");
+    } finally {
+      setFollowBusy(false);
+    }
+  }
+
+  /** Two taps on the picture follows; one still opens the channel. */
+  function onAvatarTap(e: React.MouseEvent) {
+    const now = Date.now();
+    if (now - lastAvatarTap.current < 300) {
+      e.preventDefault();
+      lastAvatarTap.current = 0;
+      if (!following) void toggleFollow();
+      else say(`Already following ${post.authorName}`);
+      return;
+    }
+    lastAvatarTap.current = now;
+  }
+
+  async function toggleRepost() {
+    const next = !reposted;
+    setReposted(next); // optimistic and local: reposting has no store yet
+    say(next ? "Reposted to your channel" : "Repost removed");
   }
 
   /**
@@ -227,6 +304,10 @@ export function Reel({
             buffer={buffer}
             muted={muted}
             onDoubleTap={doubleTapLike}
+            onHold={() => {
+              onToggleMuted();
+              say(muted ? "Sound on" : "Sound off");
+            }}
             fill
           />
         ) : (
@@ -302,6 +383,40 @@ export function Reel({
         // order, so keyboard focus walks into buttons nobody can see.
         inert={commentsOpen}
       >
+        {/* The creator sits at the head of the rail rather than down in the
+            caption. Their picture is the tallest thing here and it belongs
+            next to the actions taken on their clip. Double-tapping it follows
+            them; the badge underneath is the same action for anyone who would
+            never guess that. */}
+        <div className="relative mb-2">
+          <Link
+            href={`/channel/${encodeURIComponent(handle)}`}
+            onClick={onAvatarTap}
+            aria-label={`${post.authorName} — double tap to follow`}
+            className="press block"
+          >
+            <span
+              className="block rounded-full ring-2 ring-white/80"
+              style={{ viewTransitionName: `avatar-${handle}` }}
+            >
+              <Avatar src={post.authorImage} size={44} />
+            </span>
+          </Link>
+
+          {!post.youAreAuthor && !following && (
+            <button
+              type="button"
+              onClick={() => void toggleFollow()}
+              disabled={followBusy}
+              aria-label={`Follow ${post.authorName}`}
+              className="press glass-bubble absolute -bottom-1.5 left-1/2 flex h-[18px] -translate-x-1/2 items-center gap-0.5 rounded-[35%] px-1.5 text-[8px] font-bold uppercase tracking-wide disabled:opacity-50"
+            >
+              <Plus className="h-2.5 w-2.5" strokeWidth={3} aria-hidden />
+              Follow
+            </button>
+          )}
+        </div>
+
         <RailButton
           label={post.likedByYou ? "Unlike" : "Like"}
           count={post.likeCount}
@@ -325,12 +440,26 @@ export function Reel({
           <MessageCircle className="h-5 w-5" strokeWidth={2} aria-hidden />
         </RailButton>
 
+        <RailButton
+          label={reposted ? "Undo repost" : "Repost"}
+          count={post.repostCount + (reposted && !post.repostedByYou ? 1 : 0)}
+          active={reposted}
+          onClick={signedIn ? () => void toggleRepost() : undefined}
+          href={signedIn ? undefined : "/signin?callbackUrl=/feed"}
+        >
+          <Repeat2 className="h-5 w-5" strokeWidth={2} aria-hidden />
+        </RailButton>
+
         <RailButton label="Share" onClick={share}>
           {copied ? (
             <Check className="h-5 w-5" strokeWidth={2.5} aria-hidden />
           ) : (
             <Share2 className="h-5 w-5" strokeWidth={2} aria-hidden />
           )}
+        </RailButton>
+
+        <RailButton label="More" onClick={() => setMenuOpen(true)}>
+          <MoreHorizontal className="h-5 w-5" strokeWidth={2} aria-hidden />
         </RailButton>
 
         {isVideo && (
@@ -375,10 +504,28 @@ export function Reel({
           <span className="shrink-0 text-[11px] text-white/60">{timeAgo(post.createdAt)}</span>
         </Link>
 
-        {post.caption && (
-          <p className="mt-2 line-clamp-3 whitespace-pre-wrap text-[13px] leading-relaxed text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
-            <Caption text={post.caption} />
-          </p>
+        {(post.carName || post.caption) && (
+          <div className="glass-card mt-2 rounded-2xl px-3.5 py-2.5">
+            {/* The car, first and on its own line. It is the one thing every
+                clip here is actually about, and it is now required at post
+                time — older clips simply have none. */}
+            {post.carName && (
+              <p className="flex items-center gap-1.5 text-[13px] font-bold leading-tight">
+                <Car className="h-3.5 w-3.5 shrink-0 text-carz" strokeWidth={2.25} aria-hidden />
+                <span className="truncate">{post.carName}</span>
+              </p>
+            )}
+            {post.caption && (
+              <p
+                className={cn(
+                  "line-clamp-3 whitespace-pre-wrap text-[13px] leading-relaxed",
+                  post.carName && "mt-1.5",
+                )}
+              >
+                <Caption text={post.caption} />
+              </p>
+            )}
+          </div>
         )}
 
         {isVideo && post.edit.musicTitle && (
@@ -388,6 +535,15 @@ export function Reel({
           </p>
         )}
       </div>
+
+      {menuOpen && (
+        <PostMenu
+          post={post}
+          signedIn={signedIn}
+          onClose={() => setMenuOpen(false)}
+          onSay={say}
+        />
+      )}
 
       {commentsOpen && (
         <CommentSheet
@@ -399,5 +555,198 @@ export function Reel({
         />
       )}
     </section>
+  );
+}
+
+/**
+ * Block, report, save.
+ *
+ * A sheet rather than a popover: these are decisions, two of them about another
+ * person, and they deserve the full attention a sheet takes. Blocking and
+ * reporting both ask once more before they fire — a mis-tap on a rail button
+ * should not silently file a complaint about somebody.
+ */
+function PostMenu({
+  post,
+  signedIn,
+  onClose,
+  onSay,
+}: {
+  post: FeedPostView;
+  signedIn: boolean;
+  onClose: () => void;
+  onSay: (message: string) => void;
+}) {
+  const [saved, setSaved] = useState(false);
+  const [confirming, setConfirming] = useState<"block" | "report" | null>(null);
+  const [busy, setBusy] = useState(false);
+  const handle = post.authorName.replace(/^@/, "");
+
+  async function post_(body: Record<string, unknown>) {
+    setBusy(true);
+    try {
+      const res = await fetch("/api/feed/moderation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const d = await res.json().catch(() => ({}));
+      return { ok: res.ok && d?.ok !== false, error: d?.error as string | undefined };
+    } catch {
+      return { ok: false, error: "Network error." };
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!signedIn) {
+    return (
+      <Sheet onClose={onClose} title="Sign in first">
+        <p className="px-1 pb-2 text-[13px] opacity-70">
+          Saving, blocking and reporting are all tied to your account.
+        </p>
+        <Link
+          href="/signin?callbackUrl=/feed"
+          className="press mt-2 flex min-h-11 items-center justify-center rounded-2xl bg-white text-sm font-bold text-black"
+        >
+          Sign in
+        </Link>
+      </Sheet>
+    );
+  }
+
+  if (confirming === "block") {
+    return (
+      <Sheet onClose={onClose} title={`Block ${post.authorName}?`}>
+        <p className="px-1 pb-3 text-[13px] opacity-70">
+          Their clips stop appearing in your feed. They are not told.
+        </p>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={async () => {
+            const r = await post_({ action: "block", username: handle, on: true });
+            onSay(r.ok ? `Blocked ${post.authorName}` : r.error || "Couldn't block");
+            onClose();
+          }}
+          className="press flex min-h-11 w-full items-center justify-center rounded-2xl bg-neon-red text-sm font-bold text-white disabled:opacity-50"
+        >
+          Block
+        </button>
+      </Sheet>
+    );
+  }
+
+  if (confirming === "report") {
+    return (
+      <Sheet onClose={onClose} title="Report this clip">
+        <div className="space-y-2">
+          {REPORT_REASONS.map((reason) => (
+            <button
+              key={reason}
+              type="button"
+              disabled={busy}
+              onClick={async () => {
+                const r = await post_({
+                  action: "report",
+                  postId: post.id,
+                  authorName: post.authorName,
+                  reason,
+                });
+                onSay(r.ok ? "Reported — thank you" : r.error || "Couldn't report");
+                onClose();
+              }}
+              className="press glass-card flex min-h-11 w-full items-center rounded-2xl px-4 text-left text-[13px] font-semibold disabled:opacity-50"
+            >
+              {reason}
+            </button>
+          ))}
+        </div>
+      </Sheet>
+    );
+  }
+
+  return (
+    <Sheet onClose={onClose} title={post.carName || post.authorName}>
+      <div className="space-y-2">
+        <MenuRow
+          Icon={Bookmark}
+          label={saved ? "Saved" : "Save"}
+          onClick={async () => {
+            const next = !saved;
+            setSaved(next);
+            const r = await post_({ action: "save", postId: post.id, on: next });
+            if (!r.ok) {
+              setSaved(!next);
+              onSay(r.error || "Couldn't save");
+            }
+          }}
+        />
+        {!post.youAreAuthor && (
+          <>
+            <MenuRow Icon={Flag} label="Report clip" onClick={() => setConfirming("report")} />
+            <MenuRow
+              Icon={UserX}
+              label={`Block ${post.authorName}`}
+              destructive
+              onClick={() => setConfirming("block")}
+            />
+          </>
+        )}
+      </div>
+    </Sheet>
+  );
+}
+
+function MenuRow({
+  Icon,
+  label,
+  destructive,
+  onClick,
+}: {
+  Icon: typeof Flag;
+  label: string;
+  destructive?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "press glass-card flex min-h-11 w-full items-center gap-3 rounded-2xl px-4 text-left text-[13px] font-semibold",
+        destructive && "text-neon-red",
+      )}
+    >
+      <Icon className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
+      <span className="truncate">{label}</span>
+    </button>
+  );
+}
+
+/** The sheet these all share. */
+function Sheet({
+  title,
+  onClose,
+  children,
+}: {
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <>
+      <div onClick={onClose} aria-hidden className="fixed inset-0 z-[75] bg-black/50" />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        className="nav-sheet-in fixed inset-x-0 bottom-0 z-[80] rounded-t-3xl border-t border-white/12 bg-black/80 px-4 pb-8 pt-4 backdrop-blur-2xl"
+      >
+        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-white/25" aria-hidden />
+        <p className="mb-3 truncate px-1 text-[13px] font-bold">{title}</p>
+        {children}
+      </div>
+    </>
   );
 }

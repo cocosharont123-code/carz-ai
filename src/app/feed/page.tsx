@@ -4,7 +4,8 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
-import { Plus, Camera, Search, UserRound } from "lucide-react";
+import { Plus, Camera, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Spinner } from "@/components/ui/editorial";
 import { Reel } from "@/components/feed/reel";
 import type { FeedPostView } from "@/components/feed/post-card";
@@ -31,6 +32,16 @@ const LOOP_LAPS = 2;
  * media elements, which is where the jank comes from on a phone.
  */
 const WINDOW = 1;
+
+/**
+ * How far out clips are fetched in full.
+ *
+ * Wider than the mount window on purpose: a clip three slides away holds no
+ * <video> yet, but its file can already be in the browser's cache, so the
+ * element that mounts a moment later has nothing left to wait for. Buffering is
+ * bytes; mounting is decoders. Only the second is scarce.
+ */
+const BUFFER = 3;
 
 /** Puts one post at the head of the list, leaving the rest in order. */
 function leadWith(posts: FeedPostView[], id: string): FeedPostView[] {
@@ -77,6 +88,10 @@ function FeedInner() {
   // back to muting that one element and playing anyway — a silent clip beats a
   // stalled one, and the viewer's unmute works from their first tap onward.
   const [muted, setMuted] = useState(false);
+  // Which feed. "For you" is everything; "Following" is only the accounts this
+  // viewer follows, which the API answers — an empty Following stays empty
+  // rather than quietly falling back to everything.
+  const [tab, setTab] = useState<"you" | "following">("you");
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [configured, setConfigured] = useState(true);
@@ -104,8 +119,9 @@ function FeedInner() {
 
   // Pure fetch — state is only written in the callbacks below, never inside an
   // effect body.
-  const load = useCallback(async (offset: number) => {
-    const res = await fetch(`/api/feed/posts?offset=${offset}`, { cache: "no-store" });
+  const load = useCallback(async (offset: number, which: "you" | "following") => {
+    const qs = `offset=${offset}${which === "following" ? "&following=1" : ""}`;
+    const res = await fetch(`/api/feed/posts?${qs}`, { cache: "no-store" });
     const d = await res.json();
     if (d.configured === false) {
       return { configured: false, posts: [] as FeedPostView[], nextOffset: null };
@@ -120,10 +136,12 @@ function FeedInner() {
 
   useEffect(() => {
     let cancelled = false;
-    load(0)
+    load(0, tab)
       .then((page) => {
         if (cancelled) return;
         setConfigured(page.configured);
+        setActiveIndex(0);
+        scrollerRef.current?.scrollTo({ top: 0 });
         // Opened from a channel thumbnail: that video leads, and the rest of
         // the feed follows it. Reordering beats scrolling to an index — the
         // clip may not be on the first page at all, and a scroller that jumps
@@ -139,13 +157,13 @@ function FeedInner() {
   // startId is a dependency, not an omission: arriving from a different
   // thumbnail has to reorder the feed around the new video rather than keep
   // showing the one before it.
-  }, [load, authStatus, startId]);
+  }, [load, authStatus, startId, tab]);
 
   const loadMore = useCallback(async () => {
     if (nextOffset === null || loadingMore) return;
     setLoadingMore(true);
     try {
-      const page = await load(nextOffset);
+      const page = await load(nextOffset, tab);
       setPosts((prev) => {
         // A post prepended between pages would shift the window and repeat one.
         const seen = new Set(prev.map((p) => p.id));
@@ -157,7 +175,7 @@ function FeedInner() {
     } finally {
       setLoadingMore(false);
     }
-  }, [load, loadingMore, nextOffset]);
+  }, [load, loadingMore, nextOffset, tab]);
 
   // Read by the observer below, which outlives the render that created it.
   // Refs rather than deps so a new page doesn't tear down and rebuild the
@@ -250,23 +268,62 @@ function FeedInner() {
         marginBottom: "calc(-1 * var(--nav-h))",
       }}
     >
-      {/* Over the clip rather than above it: a bar in the flow would cost the
-          video its height, and these two are small enough to float. */}
+      {/* The two feeds, centred at the top the way every reel app puts them.
+          Over the clip rather than above it: a bar in the flow would cost the
+          video its height. */}
+      <div className="pointer-events-none absolute inset-x-0 top-3 z-30 flex items-center justify-center gap-1">
+        {(
+          [
+            ["you", "For you"],
+            ["following", "Following"],
+          ] as const
+        ).map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setTab(key)}
+            aria-pressed={tab === key}
+            className={cn(
+              "press pointer-events-auto min-h-11 rounded-full px-4 text-sm font-bold transition-opacity",
+              "drop-shadow-[0_1px_4px_rgba(0,0,0,0.85)]",
+              tab === key ? "text-white" : "text-white/55 hover:text-white/80",
+            )}
+          >
+            {label}
+            {/* An underline rather than a filled chip: a pill up here competes
+                with the clip, and the line says which is live just as well. */}
+            <span
+              aria-hidden
+              className={cn(
+                "mx-auto mt-0.5 block h-0.5 w-6 rounded-full bg-white transition-opacity",
+                tab === key ? "opacity-100" : "opacity-0",
+              )}
+            />
+          </button>
+        ))}
+      </div>
+
+      {/* Post and search, in the corner. The composer used to be a large button
+          in the middle of the clip, which is the one place on this screen
+          nothing should sit. */}
       <div className="pointer-events-none absolute right-3 top-3 z-30 flex items-center gap-2">
         <Link
           href="/search"
           aria-label="Search accounts"
-          className="press glass-card pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full"
+          className="press glass-bubble pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full"
         >
           <Search className="h-[18px] w-[18px] text-white" strokeWidth={2} aria-hidden />
         </Link>
-        <Link
-          href="/profile"
-          aria-label="Your account"
-          className="press glass-card pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full"
-        >
-          <UserRound className="h-[18px] w-[18px] text-white" strokeWidth={2} aria-hidden />
-        </Link>
+        {configured && (
+          <Link
+            href={composerHref}
+            aria-label="Post a clip"
+            className="press glass-bubble pointer-events-auto flex min-h-10 items-center gap-1.5 rounded-full px-3 text-[13px] font-bold"
+          >
+            <Plus className="h-4 w-4" strokeWidth={2.75} aria-hidden />
+            Post
+          </Link>
+        )}
       </div>
 
       {!configured ? (
@@ -331,7 +388,7 @@ function FeedInner() {
                     <Reel
                       post={p}
                       active={index === activeIndex}
-                      buffer={distance === 1}
+                      buffer={distance <= BUFFER}
                       signedIn={signedIn}
                       muted={muted}
                       onToggleMuted={() => setMuted((m) => !m)}
@@ -350,28 +407,6 @@ function FeedInner() {
         </div>
       )}
 
-      {/* Composer. Floats over the scroller rather than inside it, so it stays
-          put while slides move underneath. Scale on press only — a transform,
-          which the compositor can run without touching layout or paint. */}
-      {configured && (
-        <Link
-          href={composerHref}
-          aria-label="Post a clip"
-          title="Post a clip"
-          /* Measured off the bubble's own top edge, not off --nav-h.
-             --nav-h is the space reserved for the nav, which is the bubble
-             plus a gap above it and another below — offsetting from it put
-             this a further 2.75rem up, floating in the middle of nowhere.
-             The bubble's top is its gap plus its height; half a rem past that
-             sits the button just clear of it. */
-          style={{
-            bottom: "calc(var(--nav-gap) + var(--nav-bubble-h) + 0.5rem)",
-          }}
-          className="glass-bubble fixed left-1/2 z-40 flex h-16 w-16 -translate-x-1/2 items-center justify-center rounded-full transition-transform duration-200 will-change-transform hover:scale-105 active:scale-90"
-        >
-          <Plus className="h-8 w-8 text-white" strokeWidth={2.5} aria-hidden />
-        </Link>
-      )}
     </div>
   );
 }

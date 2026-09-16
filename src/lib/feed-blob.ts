@@ -113,6 +113,9 @@ export type PublicPost = {
   commentCount: number;
   likedByYou: boolean;
   youAreAuthor: boolean;
+  youFollowAuthor: boolean;
+  repostCount: number;
+  repostedByYou: boolean;
   comments?: PublicComment[]; // detail view only
 };
 
@@ -254,6 +257,10 @@ export function toPublicPost(
     commentCount: p.comments.length,
     likedByYou: !!viewerHash && p.likes.some((l) => l.userHash === viewerHash),
     youAreAuthor: !!viewerHash && p.authorHash === viewerHash,
+    // Filled in by the route, which is where the follow graph is reachable.
+    youFollowAuthor: false,
+    repostCount: 0,
+    repostedByYou: false,
   };
   if (opts.withComments) {
     out.comments = threadComments(p.comments).map((c) => toPublicComment(c, viewerHash));

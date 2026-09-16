@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 
 /** Window for a second tap to count as a double. Long enough for a thumb, short
  *  enough that a plain pause doesn't feel laggy. */
+const HOLD_MS = 350;
 const DOUBLE_TAP_MS = 260;
 
 export type VideoEdit = {
@@ -34,6 +35,7 @@ export function FeedVideo({
   edit,
   active = true,
   buffer = false,
+  onHold,
   muted = false,
   fill = false,
   onDoubleTap,
@@ -52,6 +54,8 @@ export function FeedVideo({
   fill?: boolean;
   /** Two quick taps on the clip. When set, a single tap is delayed to tell them apart. */
   onDoubleTap?: () => void;
+  /** Press and hold. Used to silence the clip without reaching for the rail. */
+  onHold?: () => void;
   className?: string;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -144,14 +148,57 @@ export function FeedVideo({
    * acts immediately.
    */
   const tapTimer = useRef<number | null>(null);
+  const holdTimer = useRef<number | null>(null);
+  /** Set by a completed hold so the click that follows is swallowed. */
+  const held = useRef(false);
 
   useEffect(() => {
     return () => {
       if (tapTimer.current !== null) clearTimeout(tapTimer.current);
+      if (holdTimer.current !== null) clearTimeout(holdTimer.current);
     };
   }, []);
 
+  /**
+   * Press and hold mutes, and releasing leaves it muted — it is a toggle, not
+   * a walkie-talkie. Holding is the one gesture here with nothing else bound to
+   * it, and reaching a rail button to silence a clip is a long way to go for
+   * something you usually want in a hurry.
+   *
+   * The hold cancels whatever tap was in flight, so a long press never also
+   * pauses or likes on the way out.
+   */
+  function onPointerDown() {
+    if (!onHold) return;
+    clearHold();
+    holdTimer.current = window.setTimeout(() => {
+      holdTimer.current = null;
+      held.current = true;
+      if (tapTimer.current !== null) {
+        clearTimeout(tapTimer.current);
+        tapTimer.current = null;
+      }
+      onHold();
+    }, HOLD_MS);
+  }
+
+  function clearHold() {
+    if (holdTimer.current !== null) {
+      clearTimeout(holdTimer.current);
+      holdTimer.current = null;
+    }
+  }
+
+  function onPointerUp() {
+    clearHold();
+  }
+
   function handleTap() {
+    // The click that ends a long press is not a tap.
+    if (held.current) {
+      held.current = false;
+      return;
+    }
     if (!onDoubleTap) {
       setPaused((p) => !p);
       return;
@@ -189,21 +236,23 @@ export function FeedVideo({
       )}
     >
       {/* What fills the frame around a clip that is not the shape of the
-          screen: the poster, blown up past the edges and blurred out. object-
-          cover on the clip itself would fill the frame too, but by cropping —
-          a tall vertical video loses its top and bottom, which is the whole
-          subject of a car shot. This keeps the clip entire and gives the
-          leftover space something to be other than black bars.
-
-          An image rather than a second copy of the video: a blurred backdrop
-          nobody looks at is not worth a second decode on a phone. */}
-      {fill && posterUrl && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={posterUrl}
-          alt=""
+          screen. object-cover on the clip itself would fill it too, but by
+          cropping — a tall vertical video loses its top and bottom, which on a
+          car shot is the subject.
+          
+          Not black bars and not the poster either: the app's own neon
+          background, blurred hard, so the leftover space reads as the app
+          rather than as a hole. transparent rather than a colour, so the
+          shader running behind the whole page shows through it. */}
+      {fill && (
+        <div
           aria-hidden
-          className="absolute inset-0 h-full w-full scale-110 object-cover blur-2xl"
+          className="pointer-events-none absolute inset-0 backdrop-blur-3xl backdrop-saturate-150"
+          style={{
+            background:
+              "radial-gradient(120% 80% at 50% 0%, rgba(0,229,255,0.18), transparent 60%)," +
+              "radial-gradient(120% 80% at 50% 100%, rgba(255,49,49,0.14), transparent 60%)",
+          }}
         />
       )}
       <video
@@ -228,6 +277,14 @@ export function FeedVideo({
         onLoadedMetadata={rewind}
         onTimeUpdate={onTimeUpdate}
         onClick={handleTap}
+        onPointerDown={onPointerDown}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        onPointerLeave={onPointerUp}
+        // A long press on a video otherwise raises the browser's own save/share
+        // menu, which would land on top of the gesture rather than after it.
+        onContextMenu={(e) => e.preventDefault()}
+        style={{ WebkitTouchCallout: "none" }}
       />
 
       {hasMusic && <audio ref={audioRef} src={edit.musicUrl} loop preload="metadata" />}

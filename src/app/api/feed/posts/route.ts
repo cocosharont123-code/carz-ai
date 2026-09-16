@@ -63,7 +63,18 @@ export async function GET(req: Request) {
       authors,
       blocked,
     });
-    return NextResponse.json({ configured: true, following, ...page });
+
+    // Resolved once for the page rather than per post: the follow graph is one
+    // document, and reading it per clip would read it a dozen times.
+    const mine = email ? new Set((await followingOf(email)).map((u) => u.toLowerCase())) : null;
+    const posts = mine
+      ? page.posts.map((p) => ({
+          ...p,
+          youFollowAuthor: mine.has(p.authorName.replace(/^@/, "").toLowerCase()),
+        }))
+      : page.posts;
+
+    return NextResponse.json({ configured: true, following, ...page, posts });
   } catch (e) {
     return storageFailure(e);
   }
