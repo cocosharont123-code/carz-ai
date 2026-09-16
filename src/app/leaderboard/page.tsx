@@ -159,6 +159,10 @@ export default function LeaderboardPage() {
  * thing it is about are read together.
  */
 function CarViewer({ car, onClose }: { car: RareCar; onClose: () => void }) {
+  // The photo's own pixel width, read off the element once it decodes, so it
+  // is never displayed larger than it actually is.
+  const [natural, setNatural] = useState<number | null>(null);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -166,6 +170,17 @@ function CarViewer({ car, onClose }: { car: RareCar; onClose: () => void }) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  // Nothing behind this scrolls while it is open. Without it the board is
+  // still scrollable under the backdrop, which on a phone reads as the viewer
+  // itself sliding around.
+  useEffect(() => {
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, []);
 
   const raw = Math.max(0, Math.round(car.rarityScore));
   const ultra = raw >= 100;
@@ -182,13 +197,35 @@ function CarViewer({ car, onClose }: { car: RareCar; onClose: () => void }) {
       >
         {/* Centred in the viewport, not anchored to the bottom of a page that
             scrolls. It opens in front of you wherever you were on the board. */}
-        <div className="nav-sheet-in glass-bubble w-full max-w-[19rem] rounded-[32px] p-4">
-          {/* The squircle. Capped at 15rem rather than filling the card: the
-              stored photo is a small thumbnail, and stretching it across a
-              phone is what made it look pixelated. Sized close to what is
-              actually there, it reads as sharp. */}
-          <div className="mx-auto aspect-square w-full max-w-[15rem] overflow-hidden rounded-[26%]">
-            <CarPhoto src={car.image} alt={`${car.make} ${car.model}`} className="h-full w-full" color />
+        <div className="nav-sheet-in glass-bubble max-h-[85dvh] w-full max-w-[22rem] overflow-y-auto rounded-[32px] p-4">
+          {/* The whole car, never enlarged past its own resolution.
+              
+              The image sizes the box rather than the other way round: given
+              max-width and height:auto it lays out at its own aspect ratio the
+              moment it decodes, so there is no square placeholder snapping to
+              the real shape a frame later. The cap is the file's own pixel
+              width — the board stores a thumbnail, and blowing one up is
+              exactly what made it look pixelated. Small photos render small and
+              sharp rather than large and soft. */}
+          <div className="overflow-hidden rounded-[26%] bg-black/30">
+            {car.image ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={car.image}
+                alt={`${car.make} ${car.model}`}
+                onLoad={(e) => setNatural(e.currentTarget.naturalWidth)}
+                style={natural ? { maxWidth: `${natural}px` } : undefined}
+                className="mx-auto block h-auto w-full"
+                draggable={false}
+              />
+            ) : (
+              <CarPhoto
+                src={undefined}
+                alt={`${car.make} ${car.model}`}
+                className="aspect-square w-full"
+                color
+              />
+            )}
           </div>
 
           <p className="mt-4 truncate text-center text-lg font-bold">
