@@ -180,14 +180,60 @@ function FeedInner() {
   // Read by the observer below, which outlives the render that created it.
   // Refs rather than deps so a new page doesn't tear down and rebuild the
   // observer on every append.
+  /**
+   * Plays, batched.
+   *
+   * Counted once per clip per visit, held here and flushed on a timer — a
+   * request per slide would be a request every couple of seconds for as long as
+   * anyone is scrolling. Sent with keepalive as well, so the last few survive
+   * the page being closed, which is exactly when they would otherwise be lost.
+   */
+  const seenRef = useRef<Set<string>>(new Set());
+  const pendingRef = useRef<Record<string, number>>({});
+
+  const flushViews = useCallback((keepalive = false) => {
+    const views = pendingRef.current;
+    if (Object.keys(views).length === 0) return;
+    pendingRef.current = {};
+    void fetch("/api/feed/views", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ views }),
+      keepalive,
+    }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const t = window.setInterval(() => flushViews(), 15_000);
+    const onHide = () => {
+      if (document.visibilityState === "hidden") flushViews(true);
+    };
+    document.addEventListener("visibilitychange", onHide);
+    return () => {
+      window.clearInterval(t);
+      document.removeEventListener("visibilitychange", onHide);
+      flushViews(true);
+    };
+  }, [flushViews]);
+
+  const countView = useCallback((postId: string) => {
+    if (seenRef.current.has(postId)) return;
+    seenRef.current.add(postId);
+    pendingRef.current[postId] = (pendingRef.current[postId] ?? 0) + 1;
+  }, []);
+
   const loadMoreRef = useRef(loadMore);
   const countRef = useRef(0);
+  const postsRef = useRef<FeedPostView[]>([]);
+  const countViewRef = useRef(countView);
   const lapRef = useRef(0);
   useEffect(() => {
     loadMoreRef.current = loadMore;
     countRef.current = posts.length * laps;
+    postsRef.current = posts;
+    countViewRef.current = countView;
     lapRef.current = lapSize;
-  }, [loadMore, posts.length, laps, lapSize]);
+  }, [loadMore, posts, laps, lapSize, countView]);
 
   /**
    * Which slide is on screen. An observer beats a scroll handler here: snap
@@ -208,6 +254,8 @@ function FeedInner() {
           const i = Number((entry.target as HTMLElement).dataset.index);
           if (!Number.isFinite(i)) continue;
           setActiveIndex(i);
+          const seen = postsRef.current[i % (postsRef.current.length || 1)];
+          if (seen) countViewRef.current(seen.id);
           // Fetch while a few slides are still in hand, so a scroll never
           // lands on the end. loadMore() no-ops once there's nothing left.
           if (i >= countRef.current - 3) void loadMoreRef.current();

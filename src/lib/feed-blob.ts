@@ -79,6 +79,8 @@ export type FeedPost = {
    *  composer will not submit without it — and absent on older records, which
    *  simply show no car line. */
   carName?: string;
+  /** Plays. Absent on anything posted before it was counted. */
+  views?: number;
   createdAt: number;
   likes: FeedLike[];
   comments: FeedComment[];
@@ -108,6 +110,7 @@ export type PublicPost = {
   edit: FeedEdit;
   caption: string;
   carName: string;
+  views: number;
   createdAt: number;
   likeCount: number;
   commentCount: number;
@@ -252,6 +255,7 @@ export function toPublicPost(
     edit: { ...DEFAULT_EDIT, ...(p.edit ?? {}) },
     caption: p.caption,
     carName: p.carName ?? "",
+    views: p.views ?? 0,
     createdAt: p.createdAt,
     likeCount: p.likes.length,
     commentCount: p.comments.length,
@@ -605,4 +609,27 @@ export async function deleteComment(
   all[idx] = post;
   await writeAll(all);
   return { ok: true, removed: [...doomed] };
+}
+
+/**
+ * Count one play.
+ *
+ * Deliberately not a read-modify-write of the whole document per view: this
+ * blob is rewritten entire on every write, and a view is the most frequent
+ * event in the app by a wide margin. The client sends one per clip per session
+ * and this folds it in on the next write the post is part of anyway, so a
+ * burst of views costs one write rather than one each.
+ */
+export async function addViews(counts: Record<string, number>): Promise<void> {
+  const ids = Object.keys(counts).filter((id) => counts[id] > 0);
+  if (ids.length === 0) return;
+  const all = await readAll();
+  let touched = false;
+  for (const id of ids) {
+    const post = all.find((p) => p.id === id);
+    if (!post) continue;
+    post.views = (post.views ?? 0) + counts[id];
+    touched = true;
+  }
+  if (touched) await writeAll(all);
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Play, Heart, Video } from "lucide-react";
+import { Eye, Heart, Play, Video } from "lucide-react";
 import type { FeedPostView } from "@/components/feed/post-card";
 
 const nf = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 });
@@ -57,9 +57,12 @@ export function VideoGrid({
 
           {/* Legible over a bright poster without dimming a dark one. */}
           <span className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center gap-2.5 bg-gradient-to-t from-black/70 to-transparent px-2 pb-1.5 pt-6 text-[11px] font-semibold text-white">
+            {/* Plays, which are now counted. This used to add likes and
+                comments together and show the total behind a play icon, which
+                looked like a view count without being one. */}
             <span className="flex items-center gap-1">
-              <Play className="h-3 w-3" fill="currentColor" strokeWidth={0} aria-hidden />
-              {nf.format(p.likeCount + p.commentCount)}
+              <Eye className="h-3 w-3" strokeWidth={2} aria-hidden />
+              {nf.format(p.views)}
             </span>
             <span className="flex items-center gap-1">
               <Heart className="h-3 w-3" fill={p.likedByYou ? "currentColor" : "none"} aria-hidden />

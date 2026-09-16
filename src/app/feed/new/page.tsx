@@ -45,23 +45,89 @@ function probeDuration(objectUrl: string): Promise<number> {
   });
 }
 
-/** Grab a still to use as the post's poster frame. */
-function captureFrame(video: HTMLVideoElement, atSec: number): Promise<string> {
+/**
+ * Grab a still to use as the post's poster frame.
+ *
+ * The naive version — seek, then drawImage — paints black more often than not.
+ * A <video> will report a currentTime it has not decoded a frame for yet, and
+ * a canvas drawn from it then is simply empty. That is where the black tiles on
+ * a channel come from: a black JPEG was captured and uploaded, so the grid was
+ * faithfully showing the poster it was given.
+ *
+ * So: wait for real frame data, wait for the seek to land, wait one more frame
+ * for the decoder, then draw — and if what comes back is still black, try a
+ * little further into the clip, since plenty of videos open on a fade.
+ */
+function waitFor(video: HTMLVideoElement, event: string, timeoutMs = 3000): Promise<void> {
   return new Promise((resolve) => {
-    const draw = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = video.videoWidth || 1280;
-      canvas.height = video.videoHeight || 960;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return resolve("");
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      resolve(canvas.toDataURL("image/jpeg", 0.82));
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      video.removeEventListener(event, finish);
+      resolve();
     };
-    // Seeking is async; drawing before it lands captures the wrong frame.
-    if (Math.abs(video.currentTime - atSec) < 0.05) return draw();
-    video.onseeked = draw;
-    video.currentTime = atSec;
+    video.addEventListener(event, finish, { once: true });
+    // Never hang on a video that will not fire: a black poster beats a
+    // composer that never returns.
+    window.setTimeout(finish, timeoutMs);
   });
+}
+
+/** Roughly, is this canvas all black? Sampled, not scanned. */
+function looksBlank(canvas: HTMLCanvasElement): boolean {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return true;
+  const w = canvas.width;
+  const h = canvas.height;
+  if (!w || !h) return true;
+  let lit = 0;
+  const step = 16;
+  const data = ctx.getImageData(0, 0, w, h).data;
+  for (let y = 0; y < h; y += step) {
+    for (let x = 0; x < w; x += step) {
+      const i = (y * w + x) * 4;
+      if (data[i] > 14 || data[i + 1] > 14 || data[i + 2] > 14) lit++;
+      if (lit > 12) return false;
+    }
+  }
+  return true;
+}
+
+async function drawAt(video: HTMLVideoElement, atSec: number): Promise<HTMLCanvasElement | null> {
+  if (Math.abs(video.currentTime - atSec) > 0.05) {
+    video.currentTime = atSec;
+    await waitFor(video, "seeked");
+  }
+  // HAVE_CURRENT_DATA. Without this the seek can resolve before a frame exists.
+  if (video.readyState < 2) await waitFor(video, "loadeddata");
+  // One more frame for the decoder to actually present it.
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = video.videoWidth || 1280;
+  canvas.height = video.videoHeight || 960;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  return canvas;
+}
+
+async function captureFrame(video: HTMLVideoElement, atSec: number): Promise<string> {
+  const duration = Number.isFinite(video.duration) ? video.duration : 0;
+  // The in-point first, then a little way past it, then a second in — a clip
+  // that is black at all three is a black clip.
+  const tries = [atSec, atSec + 0.4, atSec + 1].filter(
+    (t) => !duration || t < duration - 0.05,
+  );
+  let last: HTMLCanvasElement | null = null;
+  for (const t of tries.length ? tries : [atSec]) {
+    const canvas = await drawAt(video, t);
+    if (!canvas) continue;
+    last = canvas;
+    if (!looksBlank(canvas)) return canvas.toDataURL("image/jpeg", 0.82);
+  }
+  return last ? last.toDataURL("image/jpeg", 0.82) : "";
 }
 
 type Media = { objectUrl: string; blobUrl: string; durationMs: number };

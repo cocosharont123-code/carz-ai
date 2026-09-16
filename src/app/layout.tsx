@@ -3,6 +3,7 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 import { GlobalShaderBg } from "@/components/global-shader-bg";
 import { BottomNav } from "@/components/bottom-nav";
+import { BackButton } from "@/components/back-button";
 
 // UI type is the Apple system font stack (no downloaded Google Fonts).
 
@@ -68,6 +69,7 @@ export default function RootLayout({
               before: the bar is fixed to the bottom and the spacer it renders
               has to come last in the flow to hold the page clear of it. */}
           <Providers>
+            <BackButton />
             {children}
             <BottomNav />
           </Providers>

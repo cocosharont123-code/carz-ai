@@ -22,6 +22,8 @@ export type FeedPostView = {
   caption: string;
   /** The car in the clip. "" on posts written before it was required. */
   carName: string;
+  /** Plays. 0 on posts from before it was counted. */
+  views: number;
   createdAt: number;
   likeCount: number;
   commentCount: number;
