@@ -20,6 +20,8 @@ export type FeedPostView = {
   durationMs: number;
   edit: VideoEdit;
   caption: string;
+  /** The car in the clip. "" on posts written before it was required. */
+  carName: string;
   createdAt: number;
   likeCount: number;
   commentCount: number;

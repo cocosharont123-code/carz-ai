@@ -111,6 +111,18 @@ export async function followStats(username: string, viewerEmail?: string): Promi
   };
 }
 
+/**
+ * Every username this account follows.
+ *
+ * An empty array is a real answer — it means they follow nobody — so callers
+ * must not treat it as "unknown" and fall back to showing everything.
+ */
+export async function followingOf(email: string): Promise<string[]> {
+  if (!followsConfigured()) return [];
+  const map = await readAll().catch(() => ({} as FollowMap));
+  return map[followerKey(email)] ?? [];
+}
+
 /** Idempotent both ways: following twice is following once. */
 export async function setFollow(
   email: string,

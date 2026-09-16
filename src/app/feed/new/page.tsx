@@ -75,6 +75,7 @@ export default function NewPostPage() {
   const [media, setMedia] = useState<Media | null>(null);
   const [edit, setEdit] = useState<VideoEdit>(EMPTY_EDIT);
   const [caption, setCaption] = useState("");
+  const [carName, setCarName] = useState("");
   const [uploading, setUploading] = useState(false);
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState("");
@@ -181,6 +182,7 @@ export default function NewPostPage() {
         body: JSON.stringify({
           image,
           caption,
+          carName: carName.trim(),
           videoUrl: media.blobUrl,
           durationMs: media.durationMs,
           edit,
@@ -322,6 +324,23 @@ export default function NewPostPage() {
             </>
           )}
 
+          {/* Required. A feed of cars where half the clips do not say which
+              car is a feed you cannot search, and the person who filmed it is
+              the one person who definitely knows. */}
+          <div className="mt-4">
+            <label htmlFor="car-name" className="util-label opacity-60">
+              Which car is it?
+            </label>
+            <input
+              id="car-name"
+              value={carName}
+              onChange={(e) => setCarName(e.target.value.slice(0, 60))}
+              placeholder="e.g. Porsche 911 GT3 RS"
+              autoComplete="off"
+              className="mt-1.5 min-h-11 w-full rounded-2xl border border-black/10 bg-black/[0.03] px-3.5 text-[13px] outline-none transition placeholder:opacity-40 focus:border-black/30"
+            />
+          </div>
+
           <div className="mt-4">
             <textarea
               value={caption}
@@ -354,7 +373,7 @@ export default function NewPostPage() {
           <button
             type="button"
             onClick={submit}
-            disabled={!media || busy}
+            disabled={!media || !carName.trim() || busy}
             aria-busy={posting || undefined}
             className="press mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-black px-6 py-3 text-sm font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-30"
           >

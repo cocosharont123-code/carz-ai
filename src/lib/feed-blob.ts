@@ -75,6 +75,10 @@ export type FeedPost = {
   durationMs?: number;
   edit?: FeedEdit;
   caption: string;
+  /** The car in the clip. Required on anything posted from now on — the
+   *  composer will not submit without it — and absent on older records, which
+   *  simply show no car line. */
+  carName?: string;
   createdAt: number;
   likes: FeedLike[];
   comments: FeedComment[];
@@ -103,6 +107,7 @@ export type PublicPost = {
   durationMs: number;
   edit: FeedEdit;
   caption: string;
+  carName: string;
   createdAt: number;
   likeCount: number;
   commentCount: number;
@@ -243,6 +248,7 @@ export function toPublicPost(
     durationMs: p.durationMs ?? 0,
     edit: { ...DEFAULT_EDIT, ...(p.edit ?? {}) },
     caption: p.caption,
+    carName: p.carName ?? "",
     createdAt: p.createdAt,
     likeCount: p.likes.length,
     commentCount: p.comments.length,
@@ -295,12 +301,27 @@ export async function listPostsByAuthor(
 
 export async function listPosts(
   viewerHash: string | null,
-  opts: { offset?: number; limit?: number } = {},
+  opts: {
+    offset?: number;
+    limit?: number;
+    /** Usernames to keep. Undefined means everyone; an empty array means the
+     *  viewer follows nobody, which is a real answer and not the same thing. */
+    authors?: string[];
+    /** Usernames to drop, whatever else matches. */
+    blocked?: string[];
+  } = {},
 ): Promise<{ posts: PublicPost[]; total: number; nextOffset: number | null }> {
   // The feed is video-only. Photo posts from before that rule are filtered out
   // rather than deleted — they stay in the blob and a direct link to one still
   // resolves, so nothing anyone posted is destroyed by the change.
-  const all = (await readAll()).filter((p) => p.mediaKind === "video" && !!p.videoUrl);
+  const handle = (name: string) => name.replace(/^@/, "").toLowerCase();
+  const keep = opts.authors ? new Set(opts.authors.map(handle)) : null;
+  const drop = new Set((opts.blocked ?? []).map(handle));
+
+  const all = (await readAll())
+    .filter((p) => p.mediaKind === "video" && !!p.videoUrl)
+    .filter((p) => !drop.has(handle(p.authorName)))
+    .filter((p) => (keep ? keep.has(handle(p.authorName)) : true));
   const offset = Math.max(0, Math.floor(opts.offset ?? 0));
   const limit = Math.min(PAGE_SIZE, Math.max(1, Math.floor(opts.limit ?? PAGE_SIZE)));
   const slice = all.slice(offset, offset + limit);
@@ -408,6 +429,7 @@ export async function createPost(input: {
   durationMs?: number;
   edit?: FeedEdit;
   caption: string;
+  carName?: string;
 }): Promise<FeedPost> {
   const post: FeedPost = {
     id: input.id,

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { ensureProfile } from "@/lib/profile-blob";
+import { getViewerState } from "@/lib/moderation-blob";
+import { followingOf } from "@/lib/follows-blob";
 import {
   listPosts,
   createPost,
@@ -42,10 +44,26 @@ export async function GET(req: Request) {
   const session = await auth();
   const viewerHash = session?.user?.email ? hashEmail(session.user.email) : null;
 
-  const offset = Number(new URL(req.url).searchParams.get("offset")) || 0;
+  const url = new URL(req.url);
+  const offset = Number(url.searchParams.get("offset")) || 0;
+  const following = url.searchParams.get("following") === "1";
+
   try {
-    const page = await listPosts(viewerHash, { offset, limit: PAGE_SIZE });
-    return NextResponse.json({ configured: true, ...page });
+    const email = session?.user?.email ?? null;
+    // Blocked accounts are dropped from both tabs. Following narrows to the
+    // accounts this viewer follows — an empty list stays an empty list rather
+    // than falling back to everyone, because "you follow nobody" is a real
+    // answer and quietly showing the whole feed instead would be a lie.
+    const { blocked } = await getViewerState(email);
+    const authors = following && email ? await followingOf(email) : undefined;
+
+    const page = await listPosts(viewerHash, {
+      offset,
+      limit: PAGE_SIZE,
+      authors,
+      blocked,
+    });
+    return NextResponse.json({ configured: true, following, ...page });
   } catch (e) {
     return storageFailure(e);
   }
@@ -65,6 +83,7 @@ export async function POST(req: Request) {
   let body: {
     image?: string;
     caption?: string;
+    carName?: string;
     videoUrl?: string;
     durationMs?: number;
     edit?: unknown;
@@ -73,6 +92,17 @@ export async function POST(req: Request) {
     body = await req.json();
   } catch {
     return NextResponse.json({ ok: false, error: "invalid JSON" }, { status: 400 });
+  }
+
+  // Required, and required here rather than only in the composer: a client is
+  // free not to send it. Older posts have none and simply show no car line, but
+  // nothing new joins the feed unnamed.
+  const carName = (body.carName ?? "").trim().slice(0, 60);
+  if (!carName) {
+    return NextResponse.json(
+      { ok: false, error: "Name the car in the clip before posting." },
+      { status: 400 },
+    );
   }
 
   const caption = (body.caption || "").trim();
@@ -142,6 +172,7 @@ export async function POST(req: Request) {
       // a frozen frame.
       edit: sanitizeEdit(body.edit, durationMs),
       caption,
+      carName,
     });
 
     return NextResponse.json({ ok: true, post: toPublicPost(post, authorHash) });
