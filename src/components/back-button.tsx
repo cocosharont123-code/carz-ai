@@ -1,27 +1,22 @@
 "use client";
 
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 
 /**
- * Back, top left, on every page that is not the root of something.
+ * Back, top left, on every page.
  *
  * In the layout rather than in each page, so a route added later gets it
  * without remembering to. Fixed, because half the app's screens are their own
  * scrollers and a button in the flow would scroll away on some and not others.
  *
- * Hidden on the five destinations the nav itself goes to. Those are where you
- * land, not somewhere you drilled into, and a back arrow on a tab bar
- * destination sends you somewhere arbitrary — whatever tab you happened to be
- * on before.
+ * It was hidden on the five the nav goes to — the reasoning being that those
+ * are where you land rather than somewhere you drilled into. Those are also
+ * the five pages anyone is most often on, so in practice the arrow was never
+ * there. Every page now, as asked.
  */
-const ROOTS = new Set(["/", "/spot", "/feed", "/garage", "/leaderboard"]);
-
 export function BackButton() {
   const router = useRouter();
-  const pathname = usePathname();
-
-  if (ROOTS.has(pathname)) return null;
 
   return (
     <button
