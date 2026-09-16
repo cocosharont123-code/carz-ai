@@ -34,14 +34,21 @@ const LOOP_LAPS = 2;
 const WINDOW = 1;
 
 /**
- * How far out clips are fetched in full.
+ * How far ahead clip files are pulled into the browser's cache.
  *
- * Wider than the mount window on purpose: a clip three slides away holds no
- * <video> yet, but its file can already be in the browser's cache, so the
- * element that mounts a moment later has nothing left to wait for. Buffering is
- * bytes; mounting is decoders. Only the second is scarce.
+ * This is not the same as preload. `preload="auto"` only does anything on an
+ * element that exists, and only slides within WINDOW have one — so widening it
+ * alone bought nothing: the slides it named held no <video> to preload with.
+ *
+ * So the bytes are fetched directly instead, with no media element involved.
+ * By the time a slide mounts, its file is already in the HTTP cache and the
+ * <video> has nothing left to wait for. Bytes are cheap and decoders are not,
+ * which is why this reaches further than WINDOW does.
  */
-const BUFFER = 3;
+const PREFETCH_AHEAD = 4;
+const PREFETCH_BEHIND = 1;
+/** At most this many downloads at once, so the clip being watched keeps the line. */
+const PREFETCH_PARALLEL = 2;
 
 /** Puts one post at the head of the list, leaving the rest in order. */
 function leadWith(posts: FeedPostView[], id: string): FeedPostView[] {
@@ -117,6 +124,61 @@ function FeedInner() {
     };
   }, []);
 
+  /**
+   * Pull the next few clips into cache before they are reached.
+   *
+   * Skipped entirely on a metered connection or with Data Saver on: downloading
+   * four videos nobody has asked for is a different thing on someone's mobile
+   * plan than it is on wifi.
+   */
+  const fetchedRef = useRef<Set<string>>(new Set());
+  const inFlightRef = useRef(0);
+  const queueRef = useRef<string[]>([]);
+
+  const pump = useCallback(() => {
+    // The recursion lives in a local declaration rather than in the callback
+    // itself: a useCallback cannot name itself from inside its own body.
+    const next = () => {
+      while (inFlightRef.current < PREFETCH_PARALLEL && queueRef.current.length > 0) {
+        const url = queueRef.current.shift()!;
+        inFlightRef.current++;
+        // The body has to be consumed for the browser to keep it. The bytes
+        // are then in the HTTP cache, and the <video> that mounts a moment
+        // later reads them from there rather than from the network.
+        fetch(url, { cache: "force-cache", mode: "cors", credentials: "omit" })
+          .then((r) => r.blob())
+          .catch(() => {})
+          .finally(() => {
+            inFlightRef.current--;
+            next();
+          });
+      }
+    };
+    next();
+  }, []);
+
+  const prefetchAround = useCallback(
+    (index: number, list: FeedPostView[]) => {
+      if (list.length === 0) return;
+      const nav = navigator as Navigator & {
+        connection?: { saveData?: boolean; effectiveType?: string };
+      };
+      const conn = nav.connection;
+      if (conn?.saveData) return;
+      if (conn?.effectiveType && /(^|-)2g$/.test(conn.effectiveType)) return;
+
+      for (let d = -PREFETCH_BEHIND; d <= PREFETCH_AHEAD; d++) {
+        const post = list[(((index + d) % list.length) + list.length) % list.length];
+        const url = post?.videoUrl;
+        if (!url || fetchedRef.current.has(url)) continue;
+        fetchedRef.current.add(url);
+        queueRef.current.push(url);
+      }
+      pump();
+    },
+    [pump],
+  );
+
   // Pure fetch — state is only written in the callbacks below, never inside an
   // effect body.
   const load = useCallback(async (offset: number, which: "you" | "following") => {
@@ -146,7 +208,11 @@ function FeedInner() {
         // the feed follows it. Reordering beats scrolling to an index — the
         // clip may not be on the first page at all, and a scroller that jumps
         // after paint is exactly the thing that feels cheap.
-        setPosts(startId ? leadWith(page.posts, startId) : page.posts);
+        const ordered = startId ? leadWith(page.posts, startId) : page.posts;
+        setPosts(ordered);
+        // Warm the opening run immediately rather than waiting for the first
+        // scroll — the very first swipe is the one most likely to be waited on.
+        prefetchAround(0, ordered);
         setNextOffset(page.nextOffset);
       })
       .catch((e: Error) => !cancelled && setError(e.message))
@@ -157,7 +223,7 @@ function FeedInner() {
   // startId is a dependency, not an omission: arriving from a different
   // thumbnail has to reorder the feed around the new video rather than keep
   // showing the one before it.
-  }, [load, authStatus, startId, tab]);
+  }, [load, authStatus, startId, tab, prefetchAround]);
 
   const loadMore = useCallback(async () => {
     if (nextOffset === null || loadingMore) return;
@@ -226,14 +292,16 @@ function FeedInner() {
   const countRef = useRef(0);
   const postsRef = useRef<FeedPostView[]>([]);
   const countViewRef = useRef(countView);
+  const prefetchRef = useRef(prefetchAround);
   const lapRef = useRef(0);
   useEffect(() => {
     loadMoreRef.current = loadMore;
     countRef.current = posts.length * laps;
     postsRef.current = posts;
     countViewRef.current = countView;
+    prefetchRef.current = prefetchAround;
     lapRef.current = lapSize;
-  }, [loadMore, posts, laps, lapSize, countView]);
+  }, [loadMore, posts, laps, lapSize, countView, prefetchAround]);
 
   /**
    * Which slide is on screen. An observer beats a scroll handler here: snap
@@ -254,8 +322,10 @@ function FeedInner() {
           const i = Number((entry.target as HTMLElement).dataset.index);
           if (!Number.isFinite(i)) continue;
           setActiveIndex(i);
-          const seen = postsRef.current[i % (postsRef.current.length || 1)];
+          const list = postsRef.current;
+          const seen = list[i % (list.length || 1)];
           if (seen) countViewRef.current(seen.id);
+          prefetchRef.current(i % (list.length || 1), list);
           // Fetch while a few slides are still in hand, so a scroll never
           // lands on the end. loadMore() no-ops once there's nothing left.
           if (i >= countRef.current - 3) void loadMoreRef.current();
@@ -436,7 +506,7 @@ function FeedInner() {
                     <Reel
                       post={p}
                       active={index === activeIndex}
-                      buffer={distance <= BUFFER}
+                      buffer
                       signedIn={signedIn}
                       muted={muted}
                       onToggleMuted={() => setMuted((m) => !m)}
