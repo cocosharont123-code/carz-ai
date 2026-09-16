@@ -487,7 +487,10 @@ export default function SpotPage() {
         // a photo of the car: a VIN scan photographs a plate, and a leaderboard
         // of door jambs helps nobody.
         if (full.rarityScore > 0 && rawImage) {
-          const lbThumb = await downscale(rawImage, 200, 0.5);
+          // 200px at quality 0.5 was sized for a row thumbnail and nothing
+          // else. The board can be opened now, and a 200px image blown up to
+          // fill a card is visibly pixelated — there are no pixels to enlarge.
+          const lbThumb = await downscale(rawImage, 560, 0.72);
           void fetch("/api/leaderboard", {
             method: "POST",
             headers: { "Content-Type": "application/json" },

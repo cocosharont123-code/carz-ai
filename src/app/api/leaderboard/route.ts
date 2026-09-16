@@ -58,7 +58,13 @@ export async function POST(req: Request) {
   }
 
   // Keep the stored thumbnail small so the JSON stays lean.
-  const image = typeof body.image === "string" && body.image.startsWith("data:") ? body.image.slice(0, 60_000) : "";
+  // Dropped whole rather than sliced when it is too big. Cutting a base64
+  // data URL at a byte limit does not produce a smaller image, it produces a
+  // broken one — every entry over the old 60,000 cap was being stored as a
+  // corrupt JPEG that would never render.
+  const rawImage = typeof body.image === "string" ? body.image : "";
+  const image =
+    rawImage.startsWith("data:image/") && rawImage.length <= 180_000 ? rawImage : "";
 
   try {
     await recordRareSpot({

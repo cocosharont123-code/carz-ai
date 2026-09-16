@@ -178,13 +178,16 @@ function CarViewer({ car, onClose }: { car: RareCar; onClose: () => void }) {
         role="dialog"
         aria-modal="true"
         aria-label={`${car.make} ${car.model}`}
-        className="nav-sheet-in fixed inset-x-0 bottom-0 z-[80] mx-auto w-full max-w-sm px-4 pb-8"
-        style={{ bottom: "calc(var(--nav-h) + 0.5rem)" }}
+        className="fixed inset-0 z-[80] flex items-center justify-center px-5"
       >
-        <div className="glass-bubble rounded-[32px] p-4">
-          {/* The squircle. A radius this large against the photo's own size is
-              what reads as a continuous corner rather than a rounded box. */}
-          <div className="aspect-square w-full overflow-hidden rounded-[26%]">
+        {/* Centred in the viewport, not anchored to the bottom of a page that
+            scrolls. It opens in front of you wherever you were on the board. */}
+        <div className="nav-sheet-in glass-bubble w-full max-w-[19rem] rounded-[32px] p-4">
+          {/* The squircle. Capped at 15rem rather than filling the card: the
+              stored photo is a small thumbnail, and stretching it across a
+              phone is what made it look pixelated. Sized close to what is
+              actually there, it reads as sharp. */}
+          <div className="mx-auto aspect-square w-full max-w-[15rem] overflow-hidden rounded-[26%]">
             <CarPhoto src={car.image} alt={`${car.make} ${car.model}`} className="h-full w-full" color />
           </div>
 
