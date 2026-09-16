@@ -87,6 +87,21 @@ function Caption({ text }: { text: string }) {
   );
 }
 
+/*
+ * Where the slide's own furniture sits, measured from the nav rather than from
+ * the bottom of the screen.
+ *
+ * The clip fills the viewport now, so "bottom" is behind the floating nav
+ * bubble — which is exactly where the caption, the hashtags and the counts had
+ * ended up. --nav-h is no use for this: it is the space reserved for the nav,
+ * not the nav. The bubble's top edge is its gap plus its height.
+ */
+const NAV_TOP = "calc(var(--nav-gap) + var(--nav-bubble-h))";
+/** The rail clears the bubble. */
+const RAIL_BOTTOM = `calc(${NAV_TOP} + 0.5rem)`;
+/** The caption clears the composer, which is centred over it and 4rem tall. */
+const CAPTION_BOTTOM = `calc(${NAV_TOP} + 5rem)`;
+
 export function Reel({
   post,
   active,
@@ -277,8 +292,9 @@ export function Reel({
           made click-through so a tap near the edge can't reach a button that
           isn't really there. */}
       <div
+        style={{ bottom: RAIL_BOTTOM }}
         className={cn(
-          "absolute bottom-24 right-3 flex flex-col items-center gap-4 transition-opacity duration-200",
+          "absolute right-3 flex flex-col items-center gap-4 transition-opacity duration-200",
           commentsOpen && "pointer-events-none opacity-0",
         )}
         aria-hidden={commentsOpen || undefined}
@@ -330,8 +346,9 @@ export function Reel({
 
       {/* Caption block — hidden with the rail for the same reason. */}
       <div
+        style={{ bottom: CAPTION_BOTTOM }}
         className={cn(
-          "absolute inset-x-0 bottom-0 p-4 pr-20 transition-opacity duration-200",
+          "absolute inset-x-0 px-4 pr-20 transition-opacity duration-200",
           commentsOpen && "pointer-events-none opacity-0",
         )}
         aria-hidden={commentsOpen || undefined}

@@ -181,7 +181,31 @@ export function FeedVideo({
   }
 
   return (
-    <div className={cn("relative", fill ? "h-full w-full" : "overflow-hidden bg-black", className)}>
+    <div
+      className={cn(
+        "relative",
+        fill ? "h-full w-full overflow-hidden" : "overflow-hidden bg-black",
+        className,
+      )}
+    >
+      {/* What fills the frame around a clip that is not the shape of the
+          screen: the poster, blown up past the edges and blurred out. object-
+          cover on the clip itself would fill the frame too, but by cropping —
+          a tall vertical video loses its top and bottom, which is the whole
+          subject of a car shot. This keeps the clip entire and gives the
+          leftover space something to be other than black bars.
+
+          An image rather than a second copy of the video: a blurred backdrop
+          nobody looks at is not worth a second decode on a phone. */}
+      {fill && posterUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={posterUrl}
+          alt=""
+          aria-hidden
+          className="absolute inset-0 h-full w-full scale-110 object-cover blur-2xl"
+        />
+      )}
       <video
         ref={videoRef}
         src={videoUrl}
@@ -192,7 +216,15 @@ export function FeedVideo({
         // swipe lands on buffered data. Anything further out takes metadata
         // only — pulling every file would be the whole feed over the wire.
         preload={active || buffer ? "auto" : "metadata"}
-        className={cn("w-full", fill ? "h-full object-cover" : "aspect-[4/3] object-cover")}
+        // contain, not cover, when it fills the screen: the clip is shown
+        // whole at whatever shape it was filmed in, and the blurred poster
+        // behind it covers whatever is left. Where the clip does match the
+        // screen the two are identical anyway, so nothing is letterboxed that
+        // did not need to be.
+        className={cn(
+          "relative w-full",
+          fill ? "h-full object-contain" : "aspect-[4/3] object-cover",
+        )}
         onLoadedMetadata={rewind}
         onTimeUpdate={onTimeUpdate}
         onClick={handleTap}
