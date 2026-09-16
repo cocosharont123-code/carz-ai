@@ -14,6 +14,11 @@
      it and reads as blurred out. The nav used to reserve this space when it
      was at the top; nothing did once it moved to the bottom. */
   --safe-top: env(safe-area-inset-top);
+  /* The strip the back arrow occupies, reserved in the flow so it never sits
+     on a page's heading. The arrow renders this spacer itself rather than the
+     layout padding for it, so the home page — which has no arrow — gets no gap
+     either. Full-bleed pages cancel it the same way they cancel --safe-top. */
+  --back-h: 3.5rem;
   /* Deliberately free of env(safe-area-inset-bottom).
      
      That value is not a constant on iOS: Safari reports 0 while its bottom

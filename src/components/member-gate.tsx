@@ -44,7 +44,7 @@ export function MemberGate({
             reader sees whether or not the nav moves with it. */}
         <main
           className="mx-auto flex w-full max-w-lg items-start justify-center px-5 py-16 text-center"
-          style={{ minHeight: "calc(100dvh - var(--nav-h) - var(--safe-top))" }}
+          style={{ minHeight: "calc(100dvh - var(--nav-h) - var(--safe-top) - var(--back-h))" }}
         >
           <div className="util-label opacity-50">Loading…</div>
         </main>

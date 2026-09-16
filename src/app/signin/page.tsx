@@ -13,7 +13,7 @@ import { GoogleSignInButton } from "@/components/google-sign-in";
  * both of those — taller than the screen by exactly the furniture around it,
  * which is the scroll to nowhere.
  */
-const FRAME_H = "min-h-[calc(100dvh-var(--nav-h)-var(--safe-top))]";
+const FRAME_H = "min-h-[calc(100dvh-var(--nav-h)-var(--safe-top)-var(--back-h))]";
 
 function SignInInner() {
   const params = useSearchParams();

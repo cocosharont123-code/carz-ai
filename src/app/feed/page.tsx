@@ -66,7 +66,7 @@ function FeedLoading() {
     <div
       className="flex h-[100dvh] items-center justify-center"
       style={{
-        marginTop: "calc(-1 * var(--safe-top))",
+        marginTop: "calc(-1 * (var(--safe-top) + var(--back-h)))",
         marginBottom: "calc(-1 * var(--nav-h))",
       }}
     >
@@ -312,7 +312,7 @@ function FeedInner() {
     <div
       className="relative flex h-[100dvh] flex-col overflow-hidden"
       style={{
-        marginTop: "calc(-1 * var(--safe-top))",
+        marginTop: "calc(-1 * (var(--safe-top) + var(--back-h)))",
         marginBottom: "calc(-1 * var(--nav-h))",
       }}
     >
