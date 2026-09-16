@@ -660,7 +660,12 @@ export default function SpotPage() {
 
   return (
     <>
-      <main className="mx-auto w-full max-w-2xl px-5 py-14">
+      {/* py-2, not py-14. That 3.5rem at each end was written when the nav was
+          at the top and nothing else reserved space: now the back arrow's
+          spacer sits above this and the nav's sits below it, so the page was
+          padding twice at both ends — which is the room to scroll above the
+          heading and below the identify button. */}
+      <main className="mx-auto w-full max-w-2xl px-5 py-2">
         <h1 className="display mt-3 text-7xl">Spot a car</h1>
         <p className="mt-3 text-sm ">
           {isVin
