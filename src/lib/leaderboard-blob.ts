@@ -13,7 +13,12 @@ export type RareCar = {
   rarityScore: number;
   rarityReason?: string;
   priceRange?: string;
-  image?: string; // small base64 thumbnail of the car
+  /**
+   * The car's photo. A Blob URL on anything stored from now on; older entries
+   * hold a base64 data URL instead. Both work in an <img src>, so nothing has
+   * to migrate — the renderer cannot tell them apart.
+   */
+  image?: string;
   spotter: string; // @username, or "Anonymous"
   spotterImage?: string; // profile picture thumbnail, or "" for the animated default
   ts: number;
@@ -21,6 +26,42 @@ export type RareCar = {
 
 const PATH = "leaderboard.json";
 const MAX = 50;
+/** 2MB. A 1000px JPEG lands around 150KB, so this is slack, not a target. */
+const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
+
+export class LeaderboardError extends Error {}
+
+/**
+ * Store a car's photo as a file and return its URL.
+ *
+ * The photo used to live in the leaderboard JSON as base64. That document is
+ * read and rewritten in full on every spot, so each entry's image was being
+ * sent over the wire on every read and rewritten on every write — and at 50
+ * entries a 1000px photo each would make it roughly 8MB. As files it stays a
+ * few kilobytes of text, and the images are fetched independently and cached
+ * by the browser like any other image.
+ */
+export async function uploadLeaderboardPhoto(dataUrl: string, id: string): Promise<string> {
+  const m = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/.exec(dataUrl || "");
+  if (!m) throw new LeaderboardError("Photo must be a JPEG, PNG or WebP.");
+  const [, contentType, b64] = m;
+  const buf = Buffer.from(b64, "base64");
+  if (buf.byteLength === 0) throw new LeaderboardError("That photo is empty.");
+  if (buf.byteLength > MAX_PHOTO_BYTES) throw new LeaderboardError("That photo is too large.");
+  const ext = contentType === "image/png" ? "png" : contentType === "image/webp" ? "webp" : "jpg";
+  try {
+    const { url } = await put(`leaderboard/${id}.${ext}`, buf, {
+      access: "public",
+      contentType,
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      token: blobToken(),
+    });
+    return url;
+  } catch (e) {
+    throw new LeaderboardError("Couldn't store that photo.", { cause: e });
+  }
+}
 
 export function leaderboardConfigured(): boolean {
   return blobConfigured();
