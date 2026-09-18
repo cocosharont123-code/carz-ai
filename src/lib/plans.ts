@@ -49,8 +49,8 @@ export const DAILY_SCANS = {
 export const CARZ_PLUS = {
   id: "plus" as const,
   name: "Carz+",
-  monthly: 7.99,
-  annual: 79.99,
+  monthly: 5.99,
+  annual: 59.99,
   blurb: "For spotting regularly.",
   perks: [
     { title: "8 car scans a day", desc: "Well past the three everyone gets." },
@@ -62,8 +62,8 @@ export const CARZ_PLUS = {
 export const CARZ_MAX = {
   id: "max" as const,
   name: "Carz MAX",
-  monthly: 12.99,
-  annual: 129.99,
+  monthly: 9.99,
+  annual: 99.99,
   blurb: "Everything in Carz+, without the ceiling.",
   /** Shown under "Everything in Carz+, plus:" — these are the additions. */
   perks: [
