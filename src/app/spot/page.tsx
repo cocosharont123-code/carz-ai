@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { useImageUpload } from "@/components/hooks/use-image-upload";
 import { CarCustomizer } from "@/components/car-customizer";
 import { ScanModePicker } from "@/components/scan-mode-picker";
+import { CaptureScreen } from "@/components/camera/capture-screen";
 import { VinPanel } from "@/components/vin-panel";
 import { addToGarage } from "@/lib/garage-local";
 import { carzPlusMonthly, carzPlusAnnual, carzPlusAnnualSaving } from "@/lib/plans";
@@ -229,6 +230,16 @@ function SaveToGarage({ car, image }: { car: CarReport; image: string }) {
   );
 }
 
+/** A File as a data URL. */
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("Couldn't read that file."));
+    reader.readAsDataURL(file);
+  });
+}
+
 function downscale(dataUrl: string, max = 1280, quality = 0.85): Promise<string> {
   return new Promise((resolve) => {
     const img = new Image();
@@ -389,6 +400,7 @@ export default function SpotPage() {
     handleThumbnailClick,
     handleFileChange,
     handleRemove,
+    acceptFile,
   } = useImageUpload();
 
   const isVin = mode === "vin";
@@ -594,12 +606,26 @@ export default function SpotPage() {
       setError("Attach a photo of a car first.");
       return;
     }
+    await runIdentify(await objectUrlToDataUrl(previewUrl));
+  }
+
+  /**
+   * Identify straight from a file.
+   *
+   * The camera path cannot wait for previewUrl: setting it is a state write and
+   * the scan would start a render behind, on whatever the previous photo was.
+   * The file it just captured is right here, so it goes in directly.
+   */
+  async function identifyFile(file: File) {
+    await runIdentify(await fileToDataUrl(file));
+  }
+
+  async function runIdentify(raw: string) {
     setError("");
     setLimitHit(false);
     setScanProgress(0);
     setLoading(true);
     try {
-      const raw = await objectUrlToDataUrl(previewUrl);
       // 2576px is the model's high-resolution limit — anything smaller throws
       // away the badge text and headlight detail the identification leans on.
       // At 1024/0.72 a Carrera 4S badge is a smudge; this is the single biggest
@@ -662,6 +688,53 @@ export default function SpotPage() {
     setMode(next);
   }
 
+
+  /**
+   * The camera replaces the page rather than sitting on top of it.
+   *
+   * /spot is a camera screen now: it opens on the viewfinder, and the document
+   * — masthead, scanner tabs, result, garage, customizer — only appears once
+   * there is a photo to talk about. Everything downstream is untouched, because
+   * a capture enters through the same previewUrl the file picker always used.
+   *
+   * VIN is the exception. It takes a typed seventeen characters as readily as a
+   * photograph, so it keeps the document and its own panel.
+   */
+  if (!isVin && !previewUrl && !car && !loading) {
+    return (
+      <div
+        className="relative w-full overflow-hidden"
+        style={{
+          height: "100dvh",
+          marginTop: "calc(-1 * (var(--safe-top) + var(--back-h)))",
+          marginBottom: "calc(-1 * var(--nav-h))",
+        }}
+      >
+        <CaptureScreen
+          hint="Tap for a photo · hold to record"
+          onPickFile={handleThumbnailClick}
+          onPhoto={(file) => {
+            acceptFile(file);
+            // Straight into the scan. Having just aimed at a car and pressed
+            // the shutter, a second button asking whether to identify it is
+            // asking a question already answered.
+            void identifyFile(file);
+          }}
+        />
+        <Input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          ref={fileInputRef}
+          onChange={(e) => {
+            handleFileChange(e);
+            const file = e.target.files?.[0];
+            if (file) void identifyFile(file);
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <>
