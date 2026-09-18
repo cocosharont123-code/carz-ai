@@ -28,6 +28,27 @@ export function useImageUpload({ onUpload }: UseImageUploadProps = {}) {
     [onUpload],
   );
 
+  /**
+   * Accept a file that never came from the input — a frame off the camera, say.
+   *
+   * The whole page downstream keys off previewUrl, so a capture has to arrive
+   * the same way a chosen file does or it would need a second pipeline beside
+   * the first. The previous URL is revoked here rather than leaked: on a camera
+   * screen this is called once per shot, not once per visit.
+   */
+  const acceptFile = useCallback(
+    (file: File) => {
+      if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+      setFileName(file.name);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+      previewRef.current = url;
+      onUpload?.(url);
+      return url;
+    },
+    [onUpload],
+  );
+
   const handleRemove = useCallback(() => {
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
@@ -55,5 +76,6 @@ export function useImageUpload({ onUpload }: UseImageUploadProps = {}) {
     handleThumbnailClick,
     handleFileChange,
     handleRemove,
+    acceptFile,
   };
 }
