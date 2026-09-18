@@ -199,15 +199,11 @@ function CarViewer({ car, onClose }: { car: RareCar; onClose: () => void }) {
         onTouchMove={(e) => e.preventDefault()}
         className="fixed inset-0 z-[80] flex touch-none items-center justify-center overscroll-none px-5"
       >
-        {/* Centred in the viewport and never scrollable.
-            
-            A column with a hard height ceiling: the text and the meter take
-            what they need, and the photo gets whatever is left. It can shrink
-            but the card cannot grow past the screen, so there is nothing to
-            scroll in either direction and nothing gets clipped on a short
-            phone either — which is what a fixed image height plus
-            overflow-y-auto was doing instead. */}
-        <div className="nav-sheet-in glass-bubble flex max-h-[88dvh] w-full max-w-[22rem] flex-col overflow-hidden rounded-[32px] p-4">
+        {/* Centred in the viewport and never scrollable. Nothing here has a
+            height ceiling of its own: the photo is capped at half the viewport
+            and everything under it is a fixed few lines, so the card is always
+            shorter than the screen and has nothing to scroll. */}
+        <div className="nav-sheet-in glass-bubble w-full max-w-[22rem] overflow-hidden rounded-[32px] p-4">
           {/* The whole car, never enlarged past its own resolution.
               
               The image sizes the box rather than the other way round: given
@@ -217,17 +213,27 @@ function CarViewer({ car, onClose }: { car: RareCar; onClose: () => void }) {
               width — the board stores a thumbnail, and blowing one up is
               exactly what made it look pixelated. Small photos render small and
               sharp rather than large and soft. */}
-          <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-[26%] bg-black/30">
+          <div className="flex items-center justify-center overflow-hidden rounded-[26%] bg-black/30">
             {car.image ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={car.image}
                 alt={`${car.make} ${car.model}`}
                 onLoad={(e) => setNatural(e.currentTarget.naturalWidth)}
-                // Still never enlarged past its own pixels; now also never
-                // taller than the room the column has left.
-                style={natural ? { maxWidth: `${natural}px` } : undefined}
-                className="mx-auto block max-h-full w-auto max-w-full object-contain"
+                // Two caps, both absolute rather than relative to a parent.
+                // maxWidth is the file's own pixel width, so it is never
+                // enlarged past its resolution; maxHeight is half the viewport,
+                // which is what keeps the whole card inside the screen without
+                // anything needing to scroll.
+                //
+                // Not flex-1 with max-h-full, which is what made the photo
+                // disappear: flex-1 sets flex-basis to 0, and in a column with
+                // no definite height of its own that resolves to zero height.
+                style={{
+                  ...(natural ? { maxWidth: `${natural}px` } : null),
+                  maxHeight: "50dvh",
+                }}
+                className="mx-auto block h-auto w-auto max-w-full object-contain"
                 draggable={false}
               />
             ) : (
@@ -240,17 +246,17 @@ function CarViewer({ car, onClose }: { car: RareCar; onClose: () => void }) {
             )}
           </div>
 
-          <p className="mt-4 shrink-0 truncate text-center text-lg font-bold">
+          <p className="mt-4 truncate text-center text-lg font-bold">
             {car.make} {car.model}
           </p>
           {car.yearRange && (
-            <p className="mt-0.5 shrink-0 text-center text-[13px] opacity-60">{car.yearRange}</p>
+            <p className="mt-0.5 text-center text-[13px] opacity-60">{car.yearRange}</p>
           )}
 
           {/* The meter, directly under the photo. */}
           <div
             className={cn(
-              "mt-4 shrink-0 rounded-2xl p-3.5",
+              "mt-4 rounded-2xl p-3.5",
               ultra
                 ? "bg-gradient-to-r from-neon-red/20 via-neon-green/12 to-neon-blue/20"
                 : "bg-white/[0.06]",
@@ -283,7 +289,7 @@ function CarViewer({ car, onClose }: { car: RareCar; onClose: () => void }) {
           <button
             type="button"
             onClick={onClose}
-            className="press mt-4 min-h-11 w-full shrink-0 rounded-full bg-white text-sm font-bold text-black"
+            className="press mt-4 min-h-11 w-full rounded-full bg-white text-sm font-bold text-black"
           >
             Close
           </button>
