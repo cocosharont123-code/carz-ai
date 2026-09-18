@@ -690,6 +690,25 @@ export default function SpotPage() {
 
 
   /**
+   * Nothing scrolls while the viewfinder is up.
+   *
+   * The camera is fixed and fills the screen, but the column it sits in still
+   * holds the back arrow's spacer, the legal notice and the nav's spacer — and
+   * the notice alone makes the document taller than the viewport, which is a
+   * page that scrolls behind a camera. Locking the body is simpler than trying
+   * to cancel each of them with a margin.
+   */
+  const cameraMode = !isVin && !previewUrl && !car && !loading;
+  useEffect(() => {
+    if (!cameraMode) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [cameraMode]);
+
+  /**
    * The camera replaces the page rather than sitting on top of it.
    *
    * /spot is a camera screen now: it opens on the viewfinder, and the document
@@ -700,16 +719,9 @@ export default function SpotPage() {
    * VIN is the exception. It takes a typed seventeen characters as readily as a
    * photograph, so it keeps the document and its own panel.
    */
-  if (!isVin && !previewUrl && !car && !loading) {
+  if (cameraMode) {
     return (
-      <div
-        className="relative w-full overflow-hidden"
-        style={{
-          height: "100dvh",
-          marginTop: "calc(-1 * (var(--safe-top) + var(--back-h)))",
-          marginBottom: "calc(-1 * var(--nav-h))",
-        }}
-      >
+      <div className="fixed inset-0 z-[1] overflow-hidden">
         <CaptureScreen
           hint="Tap for a photo · hold to record"
           onPickFile={handleThumbnailClick}
