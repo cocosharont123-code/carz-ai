@@ -4,6 +4,7 @@ import { Providers } from "@/components/providers";
 import { GlobalShaderBg } from "@/components/global-shader-bg";
 import { BottomNav } from "@/components/bottom-nav";
 import { BackButton } from "@/components/back-button";
+import { LegalNotice } from "@/components/legal-notice";
 
 // UI type is the Apple system font stack (no downloaded Google Fonts).
 
@@ -71,6 +72,7 @@ export default function RootLayout({
           <Providers>
             <BackButton />
             {children}
+            <LegalNotice />
             <BottomNav />
           </Providers>
         </div>
