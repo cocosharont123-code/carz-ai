@@ -116,7 +116,7 @@ export function CaptureScreen({
   const blocked = status === "denied" || status === "unsupported";
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-black">
+    <div className="absolute inset-0 overflow-hidden bg-black">
       {/* The viewfinder. object-cover so it fills the screen the way a camera
           app does rather than letterboxing onto black. */}
       <video
@@ -124,12 +124,22 @@ export function CaptureScreen({
         playsInline
         muted
         autoPlay
+        // Always rendered, never faded. It used to be opacity-0 until the
+        // stream reported live, so anything that stalled between "starting"
+        // and "live" — a permission prompt sitting unanswered, a slow camera —
+        // showed an empty screen rather than a camera about to appear.
         className={cn(
-          "h-full w-full object-cover transition-opacity duration-300",
-          status === "live" ? "opacity-100" : "opacity-0",
+          "absolute inset-0 h-full w-full object-cover",
           facing === "user" && "scale-x-[-1]",
         )}
       />
+
+      {/* Something to look at while the camera opens. */}
+      {(status === "idle" || status === "starting") && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <p className="util-label animate-pulse opacity-60">Opening camera…</p>
+        </div>
+      )}
 
       {/* Shutter flash. A white sheet at 180ms — long enough to register as a
           shutter, short enough not to hide the next frame. */}

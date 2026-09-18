@@ -721,7 +721,10 @@ export default function SpotPage() {
    */
   if (cameraMode) {
     return (
-      <div className="fixed inset-0 z-[1] overflow-hidden">
+      // No z-index. The layout column is already its own stacking context, so
+      // a fixed child paints above everything else in it; z-[1] only invited a
+      // fight with the shader background behind it.
+      <div className="fixed inset-0 overflow-hidden bg-black">
         <CaptureScreen
           hint="Tap for a photo · hold to record"
           onPickFile={handleThumbnailClick}
