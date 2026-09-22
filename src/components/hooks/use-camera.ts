@@ -22,6 +22,16 @@ export type CameraStatus = "idle" | "starting" | "live" | "denied" | "unsupporte
 /** Longest clip a press-and-hold will record before stopping itself. */
 const MAX_CLIP_MS = 15_000;
 
+/**
+ * How long to wait for the camera before giving up on it.
+ *
+ * getUserMedia does not always settle. A permission prompt that is never
+ * answered leaves the promise pending forever, and the screen would sit on
+ * "Opening camera…" with no way forward. After this it is treated as refused,
+ * which is the state that offers Retry and Upload.
+ */
+const OPEN_TIMEOUT_MS = 12_000;
+
 export function cameraSupported(): boolean {
   return typeof navigator !== "undefined" && !!navigator.mediaDevices?.getUserMedia;
 }
@@ -67,10 +77,24 @@ export function useCamera() {
         // `ideal`, not `exact`: a laptop has no environment camera, and an
         // exact constraint fails outright rather than falling back to the one
         // camera it does have.
-        const stream = await navigator.mediaDevices.getUserMedia({
+        const ask = navigator.mediaDevices.getUserMedia({
           video: { facingMode: { ideal: which }, width: { ideal: 1920 } },
           audio: false,
         });
+        const stream = await Promise.race([
+          ask,
+          new Promise<never>((_, reject) =>
+            setTimeout(
+              () => reject(new DOMException("timeout", "NotAllowedError")),
+              OPEN_TIMEOUT_MS,
+            ),
+          ),
+        ]);
+        // The race can resolve against a stream that arrives late; if it does,
+        // its tracks would run with nothing showing them.
+        ask.then((late) => {
+          if (late !== stream) late.getTracks().forEach((t) => t.stop());
+        }).catch(() => {});
         streamRef.current?.getTracks().forEach((t) => t.stop());
         streamRef.current = stream;
         setFacing(which);

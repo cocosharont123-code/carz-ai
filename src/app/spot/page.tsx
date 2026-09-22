@@ -12,6 +12,7 @@ import { useImageUpload } from "@/components/hooks/use-image-upload";
 import { CarCustomizer } from "@/components/car-customizer";
 import { ScanModePicker } from "@/components/scan-mode-picker";
 import { CaptureScreen } from "@/components/camera/capture-screen";
+import { CameraBoundary } from "@/components/camera/camera-boundary";
 import { VinPanel } from "@/components/vin-panel";
 import { addToGarage } from "@/lib/garage-local";
 import { carzPlusMonthly, carzPlusAnnual, carzPlusAnnualSaving } from "@/lib/plans";
@@ -699,6 +700,11 @@ export default function SpotPage() {
    * to cancel each of them with a margin.
    */
   const cameraMode = !isVin && !previewUrl && !car && !loading;
+  // If the viewfinder cannot render, the page falls back to the document it
+  // replaced rather than to nothing. A camera screen is a nice way to start a
+  // scan; it is not the only way, and it should never be the reason this page
+  // shows an empty screen.
+  const [cameraFailed, setCameraFailed] = useState(false);
   useEffect(() => {
     if (!cameraMode) return;
     const previous = document.body.style.overflow;
@@ -719,12 +725,13 @@ export default function SpotPage() {
    * VIN is the exception. It takes a typed seventeen characters as readily as a
    * photograph, so it keeps the document and its own panel.
    */
-  if (cameraMode) {
+  if (cameraMode && !cameraFailed) {
     return (
       // No z-index. The layout column is already its own stacking context, so
       // a fixed child paints above everything else in it; z-[1] only invited a
       // fight with the shader background behind it.
       <div className="fixed inset-0 overflow-hidden bg-black">
+        <CameraBoundary onFail={() => setCameraFailed(true)}>
         <CaptureScreen
           hint="Tap for a photo · hold to record"
           onPickFile={handleThumbnailClick}
@@ -747,6 +754,7 @@ export default function SpotPage() {
             if (file) void identifyFile(file);
           }}
         />
+        </CameraBoundary>
       </div>
     );
   }
