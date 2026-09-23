@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { claimCamera } from "@/components/camera/camera-in-use";
 
 /**
  * The live rear camera, and the two things anyone wants from it: a still, or a
@@ -60,9 +61,13 @@ export function useCamera() {
   const [facing, setFacing] = useState<"environment" | "user">("environment");
   const [recording, setRecording] = useState(false);
 
+  const releaseRef = useRef<(() => void) | null>(null);
+
   const stop = useCallback(() => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
+    releaseRef.current?.();
+    releaseRef.current = null;
     setStatus("idle");
   }, []);
 
@@ -97,6 +102,8 @@ export function useCamera() {
         }).catch(() => {});
         streamRef.current?.getTracks().forEach((t) => t.stop());
         streamRef.current = stream;
+        // Tell the shader to stand down before the preview starts, not after.
+        releaseRef.current ??= claimCamera();
         setFacing(which);
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -196,6 +203,7 @@ export function useCamera() {
       if (stopTimerRef.current !== null) clearTimeout(stopTimerRef.current);
       recorderRef.current?.stream?.getTracks().forEach((t) => t.stop());
       streamRef.current?.getTracks().forEach((t) => t.stop());
+      releaseRef.current?.();
     },
     [],
   );

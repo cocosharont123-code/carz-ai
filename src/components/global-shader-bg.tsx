@@ -1,6 +1,7 @@
 "use client";
 
 import { WebGLShader } from "@/components/ui/web-gl-shader";
+import { useCameraInUse } from "@/components/camera/camera-in-use";
 
 // The homepage's neon RGB shader, mounted as a fixed background behind every page.
 //
@@ -14,9 +15,14 @@ import { WebGLShader } from "@/components/ui/web-gl-shader";
 // no text is inside a filtered, translucent or transformed layer, so glyphs keep
 // subpixel antialiasing instead of being resampled into softness.
 export function GlobalShaderBg() {
+  // Unmounted, not hidden: hiding the canvas would keep the context and the
+  // render loop alive, which is the cost being avoided. The scrims stay, so the
+  // background is still the app's black rather than nothing.
+  const cameraInUse = useCameraInUse();
+
   return (
     <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
-      <WebGLShader />
+      {!cameraInUse && <WebGLShader />}
       {/* Flat floor. This is the brightness dial: lower percentage = brighter
           neon. Below roughly /35 the clipped bands start reaching white behind
           body text again, which is what made type look blurred. */}
