@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ImagePlus, SwitchCamera, CameraOff } from "lucide-react";
+import { ImagePlus, SwitchCamera, CameraOff, X } from "lucide-react";
 import { useCamera, cameraSupported, recordingSupported, haptic } from "@/components/hooks/use-camera";
 import { cn } from "@/lib/utils";
 
@@ -22,12 +22,15 @@ const MAX_CLIP_MS = 15_000;
 export function CaptureScreen({
   onPhoto,
   onPickFile,
+  onClose,
   hint,
 }: {
   /** A still, ready for the scan pipeline. */
   onPhoto: (file: File) => void;
   /** Open the system picker instead. */
   onPickFile: () => void;
+  /** Leave the viewfinder and go back to the page. */
+  onClose?: () => void;
   hint?: string;
 }) {
   // Destructured rather than held as one object: the refs lint rule treats any
@@ -144,6 +147,20 @@ export function CaptureScreen({
       {/* Shutter flash. A white sheet at 180ms — long enough to register as a
           shutter, short enough not to hide the next frame. */}
       {flash && <div aria-hidden className="pointer-events-none absolute inset-0 bg-white" />}
+
+      {/* Always there, whatever the camera is doing. A full-screen viewfinder
+          with no way out is a trap if anything below it misbehaves. */}
+      {onClose && (
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close camera"
+          style={{ top: "calc(var(--safe-top) + 0.75rem)" }}
+          className="press glass-bubble absolute right-3 z-20 flex h-10 w-10 items-center justify-center rounded-full"
+        >
+          <X className="h-5 w-5 text-white" strokeWidth={2.5} aria-hidden />
+        </button>
+      )}
 
       {blocked && <Blocked status={status} onRetry={() => void start()} onPickFile={onPickFile} />}
 

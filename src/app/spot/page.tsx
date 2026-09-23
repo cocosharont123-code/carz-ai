@@ -2,7 +2,17 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ImagePlus, Upload, Trash2, X, TrafficCone, Check, BookmarkPlus, ChevronDown } from "lucide-react";
+import {
+  ImagePlus,
+  Upload,
+  Trash2,
+  X,
+  TrafficCone,
+  Check,
+  BookmarkPlus,
+  ChevronDown,
+  Camera,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Button as GlassButton } from "@/components/ui/editorial";
 import { ProgressiveFluxLoader } from "@/components/ui/progressive-flux-loader";
@@ -699,7 +709,18 @@ export default function SpotPage() {
    * page that scrolls behind a camera. Locking the body is simpler than trying
    * to cancel each of them with a margin.
    */
-  const cameraMode = !isVin && !previewUrl && !car && !loading;
+  /**
+   * The camera is opt-in, and off by default.
+   *
+   * It used to open on load and replace the page. On at least one real device
+   * that produced a blank screen every time, through four attempts at fixing
+   * it — and a page whose entire purpose is identifying a car is not a place to
+   * keep guessing. The document below is the code that worked for months, so
+   * that is what /spot renders again; the viewfinder opens on a tap, from a
+   * button that cannot blank anything by failing to mount.
+   */
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const cameraMode = cameraOpen && !isVin && !previewUrl && !car && !loading;
   // If the viewfinder cannot render, the page falls back to the document it
   // replaced rather than to nothing. A camera screen is a nice way to start a
   // scan; it is not the only way, and it should never be the reason this page
@@ -731,11 +752,18 @@ export default function SpotPage() {
       // a fixed child paints above everything else in it; z-[1] only invited a
       // fight with the shader background behind it.
       <div className="fixed inset-0 overflow-hidden bg-black">
-        <CameraBoundary onFail={() => setCameraFailed(true)}>
+        <CameraBoundary
+          onFail={() => {
+            setCameraFailed(true);
+            setCameraOpen(false);
+          }}
+        >
         <CaptureScreen
           hint="Tap for a photo · hold to record"
+          onClose={() => setCameraOpen(false)}
           onPickFile={handleThumbnailClick}
           onPhoto={(file) => {
+            setCameraOpen(false);
             acceptFile(file);
             // Straight into the scan. Having just aimed at a car and pressed
             // the shutter, a second button asking whether to identify it is
@@ -817,6 +845,23 @@ export default function SpotPage() {
           </div>
         )}
 
+
+        {/* The camera, on a tap. Not on load: opening it automatically is what
+            left this page blank on a real phone, and a button that does nothing
+            is recoverable in a way that an empty screen is not. */}
+        {!isVin && !previewUrl && !car && (
+          <button
+            type="button"
+            onClick={() => {
+              setCameraFailed(false);
+              setCameraOpen(true);
+            }}
+            className="press mt-6 flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-carz py-3.5 text-sm font-bold text-black transition hover:brightness-110"
+          >
+            <Camera className="h-4 w-4" strokeWidth={2.25} aria-hidden />
+            Open camera
+          </button>
+        )}
 
         {/* Upload card */}
         <div className="mt-6 space-y-4">
