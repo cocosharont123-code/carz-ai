@@ -61,13 +61,9 @@ export function useCamera() {
   const [facing, setFacing] = useState<"environment" | "user">("environment");
   const [recording, setRecording] = useState(false);
 
-  const releaseRef = useRef<(() => void) | null>(null);
-
   const stop = useCallback(() => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
-    releaseRef.current?.();
-    releaseRef.current = null;
     setStatus("idle");
   }, []);
 
@@ -102,8 +98,6 @@ export function useCamera() {
         }).catch(() => {});
         streamRef.current?.getTracks().forEach((t) => t.stop());
         streamRef.current = stream;
-        // Tell the shader to stand down before the preview starts, not after.
-        releaseRef.current ??= claimCamera();
         setFacing(which);
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -197,13 +191,26 @@ export function useCamera() {
     });
   }, []);
 
+  /**
+   * Claim the GPU for as long as this hook is mounted, not merely for as long
+   * as a stream is open.
+   *
+   * The dangerous window is the one before the stream exists: the shader is
+   * still rendering, getUserMedia is spinning up the camera hardware, and both
+   * want the GPU at once. Claiming only once the preview arrives leaves exactly
+   * that window unprotected.
+   */
+  useEffect(() => {
+    const release = claimCamera();
+    return release;
+  }, []);
+
   // Never leave the camera light on after this unmounts.
   useEffect(
     () => () => {
       if (stopTimerRef.current !== null) clearTimeout(stopTimerRef.current);
       recorderRef.current?.stream?.getTracks().forEach((t) => t.stop());
       streamRef.current?.getTracks().forEach((t) => t.stop());
-      releaseRef.current?.();
     },
     [],
   );
