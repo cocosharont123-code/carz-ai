@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ImagePlus,
@@ -21,8 +21,6 @@ import { Input } from "@/components/ui/input";
 import { useImageUpload } from "@/components/hooks/use-image-upload";
 import { CarCustomizer } from "@/components/car-customizer";
 import { ScanModePicker } from "@/components/scan-mode-picker";
-import { CaptureScreen } from "@/components/camera/capture-screen";
-import { CameraBoundary } from "@/components/camera/camera-boundary";
 import { VinPanel } from "@/components/vin-panel";
 import { addToGarage } from "@/lib/garage-local";
 import { carzPlusMonthly, carzPlusAnnual, carzPlusAnnualSaving } from "@/lib/plans";
@@ -398,6 +396,10 @@ export default function SpotPage() {
   const [spottedImage, setSpottedImage] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [mode, setMode] = useState<SpotMode>("photo");
+  // Its own input, separate from the library picker: `capture` is what sends a
+  // phone straight to its camera rather than to the photo roll, and the two
+  // need different behaviour from the same page.
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const [vinInput, setVinInput] = useState("");
   const [vinResult, setVinResult] = useState<VinResult | null>(null);
   // Mirrored from the picker purely so the loader can say which mode is
@@ -411,7 +413,6 @@ export default function SpotPage() {
     handleThumbnailClick,
     handleFileChange,
     handleRemove,
-    acceptFile,
   } = useImageUpload();
 
   const isVin = mode === "vin";
@@ -700,93 +701,6 @@ export default function SpotPage() {
   }
 
 
-  /**
-   * Nothing scrolls while the viewfinder is up.
-   *
-   * The camera is fixed and fills the screen, but the column it sits in still
-   * holds the back arrow's spacer, the legal notice and the nav's spacer — and
-   * the notice alone makes the document taller than the viewport, which is a
-   * page that scrolls behind a camera. Locking the body is simpler than trying
-   * to cancel each of them with a margin.
-   */
-  /**
-   * The camera is opt-in, and off by default.
-   *
-   * It used to open on load and replace the page. On at least one real device
-   * that produced a blank screen every time, through four attempts at fixing
-   * it — and a page whose entire purpose is identifying a car is not a place to
-   * keep guessing. The document below is the code that worked for months, so
-   * that is what /spot renders again; the viewfinder opens on a tap, from a
-   * button that cannot blank anything by failing to mount.
-   */
-  const [cameraOpen, setCameraOpen] = useState(false);
-  const cameraMode = cameraOpen && !isVin && !previewUrl && !car && !loading;
-  // If the viewfinder cannot render, the page falls back to the document it
-  // replaced rather than to nothing. A camera screen is a nice way to start a
-  // scan; it is not the only way, and it should never be the reason this page
-  // shows an empty screen.
-  const [cameraFailed, setCameraFailed] = useState(false);
-  useEffect(() => {
-    if (!cameraMode) return;
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = previous;
-    };
-  }, [cameraMode]);
-
-  /**
-   * The camera replaces the page rather than sitting on top of it.
-   *
-   * /spot is a camera screen now: it opens on the viewfinder, and the document
-   * — masthead, scanner tabs, result, garage, customizer — only appears once
-   * there is a photo to talk about. Everything downstream is untouched, because
-   * a capture enters through the same previewUrl the file picker always used.
-   *
-   * VIN is the exception. It takes a typed seventeen characters as readily as a
-   * photograph, so it keeps the document and its own panel.
-   */
-  if (cameraMode && !cameraFailed) {
-    return (
-      // No z-index. The layout column is already its own stacking context, so
-      // a fixed child paints above everything else in it; z-[1] only invited a
-      // fight with the shader background behind it.
-      <div className="fixed inset-0 overflow-hidden bg-black">
-        <CameraBoundary
-          onFail={() => {
-            setCameraFailed(true);
-            setCameraOpen(false);
-          }}
-        >
-        <CaptureScreen
-          hint="Tap for a photo · hold to record"
-          onClose={() => setCameraOpen(false)}
-          onPickFile={handleThumbnailClick}
-          onPhoto={(file) => {
-            setCameraOpen(false);
-            acceptFile(file);
-            // Straight into the scan. Having just aimed at a car and pressed
-            // the shutter, a second button asking whether to identify it is
-            // asking a question already answered.
-            void identifyFile(file);
-          }}
-        />
-        <Input
-          type="file"
-          accept="image/*"
-          className="hidden"
-          ref={fileInputRef}
-          onChange={(e) => {
-            handleFileChange(e);
-            const file = e.target.files?.[0];
-            if (file) void identifyFile(file);
-          }}
-        />
-        </CameraBoundary>
-      </div>
-    );
-  }
-
   return (
     <>
       {/* py-2, not py-14. That 3.5rem at each end was written when the nav was
@@ -846,21 +760,41 @@ export default function SpotPage() {
         )}
 
 
-        {/* The camera, on a tap. Not on load: opening it automatically is what
-            left this page blank on a real phone, and a button that does nothing
-            is recoverable in a way that an empty screen is not. */}
-        {!isVin && !previewUrl && !car && (
-          <button
-            type="button"
-            onClick={() => {
-              setCameraFailed(false);
-              setCameraOpen(true);
-            }}
-            className="press mt-6 flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-carz py-3.5 text-sm font-bold text-black transition hover:brightness-110"
-          >
-            <Camera className="h-4 w-4" strokeWidth={2.25} aria-hidden />
-            Open camera
-          </button>
+        {/* The phone's own camera, not one drawn in the page.
+            
+            An in-page viewfinder — getUserMedia into a <video> — blanked this
+            page on a real device, whether it opened on load or on a tap, and
+            five attempts at fixing it from here did not shift it. `capture`
+            hands the job to the camera app that device already trusts: it
+            opens outside the browser, returns a file, and cannot take this
+            page down with it, because this page is not running while it is up.
+            
+            The trade is a still photo only. No live preview, no hold-to-record
+            — which is no loss, since a recording was only ever scanned as its
+            first frame anyway. */}
+        {!previewUrl && !car && (
+          <>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              ref={cameraInputRef}
+              onChange={(e) => {
+                handleFileChange(e);
+                const file = e.target.files?.[0];
+                if (file && !isVin) void identifyFile(file);
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => cameraInputRef.current?.click()}
+              className="press mt-6 flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-carz py-3.5 text-sm font-bold text-black transition hover:brightness-110"
+            >
+              <Camera className="h-4 w-4" strokeWidth={2.25} aria-hidden />
+              {isVin ? "Photograph the VIN" : "Take a photo"}
+            </button>
+          </>
         )}
 
         {/* Upload card */}
