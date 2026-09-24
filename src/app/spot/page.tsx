@@ -21,10 +21,8 @@ import { Input } from "@/components/ui/input";
 import { useImageUpload } from "@/components/hooks/use-image-upload";
 import { CarCustomizer } from "@/components/car-customizer";
 import { ScanModePicker } from "@/components/scan-mode-picker";
-import { VinPanel } from "@/components/vin-panel";
 import { addToGarage } from "@/lib/garage-local";
 import { carzPlusMonthly, carzPlusAnnual, carzPlusAnnualSaving } from "@/lib/plans";
-import { normalizeVin, type VinFacts } from "@/lib/vin";
 import { SCAN_MODE_META, type ScanMode } from "@/lib/scan-mode";
 import { cn } from "@/lib/utils";
 import type { CarReport } from "@/lib/identify";
@@ -43,18 +41,6 @@ type Status = {
   totalSpots?: number;
 };
 
-// Everything the VIN itself established, kept beside the car it describes so
-// the result can show its working: the number, whether it proved itself, and
-// what the standard positions decode to.
-type VinResult = {
-  vin: string;
-  facts: VinFacts;
-  corrected?: string;
-  ambiguous?: string[];
-  registrySource?: string;
-  surface?: string;
-};
-
 // Phase labels tied to what the pipeline is actually doing: a wide look, then
 // an independent second opinion, then a magnified read of the deciding detail.
 const SCAN_PHASES = [
@@ -65,22 +51,8 @@ const SCAN_PHASES = [
   { at: 82, label: "almost there" },
 ];
 
-// The VIN pipeline does genuinely different work, so it says so rather than
-// reusing labels about badges and body shapes that would be a lie here.
-const VIN_PHASES = [
-  { at: 0, label: "finding the plate" },
-  { at: 22, label: "reading the characters" },
-  { at: 46, label: "verifying the check digit" },
-  { at: 68, label: "decoding the VIN" },
-  { at: 86, label: "naming the car" },
-];
 
 // Two ways to identify a car: what it looks like, or the number stamped on it.
-type SpotMode = "photo" | "vin";
-const MODES: { id: SpotMode; label: string }[] = [
-  { id: "photo", label: "Car photo" },
-  { id: "vin", label: "VIN" },
-];
 
 /**
  * The scan reports no progress — /api/identify is a single call that either
@@ -395,13 +367,10 @@ export default function SpotPage() {
   const [note, setNote] = useState("");
   const [spottedImage, setSpottedImage] = useState("");
   const [isDragging, setIsDragging] = useState(false);
-  const [mode, setMode] = useState<SpotMode>("photo");
   // Its own input, separate from the library picker: `capture` is what sends a
   // phone straight to its camera rather than to the photo roll, and the two
   // need different behaviour from the same page.
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  const [vinInput, setVinInput] = useState("");
-  const [vinResult, setVinResult] = useState<VinResult | null>(null);
   // Mirrored from the picker purely so the loader can say which mode is
   // running — PRO is the slower one, and the wait makes more sense named.
   const [scanMode, setScanMode] = useState<ScanMode>("fast");
@@ -415,14 +384,8 @@ export default function SpotPage() {
     handleRemove,
   } = useImageUpload();
 
-  const isVin = mode === "vin";
-  // What the typed VIN actually resolves to — spaces and dashes stripped, and
-  // the three characters a VIN can't contain folded onto the ones they're
-  // mistaken for. The count shown to the user has to be of this, not of the raw
-  // input, or "17 characters" and "valid VIN" disagree.
-  const typedVin = normalizeVin(vinInput);
-  const canRun = isVin ? typedVin.length === 17 || !!previewUrl : !!previewUrl;
-  const run = isVin ? identifyVin : identify;
+  const canRun = !!previewUrl;
+  const run = identify;
 
   async function refresh() {
     const s = await fetch("/api/me").then((r) => r.json());
@@ -479,7 +442,7 @@ export default function SpotPage() {
 
   /**
    * The half of a report that follows from the car's name rather than from what
-   * was photographed — specs, rarity, values. Shared by both scanners: a VIN
+   * was photographed — specs, rarity, values. A car
    * decode and a photo scan arrive at an identification by completely different
    * routes, but everything after the name is the same work.
    */
@@ -508,7 +471,7 @@ export default function SpotPage() {
         // spotter curates, so it only takes what they press Save on.
 
         // Submit to the global rarest-cars leaderboard (best-effort). Only with
-        // a photo of the car: a VIN scan photographs a plate, and a leaderboard
+        // a photo of the car: a leaderboard
         // of door jambs helps nobody.
         if (full.rarityScore > 0 && rawImage) {
           // 1000px. It was 200 at quality 0.5, which was sized for a row
@@ -537,80 +500,6 @@ export default function SpotPage() {
         setSpecsPending(false);
       }
     })();
-  }
-
-  /**
-   * Identify a car from its VIN rather than its bodywork.
-   *
-   * A typed VIN beats a photographed one whenever both are present: someone who
-   * has typed all seventeen characters is doing it precisely because the plate
-   * wouldn't photograph, and their reading of it is the better source.
-   */
-  async function identifyVin() {
-    const typed = normalizeVin(vinInput);
-    if (typed.length !== 17 && !previewUrl) {
-      setError("Add a photo of the VIN plate, or type all 17 characters.");
-      return;
-    }
-    setError("");
-    setLimitHit(false);
-    setVinResult(null);
-    setScanProgress(0);
-    setLoading(true);
-    try {
-      let payload: { vin?: string; image?: string };
-      if (typed.length === 17) {
-        payload = { vin: typed };
-      } else {
-        // Higher quality than a car scan for the same pixel budget: stamped
-        // characters are exactly what JPEG ringing destroys, and one mangled
-        // character is a different vehicle rather than a slightly worse guess.
-        payload = { image: await downscale(await objectUrlToDataUrl(previewUrl!), 2048, 0.92) };
-      }
-
-      const res = await fetch("/api/vin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-
-      if (res.status === 402) {
-        setLimitHit(true);
-        if (data.status) setStatus((prev) => ({ ...(prev as Status), ...data.status }));
-        return;
-      }
-      if (!res.ok) {
-        setError(data.message || "Something went wrong.");
-        return;
-      }
-      // A VIN that couldn't be read or decoded — the message says which, and
-      // what to do about it.
-      if (!data.ok) {
-        setError(data.message || "Couldn't read that VIN.");
-        return;
-      }
-
-      setCar(data.car);
-      // No car photo here, so no customizer and no garage thumbnail: the image
-      // that was uploaded is a picture of a plate.
-      setSpottedImage("");
-      setVinResult({
-        vin: data.vin,
-        facts: data.facts,
-        corrected: data.corrected || undefined,
-        ambiguous: data.ambiguous,
-        registrySource: data.registrySource || undefined,
-        surface: data.read?.surface,
-      });
-      setStatus((prev) => ({ ...(prev as Status), ...data.status }));
-      if (data.car?.isCar) void loadDetails(data.car, "");
-      await refresh();
-    } catch {
-      setError("Network error — please try again.");
-    } finally {
-      setLoading(false);
-    }
   }
 
   async function identify() {
@@ -686,18 +575,7 @@ export default function SpotPage() {
     setNote("");
     setCar(null);
     setSpottedImage("");
-    setVinResult(null);
-    setVinInput("");
     setError("");
-  }
-
-  // Switching scanners clears the last result: a car card from a photo scan
-  // sitting under the VIN tab would look like it came from a VIN.
-  function switchMode(next: SpotMode) {
-    if (next === mode) return;
-    startNew();
-    setLimitHit(false);
-    setMode(next);
   }
 
 
@@ -713,32 +591,10 @@ export default function SpotPage() {
             two buttons under it say what to do — a 7xl restatement of the tab
             you just tapped was taking a third of the screen to add nothing.
             The line under it stays, because it does say something the buttons
-            do not, and is the only copy carrying the VIN instructions. */}
+            do not. */}
         <p className="mt-3 text-sm ">
-          {isVin
-            ? "Photograph the VIN plate and get the exact car it was built as."
-            : "Drop in a photo, then hit identify."}
+          Drop in a photo, then hit identify.
         </p>
-
-        {/* The two ways in. A VIN is the car's own answer rather than a very
-            good guess at it, so it sits beside the photo scanner as a peer
-            instead of being buried somewhere in settings. */}
-        <div className="mt-4 inline-flex gap-1 rounded-full border border-white/12 bg-white/[0.03] p-1">
-          {MODES.map((m) => (
-            <button
-              key={m.id}
-              type="button"
-              onClick={() => switchMode(m.id)}
-              aria-pressed={mode === m.id}
-              className={cn(
-                "util-label whitespace-nowrap rounded-full px-5 py-1.5 transition-colors",
-                mode === m.id ? "bg-carz text-black" : "opacity-70 hover:opacity-100",
-              )}
-            >
-              {m.label}
-            </button>
-          ))}
-        </div>
 
         {status && (
           <p className="util-label mt-3 ">
@@ -787,7 +643,7 @@ export default function SpotPage() {
               onChange={(e) => {
                 handleFileChange(e);
                 const file = e.target.files?.[0];
-                if (file && !isVin) void identifyFile(file);
+                if (file) void identifyFile(file);
               }}
             />
             <button
@@ -796,7 +652,7 @@ export default function SpotPage() {
               className="press mt-6 flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-carz py-3.5 text-sm font-bold text-black transition hover:brightness-110"
             >
               <Camera className="h-4 w-4" strokeWidth={2.25} aria-hidden />
-              {isVin ? "Photograph the VIN" : "Take a photo"}
+              Take a photo
             </button>
           </>
         )}
@@ -828,12 +684,10 @@ export default function SpotPage() {
               </div>
               <div className="text-center">
                 <p className="text-sm font-medium">
-                  {isVin ? "Click to select a photo of the VIN" : "Click to select a car photo"}
+                  Click to select a car photo
                 </p>
                 <p className="text-xs ">
-                  {isVin
-                    ? "The plate at the base of the windscreen, or the door-jamb sticker"
-                    : "or drag and drop it here"}
+                  or drag and drop it here
                 </p>
               </div>
             </div>
@@ -867,66 +721,30 @@ export default function SpotPage() {
             </div>
           )}
 
-          {isVin ? (
-            <div>
-              <Input
-                value={vinInput}
-                onChange={(e) => setVinInput(e.target.value.toUpperCase())}
-                placeholder="…or type the 17 characters"
-                spellCheck={false}
-                autoCapitalize="characters"
-                autoComplete="off"
-                maxLength={25}
-                className="font-mono tracking-[0.15em]"
-                aria-label="VIN"
-              />
-              {/* Counts what the VIN actually is rather than what was typed:
-                  spaces and dashes are stripped, and I/O/Q fold onto 1/0/0. */}
-              {vinInput.trim() !== "" && (
-                <p className="mt-1.5 text-xs opacity-60">
-                  {typedVin.length === 17
-                    ? "17 characters — this will be used instead of the photo."
-                    : `${typedVin.length} of 17 characters.`}
-                </p>
-              )}
-            </div>
-          ) : (
-            <Input
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="Optional note: 'spotted downtown, looked rare…'"
-            />
-          )}
-
-          {/* Only on the photo tab: a VIN read is a transcription, and the two
-              modes are about how hard to look at a car's bodywork. Showing a
-              control here that the VIN pipeline ignores would be a lie. */}
-          {!isVin && !loading && <ScanModePicker onModeChange={setScanMode} />}
+          {!loading && <ScanModePicker onModeChange={setScanMode} />}
 
           {loading ? (
             <ScanningButton
               progress={scanProgress}
-              phases={isVin ? VIN_PHASES : SCAN_PHASES}
+              phases={SCAN_PHASES}
               // Each pipeline is doing a different kind of work, and the orb
-              // has a state for each: a VIN is located and read, Precise takes
+              // has a state for each: Precise takes
               // a second look and adjudicates, Lightning reads the silhouette.
-              orbState={isVin ? "searching" : scanMode === "precise" ? "solving" : "shaping"}
+              orbState={scanMode === "precise" ? "solving" : "shaping"}
               hint={
-                isVin
-                  ? "Reading seventeen characters and checking them against the VIN's own checksum"
-                  : scanMode === "precise"
-                    ? `${SCAN_MODE_META.precise.name} scan — a second look, a magnified detail, and a tiebreak`
-                    : "Reading badges, lights and body lines — this takes a few seconds"
+                scanMode === "precise"
+                  ? `${SCAN_MODE_META.precise.name} scan — a second look, a magnified detail, and a tiebreak`
+                  : "Reading badges, lights and body lines — this takes a few seconds"
               }
             />
           ) : !car ? (
             <GlassButton onClick={run} disabled={!canRun} size="lg" className="w-full py-5">
-              {isVin ? "Read VIN" : "Identify car"}
+              Identify car
             </GlassButton>
           ) : (
             <div className="flex gap-3">
               <GlassButton onClick={run} className="flex-1">
-                {isVin ? "Read again" : "Re-identify"}
+                Re-identify
               </GlassButton>
               <GlassButton onClick={startNew} className="flex-1">
                 New car
@@ -953,18 +771,6 @@ export default function SpotPage() {
               or {carzPlusAnnual()}/year — save {carzPlusAnnualSaving()}%
             </p>
           </div>
-        )}
-
-        {/* What the number itself said, above the car it describes. */}
-        {vinResult && !limitHit && (
-          <VinPanel
-            vin={vinResult.vin}
-            facts={vinResult.facts}
-            corrected={vinResult.corrected}
-            ambiguous={vinResult.ambiguous}
-            registrySource={vinResult.registrySource}
-            surface={vinResult.surface}
-          />
         )}
 
         {/* Result */}
@@ -1104,13 +910,10 @@ export default function SpotPage() {
             ) : (
               <>
                 <h2 className="text-xl font-bold">
-                  {isVin ? "Not a car" : "No car detected"}
+                  No car detected
                 </h2>
                 <p className="mt-1 text-sm ">
-                  {car.notes ||
-                    (isVin
-                      ? "That VIN decodes to something that isn't a car."
-                      : "Try a clearer photo of the car.")}
+                  {car.notes || "Try a clearer photo of the car."}
                 </p>
               </>
             )}
