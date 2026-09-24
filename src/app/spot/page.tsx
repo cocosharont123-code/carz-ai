@@ -709,7 +709,11 @@ export default function SpotPage() {
           padding twice at both ends — which is the room to scroll above the
           heading and below the identify button. */}
       <main className="mx-auto w-full max-w-2xl px-5 py-2">
-        <h1 className="display mt-3 text-7xl">Spot a car</h1>
+        {/* No "Spot a car" headline. The nav says which page this is, and the
+            two buttons under it say what to do — a 7xl restatement of the tab
+            you just tapped was taking a third of the screen to add nothing.
+            The line under it stays, because it does say something the buttons
+            do not, and is the only copy carrying the VIN instructions. */}
         <p className="mt-3 text-sm ">
           {isVin
             ? "Photograph the VIN plate and get the exact car it was built as."
