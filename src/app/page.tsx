@@ -1,15 +1,27 @@
 import Link from "next/link";
 import { EXPLORE_BUBBLES } from "@/config/explore";
-import { CARZ_PLUS, CARZ_MAX, carzPlusMonthly, carzMaxMonthly } from "@/lib/plans";
 
 /**
  * The launch homepage.
  *
- * Everything it says about the app comes from config the app itself uses —
- * the feature list is the same EXPLORE_BUBBLES the menu renders, the price is
- * the same CARZ_PLUS the pricing page bills from — so a marketing page cannot
- * quietly start advertising something the product no longer does.
+ * Everything it says about the app comes from config the app itself uses: the
+ * tiles are the same EXPLORE_BUBBLES the menu renders, so a marketing page
+ * cannot quietly start advertising something the product no longer does.
+ *
+ * What it does not carry is anything the bottom nav already does. Spot, Feed,
+ * Garage and Leaderboard are one tap away from every screen in the app, and a
+ * grid repeating them was a menu for a menu.
  */
+/**
+ * Destinations the bottom nav already carries.
+ *
+ * They are dropped from this grid rather than from EXPLORE_BUBBLES, which the
+ * nav's own menu renders from the same list — removing them there would take
+ * them out of the menu too. Matched on href rather than label so a rename
+ * cannot quietly put one back.
+ */
+const ON_THE_NAV = new Set(["/spot", "/feed", "/garage", "/leaderboard"]);
+
 export default function Home() {
   return (
     // pb-2, not pb-24. That 6rem was written when the nav was at the top of
@@ -32,10 +44,8 @@ export default function Home() {
       {/* What it does — the app's own feature list, not a second copy of it. */}
       <section className="mt-8 sm:mt-10">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {EXPLORE_BUBBLES.map((item) => {
+          {EXPLORE_BUBBLES.filter((item) => !ON_THE_NAV.has(item.href)).map((item) => {
             const Icon = item.icon;
-            // Eight tiles divide evenly at both two and four columns, so
-            // nothing has to stretch to fill a row any more.
             return (
               <Link
                 key={item.label}
@@ -48,61 +58,6 @@ export default function Home() {
               </Link>
             );
           })}
-        </div>
-      </section>
-
-      {/* Membership */}
-      <section className="mt-20 grid gap-4 sm:grid-cols-2">
-        <div className="glass-card flex flex-col rounded-3xl p-7">
-          <p className="util-label text-carz">{CARZ_PLUS.name}</p>
-          <h2 className="display mt-2 text-4xl">
-            {carzPlusMonthly()}
-            <span className="text-xl opacity-60"> / month</span>
-          </h2>
-          <p className="mt-2 text-[13px] opacity-60">{CARZ_PLUS.blurb}</p>
-          <ul className="mt-6 flex-1 space-y-2.5 text-left">
-            {CARZ_PLUS.perks.map((p) => (
-              <li key={p.title} className="flex items-start gap-2.5 text-[13px]">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-carz" />
-                <span className="opacity-90">{p.title}</span>
-              </li>
-            ))}
-          </ul>
-          <Link
-            href="/pricing"
-            className="press glass-card mt-7 rounded-full py-3 text-center text-sm font-bold"
-          >
-            Get {CARZ_PLUS.name}
-          </Link>
-        </div>
-
-        {/* MAX is Carz+ and then some, so it says so rather than repeating the
-            four lines above it — a list that restates the cheaper tier makes
-            the difference between them harder to see, not easier. */}
-        <div className="glass-card relative flex flex-col rounded-3xl p-7 ring-1 ring-white/20">
-          <p className="util-label text-rank-1">{CARZ_MAX.name}</p>
-          <h2 className="display mt-2 text-4xl">
-            {carzMaxMonthly()}
-            <span className="text-xl opacity-60"> / month</span>
-          </h2>
-          <p className="mt-2 text-[13px] opacity-60">{CARZ_MAX.blurb}</p>
-          <p className="mt-6 text-[13px] font-semibold">
-            Everything in {CARZ_PLUS.name}, plus:
-          </p>
-          <ul className="mt-3 flex-1 space-y-2.5 text-left">
-            {CARZ_MAX.perks.map((p) => (
-              <li key={p.title} className="flex items-start gap-2.5 text-[13px]">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-rank-1" />
-                <span className="opacity-90">{p.title}</span>
-              </li>
-            ))}
-          </ul>
-          <Link
-            href="/pricing"
-            className="press mt-7 rounded-full bg-white py-3 text-center text-sm font-bold text-neutral-900 transition hover:opacity-90"
-          >
-            Get {CARZ_MAX.name}
-          </Link>
         </div>
       </section>
     </main>
