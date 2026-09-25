@@ -26,7 +26,7 @@ export function PageTabs({ group }: { group: keyof typeof GROUPS }) {
   const pathname = usePathname();
   return (
     <div className="mx-auto flex w-full max-w-6xl justify-center px-5 pt-5">
-      <nav className="inline-flex gap-1 rounded-full border border-white/12 bg-white/[0.03] p-1">
+      <nav className="inline-flex gap-1 rounded-full border border-hairline bg-surface p-1">
         {GROUPS[group].map((t) => {
           const active = pathname === t.href;
           return (

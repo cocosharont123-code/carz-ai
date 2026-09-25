@@ -168,7 +168,7 @@ export default function MembershipPage() {
       <SiteHeader />
       <main className="mx-auto w-full max-w-2xl px-5 py-10">
         {/* Hero offer */}
-        <div className="reveal rounded-3xl border border-white/12 bg-card p-8 text-center">
+        <div className="reveal rounded-3xl border border-hairline bg-card p-8 text-center">
           <div className="util-label">Carz+ membership</div>
           <h1 className="display mt-2 text-4xl">
             {member ? "You're a member" : "Get more from every car"}
@@ -182,7 +182,7 @@ export default function MembershipPage() {
                     Free trial · {trialDaysLeft} {trialDaysLeft === 1 ? "day" : "days"} left · then $9.99/mo
                   </span>
                 ) : (
-                  <span className="rounded-full border border-white/15 px-4 py-1.5 text-xs">
+                  <span className="rounded-full border border-hairline px-4 py-1.5 text-xs">
                     Active · {s?.billing === "annual" ? "$80/yr" : "$9.99/mo"}
                   </span>
                 )}
@@ -246,7 +246,7 @@ export default function MembershipPage() {
                       if (e.key === "Enter") redeem();
                     }}
                     placeholder="Enter code"
-                    className="w-full rounded-full border border-white/15 bg-white/[0.04] px-4 py-2.5 text-sm outline-none placeholder:opacity-40 focus:border-white/30"
+                    className="w-full rounded-full border border-hairline bg-surface px-4 py-2.5 text-sm outline-none placeholder:opacity-40 focus:border-hairline-strong"
                   />
                   <Button onClick={redeem} loading={busy} size="md">
                     Redeem

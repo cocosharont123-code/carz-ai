@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { MapPin } from "lucide-react";
 import { Avatar } from "@/components/default-avatar";
 import { CarPhoto, LiveDot, Skeleton } from "@/components/ui/editorial";
+import { usePrefs } from "@/components/prefs-provider";
+import { formatDistance } from "@/lib/prefs";
 
 type Spot = {
   id: string;
@@ -39,12 +41,8 @@ function ago(ts: number): string {
   return rem ? `${hrs} hrs ${rem} min ago` : `${hrs} hrs ago`;
 }
 
-function distance(km: number): string {
-  if (km < 1) return "under 1 km away";
-  return `${km < 10 ? km.toFixed(1) : Math.round(km)} km away`;
-}
-
 export function NearbySpots() {
+  const { prefs } = usePrefs();
   const [state, setState] = useState<State>({ kind: "idle" });
 
   const load = useCallback(async () => {
@@ -124,7 +122,7 @@ export function NearbySpots() {
         )}
 
         {state.kind === "denied" && (
-          <div className="rounded-2xl border border-white/10 bg-card p-6 text-center text-card-foreground">
+          <div className="rounded-2xl border border-hairline bg-card p-6 text-center text-card-foreground">
             <MapPin className="mx-auto h-7 w-7 opacity-40" strokeWidth={1.5} aria-hidden />
             <p className="mt-2 text-sm font-semibold">Location needed</p>
             <p className="mx-auto mt-1 max-w-sm text-[13px] opacity-70">
@@ -133,7 +131,7 @@ export function NearbySpots() {
             </p>
             <button
               onClick={() => void load()}
-              className="press mt-4 rounded-full border border-white/20 px-5 py-2 text-sm font-semibold transition hover:border-white/40"
+              className="press mt-4 rounded-full border border-hairline-strong px-5 py-2 text-sm font-semibold transition hover:border-hairline-strong"
             >
               Use my location
             </button>
@@ -150,10 +148,12 @@ export function NearbySpots() {
         )}
 
         {state.kind === "ready" && state.spots.length === 0 && (
-          <div className="rounded-2xl border border-white/10 bg-card p-6 text-center text-card-foreground">
+          <div className="rounded-2xl border border-hairline bg-card p-6 text-center text-card-foreground">
             <p className="text-sm font-semibold">Nothing spotted near you yet</p>
             <p className="mx-auto mt-1 max-w-sm text-[13px] opacity-70">
-              No one has caught a car on the live camera within {state.radiusKm} km in the last two hours.
+              No one has caught a car on the live camera within{" "}
+              {prefs.units === "mi" ? `${Math.round(state.radiusKm * 0.621371)} miles` : `${state.radiusKm} km`} in the
+              last two hours.
               Snap one and you will be the first.
             </p>
           </div>
@@ -164,7 +164,7 @@ export function NearbySpots() {
             {state.spots.map((s) => (
               <article
                 key={s.id}
-                className="flex gap-3 overflow-hidden rounded-2xl border border-white/10 bg-card p-3 text-card-foreground"
+                className="flex gap-3 overflow-hidden rounded-2xl border border-hairline bg-card p-3 text-card-foreground"
               >
                 <div className="h-20 w-24 shrink-0 overflow-hidden rounded-xl bg-foreground/[0.04]">
                   <CarPhoto src={s.image} alt={`${s.make} ${s.model}`} color className="h-full w-full" />
@@ -176,7 +176,7 @@ export function NearbySpots() {
                   {s.yearRange && <p className="text-xs opacity-60">{s.yearRange}</p>}
                   <p className="mt-1 flex items-center gap-1.5 text-xs">
                     <LiveDot />
-                    <span className="opacity-80">{distance(s.km)}</span>
+                    <span className="opacity-80">{formatDistance(s.km, prefs.units)}</span>
                     <span className="opacity-40">·</span>
                     <span className="opacity-60">{ago(s.ts)}</span>
                   </p>

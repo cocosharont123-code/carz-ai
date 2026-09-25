@@ -615,7 +615,7 @@ export default function SpotPage() {
           />
 
           {camOn && !shotUrl ? (
-            <div className="overflow-hidden rounded-2xl border border-white/12 bg-black">
+            <div className="overflow-hidden rounded-2xl border border-hairline bg-black">
               <div className="relative aspect-[4/3] w-full">
                 {/* muted + playsInline so iOS Safari plays inline instead of
                     taking over the screen with its native player. */}
@@ -636,7 +636,7 @@ export default function SpotPage() {
                 </button>
                 <button
                   onClick={stopCam}
-                  className="press rounded-xl border border-white/20 px-5 py-3 text-sm font-semibold text-white transition hover:border-white/40"
+                  className="press rounded-xl border border-hairline-strong px-5 py-3 text-sm font-semibold text-white transition hover:border-hairline-strong"
                 >
                   Cancel
                 </button>
@@ -738,10 +738,10 @@ export default function SpotPage() {
               className="w-full overflow-hidden rounded-2xl border-2 border-neon-blue/70 bg-neon-blue/10 shadow-[0_0_40px_-10px_rgba(0,229,255,0.8)]"
             >
               <div className="flex items-center justify-center gap-3 px-5 py-5">
-                <span className="h-6 w-6 shrink-0 animate-spin rounded-full border-[3px] border-white/25 border-t-neon-blue" />
+                <span className="h-6 w-6 shrink-0 animate-spin rounded-full border-[3px] border-hairline-strong border-t-neon-blue" />
                 <span className="text-lg font-black tracking-tight">Reading the car…</span>
               </div>
-              <div className="h-1.5 w-full bg-white/10">
+              <div className="h-1.5 w-full bg-surface-2">
                 <div className="scan-sweep h-full w-1/3 bg-neon-blue" />
               </div>
             </div>
@@ -768,7 +768,7 @@ export default function SpotPage() {
         )}
 
         {limitHit && (
-          <div className="mt-4 rounded-2xl border border-white/12 bg-card text-card-foreground p-6 text-center">
+          <div className="mt-4 rounded-2xl border border-hairline bg-card text-card-foreground p-6 text-center">
             <TrafficCone className="mx-auto h-8 w-8 opacity-50" strokeWidth={1.5} aria-hidden />
             <h3 className="display mt-2 text-2xl">Out of free scans</h3>
             <p className="mx-auto mt-1 max-w-sm text-[13px] opacity-70">

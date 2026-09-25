@@ -45,3 +45,12 @@ export function removeWish(id: string): WishItem[] {
   save(next);
   return next;
 }
+
+/** Wipe the on-device wishlist. Used by Settings → Data on this device. */
+export function clearWishlist(): void {
+  try {
+    window.localStorage.removeItem(KEY);
+  } catch {
+    /* ignore */
+  }
+}

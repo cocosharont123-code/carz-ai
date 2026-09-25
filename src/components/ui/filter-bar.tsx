@@ -22,9 +22,9 @@ export function FilterBar({
   const [q, setQ] = useState("");
 
   return (
-    <div className={cn("flex flex-col border border-white/15 sm:flex-row sm:items-stretch", className)}>
+    <div className={cn("flex flex-col border border-hairline sm:flex-row sm:items-stretch", className)}>
       {/* segmented tabs */}
-      <div className="flex border-b border-white/15 sm:border-b-0 sm:border-r">
+      <div className="flex border-b border-hairline sm:border-b-0 sm:border-r">
         {tabs.map((t) => (
           <button
             key={t}

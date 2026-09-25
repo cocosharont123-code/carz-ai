@@ -11,21 +11,35 @@
   --color-rank-3: #d28a4a;
   --color-success-600: #16a34a;
 
-  /* Neon primary accent + neon trio. */
-  --color-carz: #00e5ff; /* primary accent = neon blue */
-  --color-carz-ink: #04121a;
+  /* Neon trio. Fixed — these are the brand, not a preference. */
   --color-neon-blue: #00e5ff;
   --color-neon-green: #39ff14;
   --color-neon-red: #ff3131;
-  /* Neon "dark" text colors (readable on black, no grey). */
-  --color-nblue: #22b8ff;
-  --color-nred: #ff3b5c;
-  --color-ngreen: #2ee66e;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  /* Accent: `--accent-hex` is what the settings page writes. */
+  --color-carz: var(--accent-hex, #00e5ff);
+  --color-carz-ink: var(--accent-ink, #04121a);
+
+  /* Neon text colours, re-darkened for light backgrounds. */
+  --color-nblue: var(--nblue);
+  --color-nred: var(--nred);
+  --color-ngreen: var(--ngreen);
+
+  /* Hairlines, raised surfaces, scrims and absolute ink. */
+  --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-scrim: var(--scrim);
+  --color-scrim-strong: var(--scrim-strong);
+  --color-ink: var(--ink);
+  --color-ink-invert: var(--ink-invert);
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
   --font-serif: ui-serif, "New York", Georgia, "Times New Roman", serif;
@@ -94,6 +108,24 @@
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.9rem;
+
+  /* Light theme. Background is a shade off-white so a pure-white card reads as
+     a card; on #fff the two were the same surface with an invisible edge. */
+  --background: oklch(0.985 0 0);
+  --hairline: oklch(0 0 0 / 0.12);
+  --hairline-strong: oklch(0 0 0 / 0.3);
+  --surface: oklch(0 0 0 / 0.035);
+  --surface-2: oklch(0 0 0 / 0.07);
+  --surface-3: oklch(0 0 0 / 0.11);
+  /* Scrims sit over photography, so they stay dark in both themes. */
+  --scrim: oklch(0 0 0 / 0.55);
+  --scrim-strong: oklch(0 0 0 / 0.8);
+  --ink: oklch(0.16 0 0);
+  --ink-invert: oklch(0.99 0 0);
+  --nblue: #0072a3;
+  --nred: #c81e3c;
+  --ngreen: #17843c;
+
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -138,6 +170,19 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  --hairline: oklch(1 0 0 / 0.12);
+  --hairline-strong: oklch(1 0 0 / 0.28);
+  --surface: oklch(1 0 0 / 0.03);
+  --surface-2: oklch(1 0 0 / 0.08);
+  --surface-3: oklch(1 0 0 / 0.14);
+  --scrim: oklch(0 0 0 / 0.6);
+  --scrim-strong: oklch(0 0 0 / 0.85);
+  --ink: oklch(0.985 0 0);
+  --ink-invert: oklch(0.16 0 0);
+  --nblue: #22b8ff;
+  --nred: #ff3b5c;
+  --ngreen: #2ee66e;
 }
 
 @layer base {
@@ -289,9 +334,12 @@
 
 h1, h2, h3, h4 { letter-spacing: -0.02em; line-height: 1.2; }
 
-/* All car photography stays black & white. */
+/* Car photography is black & white by default; "Photo style" turns it off. */
 .car-photo {
   filter: grayscale(1) contrast(1.03);
+}
+:root[data-photos="color"] .car-photo {
+  filter: none;
 }
 
 /* The live indicator: a small neon-green pulsing dot. */
@@ -421,7 +469,7 @@ body {
   position: relative;
   isolation: isolate;
   --blur-behind: 20px;
-  color: oklch(0.985 0 0);
+  color: var(--ink);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04) 55%, rgba(255, 255, 255, 0.02));
   border: 1px solid rgba(255, 255, 255, 0.16);
@@ -450,3 +498,65 @@ body {
     inset 0 0 24px 0 rgba(255, 255, 255, 0.07),
     0 14px 36px -12px rgba(0, 0, 0, 0.75);
 }
+
+
+/* ==========================================================================
+   Preferences — everything the settings page can change at runtime.
+   Each block is driven by an attribute on <html>, written before first paint
+   so none of it flashes. Colour, radius and text size are plain variables
+   (`--accent-hex`, `--radius`, `--font-scale`) set inline on the same element.
+   ========================================================================== */
+
+/* Text size. Rem-based spacing scales with it, which is the point. */
+html {
+  font-size: calc(100% * var(--font-scale, 1));
+}
+
+/* Reduced motion, chosen in settings rather than in the OS. Mirrors the
+   prefers-reduced-motion block above — reveals must end up visible, not
+   half-faded, so this sets the final state rather than only killing the
+   transition. */
+:root[data-motion="reduced"] .reveal {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+:root[data-motion="reduced"] .press:active,
+:root[data-motion="reduced"] .lift:hover {
+  transform: none;
+}
+:root[data-motion="reduced"] *,
+:root[data-motion="reduced"] *::before,
+:root[data-motion="reduced"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Glass off: keep the tint and the edge, drop the expensive blur. The biggest
+   single win available on a mid-range phone. */
+:root[data-glass="off"] .blur-behind::before,
+:root[data-glass="off"] .glass-card::before {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+:root[data-glass="off"] .glass-card {
+  background: var(--surface-2);
+}
+
+/* Glow off: strip the neon bloom, keep the colour. */
+:root[data-glow="off"] .hunt-glow {
+  animation: none;
+}
+:root[data-glow="off"] [class*="shadow-\[0_0"] {
+  box-shadow: none !important;
+}
+
+/* The animated WebGL background. Hidden in CSS rather than unmounted in React,
+   so the boot script can suppress it in the first painted frame — unmounting
+   would need the preference in React state, which arrives a tick too late. */
+:root[data-shader="off"] .global-shader {
+  display: none;
+}
+

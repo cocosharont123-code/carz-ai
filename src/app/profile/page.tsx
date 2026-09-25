@@ -108,7 +108,7 @@ function ProfileInner() {
         {loading ? (
           <Skeleton className="mt-8 h-64 w-full" />
         ) : authStatus === "unauthenticated" ? (
-          <div className="mt-8 rounded-2xl border border-white/10 bg-card text-card-foreground p-10 text-center">
+          <div className="mt-8 rounded-2xl border border-hairline bg-card text-card-foreground p-10 text-center">
             <h3 className="display text-3xl">Sign in</h3>
             <p className="mx-auto mt-2 max-w-sm text-sm ">Set up your profile to appear on the board.</p>
             <button
@@ -126,7 +126,7 @@ function ProfileInner() {
               <div>
                 <button
                   onClick={() => fileRef.current?.click()}
-                  className="util-label border border-white/20 px-4 py-2  transition hover:border-carz "
+                  className="util-label border border-hairline-strong px-4 py-2  transition hover:border-carz "
                 >
                   {image ? "Change" : "Upload"}
                 </button>
@@ -142,7 +142,7 @@ function ProfileInner() {
 
             <div>
               <label className="util-label ">Username <span className="">*</span></label>
-              <div className="mt-2 flex items-center rounded-xl border border-white/15 bg-white/[0.03] px-3">
+              <div className="mt-2 flex items-center rounded-xl border border-hairline bg-surface px-3">
                 <span className="">@</span>
                 <input
                   value={username}
@@ -164,7 +164,7 @@ function ProfileInner() {
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="How your name shows (optional)"
                 maxLength={40}
-                className="mt-2 w-full rounded-xl border border-white/15 bg-white/[0.03] px-3 py-3 text-sm  outline-none "
+                className="mt-2 w-full rounded-xl border border-hairline bg-surface px-3 py-3 text-sm  outline-none "
               />
             </div>
 

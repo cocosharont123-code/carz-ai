@@ -26,7 +26,7 @@ type ButtonProps = {
 
 // Milky white glass bubble — near-black text.
 const GLASS =
-  "border border-white/50 bg-white/90 text-neutral-900 shadow-[0_2px_12px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.95),inset_0_-2px_4px_rgba(0,0,0,0.12)] hover:bg-white hover:scale-[1.03]";
+  "border border-hairline-strong bg-white/90 text-neutral-900 shadow-[0_2px_12px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.95),inset_0_-2px_4px_rgba(0,0,0,0.12)] hover:bg-white hover:scale-[1.03]";
 
 export function Button({
   href,
@@ -91,8 +91,8 @@ export function Card({ children, className, hover }: { children: ReactNode; clas
   return (
     <div
       className={cn(
-        "rounded-2xl border border-white/10 bg-card text-card-foreground",
-        hover && "transition-colors hover:border-white/25",
+        "rounded-2xl border border-hairline bg-card text-card-foreground",
+        hover && "transition-colors hover:border-hairline-strong",
         className,
       )}
     >
@@ -114,7 +114,7 @@ export function PageMasthead({
   action?: ReactNode;
 }) {
   return (
-    <header className="border-b border-white/10 pb-5">
+    <header className="border-b border-hairline pb-5">
       {eyebrow && <Eyebrow className="mb-3">{eyebrow}</Eyebrow>}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="display text-4xl">{title}</h1>
@@ -130,7 +130,7 @@ export function PageMasthead({
 /* --- SectionDivider: full-width bar, thin rules, centered label ------------- */
 export function SectionDivider({ children }: { children: ReactNode }) {
   return (
-    <div className="my-8 border-y border-white/10 py-3 text-center">
+    <div className="my-8 border-y border-hairline py-3 text-center">
       <span className="util-label ">{children}</span>
     </div>
   );
@@ -151,7 +151,7 @@ export function StatRow({
   return (
     <div
       className={cn(
-        "flex flex-col justify-center rounded-2xl border border-white/10 p-6",
+        "flex flex-col justify-center rounded-2xl border border-hairline p-6",
         yellow ? "bg-carz " : "bg-card text-card-foreground",
         className,
       )}
@@ -178,7 +178,7 @@ export function DataTable({
     <table className={cn("w-full border-collapse text-left", className)}>
       {head && (
         <thead>
-          <tr className="border-b border-white/15">
+          <tr className="border-b border-hairline">
             {head.map((h, i) => (
               <th key={i} className="util-label px-3 py-2.5  first:pl-0 last:pr-0 last:text-right">
                 {h}
@@ -192,7 +192,7 @@ export function DataTable({
           <tr
             key={i}
             className={cn(
-              "border-b border-white/10",
+              "border-b border-hairline",
               r.highlight ? "bg-carz " : "",
             )}
           >
@@ -232,7 +232,7 @@ export function CarPhoto({
 }) {
   if (!src) {
     return (
-      <div className={cn("flex items-center justify-center bg-white/[0.04]", !color && "grayscale", className)}>
+      <div className={cn("flex items-center justify-center bg-surface", !color && "grayscale", className)}>
         {fallback ?? <Car className="h-9 w-9 opacity-40" strokeWidth={1.5} aria-hidden />}
       </div>
     );
@@ -250,7 +250,7 @@ export function CarPhoto({
 
 /* --- Skeleton --------------------------------------------------------------- */
 export function Skeleton({ className }: { className?: string }) {
-  return <div className={cn("animate-pulse rounded-xl bg-white/[0.06]", className)} />;
+  return <div className={cn("animate-pulse rounded-xl bg-surface-2", className)} />;
 }
 
 /* --- LiveDot: the single yellow live indicator ------------------------------ */

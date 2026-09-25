@@ -136,13 +136,13 @@ function BuildsInner() {
         {loading ? (
           <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
             {[0, 1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="overflow-hidden rounded-2xl border border-white/10 bg-card text-card-foreground">
+              <div key={i} className="overflow-hidden rounded-2xl border border-hairline bg-card text-card-foreground">
                 <Skeleton className="aspect-square w-full" />
               </div>
             ))}
           </div>
         ) : builds.length === 0 ? (
-          <div className="mt-8 rounded-2xl border border-white/10 bg-card text-card-foreground p-10 text-center">
+          <div className="mt-8 rounded-2xl border border-hairline bg-card text-card-foreground p-10 text-center">
             <h3 className="display text-3xl">No builds yet</h3>
             <p className="mx-auto mt-2 max-w-sm text-sm ">
               Spot a car and customize the look — every config you generate is saved here automatically.
@@ -159,7 +159,7 @@ function BuildsInner() {
 
             <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
               {builds.map((b) => (
-                <div key={b.id} className="reveal press lift group relative overflow-hidden rounded-2xl border border-white/10 bg-card text-card-foreground">
+                <div key={b.id} className="reveal press lift group relative overflow-hidden rounded-2xl border border-hairline bg-card text-card-foreground">
                   <button
                     onClick={() => remove(b.id)}
                     disabled={pendingId === b.id}
@@ -190,7 +190,7 @@ function BuildsInner() {
                     {(b.bodyColor || b.rimColor) && (
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {b.bodyColor && (
-                          <span className="flex items-center gap-1 rounded-full border border-white/15 px-2 py-0.5 text-[11px]">
+                          <span className="flex items-center gap-1 rounded-full border border-hairline px-2 py-0.5 text-[11px]">
                             <span
                               className="h-2.5 w-2.5 rounded-full border border-black/20"
                               style={{ background: b.bodyHex }}
@@ -199,7 +199,7 @@ function BuildsInner() {
                           </span>
                         )}
                         {b.rimColor && (
-                          <span className="flex items-center gap-1 rounded-full border border-white/15 px-2 py-0.5 text-[11px]">
+                          <span className="flex items-center gap-1 rounded-full border border-hairline px-2 py-0.5 text-[11px]">
                             <span
                               className="h-2.5 w-2.5 rounded-full border border-black/20"
                               style={{ background: b.rimHex }}

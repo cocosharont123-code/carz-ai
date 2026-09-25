@@ -166,7 +166,7 @@ export default function PricingPage() {
     </div>
   ) : (
     <div className="flex flex-col items-center gap-4">
-      <div className="blur-behind inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/5 p-1 text-sm">
+      <div className="blur-behind inline-flex items-center gap-1 rounded-full border border-hairline bg-surface p-1 text-sm">
         <button
           onClick={() => setAnnual(false)}
           className={cn("press rounded-full px-4 py-1.5 font-medium transition", !annual ? "bg-cyan-400 text-black" : "text-foreground/70 hover:text-foreground")}
@@ -203,11 +203,11 @@ export default function PricingPage() {
                 if (e.key === "Enter") applyPromo();
               }}
               placeholder="Promo code"
-              className="w-40 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-sm outline-none placeholder:text-foreground/40 focus:border-white/40"
+              className="w-40 rounded-full border border-hairline bg-surface px-4 py-1.5 text-sm outline-none placeholder:text-foreground/40 focus:border-hairline-strong"
             />
             <button
               onClick={applyPromo}
-              className="press rounded-full border border-white/20 px-4 py-1.5 text-sm font-medium text-foreground/80 transition hover:border-white/40 hover:text-foreground"
+              className="press rounded-full border border-hairline-strong px-4 py-1.5 text-sm font-medium text-foreground/80 transition hover:border-hairline-strong hover:text-foreground"
             >
               Apply
             </button>

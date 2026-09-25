@@ -24,7 +24,7 @@ function NavLink({ href, label, accent }: { href: string; label: string; accent?
   return (
     <Link
       href={href}
-      className={cn("util-label whitespace-nowrap transition-colors", accent ? "text-carz hover:brightness-110" : "hover:text-white")}
+      className={cn("util-label whitespace-nowrap transition-colors", accent ? "text-carz hover:brightness-110" : "hover:text-foreground")}
     >
       {label}
     </Link>
@@ -55,18 +55,26 @@ export function SiteHeader() {
           {profile?.username ? `@${profile.username}` : "Set username"}
         </span>
       </Link>
-      <button onClick={() => signOut()} className="util-label hidden hover:text-white sm:inline">
+      <Link href="/settings" title="Settings" className="util-label hidden hover:text-foreground sm:inline">
+        Settings
+      </Link>
+      <button onClick={() => signOut()} className="util-label hidden hover:text-foreground sm:inline">
         Out
       </button>
     </div>
   ) : (
-    <Link href="/signin" className="util-label whitespace-nowrap hover:text-white">
-      Sign in
-    </Link>
+    <div className="flex items-center gap-4">
+      <Link href="/settings" title="Settings" className="util-label hidden hover:text-foreground sm:inline">
+        Settings
+      </Link>
+      <Link href="/signin" className="util-label whitespace-nowrap hover:text-foreground">
+        Sign in
+      </Link>
+    </div>
   );
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-black text-white shadow-[0_1px_0_rgba(255,255,255,0.06),0_12px_30px_-12px_rgba(0,0,0,0.9)]">
+    <header className="sticky top-0 z-50 border-b border-hairline bg-background text-foreground shadow-[0_8px_30px_-16px_rgba(0,0,0,0.55)]">
       {/* Desktop: left nav / centered wordmark / right nav + account */}
       <div className="hidden grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-3.5 sm:grid">
         <nav className="flex flex-wrap items-center justify-start gap-x-4 gap-y-1.5">
@@ -96,7 +104,7 @@ export function SiteHeader() {
             onClick={() => setMenuOpen((o) => !o)}
             aria-label="Menu"
             aria-expanded={menuOpen}
-            className="press flex h-8 w-8 flex-col items-center justify-center gap-[5px] hover:text-white"
+            className="press flex h-8 w-8 flex-col items-center justify-center gap-[5px] hover:text-foreground"
           >
             <span className={cn("block h-0.5 w-5 bg-current transition-transform", menuOpen && "translate-y-[7px] rotate-45")} />
             <span className={cn("block h-0.5 w-5 bg-current transition-opacity", menuOpen && "opacity-0")} />
@@ -112,8 +120,8 @@ export function SiteHeader() {
         </div>
 
         {menuOpen && (
-          <nav className="flex flex-col gap-y-3 border-t border-white/10 px-4 py-4">
-            {[...LEFT_NAV, ...RIGHT_NAV].map((n) => (
+          <nav className="flex flex-col gap-y-3 border-t border-hairline px-4 py-4">
+            {[...LEFT_NAV, ...RIGHT_NAV, { href: "/settings", label: "Settings" }].map((n) => (
               <span key={n.href} onClick={() => setMenuOpen(false)}>
                 <NavLink {...n} />
               </span>

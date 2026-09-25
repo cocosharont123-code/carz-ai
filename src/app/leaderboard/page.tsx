@@ -56,12 +56,12 @@ export default function LeaderboardPage() {
             ))}
           </div>
         ) : !configured ? (
-          <div className="mt-8 rounded-2xl border border-white/10 bg-card text-card-foreground p-8 text-center">
+          <div className="mt-8 rounded-2xl border border-hairline bg-card text-card-foreground p-8 text-center">
             <Eyebrow yellow className="justify-center">Warming up</Eyebrow>
             <p className="mt-2 text-sm ">The board is connecting its database. Check back in a moment.</p>
           </div>
         ) : cars.length === 0 ? (
-          <div className="mt-8 rounded-2xl border border-white/10 bg-card text-card-foreground p-10 text-center">
+          <div className="mt-8 rounded-2xl border border-hairline bg-card text-card-foreground p-10 text-center">
             <h3 className="display text-3xl">No cars yet</h3>
             <p className="mx-auto mt-2 max-w-sm text-sm ">
               The board is empty. Spot a rare car and claim the top slot.
@@ -69,9 +69,9 @@ export default function LeaderboardPage() {
             <Button href="/spot" className="mt-6">Spot a car</Button>
           </div>
         ) : (
-          <div className="reveal mt-6 overflow-hidden rounded-2xl border border-white/10">
+          <div className="reveal mt-6 overflow-hidden rounded-2xl border border-hairline">
             {/* header */}
-            <div className="hidden grid-cols-[3rem_5rem_1fr_5rem] items-center gap-3 border-b border-white/15 px-4 py-2.5 sm:grid">
+            <div className="hidden grid-cols-[3rem_5rem_1fr_5rem] items-center gap-3 border-b border-hairline px-4 py-2.5 sm:grid">
               <span className="util-label ">#</span>
               <span className="util-label ">Car</span>
               <span className="util-label ">Spotter</span>
@@ -84,7 +84,7 @@ export default function LeaderboardPage() {
                 <div
                   key={c.id}
                   className={cn(
-                    "group grid grid-cols-[2.5rem_4rem_1fr_auto] items-center gap-3 border-b border-white/10 px-4 sm:grid-cols-[3rem_5rem_1fr_5rem]",
+                    "group grid grid-cols-[2.5rem_4rem_1fr_auto] items-center gap-3 border-b border-hairline px-4 sm:grid-cols-[3rem_5rem_1fr_5rem]",
                     ultra ? "bg-carz " : "",
                     top ? "py-4" : "py-3",
                   )}

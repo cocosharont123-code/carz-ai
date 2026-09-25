@@ -73,13 +73,13 @@ function GarageInner() {
         {loading ? (
           <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
             {[0, 1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="overflow-hidden rounded-2xl border border-white/10 bg-card text-card-foreground">
+              <div key={i} className="overflow-hidden rounded-2xl border border-hairline bg-card text-card-foreground">
                 <Skeleton className="aspect-square w-full" />
               </div>
             ))}
           </div>
         ) : cars.length === 0 ? (
-          <div className="mt-8 rounded-2xl border border-white/10 bg-card text-card-foreground p-10 text-center">
+          <div className="mt-8 rounded-2xl border border-hairline bg-card text-card-foreground p-10 text-center">
             <h3 className="display text-3xl">Garage empty</h3>
             <p className="mx-auto mt-2 max-w-sm text-sm ">
               No spots yet. Identify a car and it lands here automatically.
@@ -91,7 +91,7 @@ function GarageInner() {
             <div className="mt-6 grid grid-cols-3 gap-4">
               <StatRow value={cars.length} label="Spotted" className="p-4 sm:p-6" />
               <StatRow value={uniqueModels} label="Unique models" yellow className="p-4 sm:p-6" />
-              <div className="flex flex-col justify-center rounded-2xl border border-white/10 bg-card text-card-foreground p-4 sm:p-6">
+              <div className="flex flex-col justify-center rounded-2xl border border-hairline bg-card text-card-foreground p-4 sm:p-6">
                 <div className="display truncate text-2xl sm:text-3xl">
                   {rarest && rarest.rarityScore > 0 ? `${rarest.make} ${rarest.model}` : "—"}
                 </div>
@@ -101,7 +101,7 @@ function GarageInner() {
 
             <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
               {cars.map((c) => (
-                <div key={c.id} className="reveal press lift group relative overflow-hidden rounded-2xl border border-white/10 bg-card text-card-foreground">
+                <div key={c.id} className="reveal press lift group relative overflow-hidden rounded-2xl border border-hairline bg-card text-card-foreground">
                   <button
                     onClick={() => remove(c.id)}
                     title="Remove"
