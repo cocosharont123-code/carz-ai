@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { EXPLORE_BUBBLES } from "@/config/explore";
+import { HomeGarage } from "@/components/home/home-garage";
 
 /**
  * The launch homepage.
@@ -60,6 +61,10 @@ export default function Home() {
           })}
         </div>
       </section>
+
+      {/* The cars already saved, under the things the app can do. Renders
+          nothing when the garage is empty. */}
+      <HomeGarage />
     </main>
   );
 }
