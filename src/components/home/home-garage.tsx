@@ -17,12 +17,37 @@ const SHOWN = 6;
  * component and renders nothing at all on the server, which also keeps the
  * markup identical on both sides of hydration.
  *
- * Nothing is shown when the garage is empty. A homepage is not the place for an
- * empty state telling you about a feature you have not used; the tiles above
- * already say the app can do this.
+ * Carz+ only, exactly as /garage is. The saved cars sit in this browser either
+ * way, but being able to look at them is the paid part — and if the homepage
+ * showed them to everyone it would simply be the way around the gate.
+ *
+ * Nothing is shown when the garage is empty, and nothing while the membership
+ * check is still in flight. A homepage is not the place for an empty state
+ * advertising a feature you have not used, nor for cars that appear for a
+ * moment and are then taken away.
  */
 export function HomeGarage() {
   const [cars, setCars] = useState<GarageCar[] | null>(null);
+  // Null until the membership check lands, so a non-member never sees their
+  // cars flash on screen before the check resolves and takes them away.
+  const [member, setMember] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/membership", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!cancelled) setMember(!!d.member);
+      })
+      .catch(() => {
+        // A failed check is not a free pass: the garage is a paid feature and
+        // the safe answer to "we could not tell" is no.
+        if (!cancelled) setMember(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     // Deferred a microtask: localStorage is the external system being read
@@ -41,6 +66,10 @@ export function HomeGarage() {
     };
   }, []);
 
+  // Paid only, here as on /garage. The cars are on this device either way, but
+  // seeing them is the feature, and the two screens have to agree or the
+  // homepage becomes the way around the gate.
+  if (member !== true) return null;
   if (!cars || cars.length === 0) return null;
 
   return (
