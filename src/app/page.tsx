@@ -21,7 +21,7 @@ import { HomeGarage } from "@/components/home/home-garage";
  * them out of the menu too. Matched on href rather than label so a rename
  * cannot quietly put one back.
  */
-const ON_THE_NAV = new Set(["/spot", "/feed", "/garage", "/leaderboard"]);
+const ON_THE_NAV = new Set(["/spot", "/feed", "/garage", "/leaderboard", "/map"]);
 
 export default function Home() {
   return (

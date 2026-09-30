@@ -39,6 +39,22 @@ const MAX = 500;
 /** ~110m. */
 const PRECISION = 3;
 
+/**
+ * How long a pin lasts.
+ *
+ * A day. The map answers "what is out there right now", and a sighting from
+ * last month answers a different question badly — it says a car is somewhere it
+ * has long since driven away from.
+ *
+ * Enforced on read as well as on write. Filtering only on write would leave a
+ * pin visible for however long it happened to be until the next person spotted
+ * something, which on a quiet day is indefinitely.
+ */
+export const SPOT_TTL_MS = 24 * 60 * 60 * 1000;
+
+const isLive = (s: Spot, now = Date.now()) =>
+  typeof s?.at === "number" && now - s.at < SPOT_TTL_MS;
+
 export class SpotsError extends Error {}
 
 export function spotsConfigured(): boolean {
@@ -104,11 +120,15 @@ async function writeAll(spots: Spot[]): Promise<void> {
   }
 }
 
-/** Newest first. */
+/** Newest first, and nothing older than a day. */
 export async function listSpots(): Promise<Spot[]> {
   if (!spotsConfigured()) return [];
   const all = await readAll().catch(() => [] as Spot[]);
-  return [...all].sort((a, b) => b.at - a.at).slice(0, MAX);
+  const now = Date.now();
+  return all
+    .filter((s) => isLive(s, now))
+    .sort((a, b) => b.at - a.at)
+    .slice(0, MAX);
 }
 
 export async function recordSpot(input: {
@@ -139,9 +159,13 @@ export async function recordSpot(input: {
   };
 
   const all = await readAll();
-  all.push(spot);
-  // Oldest go first once the cap is reached.
-  const kept = all.sort((a, b) => a.at - b.at).slice(-MAX);
+  // Expired pins are dropped here rather than left to accumulate. Every write
+  // rewrites the whole document anyway, so this is the free moment to do it and
+  // the blob never grows past a day's worth of spotting.
+  const now = Date.now();
+  const kept = [...all.filter((s) => isLive(s, now)), spot]
+    .sort((a, b) => a.at - b.at)
+    .slice(-MAX);
   await writeAll(kept);
   return spot;
 }

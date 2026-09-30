@@ -120,16 +120,32 @@ export function SpotMap() {
     };
   }, [token]);
 
+  /**
+   * Pins, refreshed when the tab comes back.
+   *
+   * They expire after a day, and the filtering happens server-side — so a map
+   * left open overnight would keep showing pins that no longer exist until
+   * something asked again. Coming back to the tab is that something. No polling:
+   * a map nobody is looking at does not need to be right.
+   */
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/spots", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((d) => {
-        if (!cancelled) setSpots(Array.isArray(d.spots) ? d.spots : []);
-      })
-      .catch(() => {});
+    const load = () => {
+      fetch("/api/spots", { cache: "no-store" })
+        .then((r) => r.json())
+        .then((d) => {
+          if (!cancelled) setSpots(Array.isArray(d.spots) ? d.spots : []);
+        })
+        .catch(() => {});
+    };
+    load();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") load();
+    };
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       cancelled = true;
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
 
