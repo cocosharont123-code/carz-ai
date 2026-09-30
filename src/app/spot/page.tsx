@@ -371,6 +371,16 @@ export default function SpotPage() {
   // phone straight to its camera rather than to the photo roll, and the two
   // need different behaviour from the same page.
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  /**
+   * Where this photo was taken, and whether it was taken here at all.
+   *
+   * Only set by the camera path. A picture chosen from the library could have
+   * been taken anywhere, years ago, by somebody else, so pinning it to wherever
+   * the phone is standing now would put a lie on the map. The library path
+   * deliberately clears both.
+   */
+  const liveRef = useRef(false);
+  const whereRef = useRef<{ lng: number; lat: number } | null>(null);
   // Mirrored from the picker purely so the loader can say which mode is
   // running — PRO is the slower one, and the wait makes more sense named.
   const [scanMode, setScanMode] = useState<ScanMode>("fast");
@@ -521,6 +531,49 @@ export default function SpotPage() {
     await runIdentify(await fileToDataUrl(file));
   }
 
+  /**
+   * Ask where we are, without holding anything up.
+   *
+   * Fired the moment the camera is opened rather than after the scan, because
+   * by then the phone has moved on and the fix takes seconds. It never blocks:
+   * a refusal, a timeout or a device without GPS simply means this spot has no
+   * pin, and the scan is unaffected either way.
+   */
+  function noteLocation() {
+    whereRef.current = null;
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        whereRef.current = { lng: pos.coords.longitude, lat: pos.coords.latitude };
+      },
+      () => {
+        /* declined or unavailable: no pin, no complaint */
+      },
+      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 60_000 },
+    );
+  }
+
+  /** Put it on the map, if it was photographed here and we know where. */
+  function mapSpot(found: CarReport) {
+    const at = whereRef.current;
+    if (!liveRef.current || !at || !found?.isCar) return;
+    void fetch("/api/spots", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        make: found.make,
+        model: found.model,
+        yearRange: found.yearRange,
+        rarityScore: found.rarityScore ?? 0,
+        lng: at.lng,
+        lat: at.lat,
+        live: true,
+      }),
+    }).catch(() => {
+      /* the scan is the thing that mattered */
+    });
+  }
+
   async function runIdentify(raw: string) {
     setError("");
     setLimitHit(false);
@@ -553,6 +606,7 @@ export default function SpotPage() {
         return;
       }
       setCar(data.car);
+      mapSpot(data.car);
       setSpottedImage(image); // keep the exact photo for the AI customizer
       setStatus((prev) => ({ ...(prev as Status), ...data.status }));
 
@@ -648,7 +702,11 @@ export default function SpotPage() {
             />
             <button
               type="button"
-              onClick={() => cameraInputRef.current?.click()}
+              onClick={() => {
+                liveRef.current = true;
+                noteLocation();
+                cameraInputRef.current?.click();
+              }}
               className="press mt-6 flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-carz py-3.5 text-sm font-bold text-black transition hover:brightness-110"
             >
               <Camera className="h-4 w-4" strokeWidth={2.25} aria-hidden />
@@ -664,7 +722,12 @@ export default function SpotPage() {
             accept="image/*"
             className="hidden"
             ref={fileInputRef}
-            onChange={handleFileChange}
+            onChange={(e) => {
+              // Chosen from the library: not a spot, wherever the phone is.
+              liveRef.current = false;
+              whereRef.current = null;
+              handleFileChange(e);
+            }}
           />
 
           {!previewUrl ? (

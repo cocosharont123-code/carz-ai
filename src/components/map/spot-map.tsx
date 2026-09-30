@@ -8,6 +8,32 @@ import { claimGpu } from "@/components/camera/camera-in-use";
 import { applyMidnight } from "@/components/map/night-style";
 import { MapHud, type MapQuality } from "@/components/map/map-hud";
 
+type SpotPin = {
+  id: string;
+  make: string;
+  model: string;
+  lng: number;
+  lat: number;
+  at: number;
+  spotter: string;
+  rarityScore: number;
+};
+
+/** The popup is built as HTML, so anything from the server is escaped first. */
+function escapeHtml(v: string): string {
+  return String(v).replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] as string,
+  );
+}
+
+function ago(ts: number): string {
+  const s = Math.max(0, Date.now() - ts) / 1000;
+  if (s < 90) return "just now";
+  if (s < 3600) return `${Math.round(s / 60)}m ago`;
+  if (s < 86_400) return `${Math.round(s / 3600)}h ago`;
+  return `${Math.round(s / 86_400)}d ago`;
+}
+
 /**
  * A midnight flight over the city.
  *
@@ -51,6 +77,7 @@ export function SpotMap() {
   const holder = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const marker = useRef<mapboxgl.Marker | null>(null);
+  const pins = useRef<mapboxgl.Marker[]>([]);
 
   const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
   const [failed, setFailed] = useState(false);
@@ -107,6 +134,64 @@ export function SpotMap() {
     };
   }, [token]);
 
+  /**
+   * The spots themselves.
+   *
+   * Refetched on a timer as well as on load, so a map left open fills in as
+   * cars are found rather than going stale. Markers are rebuilt wholesale each
+   * time: at a few hundred pins that is cheaper than diffing, and it cannot
+   * drift out of step with what the server said.
+   */
+  const loadSpots = useCallback(async () => {
+    const m = map.current;
+    if (!m) return;
+    try {
+      const res = await fetch("/api/spots", { cache: "no-store" });
+      const d = await res.json();
+      const spots: SpotPin[] = Array.isArray(d.spots) ? d.spots : [];
+
+      pins.current.forEach((p) => p.remove());
+      pins.current = spots.map((s) => {
+        const el = document.createElement("div");
+        // Rarer cars burn brighter. The dot is small on purpose — a hundred
+        // fat pins is a heat map, not a map.
+        const rare = s.rarityScore >= 70;
+        el.style.cssText = [
+          "width:10px",
+          "height:10px",
+          "border-radius:9999px",
+          `background:${rare ? "#ffad42" : "#00e5ff"}`,
+          `box-shadow:0 0 10px 2px ${rare ? "rgba(255,173,66,.7)" : "rgba(0,229,255,.6)"}`,
+          "cursor:pointer",
+        ].join(";");
+
+        return new mapboxgl.Marker({ element: el })
+          .setLngLat([s.lng, s.lat])
+          .setPopup(
+            new mapboxgl.Popup({ offset: 14, closeButton: false }).setHTML(
+              `<div style="font:600 13px/1.35 system-ui;color:#fff">
+                 ${escapeHtml(s.make)} ${escapeHtml(s.model)}
+                 <div style="font-weight:400;opacity:.65;font-size:11px;margin-top:2px">
+                   ${escapeHtml(ago(s.at))} · ${escapeHtml(s.spotter)}
+                 </div>
+               </div>`,
+            ),
+          )
+          .addTo(m);
+      });
+    } catch {
+      /* a map with no pins is still a map */
+    }
+  }, []);
+
+  useEffect(() => {
+    const m = map.current;
+    if (!m) return;
+    void loadSpots();
+    const id = window.setInterval(() => void loadSpots(), 30_000);
+    return () => window.clearInterval(id);
+  }, [loadSpots, quality]);
+
   /** Swap the whole style. The night treatment is re-applied once it loads. */
   const changeQuality = useCallback((next: MapQuality) => {
     const m = map.current;
@@ -115,6 +200,7 @@ export function SpotMap() {
     m.once("style.load", () => {
       if (next === "cinematic") applyMidnight(m);
       else m.setTerrain(null);
+      void loadSpots();
     });
     m.setStyle(
       next === "cinematic"
@@ -124,7 +210,7 @@ export function SpotMap() {
     const view = next === "cinematic" ? CINEMATIC_VIEW : FLAT_VIEW;
     m.easeTo({ pitch: view.pitch, bearing: view.bearing, zoom: view.zoom, duration: 900 });
     setTilted(next === "cinematic");
-  }, []);
+  }, [loadSpots]);
 
   const toggleTilt = useCallback(() => {
     const m = map.current;
