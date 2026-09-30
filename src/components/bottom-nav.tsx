@@ -20,6 +20,7 @@ import {
   Lock,
   ChevronDown,
   Crown,
+  Crosshair,
 } from "lucide-react";
 import { EXPLORE_BUBBLES, EXPLORE_COPY } from "@/config/explore";
 import { GlassFilter } from "@/components/ui/liquid-glass";
@@ -89,8 +90,9 @@ export function BottomNav() {
     return () => window.removeEventListener("keydown", onKey);
   }, [menuOpen, closeMenu]);
 
-  // Spot sits in the middle of the five and wears a ring, because it is what
-  // the app is for. The others are places to look at what it produced.
+  // Seven targets with Spot in the middle of them — three either side, so its
+  // position is the centre rather than nearly the centre. It is what the app is
+  // for; the rest are places to look at what it produced.
   const items = [
     {
       key: "home",
@@ -98,6 +100,13 @@ export function BottomNav() {
       href: "/",
       Icon: Home,
       active: pathname === "/",
+    },
+    {
+      key: "hunt",
+      label: "Hunt",
+      href: "/hunt",
+      Icon: Crosshair,
+      active: pathname.startsWith("/hunt"),
     },
     {
       key: "feed",
@@ -133,7 +142,11 @@ export function BottomNav() {
   // the row taken from the target count, so moving it is one transform and
   // nothing has to be measured while it travels. The menu is the last target.
   const targetCount = items.length + 1;
-  const activeIndex = menuOpen ? items.length : items.findIndex((i) => i.active);
+  const spotIndex = items.findIndex((i) => i.key === "spot");
+  const rawActive = menuOpen ? items.length : items.findIndex((i) => i.active);
+  // The lens skips Spot: its own disc already says it is current, and two
+  // markers on one target reads as a mistake rather than as emphasis.
+  const activeIndex = rawActive === spotIndex ? -1 : rawActive;
 
   return (
     <>
@@ -167,22 +180,38 @@ export function BottomNav() {
               onClick={closeMenu}
               className="press group relative flex min-h-[44px] min-w-[44px] flex-1 items-center justify-center rounded-full"
             >
-              {/* The ring. Drawn behind the icon and sized to the icon rather
-                  than the target, so the 44pt tap area is untouched by it. */}
+              {/* Spot's disc. Filled, bigger than the icons either side of it,
+                  and lit — it is the one thing on this bar that makes something
+                  rather than showing something.
+                  
+                  Behind the icon and sized to the icon, not to the target, so
+                  the 44pt tap area is exactly what it was. */}
               {key === "spot" && (
                 <span
                   aria-hidden
-                  className="pointer-events-none absolute h-10 w-10 rounded-full border-2 border-white"
+                  className={cn(
+                    // 44px, not 48: seven targets across a 351px bubble is 49px
+                    // each on a small phone, and a 48px disc inside that leaves
+                    // a single pixel either side. This still reads as the
+                    // largest thing on the bar without touching its neighbours.
+                    "pointer-events-none absolute h-11 w-11 rounded-full bg-carz",
+                    "shadow-[0_0_18px_-2px_rgba(0,229,255,0.75)]",
+                    "transition-transform duration-200 group-active:scale-95",
+                  )}
                 />
               )}
               <Icon
-                size={24}
-                strokeWidth={active ? 2.25 : 2}
+                size={key === "spot" ? 26 : 24}
+                strokeWidth={key === "spot" ? 2.5 : active ? 2.25 : 2}
                 className={cn(
-                  "relative text-white transition-[opacity,transform] duration-300",
-                  active
-                    ? "-translate-y-px opacity-100 drop-shadow-[0_1px_6px_rgba(255,255,255,0.35)]"
-                    : "opacity-60 group-hover:opacity-90",
+                  "relative transition-[opacity,transform] duration-300",
+                  key === "spot"
+                    // Black on the filled disc: white on this cyan is the one
+                    // pairing here that would not clear AA.
+                    ? "text-black opacity-100"
+                    : active
+                      ? "-translate-y-px text-white opacity-100 drop-shadow-[0_1px_6px_rgba(255,255,255,0.35)]"
+                      : "text-white opacity-60 group-hover:opacity-90",
                 )}
                 aria-hidden
               />
