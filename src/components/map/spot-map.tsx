@@ -6,7 +6,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { MapPinOff } from "lucide-react";
 import { claimGpu } from "@/components/camera/camera-in-use";
 import { applyMidnight } from "@/components/map/night-style";
-import { MapHud, type MapQuality } from "@/components/map/map-hud";
+import { MapHud } from "@/components/map/map-hud";
 import { timeAgo } from "@/components/feed/post-card";
 
 type Spot = {
@@ -70,13 +70,14 @@ export function SpotMap() {
   const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
   const [failed, setFailed] = useState(false);
   const [locating, setLocating] = useState(false);
-  const [quality, setQuality] = useState<MapQuality>("cinematic");
   const [tilted, setTilted] = useState(true);
 
   useEffect(() => {
     if (!token || !holder.current || map.current) return;
     const release = claimGpu();
-    const wanted: MapQuality = capableDevice() ? "cinematic" : "flat";
+    // Decided once, here, and never changed afterwards. Swapping the style at
+    // runtime is exactly what blanked this page.
+    const wanted: "cinematic" | "flat" = capableDevice() ? "cinematic" : "flat";
 
     try {
       mapboxgl.accessToken = token;
@@ -106,10 +107,7 @@ export function SpotMap() {
       map.current = m;
       // Deferred: a synchronous write here cascades renders, and the frame it
       // costs is one nobody sees.
-      void Promise.resolve().then(() => {
-        setQuality(wanted);
-        setTilted(wanted === "cinematic");
-      });
+      void Promise.resolve().then(() => setTilted(wanted === "cinematic"));
     } catch (e) {
       console.error("map failed to start:", e);
       void Promise.resolve().then(() => setFailed(true));
@@ -142,8 +140,9 @@ export function SpotMap() {
    * wants a popup, and a symbol layer would mean shipping an icon atlas and
    * hand-writing the hit testing for what the marker API already does.
    *
-   * Re-run when the style changes as well as when the spots do — setStyle tears
-   * down everything the map is holding, markers included.
+   * Waits for the style if it is not ready: markers added before the first
+   * style load are dropped on the floor. The style never changes after startup
+   * any more, so this runs once per set of spots and no more.
    */
   useEffect(() => {
     const m = map.current;
@@ -186,26 +185,7 @@ export function SpotMap() {
       pins.current.forEach((p) => p.remove());
       pins.current = [];
     };
-  }, [spots, quality]);
-
-  /** Swap the whole style. The night treatment is re-applied once it loads. */
-  const changeQuality = useCallback((next: MapQuality) => {
-    const m = map.current;
-    if (!m) return;
-    setQuality(next);
-    m.once("style.load", () => {
-      if (next === "cinematic") applyMidnight(m);
-      else m.setTerrain(null);
-    });
-    m.setStyle(
-      next === "cinematic"
-        ? "mapbox://styles/mapbox/satellite-streets-v12"
-        : "mapbox://styles/mapbox/dark-v11",
-    );
-    const view = next === "cinematic" ? CINEMATIC_VIEW : FLAT_VIEW;
-    m.easeTo({ pitch: view.pitch, bearing: view.bearing, zoom: view.zoom, duration: 900 });
-    setTilted(next === "cinematic");
-  }, []);
+  }, [spots]);
 
   const toggleTilt = useCallback(() => {
     const m = map.current;
@@ -252,14 +232,22 @@ export function SpotMap() {
     <div className="relative h-full w-full bg-[#04040d]">
       <div ref={holder} className="h-full w-full" />
       <MapHud
-        quality={quality}
-        onQuality={changeQuality}
         tilted={tilted}
         onTilt={toggleTilt}
         onLocate={locate}
         locating={locating}
-        spotCount={spots.length}
       />
+
+      {/* Only when there is nothing to see, so an empty map reads as new
+          rather than as broken. */}
+      {spots.length === 0 && (
+        <p
+          className="pointer-events-none absolute inset-x-0 text-center text-[11px] text-white/55"
+          style={{ bottom: "calc(var(--nav-h) + 0.75rem)" }}
+        >
+          Cars appear here when they are scanned live in the app.
+        </p>
+      )}
     </div>
   );
 }
