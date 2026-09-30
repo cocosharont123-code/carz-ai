@@ -21,6 +21,7 @@ import {
   Trophy,
   Images,
   ScanLine,
+  Map,
   Ticket,
   Users,
   type LucideIcon,
@@ -99,6 +100,12 @@ export const EXPLORE_BUBBLES: ExploreItem[] = [
     href: "/events",
     icon: Ticket,
     tier: "max",
+  },
+  {
+    label: "Map",
+    description: "See where cars are being spotted",
+    href: "/map",
+    icon: Map,
   },
   {
     label: "Hunt",

@@ -22,7 +22,14 @@ function broadcast() {
   listeners.forEach((fn) => fn());
 }
 
-/** Call when a stream starts; call the returned function when it ends. */
+/**
+ * Claim the GPU. Call when something heavy starts, release when it ends.
+ *
+ * Named for the camera because that was the first caller, and kept general
+ * because it was never really about cameras: the shader is what stands down,
+ * and anything else holding a WebGL context — a map, for one — has exactly the
+ * same quarrel with it. /spot rendered a blank page for days over this.
+ */
 export function claimCamera(): () => void {
   open += 1;
   broadcast();
@@ -55,3 +62,6 @@ export function useCameraInUse(): boolean {
     () => false,
   );
 }
+
+/** The same claim, named for callers that are not a camera. */
+export const claimGpu = claimCamera;
