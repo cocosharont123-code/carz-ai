@@ -20,6 +20,7 @@ export function MapHud({
   onTilt,
   onLocate,
   locating,
+  spotCount,
 }: {
   quality: MapQuality;
   onQuality: (q: MapQuality) => void;
@@ -27,13 +28,25 @@ export function MapHud({
   onTilt: () => void;
   onLocate: () => void;
   locating: boolean;
+  /** How many live spots are on the map. */
+  spotCount: number;
 }) {
   return (
     <div
       className="absolute left-3 z-10 w-[13.5rem] rounded-2xl border border-white/10 bg-zinc-950/60 p-3 text-white backdrop-blur-xl"
       style={{ top: "calc(var(--safe-top) + 0.75rem)" }}
     >
-      <p className="util-label px-1 opacity-50">Map</p>
+      <p className="util-label px-1 opacity-50">
+        {spotCount > 0
+          ? `${spotCount} ${spotCount === 1 ? "spot" : "spots"}`
+          : "No spots yet"}
+      </p>
+      {spotCount === 0 && (
+        // Otherwise an empty map reads as broken rather than as new.
+        <p className="mt-1 px-1 text-[11px] leading-snug opacity-50">
+          Cars appear here when they are scanned live in the app.
+        </p>
+      )}
 
       <div className="mt-2 space-y-1.5">
         <Row

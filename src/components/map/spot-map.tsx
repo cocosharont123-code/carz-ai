@@ -7,32 +7,19 @@ import { MapPinOff } from "lucide-react";
 import { claimGpu } from "@/components/camera/camera-in-use";
 import { applyMidnight } from "@/components/map/night-style";
 import { MapHud, type MapQuality } from "@/components/map/map-hud";
+import { timeAgo } from "@/components/feed/post-card";
 
-type SpotPin = {
+type Spot = {
   id: string;
+  lat: number;
+  lng: number;
   make: string;
   model: string;
-  lng: number;
-  lat: number;
-  at: number;
-  spotter: string;
+  yearRange: string;
   rarityScore: number;
+  spotter: string;
+  at: number;
 };
-
-/** The popup is built as HTML, so anything from the server is escaped first. */
-function escapeHtml(v: string): string {
-  return String(v).replace(/[&<>"']/g, (c) =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] as string,
-  );
-}
-
-function ago(ts: number): string {
-  const s = Math.max(0, Date.now() - ts) / 1000;
-  if (s < 90) return "just now";
-  if (s < 3600) return `${Math.round(s / 60)}m ago`;
-  if (s < 86_400) return `${Math.round(s / 3600)}h ago`;
-  return `${Math.round(s / 86_400)}d ago`;
-}
 
 /**
  * A midnight flight over the city.
@@ -78,6 +65,7 @@ export function SpotMap() {
   const map = useRef<mapboxgl.Map | null>(null);
   const marker = useRef<mapboxgl.Marker | null>(null);
   const pins = useRef<mapboxgl.Marker[]>([]);
+  const [spots, setSpots] = useState<Spot[]>([]);
 
   const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
   const [failed, setFailed] = useState(false);
@@ -134,63 +122,71 @@ export function SpotMap() {
     };
   }, [token]);
 
-  /**
-   * The spots themselves.
-   *
-   * Refetched on a timer as well as on load, so a map left open fills in as
-   * cars are found rather than going stale. Markers are rebuilt wholesale each
-   * time: at a few hundred pins that is cheaper than diffing, and it cannot
-   * drift out of step with what the server said.
-   */
-  const loadSpots = useCallback(async () => {
-    const m = map.current;
-    if (!m) return;
-    try {
-      const res = await fetch("/api/spots", { cache: "no-store" });
-      const d = await res.json();
-      const spots: SpotPin[] = Array.isArray(d.spots) ? d.spots : [];
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/spots", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!cancelled) setSpots(Array.isArray(d.spots) ? d.spots : []);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
+  /**
+   * Draw a pin per spot.
+   *
+   * Markers rather than a GeoJSON layer: there are at most a few hundred, each
+   * wants a popup, and a symbol layer would mean shipping an icon atlas and
+   * hand-writing the hit testing for what the marker API already does.
+   *
+   * Re-run when the style changes as well as when the spots do — setStyle tears
+   * down everything the map is holding, markers included.
+   */
+  useEffect(() => {
+    const m = map.current;
+    if (!m || spots.length === 0) return;
+
+    const draw = () => {
       pins.current.forEach((p) => p.remove());
       pins.current = spots.map((s) => {
         const el = document.createElement("div");
-        // Rarer cars burn brighter. The dot is small on purpose — a hundred
-        // fat pins is a heat map, not a map.
+        // Rare cars burn brighter. Everything else is the app's cyan.
         const rare = s.rarityScore >= 70;
         el.style.cssText = [
-          "width:10px",
-          "height:10px",
-          "border-radius:9999px",
+          "width:14px;height:14px;border-radius:9999px;cursor:pointer",
           `background:${rare ? "#ffad42" : "#00e5ff"}`,
-          `box-shadow:0 0 10px 2px ${rare ? "rgba(255,173,66,.7)" : "rgba(0,229,255,.6)"}`,
-          "cursor:pointer",
+          "border:2px solid rgba(255,255,255,0.85)",
+          `box-shadow:0 0 12px ${rare ? "rgba(255,173,66,0.9)" : "rgba(0,229,255,0.9)"}`,
         ].join(";");
 
+        const name = `${s.make} ${s.model}`.trim();
         return new mapboxgl.Marker({ element: el })
           .setLngLat([s.lng, s.lat])
           .setPopup(
-            new mapboxgl.Popup({ offset: 14, closeButton: false }).setHTML(
-              `<div style="font:600 13px/1.35 system-ui;color:#fff">
-                 ${escapeHtml(s.make)} ${escapeHtml(s.model)}
-                 <div style="font-weight:400;opacity:.65;font-size:11px;margin-top:2px">
-                   ${escapeHtml(ago(s.at))} · ${escapeHtml(s.spotter)}
+            new mapboxgl.Popup({ offset: 16, closeButton: false }).setHTML(
+              `<div style="font:600 13px/1.4 -apple-system,system-ui,sans-serif;color:#fff">
+                 ${escapeHtml(name)}
+                 <div style="font-weight:400;opacity:.65;margin-top:2px">
+                   ${escapeHtml(s.spotter)} · ${escapeHtml(timeAgo(s.at))}
                  </div>
                </div>`,
             ),
           )
           .addTo(m);
       });
-    } catch {
-      /* a map with no pins is still a map */
-    }
-  }, []);
+    };
 
-  useEffect(() => {
-    const m = map.current;
-    if (!m) return;
-    void loadSpots();
-    const id = window.setInterval(() => void loadSpots(), 30_000);
-    return () => window.clearInterval(id);
-  }, [loadSpots, quality]);
+    if (m.isStyleLoaded()) draw();
+    m.on("style.load", draw);
+    return () => {
+      m.off("style.load", draw);
+      pins.current.forEach((p) => p.remove());
+      pins.current = [];
+    };
+  }, [spots, quality]);
 
   /** Swap the whole style. The night treatment is re-applied once it loads. */
   const changeQuality = useCallback((next: MapQuality) => {
@@ -200,7 +196,6 @@ export function SpotMap() {
     m.once("style.load", () => {
       if (next === "cinematic") applyMidnight(m);
       else m.setTerrain(null);
-      void loadSpots();
     });
     m.setStyle(
       next === "cinematic"
@@ -210,7 +205,7 @@ export function SpotMap() {
     const view = next === "cinematic" ? CINEMATIC_VIEW : FLAT_VIEW;
     m.easeTo({ pitch: view.pitch, bearing: view.bearing, zoom: view.zoom, duration: 900 });
     setTilted(next === "cinematic");
-  }, [loadSpots]);
+  }, []);
 
   const toggleTilt = useCallback(() => {
     const m = map.current;
@@ -263,7 +258,17 @@ export function SpotMap() {
         onTilt={toggleTilt}
         onLocate={locate}
         locating={locating}
+        spotCount={spots.length}
       />
     </div>
   );
+}
+
+/** Popups take HTML, and a car name is user-supplied text. */
+function escapeHtml(v: string): string {
+  return v
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
