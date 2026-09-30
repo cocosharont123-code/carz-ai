@@ -89,6 +89,8 @@ export function BottomNav() {
     return () => window.removeEventListener("keydown", onKey);
   }, [menuOpen, closeMenu]);
 
+  // Spot sits in the middle of the five and wears a ring, because it is what
+  // the app is for. The others are places to look at what it produced.
   const items = [
     {
       key: "home",
@@ -98,18 +100,18 @@ export function BottomNav() {
       active: pathname === "/",
     },
     {
-      key: "spot",
-      label: "Spot a car",
-      href: "/spot",
-      Icon: ScanLine,
-      active: pathname === "/spot",
-    },
-    {
       key: "feed",
       label: "Feed",
       href: "/feed",
       Icon: Play,
       active: pathname.startsWith("/feed"),
+    },
+    {
+      key: "spot",
+      label: "Spot a car",
+      href: "/spot",
+      Icon: ScanLine,
+      active: pathname === "/spot",
     },
     {
       key: "garage",
@@ -165,6 +167,14 @@ export function BottomNav() {
               onClick={closeMenu}
               className="press group relative flex min-h-[44px] min-w-[44px] flex-1 items-center justify-center rounded-full"
             >
+              {/* The ring. Drawn behind the icon and sized to the icon rather
+                  than the target, so the 44pt tap area is untouched by it. */}
+              {key === "spot" && (
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute h-10 w-10 rounded-full border-2 border-white"
+                />
+              )}
               <Icon
                 size={24}
                 strokeWidth={active ? 2.25 : 2}
