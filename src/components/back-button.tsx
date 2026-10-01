@@ -18,7 +18,9 @@ export function BackButton() {
   const router = useRouter();
   const pathname = usePathname();
 
-  if (pathname === "/") return null;
+  // Not on the sign-in flow. These are full-screen screens with no app behind
+  // them to go back to, and step two carries its own back to step one.
+  if (pathname === "/" || pathname.startsWith("/signin")) return null;
 
   return (
     <>

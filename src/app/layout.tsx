@@ -2,9 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { GlobalBg } from "@/components/global-bg";
-import { BottomNav } from "@/components/bottom-nav";
 import { BackButton } from "@/components/back-button";
-import { LegalNotice } from "@/components/legal-notice";
+import { AppChrome } from "@/components/app-chrome";
 
 // UI type is the Apple system font stack (no downloaded Google Fonts).
 
@@ -72,8 +71,7 @@ export default function RootLayout({
           <Providers>
             <BackButton />
             {children}
-            <LegalNotice />
-            <BottomNav />
+            <AppChrome />
           </Providers>
         </div>
       </body>

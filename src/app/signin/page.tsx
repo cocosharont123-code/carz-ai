@@ -1,74 +1,54 @@
-"use client";
-
-import { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { GoogleSignInButton } from "@/components/google-sign-in";
+import { AuthShell } from "@/components/auth/auth-shell";
+import { EmailStep } from "@/components/auth/email-step";
 
 /**
- * Sign in.
+ * Step one: who you are.
  *
- * Sized to the space that is actually free rather than to the viewport. The
- * page sits inside a column that already carries the status-bar inset above it
- * and the nav's spacer below, so a min-h-screen here was a full viewport plus
- * both of those — taller than the screen by exactly the furniture around it,
- * which is the scroll to nowhere.
+ * A server component, which is the point. The first version read the query with
+ * useSearchParams, and that suspends — so what Next prerendered for this route
+ * was the Suspense fallback and nothing else, and the form only existed once the
+ * client bundle had arrived. On the one screen every single visitor now has to
+ * pass through, first paint was an empty black page.
+ *
+ * searchParams as a prop needs no hook and no boundary, so the headline, the
+ * frame and the field are in the HTML. Only the typing is client-side.
+ *
+ * Reading it also makes the route dynamic, which an auth screen has to be
+ * anyway: a cached sign-in page is a sign-in page serving one person's
+ * callbackUrl to the next.
  */
-const FRAME_H = "min-h-[calc(100dvh-var(--nav-h)-var(--safe-top)-var(--back-h))]";
 
-function SignInInner() {
-  const params = useSearchParams();
-  const callbackUrl = params.get("callbackUrl") || "/spot";
-  const [authEnabled, setAuthEnabled] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    fetch("/api/me")
-      .then((r) => r.json())
-      .then((d) => setAuthEnabled(!!d.authEnabled))
-      .catch(() => setAuthEnabled(false));
-  }, []);
-
-  return (
-    <main
-      className={`flex ${FRAME_H} w-full flex-col items-center justify-center px-5 text-center`}
-    >
-      {/* .display is the home page's headline face and is uppercase in the
-          class itself, so the markup stays sentence case and the screen still
-          reads SIGN IN. */}
-      <h1 className="display text-6xl leading-[0.95] sm:text-7xl">Sign in</h1>
-
-      <p className="mx-auto mt-4 max-w-xs text-[13px] leading-relaxed opacity-60">
-        Your garage, your streak and your place on the leaderboard follow your
-        account.
-      </p>
-
-      <div className="mt-9 w-full max-w-[17rem]">
-        <GoogleSignInButton
-          variant="squircle"
-          callbackUrl={callbackUrl}
-          disabled={authEnabled === false}
-        />
-
-        {/* Reserved whether or not it is showing, so the button does not jump
-            down the screen when the check comes back. */}
-        <div className="mt-4 min-h-[3.25rem]">
-          {authEnabled === false && (
-            <p
-              role="status"
-              className="glass-card rounded-2xl px-4 py-3 text-[13px] leading-snug"
-            >
-              Sign-in is being set up and isn&apos;t available just yet.
-            </p>
-          )}
-        </div>
-      </div>
-    </main>
-  );
+/** Relative, single-slash, no scheme: a callbackUrl is not an open redirect. */
+function safeCallback(raw: string | string[] | undefined): string {
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  if (!value || !value.startsWith("/") || value.startsWith("//")) return "/";
+  return value;
 }
 
-export default function SignInPage() {
+function first(raw: string | string[] | undefined): string {
+  return (Array.isArray(raw) ? raw[0] : raw) ?? "";
+}
+
+export default async function SignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = await searchParams;
+
   return (
-    <Suspense fallback={<div className={FRAME_H} />}>
-      <SignInInner />
-    </Suspense>
+    <AuthShell
+      step={1}
+      title="Sign in"
+      subtitle="Your garage, your streak and your place on the leaderboard follow your account."
+    >
+      <EmailStep
+        callbackUrl={safeCallback(params.callbackUrl)}
+        initialEmail={first(params.email)}
+        // Read here rather than asked for over the network. The only API that
+        // knew the answer is now behind the wall this page is the door to.
+        authEnabled={!!process.env.AUTH_GOOGLE_ID && !!process.env.AUTH_GOOGLE_SECRET}
+      />
+    </AuthShell>
   );
 }

@@ -35,6 +35,7 @@ export function GoogleSignInButton({
   disabled,
   className,
   variant = "pill",
+  loginHint,
 }: {
   /** Where to land after signing in. */
   callbackUrl?: string;
@@ -50,8 +51,19 @@ export function GoogleSignInButton({
    * you cannot miss.
    */
   variant?: "pill" | "squircle";
+  /**
+   * Opens Google's chooser on this account rather than on whichever one the
+   * browser is holding. A hint and nothing more: whoever is picked over there is
+   * who signs in, so nothing downstream may treat this as a claim about them.
+   */
+  loginHint?: string;
 }) {
-  const onClick = () => signIn("google", callbackUrl ? { callbackUrl } : undefined);
+  const onClick = () =>
+    signIn(
+      "google",
+      callbackUrl ? { callbackUrl } : undefined,
+      loginHint ? { login_hint: loginHint } : undefined,
+    );
 
   if (variant === "squircle") {
     return (
