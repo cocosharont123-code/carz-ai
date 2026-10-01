@@ -35,29 +35,73 @@
   --nav-h: calc(var(--nav-bubble-h) + var(--nav-gap) * 2);
 }
 
-/* Leaderboard crown + trend colors used by leaderboard-rankings.tsx */
-@theme {
-  --color-rank-1: #fbbf24;
-  --color-rank-2: #cbd5e1;
-  --color-rank-3: #d28a4a;
-  --color-success-600: #16a34a;
+/* ==========================================================================
+   Black and white. The whole palette.
 
-  /* Neon primary accent + neon trio. */
-  --color-carz: #00e5ff; /* primary accent = neon blue */
-  --color-carz-ink: #04121a;
-  --color-neon-blue: #00e5ff;
-  --color-neon-green: #39ff14;
-  --color-neon-red: #ff3131;
-  /* Neon "dark" text colors (readable on black, no grey). */
-  --color-nblue: #22b8ff;
-  --color-nred: #ff3b5c;
-  --color-ngreen: #2ee66e;
+   There is one accent and it is #fff. Every name below that used to be a neon
+   -- carz, neon-blue, ngreen, the leaderboard's gold, silver and bronze --
+   still exists and still resolves, because roughly a hundred components call
+   them by name and renaming each call site is a hundred chances to miss one.
+   They simply all point at white or a neutral grey now, so the palette cannot
+   be reintroduced a class at a time.
+
+   Every grey is R=G=B. A grey with any hue in it reads as a tint of that hue
+   against pure black, which is how "no blue" turns back into blue.
+
+   The one real colour is #FF453A, and only for errors.
+   ========================================================================== */
+@theme {
+  /* Surfaces */
+  --color-surface: #121212;
+  --color-raised: #1a1a1a;
+
+  /* Type */
+  --color-secondary-text: #a3a3a3;
+  --color-muted-text: #808080;
+  --color-hero-2: #c2c2c2;
+
+  /* The accent, and what sits on it */
+  --color-carz: #ffffff;
+  --color-carz-ink: #000000;
+
+  /* Error, and only error */
+  --color-error: #ff453a;
+
+  /* Former neons. Kept as names, emptied of colour. */
+  --color-neon-blue: #ffffff;
+  --color-neon-green: #ffffff;
+  --color-neon-red: #ff453a;
+  --color-nblue: #ffffff;
+  --color-nred: #ff453a;
+  --color-ngreen: #ffffff;
+
+  /* Former podium metals. A rank is a number, not a colour. */
+  --color-rank-1: #ffffff;
+  --color-rank-2: #a3a3a3;
+  --color-rank-3: #808080;
+  --color-success-600: #ffffff;
+
+  /* Radii, per the spec */
+  --radius-card: 20px;
+  --radius-tile: 18px;
+  --radius-stat: 18px;
+  --radius-thumb: 12px;
+  --radius-sheet: 24px;
+}
+
+:root {
+  /* Lines. Three weights: a card's edge, a secondary button's edge, a divider. */
+  --line-card: rgba(255, 255, 255, 0.10);
+  --line-button: rgba(255, 255, 255, 0.20);
+  --line-divider: rgba(255, 255, 255, 0.08);
+  /* The only glow left, and it is white. */
+  --glow: 0 0 24px rgba(255, 255, 255, 0.35);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", var(--font-inter), "Helvetica Neue", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
   --font-serif: ui-serif, "New York", Georgia, "Times New Roman", serif;
   --font-heading: var(--font-sans);
@@ -100,80 +144,85 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Dark only.
+   
+   These were the light-theme values. The app forces .dark on <html> before
+   first paint, so they were never meant to be seen -- but "never meant to be
+   seen" is how a white flash happens when a class lands a frame late, and how
+   a browser with JS disabled renders the whole site inverted. The light theme
+   is not overridden any more, it is gone: :root holds the dark values and
+   .dark repeats them. */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  /* Kept in step with the .dark value so the surface never flashes white
-     before the theme class lands. */
-  --card: oklch(0.96 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #121212;
+  --card-foreground: #ffffff;
+  --popover: #121212;
+  --popover-foreground: #ffffff;
+  --primary: #ffffff;
+  --primary-foreground: #000000;
+  --secondary: #1a1a1a;
+  --secondary-foreground: #ffffff;
+  --muted: #1a1a1a;
+  --muted-foreground: #a3a3a3;
+  --accent: #ffffff;
+  --accent-foreground: #000000;
+  --destructive: #ff453a;
+  --border: rgba(255, 255, 255, 0.10);
+  --input: rgba(255, 255, 255, 0.20);
+  --ring: #ffffff;
+  --chart-1: #ffffff;
+  --chart-2: #a3a3a3;
+  --chart-3: #808080;
+  --chart-4: #4d4d4d;
+  --chart-5: #2b2b2b;
   --radius: 0.9rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: #121212;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ffffff;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #1a1a1a;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.10);
+  --sidebar-ring: #ffffff;
 }
 
 .dark {
-  --background: oklch(0 0 0);
-  --foreground: oklch(0.985 0 0);
-  /* Light-grey glass panels floating on black; near-black text on them.
-     0.90 rather than the old near-white 0.97 — enough grey to read as a
-     surface rather than a hole punched in the page, while keeping the
-     contrast against --card-foreground far above AA. */
-  --card: oklch(0.9 0 0 / 0.92);
-  --card-foreground: oklch(0.16 0 0);
-  --popover: oklch(0.21 0.01 265);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 6%);
-  --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.6 0.12 255);
-  --muted-foreground: oklch(0.72 0.01 265);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #000000;
+  --foreground: #ffffff;
+  /* A surface, not a pane of frosted glass with near-black text on it. The old
+     --card was a light grey at 92% opacity carrying dark type, which is where
+     most of the app's "glass" came from. */
+  --card: #121212;
+  --card-foreground: #ffffff;
+  --popover: #121212;
+  --popover-foreground: #ffffff;
+  --primary: #ffffff;
+  --primary-foreground: #000000;
+  --secondary: #1a1a1a;
+  --secondary-foreground: #ffffff;
+  --muted: #1a1a1a;
+  --muted-foreground: #a3a3a3;
+  --accent: #ffffff;
+  --accent-foreground: #000000;
+  --destructive: #ff453a;
+  --border: rgba(255, 255, 255, 0.10);
+  --input: rgba(255, 255, 255, 0.20);
+  /* Was oklch(0.6 0.12 255) -- a blue focus ring on every control in the app. */
+  --ring: #ffffff;
+  --chart-1: #ffffff;
+  --chart-2: #a3a3a3;
+  --chart-3: #808080;
+  --chart-4: #4d4d4d;
+  --chart-5: #2b2b2b;
+  --sidebar: #121212;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ffffff;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #1a1a1a;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.10);
+  --sidebar-ring: #ffffff;
 }
 
 @layer base {
@@ -193,16 +242,8 @@
     text-rendering: optimizeLegibility;
     position: relative;
   }
-  /* Faint white radial glow at the top of every screen (depth). */
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0 0 auto 0;
-    height: 46vh;
-    background: radial-gradient(ellipse 80% 100% at 50% 0%, rgba(255, 255, 255, 0.11), transparent 68%);
-    pointer-events: none;
-    z-index: 0;
-  }
+  /* The radial glow that used to sit over the top of every screen is gone.
+     The background is #000, flat, everywhere. */
   html {
     @apply font-sans;
   }
@@ -214,20 +255,10 @@
   max-height: 100vh;
   box-sizing: border-box;
 }
-/* --- Default profile avatar: black car on shifting neon bg --- */
+/* --- Default profile avatar. Was green, blue and red radials cycling; now a
+       flat raised surface, which is what every other surface in the app is. --- */
 .carz-neon-bg {
-  background:
-    radial-gradient(circle at 20% 30%, rgba(0, 255, 128, 0.55), transparent 45%),
-    radial-gradient(circle at 80% 25%, rgba(0, 102, 255, 0.55), transparent 45%),
-    radial-gradient(circle at 50% 85%, rgba(255, 0, 51, 0.55), transparent 50%),
-    linear-gradient(120deg, #03140d, #041127, #150406);
-  background-size: 200% 200%, 200% 200%, 200% 200%, 200% 200%;
-  animation: carzNeon 5.5s ease-in-out infinite;
-}
-@keyframes carzNeon {
-  0%   { background-position: 0% 50%, 100% 50%, 50% 0%, 0% 50%; }
-  50%  { background-position: 100% 50%, 0% 50%, 50% 100%, 100% 50%; }
-  100% { background-position: 0% 50%, 100% 50%, 50% 0%, 0% 50%; }
+  background: #1a1a1a;
 }
 .carz-car { animation: carzBob 1.8s ease-in-out infinite; }
 @keyframes carzBob {
@@ -237,43 +268,30 @@
 .carz-wheel { transform-box: fill-box; transform-origin: center; animation: carzWheel 0.9s linear infinite; }
 @keyframes carzWheel { to { transform: rotate(360deg); } }
 
-/* --- Car Hunt Miami: full-color neon --- */
+/* --- Car Hunt. Was a seven-stop rainbow banner, a gradient-clipped title and
+       gold / purple / blue rarity tiers. Rarity is carried by the label text
+       now; the tiers differ only in how bright their edge is. --- */
 .hunt-banner {
-  background: linear-gradient(120deg, #ff006e, #fb5607, #ffbe0b, #8338ec, #3a86ff, #06ffa5, #ff006e);
-  background-size: 300% 300%;
-  animation: huntShimmer 7s ease infinite;
-}
-@keyframes huntShimmer {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  background: #121212;
 }
 .hunt-title {
-  background: linear-gradient(90deg, #ffbe0b, #ff006e, #8338ec, #3a86ff, #06ffa5);
-  background-size: 300% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: huntShimmer 6s ease infinite;
+  color: #ffffff;
 }
-.hunt-glow { animation: huntGlow 2.4s ease-in-out infinite; }
-@keyframes huntGlow {
-  0%, 100% { box-shadow: 0 0 22px -4px rgba(255, 0, 110, 0.7); }
-  50% { box-shadow: 0 0 46px -2px rgba(131, 56, 236, 0.9); }
+.hunt-glow {
+  box-shadow: var(--glow);
 }
 .hunt-legendary {
-  background: linear-gradient(100deg, rgba(255,190,11,0.22), rgba(251,86,7,0.12));
-  border-color: rgba(255, 190, 11, 0.6);
-  box-shadow: 0 0 24px -10px rgba(255, 190, 11, 0.7);
+  background: #1a1a1a;
+  border-color: rgba(255, 255, 255, 0.40);
+  box-shadow: var(--glow);
 }
 .hunt-epic {
-  background: linear-gradient(100deg, rgba(131,56,236,0.22), rgba(255,0,110,0.12));
-  border-color: rgba(180, 80, 236, 0.6);
-  box-shadow: 0 0 24px -12px rgba(131, 56, 236, 0.7);
+  background: #1a1a1a;
+  border-color: rgba(255, 255, 255, 0.24);
 }
 .hunt-rare {
-  background: linear-gradient(100deg, rgba(58,134,255,0.2), rgba(6,255,165,0.12));
-  border-color: rgba(58, 134, 255, 0.55);
-  box-shadow: 0 0 24px -12px rgba(58, 134, 255, 0.6);
+  background: #1a1a1a;
+  border-color: rgba(255, 255, 255, 0.14);
 }
 
 /* ==========================================================================
@@ -447,26 +465,13 @@ body {
 }
 
 /* Token for RippleButton (multi-type-ripple-buttons). */
-:root { --button-ripple-color: oklch(0.145 0 0 / 0.3); }
-.dark { --button-ripple-color: oklch(0.985 0 0 / 0.5); }
+:root, .dark { --button-ripple-color: rgba(255, 255, 255, 0.5); }
 
-/* Blur what's behind an element without dragging its text into the blurred
-   layer. backdrop-filter promotes the element to its own composited layer,
-   which costs the text subpixel antialiasing — over the animated shader that
-   reads as blur. Keeping the filter on a ::before leaves the text crisp.
-   Set --blur-behind to tune the radius. */
+/* .blur-behind blurred what was behind an element. Nothing blurs now, so it
+   paints the surface instead -- the class is still applied in several places
+   and an empty rule there would leave transparent boxes on black. */
 .blur-behind {
-  isolation: isolate; /* keeps the -1 layer behind this box, not the page */
-}
-.blur-behind::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  backdrop-filter: blur(var(--blur-behind, 14px)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--blur-behind, 14px)) saturate(180%);
-  pointer-events: none;
+  background: var(--color-surface);
 }
 
 /* These three each need a positioned box for their ::before to fill, but only
@@ -485,78 +490,32 @@ body {
   }
 }
 
-/* Liquid glass bubble — translucent, blurred, floats on the black/neon background.
-   Unlike the milky .bg-card (near-black text), glass is see-through so text is white. */
-.glass-card {
-  isolation: isolate;
-  --blur-behind: 20px;
-  color: oklch(0.985 0 0);
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04) 55%, rgba(255, 255, 255, 0.02));
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.30),
-    inset 0 -1px 1px 0 rgba(255, 255, 255, 0.06),
-    inset 0 0 20px 0 rgba(255, 255, 255, 0.05),
-    0 10px 30px -12px rgba(0, 0, 0, 0.7);
-  transition: border-color 300ms var(--ease-apple), box-shadow 300ms var(--ease-apple);
-}
-.glass-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  backdrop-filter: blur(var(--blur-behind)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--blur-behind)) saturate(180%);
-  pointer-events: none;
-}
-/* The nav bubble's glass. The same material as .glass-card, lit harder: it
-   floats free on the page rather than being tucked against an edge, so the
-   specular rim has to read all the way round.
+/* Surfaces, not glass.
    
-   Three shadows rather than one. A tight contact shadow to seat it, a wide
-   ambient one to lift it off whatever is scrolling underneath, and a faint
-   coloured bloom so it picks up the neon behind it instead of reading as a
-   grey slab on a bright background. */
-.glass-bubble {
-  isolation: isolate;
-  --blur-behind: 28px;
-  color: oklch(0.985 0 0);
-  background:
-    linear-gradient(140deg, rgba(255, 255, 255, 0.17), rgba(255, 255, 255, 0.055) 52%, rgba(255, 255, 255, 0.03));
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.38),
-    inset 0 -1px 1px 0 rgba(255, 255, 255, 0.07),
-    inset 0 0 26px 0 rgba(255, 255, 255, 0.055),
-    0 2px 6px -1px rgba(0, 0, 0, 0.5),
-    0 20px 44px -14px rgba(0, 0, 0, 0.85),
-    0 0 30px -18px rgba(0, 229, 255, 0.5);
+   .glass-card and .glass-bubble were the app's material: a white gradient over
+   a backdrop-filter, a specular rim and a cyan bloom. All three are gone -- the
+   spec allows no blur, no glass and no gradient except a photo fading to black.
+   
+   The class names stay. They are applied in sixty-odd places, and a rename is
+   sixty chances to leave one behind still asking for glass that no longer
+   exists. Both now paint the same thing every other surface paints: #121212
+   with a hairline edge.
+   
+   position:relative stays inside @layer components, which is load-bearing.
+   Declared unlayered it outranks Tailwind's own .fixed -- that is what once
+   left the nav rendering at the bottom of the document instead of fixed to the
+   screen. */
+.glass-card {
+  color: #ffffff;
+  background: var(--color-surface);
+  border: 1px solid var(--line-card);
+  transition: border-color 300ms var(--ease-apple);
 }
 
-/* The specular rim. A real glass edge is not evenly lit — it catches hardest
-   where the light lands, top-left here, and falls off to nothing before it
-   comes round again. One hairline ring, masked to the border, does more for
-   the material than any amount of extra blur. */
-.glass-bubble::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.55),
-    rgba(255, 255, 255, 0.06) 38%,
-    rgba(255, 255, 255, 0) 62%,
-    rgba(255, 255, 255, 0.12)
-  );
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
+.glass-bubble {
+  color: #ffffff;
+  background: var(--color-surface);
+  border: 1px solid var(--line-card);
 }
 
 /* The travelling lens: the brighter pane of glass that sits under whichever
@@ -567,15 +526,9 @@ body {
    width is a fraction of the row set from the target count, so nothing has to
    be measured and no layout is read during the animation. */
 .nav-lens {
-  /* Light blue rather than white. --color-carz is the app's own accent, the
-     same cyan the spot page and the pricing badges use, so this is the palette
-     already in hand rather than a new colour. */
-  background:
-    linear-gradient(180deg, rgba(0, 229, 255, 0.30), rgba(0, 229, 255, 0.14));
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.45),
-    inset 0 -1px 0 0 rgba(0, 229, 255, 0.18),
-    0 2px 12px -2px rgba(0, 229, 255, 0.45);
+  /* Was cyan. White at a low alpha, which on #000 is the same object without
+     the hue. */
+  background: rgba(255, 255, 255, 0.14);
   transition:
     transform 420ms var(--ease-apple),
     opacity 220ms var(--ease-apple);
@@ -609,32 +562,105 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .nav-sheet-in, .nav-sheet-out, .nav-veil-in, .nav-veil-out { animation-duration: 1ms; }
 }
-/* Blur alone reads as frosted plastic. #glass-distortion (mounted by the nav)
-   pushes the already-blurred backdrop around with a displacement map, so the
-   neon behind the bubble bends through it the way it would through a lens.
-   Only where it is supported: the fallback is the plain blur, which is what
-   this was before. */
-.glass-bubble::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  backdrop-filter: blur(var(--blur-behind)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--blur-behind)) saturate(180%);
-  pointer-events: none;
-}
-@supports (filter: url("#glass-distortion")) {
-  .glass-bubble::before {
-    filter: url("#glass-distortion");
-  }
-}
+/* The bubble's backdrop blur and the #glass-distortion displacement map that
+   bent the neon behind it are both gone with the rest of the glass. There is
+   no neon left to bend and nothing is translucent, so there is nothing to
+   refract. The SVG filter the nav mounts is removed with it. */
 
 .glass-card:hover {
-  border-color: rgba(255, 255, 255, 0.28);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.40),
-    inset 0 -1px 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 0 24px 0 rgba(255, 255, 255, 0.07),
-    0 14px 36px -12px rgba(0, 0, 0, 0.75);
+  border-color: rgba(255, 255, 255, 0.20);
+}
+
+
+/* ==========================================================================
+   What the browser colours when nobody tells it otherwise.
+
+   Most of the blue in a web app is never written down. Link colour, the focus
+   ring, a checkbox, the text caret, the selection highlight, the tap flash on
+   iOS, autofilled inputs -- all of it ships blue by default, and none of it
+   appears in a search for "blue". This block is that list.
+   ========================================================================== */
+
+:root {
+  color-scheme: dark;
+}
+
+/* A link is whatever colour its text already is. */
+a {
+  color: inherit;
+}
+
+/* Visible focus, on everything, always. A white ring with a black gap so it
+   reads on a white button as well as on black. */
+:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/* Checkboxes, radios, range sliders and progress bars. */
+:root {
+  accent-color: #ffffff;
+}
+
+input,
+textarea,
+select,
+[contenteditable] {
+  caret-color: #ffffff;
+}
+
+::selection {
+  background: #ffffff;
+  color: #000000;
+}
+
+::-moz-selection {
+  background: #ffffff;
+  color: #000000;
+}
+
+/* iOS paints a translucent grey-blue box over anything tapped. */
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Autofill. Chrome paints a pale blue field and ignores background-color, so
+   the only way through is an inset shadow the size of the box. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: #ffffff;
+  -webkit-box-shadow: 0 0 0 1000px var(--color-surface) inset;
+  box-shadow: 0 0 0 1000px var(--color-surface) inset;
+  caret-color: #ffffff;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+/* Anything that spins, fills or pulses while waiting. */
+progress,
+progress::-webkit-progress-value,
+progress::-moz-progress-bar {
+  accent-color: #ffffff;
+  color: #ffffff;
+}
+
+/* Scrollbars, where they are drawn at all. */
+* {
+  scrollbar-color: rgba(255, 255, 255, 0.24) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.24);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
 }

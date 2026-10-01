@@ -1,11 +1,26 @@
 import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
-import { GlobalBg } from "@/components/global-bg";
 import { BackButton } from "@/components/back-button";
 import { AppChrome } from "@/components/app-chrome";
 
-// UI type is the Apple system font stack (no downloaded Google Fonts).
+/**
+ * Inter, behind the system stack.
+ *
+ * The spec asks for -apple-system, then SF Pro Display, then Inter. On Apple
+ * hardware the first two win and this never downloads a byte; it is the
+ * fallback for everything else, so Android and Windows stop rendering the app
+ * in Roboto and Segoe. Variable, so 400 through 900 is one file rather than
+ * six, and swapped rather than blocked so no text waits on it.
+ */
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  display: "swap",
+  variable: "--font-inter",
+  fallback: ["-apple-system", "BlinkMacSystemFont", "sans-serif"],
+});
 
 export const metadata: Metadata = {
   title: "Carz AI — snap a car, know everything",
@@ -38,14 +53,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className="dark h-full antialiased">
+    <html lang="en" suppressHydrationWarning className={`dark h-full antialiased ${inter.variable}`}>
       <body className="min-h-full flex flex-col bg-background ">
         <script
           dangerouslySetInnerHTML={{
             __html: `try{localStorage.removeItem('theme');document.documentElement.classList.remove('light');document.documentElement.classList.add('dark');}catch(e){}`,
           }}
         />
-        <GlobalBg />
+        {/* The cyan gradient bars that used to sit behind every page are gone.
+            The background is #000, flat. */}
         {/* min-height one pixel past the viewport, on purpose.
             
             Safari slides its bottom toolbar in the moment a page becomes tall
