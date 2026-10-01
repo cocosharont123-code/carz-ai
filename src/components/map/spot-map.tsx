@@ -7,7 +7,7 @@ import { MapPinOff } from "lucide-react";
 import { claimGpu } from "@/components/camera/camera-in-use";
 import { applyMidnight } from "@/components/map/night-style";
 import { MapHud } from "@/components/map/map-hud";
-import { timeAgo } from "@/components/feed/post-card";
+import { timeAgo } from "@/lib/time-ago";
 
 type Spot = {
   id: string;

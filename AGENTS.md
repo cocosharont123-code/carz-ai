@@ -98,7 +98,7 @@ working in that component.
 - **ALL CAPS labels.** `.util-label` is `text-transform: uppercase` at 11px and
   is used throughout, against rule 8's sentence case.
 - **Primary nav is 6 targets** — five items plus the menu, over rule 4's max
-  of five.
+  of five. It was seven until the feed was removed.
 
 Already compliant, so don't spend effort re-checking: reduce-motion is handled
 in `globals.css`, `web-gl-shader.tsx`, `siri-wave.tsx`, `reveal-observer.tsx`

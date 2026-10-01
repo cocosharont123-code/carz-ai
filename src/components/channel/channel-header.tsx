@@ -15,7 +15,7 @@ type Channel = {
   isYou: boolean;
 };
 
-type Stats = { followers: number; following: number; youFollow: boolean; posts: number };
+type Stats = { followers: number; following: number; youFollow: boolean };
 
 const nf = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 });
 
@@ -63,7 +63,7 @@ export function ChannelHeader({
         setError(d.error || "Couldn't save that.");
         return;
       }
-      onStats({ ...before, ...d, posts: before.posts });
+      onStats({ ...before, ...d });
     } catch {
       onStats(before);
       setError("Network error.");
@@ -116,7 +116,6 @@ export function ChannelHeader({
         )}
 
         <dl className="mt-5 flex gap-7">
-          <Stat label="Videos" value={stats?.posts ?? 0} />
           <Stat label="Followers" value={stats?.followers ?? 0} />
           <Stat label="Following" value={stats?.following ?? 0} />
         </dl>

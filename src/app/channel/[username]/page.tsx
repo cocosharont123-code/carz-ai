@@ -1,11 +1,17 @@
 "use client";
 
-import { use, useCallback, useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ChannelHeader } from "@/components/channel/channel-header";
-import { VideoGrid } from "@/components/channel/video-grid";
-import type { FeedPostView } from "@/components/feed/post-card";
+
+/**
+ * Somebody's profile.
+ *
+ * It used to be a grid of their clips over a header, which is what a channel was
+ * for. The feed is gone, so what is left is who they are, their following and
+ * the follow button -- all of which came from the profile and follow stores, not
+ * from the feed, and all of which still work.
+ */
 
 type Channel = {
   username: string;
@@ -17,7 +23,7 @@ type Channel = {
   isYou: boolean;
 };
 
-type Stats = { followers: number; following: number; youFollow: boolean; posts: number };
+type Stats = { followers: number; following: number; youFollow: boolean };
 
 export default function ChannelPage({
   params,
@@ -27,10 +33,8 @@ export default function ChannelPage({
   const { username } = use(params);
   const handle = decodeURIComponent(username).replace(/^@/, "");
 
-  const router = useRouter();
   const [channel, setChannel] = useState<Channel | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
-  const [posts, setPosts] = useState<FeedPostView[]>([]);
   const [loading, setLoading] = useState(true);
   const [missing, setMissing] = useState(false);
 
@@ -46,7 +50,6 @@ export default function ChannelPage({
         }
         setChannel(data.channel);
         setStats(data.stats);
-        setPosts(data.posts ?? []);
       })
       .catch(() => {
         if (!cancelled) setMissing(true);
@@ -59,12 +62,6 @@ export default function ChannelPage({
     };
   }, [handle]);
 
-  /** A thumbnail opens the feed on that video rather than a page of its own. */
-  const openAt = useCallback(
-    (postId: string) => router.push(`/feed?start=${encodeURIComponent(postId)}`),
-    [router],
-  );
-
   if (loading) return <ChannelSkeleton />;
 
   if (missing || !channel) {
@@ -75,10 +72,10 @@ export default function ChannelPage({
           Nobody here goes by @{handle}.
         </p>
         <Link
-          href="/feed"
-          className="press mt-6 inline-flex rounded-full bg-white px-6 py-2.5 text-sm font-bold text-neutral-900"
+          href="/search"
+          className="press mt-6 inline-flex min-h-11 items-center rounded-full bg-white px-6 text-sm font-bold text-neutral-900"
         >
-          Back to the feed
+          Search for someone
         </Link>
       </main>
     );
@@ -87,7 +84,6 @@ export default function ChannelPage({
   return (
     <main className="mx-auto w-full max-w-2xl pb-16">
       <ChannelHeader channel={channel} stats={stats} onStats={setStats} />
-      <VideoGrid posts={posts} onOpen={openAt} />
     </main>
   );
 }
@@ -108,11 +104,6 @@ function ChannelSkeleton() {
           ))}
         </div>
         <div className="mt-5 h-10 w-full animate-pulse rounded-full bg-white/[0.06]" />
-      </div>
-      <div className="mt-6 grid grid-cols-3 gap-0.5">
-        {Array.from({ length: 9 }, (_, i) => (
-          <div key={i} className="aspect-[9/16] animate-pulse bg-white/[0.04]" />
-        ))}
       </div>
     </main>
   );

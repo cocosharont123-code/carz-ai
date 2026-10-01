@@ -23,7 +23,6 @@ import {
   ScanLine,
   Map,
   Ticket,
-  Users,
   type LucideIcon,
 } from "lucide-react";
 
@@ -71,12 +70,6 @@ export const EXPLORE_BUBBLES: ExploreItem[] = [
     description: "Ask anything about cars",
     href: "/carzbot",
     icon: Bot,
-  },
-  {
-    label: "Feed",
-    description: "Watch car clips from everyone",
-    href: "/feed",
-    icon: Users,
   },
   {
     label: "Garage",

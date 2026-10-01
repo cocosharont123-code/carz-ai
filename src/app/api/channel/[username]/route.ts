@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { findByUsername, isActiveMember } from "@/lib/profile-blob";
-import { listPostsByAuthor, hashEmail } from "@/lib/feed-blob";
 import { followStats } from "@/lib/follows-blob";
 
 export const runtime = "nodejs";
 
-// Everything a channel screen needs, in one request: who they are, their
-// counts, whether you follow them, and their videos. Four round trips for one
-// screen is what makes a profile feel slow.
+// Everything a channel screen needs in one request: who they are, their counts,
+// and whether you follow them. It used to return their videos too; with the feed
+// gone there are none to return.
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ username: string }> },
@@ -18,15 +17,14 @@ export async function GET(
 
   const session = await auth();
   const email = session?.user?.email ?? null;
-  const viewerHash = email ? hashEmail(email) : null;
 
   const profile = await findByUsername(username);
-  const posts = await listPostsByAuthor(username, viewerHash);
 
-  // A channel can exist as a name on posts without a stored profile — the feed
-  // records the name it was posted under. Better a channel with their videos
-  // and no bio than a 404 on a name the feed itself is showing.
-  if (!profile && posts.length === 0) {
+  // A stored profile is now the only thing that makes a channel exist. It used
+  // to fall back to any name the feed had seen posting, which is how a channel
+  // could have videos and no bio; with no posts there is nothing to fall back
+  // to and an unknown handle is simply a 404.
+  if (!profile) {
     return NextResponse.json({ error: "No such channel." }, { status: 404 });
   }
 
@@ -34,16 +32,15 @@ export async function GET(
 
   return NextResponse.json({
     channel: {
-      username: profile?.username ?? username,
-      displayName: profile?.displayName ?? username,
-      image: profile?.image ?? posts[0]?.authorImage ?? "",
-      bio: profile?.bio ?? "",
-      cover: profile?.cover ?? "",
-      member: profile ? isActiveMember(profile) : false,
-      isYou: !!profile && !!email && profile.username === (await meUsername(email)),
+      username: profile.username,
+      displayName: profile.displayName ?? username,
+      image: profile.image ?? "",
+      bio: profile.bio ?? "",
+      cover: profile.cover ?? "",
+      member: isActiveMember(profile),
+      isYou: !!email && profile.username === (await meUsername(email)),
     },
-    stats: { ...stats, posts: posts.length },
-    posts,
+    stats,
   });
 }
 

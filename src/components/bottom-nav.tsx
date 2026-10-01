@@ -8,7 +8,6 @@ import {
   Home,
   Trophy,
   ScanLine,
-  Play,
   Map,
   Menu,
   X,
@@ -107,13 +106,6 @@ export function BottomNav() {
       href: "/hunt",
       Icon: Crosshair,
       active: pathname.startsWith("/hunt"),
-    },
-    {
-      key: "feed",
-      label: "Feed",
-      href: "/feed",
-      Icon: Play,
-      active: pathname.startsWith("/feed"),
     },
     {
       key: "spot",

@@ -27,11 +27,11 @@ export function BackButton() {
       <button
         type="button"
         onClick={() => {
-          // history.back() when there is somewhere to go back to, and the feed
+          // history.back() when there is somewhere to go back to, and home
           // otherwise — a deep link opened in a new tab has no history, and a
           // back button that does nothing is worse than no back button.
           if (window.history.length > 1) router.back();
-          else router.push("/feed");
+          else router.push("/");
         }}
         aria-label="Back"
         style={{ top: "calc(var(--safe-top) + 0.75rem)" }}

@@ -43,10 +43,10 @@ export default function SpotError({
         Try again
       </button>
       <Link
-        href="/feed"
+        href="/"
         className="press glass-card mt-2 flex min-h-11 w-full items-center justify-center rounded-full text-sm font-bold"
       >
-        Back to the feed
+        Back to home
       </Link>
     </main>
   );

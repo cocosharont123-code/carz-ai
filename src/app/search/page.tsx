@@ -1,7 +1,6 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search as SearchIcon, Crown, X } from "lucide-react";
 import { Avatar } from "@/components/default-avatar";
@@ -135,11 +134,6 @@ function SearchInner() {
         )}
       </div>
 
-      <p className="mt-8 text-center">
-        <Link href="/feed" className="util-label opacity-50 hover:opacity-100">
-          Back to the feed
-        </Link>
-      </p>
     </main>
   );
 }
