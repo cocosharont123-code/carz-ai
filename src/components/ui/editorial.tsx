@@ -132,12 +132,17 @@ export function PageMasthead({
   action?: ReactNode;
 }) {
   return (
-    <header className="border-b border-white/10 pb-5">
-      {eyebrow && <Eyebrow className="mb-3">{eyebrow}</Eyebrow>}
+    <header className="pb-5">
+      {eyebrow && <Eyebrow className="mb-2">{eyebrow}</Eyebrow>}
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="display text-4xl">{title}</h1>
+        {/* 34px bold, the spec's page title. It was .display at text-4xl, which
+            is the condensed face the hero uses -- at page-title size that read
+            as a second hero on every screen. */}
+        <h1 className="text-[34px] font-bold leading-tight tracking-tight text-white">{title}</h1>
         <div className="flex items-center gap-4 pb-1">
-          {count != null && <span className="util-label ">{count}</span>}
+          {count != null && (
+            <span className="text-[14px] text-[var(--color-secondary-text)]">{count}</span>
+          )}
           {action}
         </div>
       </div>
@@ -148,7 +153,7 @@ export function PageMasthead({
 /* --- SectionDivider: full-width bar, thin rules, centered label ------------- */
 export function SectionDivider({ children }: { children: ReactNode }) {
   return (
-    <div className="my-8 border-y border-white/10 py-3 text-center">
+    <div className="my-8 border-y border-[var(--line-divider)] py-3 text-center">
       <span className="util-label ">{children}</span>
     </div>
   );
