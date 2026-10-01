@@ -7,13 +7,13 @@ import { PageMasthead, Button, Skeleton } from "@/components/ui/editorial";
 type Ev = { name: string; type: string; venue?: string; city: string; when: string; note?: string };
 
 const TYPE_STYLE: Record<string, string> = {
-  "Cars & Coffee": "bg-amber-400/20 text-amber-300",
-  Concours: "bg-fuchsia-400/20 text-fuchsia-300",
-  Auction: "bg-emerald-400/20 text-emerald-300",
-  "Track day": "bg-rose-400/20 text-rose-300",
-  "Car show": "bg-sky-400/20 text-sky-300",
-  Rally: "bg-violet-400/20 text-violet-300",
-  Meet: "bg-cyan-400/20 text-cyan-300",
+  "Cars & Coffee": "bg-white/10 text-white",
+  Concours: "bg-white/10 text-white",
+  Auction: "bg-white/10 text-white",
+  "Track day": "bg-white/10 text-white",
+  "Car show": "bg-white/10 text-white",
+  Rally: "bg-white/10 text-white",
+  Meet: "bg-white/10 text-white",
 };
 
 const searchUrl = (e: Ev) =>

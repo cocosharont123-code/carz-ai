@@ -213,13 +213,15 @@ export function SpotMap() {
       pins.current = spots.map((s) => {
         // Kept so a deep link can find this pin again by its spot id.
         const el = document.createElement("div");
-        // Rare cars burn brighter. Everything else is the app's cyan.
+        // Rare cars burn brighter. It was amber against cyan; it is a solid
+        // white dot against a hollow one, so rarity still reads at a glance
+        // without a hue doing the work.
         const rare = s.rarityScore >= 70;
         el.style.cssText = [
           "width:14px;height:14px;border-radius:9999px;cursor:pointer",
-          `background:${rare ? "#ffad42" : "#00e5ff"}`,
-          "border:2px solid rgba(255,255,255,0.85)",
-          `box-shadow:0 0 12px ${rare ? "rgba(255,173,66,0.9)" : "rgba(0,229,255,0.9)"}`,
+          `background:${rare ? "#ffffff" : "#000000"}`,
+          "border:2px solid #ffffff",
+          rare ? "box-shadow:0 0 12px rgba(255,255,255,0.9)" : "",
         ].join(";");
 
         const name = `${s.make} ${s.model}`.trim();
@@ -243,7 +245,7 @@ export function SpotMap() {
                    entryId
                      ? `<a href="/leaderboard?car=${encodeURIComponent(entryId)}"
                           style="display:flex;align-items:center;min-height:44px;margin-top:6px;
-                                 color:#00e5ff;font-weight:600;text-decoration:none">
+                                 color:#ffffff;font-weight:600;text-decoration:underline">
                           See it on the leaderboard &rsaquo;
                         </a>`
                      : ""
@@ -303,7 +305,16 @@ export function SpotMap() {
         const at: [number, number] = [pos.coords.longitude, pos.coords.latitude];
         m.flyTo({ center: at, zoom: 14, essential: true, duration: 2000 });
         marker.current?.remove();
-        marker.current = new mapboxgl.Marker({ color: "#00e5ff" }).setLngLat(at).addTo(m);
+        // The viewer's own position: a white dot, per the spec. Mapbox's default
+        // marker is a teardrop pin, which is the shape used for cars -- a plain
+        // circle keeps "where I am" distinct from "where a car was".
+        const dot = document.createElement("div");
+        dot.style.cssText = [
+          "width:16px;height:16px;border-radius:9999px",
+          "background:#ffffff",
+          "box-shadow:0 0 0 4px rgba(255,255,255,0.25), 0 0 18px rgba(255,255,255,0.65)",
+        ].join(";");
+        marker.current = new mapboxgl.Marker({ element: dot }).setLngLat(at).addTo(m);
       },
       () => setLocating(false),
       { enableHighAccuracy: true, timeout: 8000 },
@@ -327,7 +338,7 @@ export function SpotMap() {
   }
 
   return (
-    <div className="relative h-full w-full bg-[#04040d]">
+    <div className="relative h-full w-full bg-black">
       <div ref={holder} className="h-full w-full" />
       <MapHud
         tilted={tilted}

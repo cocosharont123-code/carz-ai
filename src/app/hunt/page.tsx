@@ -232,7 +232,10 @@ function HuntInner() {
                 className="h-6 w-6 shrink-0 rounded-full border border-white/25"
                 style={{
                   background:
-                    w.swatch ?? "conic-gradient(#ef4444,#facc15,#22c55e,#3b82f6,#ef4444)",
+                    // A real car colour is a real colour and stays one -- the swatch is
+                    // what the hunt is asking you to find. Only the "any colour"
+                    // fallback loses its rainbow, which was decoration.
+                    w.swatch ?? "#1a1a1a",
                 }}
                 aria-hidden
               />

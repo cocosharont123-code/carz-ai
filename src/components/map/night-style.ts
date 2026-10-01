@@ -9,10 +9,55 @@ import type mapboxgl from "mapbox-gl";
  * hardcoded `road-primary` is a map that silently stops glowing one morning.
  */
 
-/** Cosmic navy the satellite imagery is dimmed towards. */
-const NIGHT = "#04040d";
-/** Sodium-lamp amber for the roads. */
-const LAMP = "#ffad42";
+/** Black. The imagery is dimmed towards it, not towards a navy. */
+const NIGHT = "#000000";
+/** White. The roads were sodium-lamp amber. */
+const LAMP = "#ffffff";
+
+/**
+ * Pulls the satellite tiles to greyscale.
+ *
+ * Dimming alone was not enough: a satellite image is grass, roofs and -- the
+ * thing the spec names outright -- blue water, and 75% black over it is a dark
+ * blue sea rather than a grey one. Saturation on the raster layer itself is the
+ * only control that reaches the imagery, since a CSS filter over the canvas
+ * would take the pins and labels with it.
+ */
+function desaturateRaster(map: mapboxgl.Map): void {
+  const style = map.getStyle();
+  for (const l of (style?.layers ?? []) as AnyLayer[]) {
+    if (l.type !== "raster") continue;
+    try {
+      map.setPaintProperty(l.id, "raster-saturation", -1);
+      map.setPaintProperty(l.id, "raster-contrast", 0.15);
+    } catch {
+      // A layer that will not take it still gets the sheet over it.
+    }
+  }
+}
+
+/** Labels, water and land, all forced to neutral. */
+function greyEverythingElse(map: mapboxgl.Map): void {
+  const style = map.getStyle();
+  for (const l of (style?.layers ?? []) as AnyLayer[]) {
+    try {
+      if (l.type === "symbol") {
+        map.setPaintProperty(l.id, "text-color", "#c2c2c2");
+        map.setPaintProperty(l.id, "text-halo-color", "#000000");
+      } else if (l.type === "fill" && l.id !== "carz-night") {
+        // Water is the one that matters. Mapbox names it variously, so this
+        // goes by source-layer and id rather than trusting a single name.
+        if (/water|ocean|sea|bay|river/i.test(l.id) || l["source-layer"] === "water") {
+          map.setPaintProperty(l.id, "fill-color", "#0a0a0a");
+        } else if (/park|green|wood|grass|landuse/i.test(l.id)) {
+          map.setPaintProperty(l.id, "fill-color", "#141414");
+        }
+      }
+    } catch {
+      // Not every layer accepts every property; the sheet covers the rest.
+    }
+  }
+}
 
 type AnyLayer = mapboxgl.Layer & { id: string; type: string; "source-layer"?: string };
 
@@ -66,7 +111,7 @@ export function addNightSheet(map: mapboxgl.Map): void {
       id: "carz-night",
       type: "fill",
       source: "carz-night-src",
-      paint: { "fill-color": NIGHT, "fill-opacity": 0.75 },
+      paint: { "fill-color": NIGHT, "fill-opacity": 0.55 },
     },
     firstRoad,
   );
@@ -129,16 +174,21 @@ export function addTerrainAndSky(map: mapboxgl.Map): void {
   map.setTerrain({ source: "mapbox-dem", exaggeration: 1.3 });
   map.setFog({
     color: NIGHT,
-    "high-color": "#0a0a1f",
+    // Was a navy horizon over a near-black space. Both neutral now.
+    "high-color": "#1a1a1a",
     "horizon-blend": 0.08,
-    "space-color": "#010103",
+    "space-color": "#000000",
     "star-intensity": 0.95,
   });
 }
 
 /** Everything, in the order it has to happen. */
 export function applyMidnight(map: mapboxgl.Map): void {
+  // Saturation first: the sheet and the road glow go on top of imagery that is
+  // already grey, so nothing downstream has to fight a blue underneath it.
+  desaturateRaster(map);
   addNightSheet(map);
+  greyEverythingElse(map);
   lightRoads(map);
   addTerrainAndSky(map);
 }

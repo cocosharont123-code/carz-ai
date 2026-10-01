@@ -33,9 +33,9 @@ function markSvg(markW: number): string {
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${boxW}" height="${boxH}" viewBox="0 0 ${boxW} ${boxH}">
   <g opacity="0.88" transform="translate(0,${Math.round(pad * 0.2)})" fill="none" stroke-linecap="round">
-    <path d="${path(waveH * 0.22)}" stroke="#ff3131" stroke-width="${stroke}"/>
-    <path d="${path(0)}" stroke="#39ff14" stroke-width="${stroke}"/>
-    <path d="${path(-waveH * 0.22)}" stroke="#00e5ff" stroke-width="${stroke}"/>
+    <path d="${path(waveH * 0.22)}" stroke="#ffffff" stroke-opacity="0.55" stroke-width="${stroke}"/>
+    <path d="${path(0)}" stroke="#ffffff" stroke-opacity="0.8" stroke-width="${stroke}"/>
+    <path d="${path(-waveH * 0.22)}" stroke="#ffffff" stroke-width="${stroke}"/>
   </g>
   <text x="${w * 0.04}" y="${textY}" font-family="sans-serif" font-size="${font}" font-weight="700"
         fill="#ffffff" opacity="0.92" letter-spacing="${font * 0.02}"

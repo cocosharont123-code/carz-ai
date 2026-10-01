@@ -92,12 +92,12 @@ function ScanningButton({
       aria-live="polite"
       aria-busy="true"
       className="w-full rounded-2xl border border-white/10 bg-white/[0.02] px-5 py-6"
-      // The loader reads its palette from these, so the brand blue is applied
-      // per instance rather than by editing the component.
+      // The loader reads its palette from these. It was the brand blue; a
+      // loading bar is not where the one allowed colour gets spent.
       style={
         {
-          "--flux-from": "#0a84ff",
-          "--flux-to": "#00e5ff",
+          "--flux-from": "#808080",
+          "--flux-to": "#ffffff",
         } as React.CSSProperties
       }
     >
@@ -323,7 +323,11 @@ function ValueChart({ points }: { points: { year: string; usd: number }[] }) {
   const line = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(p.usd)}`).join(" ");
   const area = `${line} L ${x(pts.length - 1)} ${H - padY} L ${x(0)} ${H - padY} Z`;
   const trendUp = pts[pts.length - 1].usd >= pts[0].usd;
-  const stroke = trendUp ? "#34d399" : "#f87171";
+  // Was green up, red down. Direction is already carried by the shape of the
+  // line and by the figure beside it, so the colour was saying it a third time
+  // -- and it was the one thing on this chart a colour-blind reader could not
+  // read. Both lines are white.
+  const stroke = "#ffffff";
   return (
     <div className="mt-4 rounded-2xl bg-black/[0.04] p-4">
       <div className="flex items-baseline justify-between">
