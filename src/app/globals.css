@@ -30,9 +30,13 @@
      A constant gap instead. 1.5rem clears the home-indicator bar on the phones
      that have one, and on everything else it is simply the gap the bubble
      floats above the edge. The nav never moves again. */
-  --nav-gap: 1.5rem;
-  --nav-bubble-h: 3.5rem;
-  --nav-h: calc(var(--nav-bubble-h) + var(--nav-gap) * 2);
+  --nav-gap: 0px;
+  --nav-bubble-h: 56px;
+  /* The tab bar is docked to the bottom edge now rather than floating above
+     it, so what a page has to keep clear is the bar plus the home-indicator
+     strip under it -- no gap either side. Kept under the same names because
+     every full-bleed page measures from --nav-h. */
+  --nav-h: calc(var(--nav-bubble-h) + env(safe-area-inset-bottom, 0px));
 }
 
 /* ==========================================================================
