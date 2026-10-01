@@ -17,6 +17,10 @@ import React from "react";
  * And the CSS custom property is typed rather than @ts-ignore'd. A style object
  * genuinely can carry a custom property; the cast says so, where the ignore
  * silenced whatever else might be wrong on that line too.
+ *
+ * Since then, a fourth: each bar carries a class so the animation can be turned
+ * off under prefers-reduced-motion. It has to be !important, because the
+ * animation is an inline style and nothing in a stylesheet outranks one.
  */
 
 interface GradientBarsProps {
@@ -31,6 +35,9 @@ const KEYFRAMES = `
 @keyframes pulseBar {
   0% { transform: scaleY(var(--initial-scale)); }
   100% { transform: scaleY(calc(var(--initial-scale) * 0.7)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gradient-bar { animation: none !important; }
 }`;
 
 /**
@@ -75,6 +82,7 @@ const GradientBars: React.FC<GradientBarsProps> = ({
           return (
             <div
               key={index}
+              className="gradient-bar"
               style={
                 {
                   flex: `1 0 calc(100% / ${numBars})`,

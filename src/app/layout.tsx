@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "@/components/providers";
-import { GlobalShaderBg } from "@/components/global-shader-bg";
+import { GlobalBg } from "@/components/global-bg";
 import { BottomNav } from "@/components/bottom-nav";
 import { BackButton } from "@/components/back-button";
 import { LegalNotice } from "@/components/legal-notice";
@@ -46,7 +46,7 @@ export default function RootLayout({
             __html: `try{localStorage.removeItem('theme');document.documentElement.classList.remove('light');document.documentElement.classList.add('dark');}catch(e){}`,
           }}
         />
-        <GlobalShaderBg />
+        <GlobalBg />
         {/* min-height one pixel past the viewport, on purpose.
             
             Safari slides its bottom toolbar in the moment a page becomes tall
