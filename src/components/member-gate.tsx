@@ -2,11 +2,23 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/editorial";
-import { carzPlusMonthly, carzPlusAnnual, carzPlusAnnualSaving } from "@/lib/plans";
+import {
+  carzPlusMonthly,
+  carzPlusAnnual,
+  carzPlusAnnualSaving,
+  carzMaxMonthly,
+  carzMaxAnnual,
+  carzMaxAnnualSaving,
+} from "@/lib/plans";
 
 /**
- * Wraps members-only content. Renders the children only for Carz+ members;
- * everyone else gets an explanation of the locked feature plus an upsell.
+ * Wraps members-only content. Renders the children only for members of the tier
+ * asked for; everyone else gets an explanation of the locked feature and the
+ * upsell for that tier.
+ *
+ * It only knew about Carz+ before, which left no way to lock a MAX feature on the
+ * client: the MAX routes answered 402 and the screen in front of them opened for
+ * any member, so a Carz+ member reached a page that then refused to load.
  */
 export function MemberGate({
   children,
@@ -14,6 +26,7 @@ export function MemberGate({
   blurb,
   points,
   tabs,
+  tier = "plus",
 }: {
   children: ReactNode;
   title?: string;
@@ -24,15 +37,30 @@ export function MemberGate({
   /** Optional section tab bar, shown under the header even while locked so
    *  a sibling public tab (e.g. Leaderboard) stays reachable for non-members. */
   tabs?: ReactNode;
+  /**
+   * Which membership opens this. "max" requires Carz MAX specifically, so a
+   * Carz+ member is shown the upsell rather than content their API will refuse.
+   */
+  tier?: "plus" | "max";
 }) {
   const [member, setMember] = useState<boolean | null>(null);
 
   useEffect(() => {
     fetch("/api/membership", { cache: "no-store" })
       .then((r) => r.json())
-      .then((d) => setMember(!!d.member))
+      .then((d) => {
+        // tier is the one that matters for a MAX feature; `member` is true for
+        // both tiers and would let Carz+ straight through.
+        setMember(tier === "max" ? d.tier === "max" : !!d.member);
+      })
       .catch(() => setMember(false));
-  }, []);
+  }, [tier]);
+
+  const isMax = tier === "max";
+  const planName = isMax ? "Carz MAX" : "Carz+";
+  const monthly = isMax ? carzMaxMonthly() : carzPlusMonthly();
+  const annual = isMax ? carzMaxAnnual() : carzPlusAnnual();
+  const saving = isMax ? carzMaxAnnualSaving() : carzPlusAnnualSaving();
 
   if (member === null) {
     return (
@@ -58,7 +86,7 @@ export function MemberGate({
         {tabs}
         <main className="mx-auto w-full max-w-lg px-5 py-16">
           <div className="glass-card rounded-3xl p-8 text-center">
-            <div className="util-label text-carz">Carz+ members only</div>
+            <div className="util-label text-carz">{planName} members only</div>
             <h1 className="display mt-2 text-3xl">{title}</h1>
             <p className="mx-auto mt-2 max-w-sm text-[13px] opacity-70">{blurb}</p>
 
@@ -73,9 +101,11 @@ export function MemberGate({
               </ul>
             )}
 
-            <Button href="/pricing" className="mt-6">Get Carz+ · {carzPlusMonthly()}/mo</Button>
+            <Button href="/pricing" className="mt-6">
+              Get {planName} · {monthly}/mo
+            </Button>
             <p className="mt-3 text-xs opacity-60">
-              or {carzPlusAnnual()}/year — save {carzPlusAnnualSaving()}%
+              or {annual}/year — save {saving}%
             </p>
           </div>
         </main>

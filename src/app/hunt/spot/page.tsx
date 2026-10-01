@@ -25,6 +25,7 @@ type Result = {
 export default function HuntSpotPage() {
   return (
     <MemberGate
+      tier="max"
       title="Hunt camera"
       blurb="The live camera that turns a real spot into a paid bounty."
       points={[

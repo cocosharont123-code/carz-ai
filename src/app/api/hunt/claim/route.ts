@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { addClaim, readClaims, claimsConfigured, ownerEmail } from "@/lib/hunt-claims";
-import { ensureProfile } from "@/lib/profile-blob";
+import { ensureProfile, isMaxMember } from "@/lib/profile-blob";
 
 export const runtime = "nodejs";
 
@@ -30,14 +30,29 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "invalid JSON" }, { status: 400 });
   }
 
-  // Attach a username if the person happens to be signed in (optional).
-  let spotter = "Guest";
+  /**
+   * Claiming is Carz MAX, and it is checked here rather than only on the screen
+   * in front of it.
+   *
+   * This route used to take a claim from anyone and file it under "Guest" if they
+   * were not signed in. The hunt pays real money, so the one request that asks
+   * for a payout was the one request with nothing behind it -- a URL and a
+   * CashApp tag were enough. The tier is read from the stored profile on every
+   * request, so a lapsed membership stops being able to claim at once.
+   */
   const session = await auth();
-  if (session?.user?.email) {
-    // Always a username — generated on first sight if they never picked one.
-    const { profile } = await ensureProfile(session.user.email);
-    spotter = `@${profile.username}`;
+  const email = session?.user?.email;
+  if (!email) {
+    return NextResponse.json({ ok: false, error: "Sign in to claim a bounty." }, { status: 401 });
   }
+  const { profile } = await ensureProfile(email);
+  if (!isMaxMember(profile)) {
+    return NextResponse.json(
+      { ok: false, error: "Claiming a bounty is a Carz MAX feature." },
+      { status: 402 },
+    );
+  }
+  const spotter = `@${profile.username}`;
 
   const res = await addClaim({
     carId: (body.carId || "").trim(),

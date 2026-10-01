@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { getProfile, isActiveMember } from "@/lib/profile-blob";
+import { getProfile, isMaxMember } from "@/lib/profile-blob";
 import { huntStatus, enterHunt, HuntEntriesError } from "@/lib/hunt-entries";
 
 export const runtime = "nodejs";
@@ -25,8 +25,8 @@ export async function POST() {
   if (!email) {
     return NextResponse.json({ error: "Sign in to enter the hunt." }, { status: 401 });
   }
-  if (!isActiveMember(await getProfile(email))) {
-    return NextResponse.json({ error: "The hunt is a Carz+ feature." }, { status: 402 });
+  if (!isMaxMember(await getProfile(email))) {
+    return NextResponse.json({ error: "The hunt is a Carz MAX feature." }, { status: 402 });
   }
   try {
     return NextResponse.json(await enterHunt(email));

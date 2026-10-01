@@ -105,7 +105,7 @@ export const EXPLORE_BUBBLES: ExploreItem[] = [
     description: "Find a wanted car, win the bounty",
     href: "/hunt",
     icon: Crosshair,
-    tier: "plus",
+    tier: "max",
   },
   // Last, because it is the one tile that sells something rather than doing
   // something. Named for both tiers under the rule above: they are one page

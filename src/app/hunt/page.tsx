@@ -28,6 +28,7 @@ function tierLabel(bounty: number): string {
 export default function HuntPage() {
   return (
     <MemberGate
+      tier="max"
       title="Car Hunt Miami"
       blurb="A real-money scavenger hunt for the world's rarest cars."
       points={[
