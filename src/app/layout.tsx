@@ -75,8 +75,12 @@ export default function RootLayout({
             where it is going to be, so nothing moves when the content lands.
             One pixel is not reachable by a drag — body already sets
             overscroll-behavior-y: none — it only settles the toolbar. */}
+        {/* The app is a 480px column, centred, with black either side of it.
+            Applied once here rather than screen by screen: a page that sets its
+            own max-w-2xl inside this is simply capped at 480, so the pages not
+            yet rebuilt get the desktop frame too. */}
         <div
-          className="relative z-10 flex min-h-[calc(100dvh+1px)] flex-1 flex-col"
+          className="relative z-10 mx-auto flex w-full max-w-[480px] min-h-[calc(100dvh+1px)] flex-1 flex-col"
           style={{ paddingTop: "var(--safe-top)" }}
         >
           {/* Inside Providers on purpose: the nav reads the session, and being
