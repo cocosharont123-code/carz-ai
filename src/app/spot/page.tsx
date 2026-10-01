@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ImagePlus,
   Upload,
@@ -11,7 +12,7 @@ import {
   Check,
   BookmarkPlus,
   ChevronDown,
-  Camera,
+  ScanLine,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Button as GlassButton } from "@/components/ui/editorial";
@@ -368,6 +369,17 @@ function newScanId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+/**
+ * The four white brackets round the frame. Borders on four small boxes rather
+ * than an SVG, so they stay hairline-crisp at any pixel density.
+ */
+const CORNERS = [
+  { key: "tl", cls: "left-4 top-4 border-l-2 border-t-2 rounded-tl-lg border-white" },
+  { key: "tr", cls: "right-4 top-4 border-r-2 border-t-2 rounded-tr-lg border-white" },
+  { key: "bl", cls: "bottom-4 left-4 border-b-2 border-l-2 rounded-bl-lg border-white" },
+  { key: "br", cls: "bottom-4 right-4 border-b-2 border-r-2 rounded-br-lg border-white" },
+] as const;
+
 export default function SpotPage() {
   const [status, setStatus] = useState<Status | null>(null);
   const [car, setCar] = useState<CarReport | null>(null);
@@ -383,6 +395,7 @@ export default function SpotPage() {
   // Its own input, separate from the library picker: `capture` is what sends a
   // phone straight to its camera rather than to the photo roll, and the two
   // need different behaviour from the same page.
+  const router = useRouter();
   const cameraInputRef = useRef<HTMLInputElement>(null);
   /**
    * Whether the photo being scanned was taken here and now.
@@ -656,7 +669,22 @@ export default function SpotPage() {
           spacer sits above this and the nav's sits below it, so the page was
           padding twice at both ends — which is the room to scroll above the
           heading and below the identify button. */}
-      <main className="mx-auto w-full max-w-2xl px-5 py-2">
+      <main className="mx-auto w-full max-w-[480px] px-5 py-2">
+        {/* X, wordmark. The app's floating back arrow is suppressed on this
+            route so there are not two ways back sitting on top of each other. */}
+        <header className="relative flex h-14 items-center">
+          <button
+            type="button"
+            onClick={() => (window.history.length > 1 ? router.back() : router.push("/"))}
+            aria-label="Close scanner"
+            className="press -ml-2 flex h-11 w-11 items-center justify-center rounded-full"
+          >
+            <X className="h-6 w-6 text-white" strokeWidth={1.75} aria-hidden />
+          </button>
+          <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-[17px] font-bold lowercase tracking-tight text-white">
+            carz
+          </span>
+        </header>
         {/* No "Spot a car" headline. The nav says which page this is, and the
             two buttons under it say what to do — a 7xl restatement of the tab
             you just tapped was taking a third of the screen to add nothing.
@@ -699,35 +727,23 @@ export default function SpotPage() {
             opens outside the browser, returns a file, and cannot take this
             page down with it, because this page is not running while it is up.
             
-            The trade is a still photo only. No live preview, no hold-to-record
-            — which is no loss, since a recording was only ever scanned as its
-            first frame anyway. */}
+            Which is why this screen has no flash button and no flip button.
+            The spec asks for both only if a live camera is really used, and
+            there is no live camera here to flip or to light — those controls
+            would be two switches wired to nothing. */}
         {!previewUrl && !car && (
-          <>
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              className="hidden"
-              ref={cameraInputRef}
-              onChange={(e) => {
-                handleFileChange(e);
-                const file = e.target.files?.[0];
-                if (file) void identifyFile(file);
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => {
-                liveCapture.current = true;
-                cameraInputRef.current?.click();
-              }}
-              className="press mt-6 flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-carz py-3.5 text-sm font-bold text-black transition hover:brightness-110"
-            >
-              <Camera className="h-4 w-4" strokeWidth={2.25} aria-hidden />
-              Take a photo
-            </button>
-          </>
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            ref={cameraInputRef}
+            onChange={(e) => {
+              handleFileChange(e);
+              const file = e.target.files?.[0];
+              if (file) void identifyFile(file);
+            }}
+          />
         )}
 
         {/* Upload card */}
@@ -745,27 +761,27 @@ export default function SpotPage() {
 
           {!previewUrl ? (
             <div
-              onClick={handleThumbnailClick}
               onDragOver={handleDragOver}
               onDragEnter={handleDragEnter}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               className={cn(
-                "flex h-64 cursor-pointer flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-foreground/15 bg-foreground/[0.02] transition-colors hover:bg-foreground/[0.04]",
-                isDragging && "border-neon-blue/60 bg-neon-blue/5",
+                // Square and black: this is where the photo will be, framed
+                // the way a camera frames it. Drag and drop still lands here,
+                // which is the only way to use this screen on a desktop.
+                "relative aspect-square w-full overflow-hidden rounded-card bg-black transition-colors",
+                isDragging && "bg-[var(--color-surface)]",
               )}
             >
-              <div className="rounded-full bg-background p-3 shadow-sm">
-                <ImagePlus className="h-6 w-6 " />
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-medium">
-                  Click to select a car photo
-                </p>
-                <p className="text-xs ">
-                  or drag and drop it here
-                </p>
-              </div>
+              {/* Four corner brackets. Drawn as borders on four absolutely
+                  placed boxes rather than as an SVG, so they stay hairline-
+                  crisp at any density. */}
+              {CORNERS.map((c) => (
+                <span key={c.key} aria-hidden className={cn("pointer-events-none absolute h-8 w-8", c.cls)} />
+              ))}
+              <p className="absolute inset-x-0 bottom-5 text-center text-[14px] text-[var(--color-secondary-text)]">
+                Point your camera at any car
+              </p>
             </div>
           ) : (
             <div className="relative">
@@ -794,6 +810,39 @@ export default function SpotPage() {
                   </button>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Gallery and shutter. No flip: there is no live camera to flip.
+              The shutter opens the same camera input the page already used,
+              and the gallery opens the same library picker -- both handlers
+              are untouched, only their presentation changed. */}
+          {!previewUrl && !car && (
+            <div className="flex items-center justify-center gap-10 pt-2">
+              <button
+                type="button"
+                onClick={handleThumbnailClick}
+                aria-label="Choose a photo from your library"
+                className="press flex h-12 w-12 items-center justify-center rounded-full bg-white/10"
+              >
+                <ImagePlus className="h-5 w-5 text-white" strokeWidth={1.75} aria-hidden />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  liveCapture.current = true;
+                  cameraInputRef.current?.click();
+                }}
+                aria-label="Take a photo"
+                className="press flex h-[68px] w-[68px] items-center justify-center rounded-full border-2 border-white bg-black shadow-[var(--glow)]"
+              >
+                <ScanLine className="h-7 w-7 text-white" strokeWidth={1.75} aria-hidden />
+              </button>
+
+              {/* Balances the row against the gallery button so the shutter is
+                  actually centred rather than nearly centred. */}
+              <span aria-hidden className="h-12 w-12" />
             </div>
           )}
 

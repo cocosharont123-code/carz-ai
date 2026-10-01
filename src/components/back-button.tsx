@@ -20,7 +20,10 @@ export function BackButton() {
 
   // Not on the sign-in flow. These are full-screen screens with no app behind
   // them to go back to, and step two carries its own back to step one.
-  if (pathname === "/" || pathname.startsWith("/signin")) return null;
+  // Home has nowhere to go back to; the sign-in flow is a wall; and the
+  // scanner draws its own X, so two back controls would sit on top of each
+  // other in the same corner.
+  if (pathname === "/" || pathname.startsWith("/signin") || pathname === "/spot") return null;
 
   return (
     <>
