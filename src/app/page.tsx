@@ -1,70 +1,133 @@
-import Link from "next/link";
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Bot, Calendar, Crosshair, Crown } from "lucide-react";
 import { EXPLORE_BUBBLES } from "@/config/explore";
+import { SearchPill, ListRow } from "@/components/ui/editorial";
 import { HomeGarage } from "@/components/home/home-garage";
+import Link from "next/link";
 
 /**
- * The launch homepage.
+ * Home.
  *
- * Everything it says about the app comes from config the app itself uses: the
- * tiles are the same EXPLORE_BUBBLES the menu renders, so a marketing page
- * cannot quietly start advertising something the product no longer does.
- *
- * What it does not carry is anything the bottom nav already does. Spot, Feed,
- * Garage and Leaderboard are one tap away from every screen in the app, and a
- * grid repeating them was a menu for a menu.
+ * Also the app's index. The tab bar carries five destinations and no menu, so
+ * the list that used to live behind the hamburger lives here -- four tiles for
+ * the things worth a tile, then every remaining feature as a row. Nothing the
+ * app can do is reachable only by typing a URL.
  */
-/**
- * Destinations the bottom nav already carries.
- *
- * They are dropped from this grid rather than from EXPLORE_BUBBLES, which the
- * nav's own menu renders from the same list — removing them there would take
- * them out of the menu too. Matched on href rather than label so a rename
- * cannot quietly put one back.
- */
-const ON_THE_NAV = new Set(["/spot", "/garage", "/leaderboard", "/map"]);
+
+/** On the tab bar already, so not repeated as a row. */
+const ON_THE_TABS = new Set(["/spot", "/map", "/hunt"]);
+
+/** The four that get a tile. Their rows are dropped. */
+const TILES = [
+  { href: "/carzbot", Icon: Bot, title: "CarzBot", caption: "Ask anything\nabout cars" },
+  { href: "/events", Icon: Calendar, title: "Events", caption: "Car meets\n& drops" },
+  { href: "/hunt", Icon: Crosshair, title: "Hunt", caption: "Find\n& win" },
+  { href: "/pricing", Icon: Crown, title: "Carz+", caption: "Premium\ntools" },
+] as const;
+
+const TILED: ReadonlySet<string> = new Set<string>(TILES.map((t) => t.href));
 
 export default function Home() {
+  const router = useRouter();
+  const [q, setQ] = useState("");
+
+  const rows = EXPLORE_BUBBLES.filter(
+    (item) => !ON_THE_TABS.has(item.href) && !TILED.has(item.href),
+  );
+
   return (
-    // pb-2, not pb-24. That 6rem was written when the nav was at the top of
-    // the screen and the page had to end well clear of the bottom on its own.
-    // The nav is at the bottom now and renders its own spacer, --nav-h, so a
-    // page that also pads for it is padding twice — which is the scroll past
-    // the end of the Carz MAX card.
-    <main className="mx-auto w-full max-w-5xl px-5 pb-2 pt-10">
-      {/* Hero. The headline and nothing else — the release eyebrow and the
-          paragraph under it are gone, so the tiles come straight off the type
-          rather than sitting two blocks below it. */}
-      <section className="text-center">
-        <h1 className="display text-6xl leading-[0.95] sm:text-7xl md:text-8xl">
-          Snap any car.
-          <br />
-          Know everything.
-        </h1>
+    <main className="mx-auto w-full max-w-[480px] px-5 pb-6">
+      {/* Wordmark only. The mockup puts a bell beside it for car alerts and
+          there is no alerts feature to open, so there is no bell. */}
+      <header className="flex h-14 items-center">
+        <span className="text-[20px] font-bold lowercase tracking-tight text-white">carz</span>
+      </header>
+
+      <Hero />
+
+      <SearchPill
+        className="mt-6"
+        value={q}
+        onChange={setQ}
+        onSubmit={() => {
+          const term = q.trim();
+          if (term) router.push(`/search?q=${encodeURIComponent(term)}`);
+        }}
+        placeholder="Search any car..."
+        label="Search any car"
+      />
+
+      {/* Four across, one row, on every width. The captions are pre-broken to
+          two lines so all four tiles are the same height whatever the device
+          does to the wrapping. */}
+      <nav aria-label="Features" className="mt-6 grid grid-cols-4 gap-3">
+        {TILES.map(({ href, Icon, title, caption }) => (
+          <Link
+            key={href}
+            href={href}
+            className="press flex flex-col items-center gap-2 rounded-tile border border-[var(--line-card)] bg-[var(--color-surface)] px-1.5 py-4 text-center"
+          >
+            <Icon className="h-6 w-6 shrink-0 text-white" strokeWidth={1.75} aria-hidden />
+            <span className="text-[13px] font-semibold leading-tight text-white">{title}</span>
+            <span className="whitespace-pre-line text-[12px] leading-snug text-[var(--color-secondary-text)]">
+              {caption}
+            </span>
+          </Link>
+        ))}
+      </nav>
+
+      <section className="mt-6">
+        {rows.map((item) => {
+          const Icon = item.icon;
+          return (
+            <ListRow
+              key={item.href}
+              href={item.href}
+              icon={<Icon className="h-[22px] w-[22px]" strokeWidth={1.75} aria-hidden />}
+              label={item.label}
+              meta={item.description}
+            />
+          );
+        })}
       </section>
 
-      {/* What it does — the app's own feature list, not a second copy of it. */}
-      <section className="mt-8 sm:mt-10">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {EXPLORE_BUBBLES.filter((item) => !ON_THE_NAV.has(item.href)).map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.label}
-                href={item.href}
-                className="press glass-card flex flex-col gap-2 rounded-2xl p-4"
-              >
-                <Icon className="h-5 w-5 shrink-0" strokeWidth={1.75} aria-hidden />
-                <span className="text-[13px] font-semibold leading-tight">{item.label}</span>
-                <span className="text-[11px] leading-snug opacity-60">{item.description}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* The cars already saved, under the things the app can do. Renders
-          nothing when the garage is empty. */}
       <HomeGarage />
     </main>
+  );
+}
+
+/**
+ * The headline over a photo that fades into black.
+ *
+ * The image is a plain background-image rather than next/image: if /hero.jpg is
+ * not there the element is simply black, where a missing <img> is a broken-image
+ * glyph. The spec asks for black, never a broken image, and this is the version
+ * that cannot break.
+ *
+ * The fade is the one gradient the spec allows, and it has to reach full black
+ * at the bottom or the type sits on a grey seam.
+ */
+function Hero() {
+  return (
+    <section className="relative -mx-5 mt-2 overflow-hidden">
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-black bg-cover bg-center"
+        style={{ backgroundImage: "url('/hero.jpg')" }}
+      />
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/70 to-black"
+      />
+      <h1 className="relative px-5 pb-10 pt-16 text-left text-[50px] font-black leading-[0.95] tracking-[-0.02em]">
+        <span className="block text-white">SNAP</span>
+        <span className="block text-white">ANY CAR.</span>
+        <span className="block text-[var(--color-hero-2)]">KNOW</span>
+        <span className="block text-[var(--color-hero-2)]">EVERYTHING.</span>
+      </h1>
+    </section>
   );
 }
