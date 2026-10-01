@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Crown } from "lucide-react";
+import { Suspense, useEffect, useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { Crown, MapPin } from "lucide-react";
 import { Avatar } from "@/components/default-avatar";
 import { Button, PageMasthead, CarPhoto, Skeleton, Eyebrow } from "@/components/ui/editorial";
 import { cn } from "@/lib/utils";
@@ -19,27 +21,66 @@ type RareCar = {
   spotterImage?: string;
   spotterMember?: boolean; // spotter is a current Carz+ member
   ts: number;
+  /** The scan that also dropped this car's map pin, when the spotter shared one. */
+  scanId?: string;
 };
 
 function rarityLabel(s: number): string {
   return s >= 100 ? "Ultra rare" : s >= 85 ? "Extremely rare" : s >= 70 ? "Rare" : s >= 45 ? "Uncommon" : "Common";
 }
 
-export default function LeaderboardPage() {
+function LeaderboardInner() {
+  const params = useSearchParams();
+  /** Set when a map pin sent someone here to see one particular car. */
+  const wanted = params.get("car");
+
   const [open, setOpen] = useState<RareCar | null>(null);
   const [loading, setLoading] = useState(true);
   const [configured, setConfigured] = useState(true);
   const [cars, setCars] = useState<RareCar[]>([]);
+  /** scanId -> spot id, for the cars whose pin is still on the map. */
+  const [pins, setPins] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
     fetch("/api/leaderboard")
       .then((r) => r.json())
       .then((d) => {
         setConfigured(d.configured !== false);
-        setCars(Array.isArray(d.cars) ? d.cars : []);
+        const list: RareCar[] = Array.isArray(d.cars) ? d.cars : [];
+        setCars(list);
+        // Arriving from a pin opens that car straight away, rather than landing
+        // someone on a list and making them find the row they just tapped.
+        if (wanted) {
+          const match = list.find((c) => c.id === wanted);
+          if (match) setOpen(match);
+        }
       })
       .catch(() => {})
       .finally(() => setLoading(false));
+  }, [wanted]);
+
+  /**
+   * Which of these cars still have a live pin.
+   *
+   * Spots expire after a day, so this is deliberately read fresh rather than
+   * inferred from the entry: a board entry is permanent and its pin is not, and
+   * offering the map for a pin that has aged out would be a link to nothing.
+   */
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/spots", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled) return;
+        const list: { id: string; scanId?: string }[] = Array.isArray(d.spots) ? d.spots : [];
+        const map = new Map<string, string>();
+        for (const sp of list) if (sp.scanId) map.set(sp.scanId, sp.id);
+        setPins(map);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
@@ -145,7 +186,13 @@ export default function LeaderboardPage() {
         )}
       </main>
 
-      {open && <CarViewer car={open} onClose={() => setOpen(null)} />}
+      {open && (
+        <CarViewer
+          car={open}
+          spotId={open.scanId ? pins.get(open.scanId) : undefined}
+          onClose={() => setOpen(null)}
+        />
+      )}
     </>
   );
 }
@@ -158,7 +205,16 @@ export default function LeaderboardPage() {
  * looking at, and puts the meter directly under the photo so the number and the
  * thing it is about are read together.
  */
-function CarViewer({ car, onClose }: { car: RareCar; onClose: () => void }) {
+function CarViewer({
+  car,
+  spotId,
+  onClose,
+}: {
+  car: RareCar;
+  /** The live pin for this car, when one is still on the map. */
+  spotId?: string;
+  onClose: () => void;
+}) {
   // The photo's own pixel width, read off the element once it decodes, so it
   // is never displayed larger than it actually is.
   const [natural, setNatural] = useState<number | null>(null);
@@ -286,15 +342,54 @@ function CarViewer({ car, onClose }: { car: RareCar; onClose: () => void }) {
             )}
           </div>
 
+          {/* Only when the pin is still up. Spots last a day and entries last
+              forever, so most older cars have no map to go to and are not
+              offered one. */}
+          {spotId && (
+            <Link
+              href={`/map?spot=${encodeURIComponent(spotId)}`}
+              className="press glass-card mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-full text-sm font-bold"
+            >
+              <MapPin className="h-4 w-4 text-carz" strokeWidth={2.5} aria-hidden />
+              See where it was spotted
+            </Link>
+          )}
+
           <button
             type="button"
             onClick={onClose}
-            className="press mt-4 min-h-11 w-full rounded-full bg-white text-sm font-bold text-black"
+            className="press mt-2 min-h-11 w-full rounded-full bg-white text-sm font-bold text-black"
           >
             Close
           </button>
         </div>
       </div>
     </>
+  );
+}
+
+/**
+ * useSearchParams suspends, so the page it is read in needs a boundary. The
+ * fallback is the board's own skeleton rather than nothing, since arriving here
+ * from a map pin should not flash an empty screen first.
+ */
+export default function LeaderboardPage() {
+  return (
+    <Suspense fallback={<LeaderboardFallback />}>
+      <LeaderboardInner />
+    </Suspense>
+  );
+}
+
+function LeaderboardFallback() {
+  return (
+    <main className="mx-auto w-full max-w-3xl px-5 py-10" aria-busy="true">
+      <PageMasthead eyebrow="The board" title="Rarest Cars" count="—" />
+      <div className="mt-6 space-y-2">
+        {Array.from({ length: 6 }, (_, i) => (
+          <Skeleton key={i} className="h-20 w-full rounded-2xl" />
+        ))}
+      </div>
+    </main>
   );
 }

@@ -31,6 +31,20 @@ export type Spot = {
   /** @username, or "Anonymous". */
   spotter: string;
   at: number;
+  /**
+   * The scan both this pin and its leaderboard entry came from.
+   *
+   * The map and the board are separate stores written by two separate requests
+   * after one identification, and nothing used to tie them together: the same
+   * car was two unrelated rows. The scan mints one id and sends it to both, so a
+   * pin can find its board entry and an entry can find its pin.
+   *
+   * Optional, and stays optional. Every spot recorded before this existed has
+   * none, a scan that places a pin for an ordinary car never reaches the board
+   * at all, and the board keeps only the highest-scoring car per model -- so a
+   * key that matches nothing is the normal case, not a broken one.
+   */
+  scanId?: string;
 };
 
 const PATH = "spots.json";
@@ -140,6 +154,7 @@ export async function recordSpot(input: {
   carName?: string;
   rarityScore?: number;
   spotter: string;
+  scanId?: string;
 }): Promise<Spot | null> {
   if (!spotsConfigured()) return null;
   const at = coarse(input.lat, input.lng);
@@ -156,6 +171,7 @@ export async function recordSpot(input: {
     rarityScore: Math.max(0, Math.min(120, Math.round(input.rarityScore ?? 0))),
     spotter: input.spotter.slice(0, 40),
     at: Date.now(),
+    ...(input.scanId ? { scanId: input.scanId.slice(0, 40) } : {}),
   };
 
   const all = await readAll();

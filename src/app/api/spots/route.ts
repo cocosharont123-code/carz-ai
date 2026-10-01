@@ -47,6 +47,8 @@ export async function POST(req: Request) {
     carName?: string;
     rarityScore?: number;
     live?: boolean;
+    /** Ties this pin to the leaderboard entry from the same scan. */
+    scanId?: string;
   };
   try {
     body = await req.json();
@@ -77,6 +79,10 @@ export async function POST(req: Request) {
       carName: body.carName,
       rarityScore: Number(body.rarityScore) || 0,
       spotter: `@${profile.username}`,
+      // Taken from the client, which is fine: it is an opaque join key between
+      // two of this app's own records and grants nothing. The identity on both
+      // rows still comes from the session.
+      scanId: typeof body.scanId === "string" ? body.scanId : undefined,
     });
     // recordSpot returns null when the coordinates are not usable.
     return NextResponse.json({ ok: true, recorded: !!spot, spot });

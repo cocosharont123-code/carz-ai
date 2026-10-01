@@ -88,9 +88,9 @@ recorded so they are not rediscovered on every task, and are NOT a standing
 mandate to refactor — rule 0 applies. Fix one only when asked, or when already
 working in that component.
 
-- **Tap targets under 44pt.** `h-8 w-8` (32px) in 9 files, `h-9 w-9` (36px) in
-  11, including `wishlist-button.tsx`, `carzbot-chat.tsx` send/mic, and the icon
-  size in `liquid-glass-button.tsx`. The feed's Search/Account buttons are 40px.
+- **Tap targets under 44pt.** `h-8 w-8` (32px) in 6 files, `h-9 w-9` (36px) in
+  10, including `wishlist-button.tsx`, `carzbot-chat.tsx` send/mic, and the icon
+  size in `liquid-glass-button.tsx`. Counts dropped when the feed was removed.
 - **Hardcoded font sizes.** ~98 uses of `text-[13px]` and ~56 of `text-[11px]`,
   plus 10px and 9px. These ignore Dynamic Type, and most body copy sits at 13px
   against a Body scale of 17. Fixing this is a token change in `globals.css`,

@@ -19,6 +19,8 @@ type Spot = {
   rarityScore: number;
   spotter: string;
   at: number;
+  /** The scan that also wrote this car's leaderboard entry, when it earned one. */
+  scanId?: string;
 };
 
 /**
@@ -65,7 +67,25 @@ export function SpotMap() {
   const map = useRef<mapboxgl.Map | null>(null);
   const marker = useRef<mapboxgl.Marker | null>(null);
   const pins = useRef<mapboxgl.Marker[]>([]);
+  /** spot id -> its marker, so ?spot= can open the right one. */
+  const byId = useRef<Map<string, mapboxgl.Marker>>(new Map());
+  /** The deep link is honoured once, not on every redraw. */
+  const flown = useRef(false);
   const [spots, setSpots] = useState<Spot[]>([]);
+  /** scanId -> leaderboard entry id, for the pins whose car is on the board. */
+  const [board, setBoard] = useState<Map<string, string>>(new Map());
+
+  /**
+   * A particular pin, when the leaderboard sent someone to look at it.
+   *
+   * Read straight off the URL rather than through useSearchParams, so this stays
+   * out of a Suspense boundary -- the map is the page, and a boundary around it
+   * would mean the whole thing waits.
+   */
+  const wantedSpot =
+    typeof window === "undefined"
+      ? null
+      : new URLSearchParams(window.location.search).get("spot");
 
   const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
   const [failed, setFailed] = useState(false);
@@ -150,6 +170,30 @@ export function SpotMap() {
   }, []);
 
   /**
+   * Which scans made the leaderboard, so a pin can offer its entry.
+   *
+   * Fetched once and separately from the spots: a pin is useful whether or not
+   * this arrives, so the two are not made to wait for each other. Failing leaves
+   * the map exactly as it was before the link existed.
+   */
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/leaderboard", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled) return;
+        const cars: { id: string; scanId?: string }[] = Array.isArray(d.cars) ? d.cars : [];
+        const map = new Map<string, string>();
+        for (const c of cars) if (c.scanId) map.set(c.scanId, c.id);
+        setBoard(map);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  /**
    * Draw a pin per spot.
    *
    * Markers rather than a GeoJSON layer: there are at most a few hundred, each
@@ -167,6 +211,7 @@ export function SpotMap() {
     const draw = () => {
       pins.current.forEach((p) => p.remove());
       pins.current = spots.map((s) => {
+        // Kept so a deep link can find this pin again by its spot id.
         const el = document.createElement("div");
         // Rare cars burn brighter. Everything else is the app's cyan.
         const rare = s.rarityScore >= 70;
@@ -178,6 +223,11 @@ export function SpotMap() {
         ].join(";");
 
         const name = `${s.make} ${s.model}`.trim();
+        // Only when this car actually has an entry. A link that leads to a board
+        // the car is not on is worse than no link, and the board keeps just the
+        // highest scorer per model, so plenty of pins have none.
+        const entryId = s.scanId ? board.get(s.scanId) : undefined;
+        const rarity = Math.round(s.rarityScore);
         return new mapboxgl.Marker({ element: el })
           .setLngLat([s.lng, s.lat])
           .setPopup(
@@ -185,13 +235,25 @@ export function SpotMap() {
               `<div style="font:600 13px/1.4 -apple-system,system-ui,sans-serif;color:#fff">
                  ${escapeHtml(name)}
                  <div style="font-weight:400;opacity:.65;margin-top:2px">
-                   ${escapeHtml(s.spotter)} · ${escapeHtml(timeAgo(s.at))}
+                   ${escapeHtml(s.spotter)} · ${escapeHtml(timeAgo(s.at))}${
+                     rarity > 0 ? ` · rarity ${rarity}` : ""
+                   }
                  </div>
+                 ${
+                   entryId
+                     ? `<a href="/leaderboard?car=${encodeURIComponent(entryId)}"
+                          style="display:flex;align-items:center;min-height:44px;margin-top:6px;
+                                 color:#00e5ff;font-weight:600;text-decoration:none">
+                          See it on the leaderboard &rsaquo;
+                        </a>`
+                     : ""
+                 }
                </div>`,
             ),
           )
           .addTo(m);
       });
+      byId.current = new Map(spots.map((s, i) => [s.id, pins.current[i]]));
     };
 
     if (m.isStyleLoaded()) draw();
@@ -201,7 +263,27 @@ export function SpotMap() {
       pins.current.forEach((p) => p.remove());
       pins.current = [];
     };
-  }, [spots]);
+  }, [spots, board]);
+
+  /**
+   * Fly to the pin someone was sent to see.
+   *
+   * Waits for the pins rather than running on mount: the spot list arrives after
+   * the map does, and there is nothing to fly to until it has. Once only -- the
+   * pins are redrawn whenever the board arrives, and re-flying then would yank
+   * the view back out from under someone who had already moved on.
+   */
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !wantedSpot || flown.current) return;
+    const target = spots.find((s) => s.id === wantedSpot);
+    if (!target) return;
+    flown.current = true;
+    m.flyTo({ center: [target.lng, target.lat], zoom: 15.5, duration: 2200, essential: true });
+    // Opened after the flight rather than during it, so the popup is not left
+    // hanging over the map while the camera is still moving.
+    m.once("moveend", () => byId.current.get(wantedSpot)?.togglePopup());
+  }, [spots, wantedSpot]);
 
   const toggleTilt = useCallback(() => {
     const m = map.current;

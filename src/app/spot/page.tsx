@@ -355,6 +355,19 @@ function ValueChart({ points }: { points: { year: string; usd: number }[] }) {
   );
 }
 
+/**
+ * An id for one identification, shared by the leaderboard entry and the map pin
+ * it produces. randomUUID where it exists, which is every browser this app
+ * supports; the fallback is for old WebViews and only has to avoid colliding
+ * with the handful of scans one device makes.
+ */
+function newScanId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export default function SpotPage() {
   const [status, setStatus] = useState<Status | null>(null);
   const [car, setCar] = useState<CarReport | null>(null);
@@ -455,7 +468,7 @@ export default function SpotPage() {
    * decode and a photo scan arrive at an identification by completely different
    * routes, but everything after the name is the same work.
    */
-  function loadDetails(base: CarReport, rawImage: string) {
+  function loadDetails(base: CarReport, rawImage: string, scanId: string) {
     setSpecsPending(true);
     return (async () => {
       try {
@@ -500,6 +513,7 @@ export default function SpotPage() {
               rarityScore: full.rarityScore,
               rarityReason: full.rarityReason,
               priceRange: full.priceRangeUsed,
+              scanId,
             }),
           }).catch(() => {});
         }
@@ -524,7 +538,7 @@ export default function SpotPage() {
    * blob is public, and a pin should say a GT3 was seen around here rather than
    * publish the doorstep somebody was standing on.
    */
-  async function placeOnMap(car: CarReport) {
+  async function placeOnMap(car: CarReport, scanId: string) {
     if (typeof navigator === "undefined" || !navigator.geolocation) return;
     try {
       const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
@@ -545,6 +559,7 @@ export default function SpotPage() {
           yearRange: car.yearRange,
           rarityScore: car.rarityScore,
           live: true,
+          scanId,
         }),
       });
     } catch {
@@ -610,8 +625,12 @@ export default function SpotPage() {
       // car's name rather than the photo, so it loads in behind the result
       // instead of holding it up — including the garage and leaderboard entries,
       // which need the rarity and price that arrive with it.
-      if (data.car?.isCar) void loadDetails(data.car, raw);
-      if (data.car?.isCar && liveCapture.current) void placeOnMap(data.car);
+      // One id for this identification, handed to both records it writes. The
+      // board and the map are separate stores reached by separate requests, and
+      // this is the only moment anything knows the two rows describe one car.
+      const scanId = newScanId();
+      if (data.car?.isCar) void loadDetails(data.car, raw, scanId);
+      if (data.car?.isCar && liveCapture.current) void placeOnMap(data.car, scanId);
       // keep the photo on screen after identifying
       await refresh();
     } catch {

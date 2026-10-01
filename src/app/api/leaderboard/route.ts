@@ -37,6 +37,8 @@ export async function POST(req: Request) {
     rarityScore?: number;
     rarityReason?: string;
     priceRange?: string;
+    /** Ties this entry to the map pin from the same scan. */
+    scanId?: string;
   };
   try {
     body = await req.json();
@@ -92,6 +94,7 @@ export async function POST(req: Request) {
       image,
       spotter,
       spotterImage,
+      scanId: typeof body.scanId === "string" ? body.scanId.slice(0, 40) : undefined,
     });
     return NextResponse.json({ ok: true });
   } catch {

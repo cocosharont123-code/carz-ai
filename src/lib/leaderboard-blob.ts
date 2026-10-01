@@ -22,6 +22,13 @@ export type RareCar = {
   spotter: string; // @username, or "Anonymous"
   spotterImage?: string; // profile picture thumbnail, or "" for the animated default
   ts: number;
+  /**
+   * The scan this entry and its map pin both came from. See the same field on
+   * Spot. Absent on every entry recorded before it existed, and absent whenever
+   * the spotter declined location, so code reading it must treat a miss as
+   * ordinary.
+   */
+  scanId?: string;
 };
 
 const PATH = "leaderboard.json";
