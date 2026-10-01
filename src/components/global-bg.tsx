@@ -14,8 +14,10 @@ import { GradientBars } from "@/components/ui/gradient-bars-background";
  * context at all, so nothing has to be taken away to make room, and the
  * background no longer blinks out when you go to spot a car.
  *
- * Cyan rather than the orange the component ships with. The palette is not mine
- * to change, and --color-carz, #00e5ff, is what the rest of the app glows.
+ * The bars are painted with --color-carz itself, which is the same token the
+ * Spot disc on the nav uses -- not a copy of #00e5ff. A hex here would be a
+ * second place the accent lives, and the two would drift the first time one of
+ * them was retuned.
  *
  * Seven seconds a cycle, against the component's default of two. A background is
  * ambient; at two seconds it reads as something loading, and anything that looks
@@ -33,15 +35,17 @@ export function GlobalBg() {
           leaves the column the type sits in. */}
       <GradientBars
         numBars={9}
-        gradientFrom="rgba(0, 229, 255, 0.5)"
+        gradientFrom="var(--color-carz)"
         gradientTo="transparent"
         animationDuration={7}
       />
-      {/* Contrast floor, as before. This is the brightness dial: more black is
-          dimmer neon. The bottom of the screen is where the bars are at full
-          strength and also where the nav bubble and the end of every page are,
-          so it is the one place the scrim has to earn its keep. */}
-      <div className="absolute inset-0 bg-black/55" />
+      {/* Contrast floor. This is the brightness dial, and 45% is the floor: the
+          bars reach full strength along the bottom edge, and white body text on
+          the cyan that comes through there measures 4.82:1, just over the 4.5:1
+          AA minimum. At 35% it is 3.59:1 and fails. Everywhere above the bottom
+          edge the bars are already fading out, so this is the worst case on the
+          screen. */}
+      <div className="absolute inset-0 bg-black/45" />
       {/* Vignette: holds the corners down, leaves the middle alone. */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.02)_0%,rgba(0,0,0,0.32)_100%)]" />
     </div>
