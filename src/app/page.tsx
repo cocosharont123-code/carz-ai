@@ -2,11 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bot, Calendar, Crosshair, Crown } from "lucide-react";
 import { EXPLORE_BUBBLES } from "@/config/explore";
 import { SearchPill, ListRow } from "@/components/ui/editorial";
 import { HomeGarage } from "@/components/home/home-garage";
-import Link from "next/link";
 
 /**
  * Home.
@@ -17,26 +15,21 @@ import Link from "next/link";
  * app can do is reachable only by typing a URL.
  */
 
-/** On the tab bar already, so not repeated as a row. */
-const ON_THE_TABS = new Set(["/spot", "/map", "/hunt"]);
-
-/** The four that get a tile. Their rows are dropped. */
-const TILES = [
-  { href: "/carzbot", Icon: Bot, title: "CarzBot", caption: "Ask anything\nabout cars" },
-  { href: "/events", Icon: Calendar, title: "Events", caption: "Car meets\n& drops" },
-  { href: "/hunt", Icon: Crosshair, title: "Hunt", caption: "Find\n& win" },
-  { href: "/pricing", Icon: Crown, title: "Carz+", caption: "Premium\ntools" },
-] as const;
-
-const TILED: ReadonlySet<string> = new Set<string>(TILES.map((t) => t.href));
+/**
+ * Not repeated as a row, because the tab bar's own icon is already the way in.
+ *
+ * Hunt is not on this list even though it is a tab. CarzBot, Events, Hunt and
+ * Carz+ were four tiles across the top; all four are rows now, and Hunt was one
+ * of them, so it stays in the list rather than being the one of the four that
+ * quietly disappeared.
+ */
+const ON_THE_TABS = new Set(["/spot", "/map"]);
 
 export default function Home() {
   const router = useRouter();
   const [q, setQ] = useState("");
 
-  const rows = EXPLORE_BUBBLES.filter(
-    (item) => !ON_THE_TABS.has(item.href) && !TILED.has(item.href),
-  );
+  const rows = EXPLORE_BUBBLES.filter((item) => !ON_THE_TABS.has(item.href));
 
   return (
     <main className="mx-auto w-full max-w-[480px] px-5 pb-6">
@@ -59,25 +52,6 @@ export default function Home() {
         placeholder="Search any car..."
         label="Search any car"
       />
-
-      {/* Four across, one row, on every width. The captions are pre-broken to
-          two lines so all four tiles are the same height whatever the device
-          does to the wrapping. */}
-      <nav aria-label="Features" className="mt-6 grid grid-cols-4 gap-3">
-        {TILES.map(({ href, Icon, title, caption }) => (
-          <Link
-            key={href}
-            href={href}
-            className="press flex flex-col items-center gap-2 rounded-tile border border-[var(--line-card)] bg-[var(--color-surface)] px-1.5 py-4 text-center"
-          >
-            <Icon className="h-6 w-6 shrink-0 text-white" strokeWidth={1.75} aria-hidden />
-            <span className="text-[15px] font-semibold leading-tight text-white">{title}</span>
-            <span className="whitespace-pre-line text-[12px] leading-snug text-[var(--color-secondary-text)]">
-              {caption}
-            </span>
-          </Link>
-        ))}
-      </nav>
 
       <section className="mt-6">
         {rows.map((item) => {
