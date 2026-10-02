@@ -801,7 +801,15 @@ export default function SpotPage() {
             }}
           />
 
-          {!previewUrl ? (
+          {/* The photo, once.
+              
+              Three states, not two. No photo yet: the scanner frame. A photo
+              waiting to be identified: the preview, with its replace and remove
+              controls. An identified car: nothing here at all, because the
+              detail screen below is already showing that same photo full-bleed
+              -- rendering both put a cropped half-screen copy directly above
+              the full-width one. */}
+          {car?.isCar ? null : !previewUrl ? (
             <div
               onDragOver={handleDragOver}
               onDragEnter={handleDragEnter}
