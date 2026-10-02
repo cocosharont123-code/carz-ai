@@ -82,7 +82,7 @@ function StepDots({ step }: { step: 1 | 2 }) {
           aria-hidden
           className={cn(
             "h-1.5 rounded-full transition-all duration-300",
-            n === step ? "w-6 bg-carz" : "w-1.5 bg-white/25",
+            n === step ? "w-6 bg-carz" : "w-1.5 bg-foreground/25",
           )}
         />
       ))}

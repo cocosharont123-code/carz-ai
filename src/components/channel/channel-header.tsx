@@ -129,8 +129,8 @@ export function ChannelHeader({
             className={cn(
               "press mt-5 w-full rounded-full py-3 text-sm font-bold transition-colors disabled:opacity-60",
               following
-                ? "glass-card hover:bg-white/[0.08]"
-                : "bg-white text-neutral-900 hover:opacity-90",
+                ? "glass-card hover:bg-foreground/[0.08]"
+                : "bg-carz text-neutral-900 hover:opacity-90",
             )}
           >
             {following ? "Following" : "Follow"}

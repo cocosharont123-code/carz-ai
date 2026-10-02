@@ -411,7 +411,7 @@ export function SiriWave({
   return (
     <canvas
       ref={canvasRef}
-      className={cn("block rounded-[20px] bg-black", className)}
+      className={cn("block rounded-[20px] bg-background", className)}
       style={{ width: size, height: size, ...style }}
       {...props}
     />

@@ -36,7 +36,7 @@ export default function Home() {
       {/* Wordmark only. The mockup puts a bell beside it for car alerts and
           there is no alerts feature to open, so there is no bell. */}
       <header className="flex h-14 items-center">
-        <span className="text-[20px] font-bold lowercase tracking-tight text-white">carz</span>
+        <span className="text-[20px] font-bold lowercase tracking-tight text-foreground">carz</span>
       </header>
 
       <Hero />
@@ -89,16 +89,18 @@ function Hero() {
     <section className="relative -mx-5 mt-2 overflow-hidden">
       <div
         aria-hidden
-        className="absolute inset-0 bg-black bg-cover bg-center"
+        className="absolute inset-0 bg-background bg-cover bg-center"
         style={{ backgroundImage: "url('/hero.jpg')" }}
       />
       <div
         aria-hidden
-        className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/70 to-black"
+        // Fades into the page, not into black: on a white page a black
+        // gradient would be a dark band under the headline.
+        className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/70 to-background"
       />
       <h1 className="relative px-5 pb-10 pt-16 text-left text-[50px] font-black leading-[0.95] tracking-[-0.02em]">
-        <span className="block text-white">SNAP</span>
-        <span className="block text-white">ANY CAR.</span>
+        <span className="block text-foreground">SNAP</span>
+        <span className="block text-foreground">ANY CAR.</span>
         <span className="block text-[var(--color-hero-2)]">KNOW</span>
         <span className="block text-[var(--color-hero-2)]">EVERYTHING.</span>
       </h1>

@@ -25,7 +25,7 @@ export function PageTabs({ group }: { group: keyof typeof GROUPS }) {
   const pathname = usePathname();
   return (
     <div className="mx-auto flex w-full max-w-6xl justify-center px-5 pt-5">
-      <nav className="inline-flex gap-1 rounded-full border border-[var(--line-card)] bg-white/[0.03] p-1">
+      <nav className="inline-flex gap-1 rounded-full border border-[var(--line-card)] bg-foreground/[0.03] p-1">
         {GROUPS[group].map((t) => {
           const active = pathname === t.href;
           return (
@@ -34,7 +34,7 @@ export function PageTabs({ group }: { group: keyof typeof GROUPS }) {
               href={t.href}
               className={cn(
                 "util-label whitespace-nowrap rounded-full px-5 py-1.5 transition-colors",
-                active ? "bg-carz text-black" : "opacity-70 hover:opacity-100",
+                active ? "bg-carz text-carz-ink" : "opacity-70 hover:opacity-100",
               )}
             >
               {t.label}

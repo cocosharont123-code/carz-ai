@@ -101,7 +101,7 @@ export function EmailStep({
           aria-invalid={!!error}
           aria-describedby={error ? "email-error" : undefined}
           placeholder="you@example.com"
-          className="mt-2 h-12 w-full rounded-card border border-[var(--line-card)] bg-white/[0.06] px-4 text-[17px] outline-none transition placeholder:opacity-35 focus:border-carz/60 focus:bg-white/[0.08]"
+          className="mt-2 h-12 w-full rounded-card border border-[var(--line-card)] bg-foreground/[0.06] px-4 text-[17px] outline-none transition placeholder:opacity-35 focus:border-carz/60 focus:bg-foreground/[0.08]"
         />
 
         {/* Held open whether or not it is filled, so the button does not jump

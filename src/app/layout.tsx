@@ -53,11 +53,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={`dark h-full antialiased ${inter.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`h-full antialiased ${inter.variable}`}>
       <body className="min-h-full flex flex-col bg-background ">
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{localStorage.removeItem('theme');document.documentElement.classList.remove('light');document.documentElement.classList.add('dark');}catch(e){}`,
+            /* Applies the saved theme before first paint.
+               
+               Inline and synchronous on purpose: anything that runs after
+               hydration paints the wrong theme first, which is the white flash
+               every app with a dark mode gets wrong. "system" follows the OS
+               and is the default, so a phone in dark mode opens dark without
+               anyone choosing anything. */
+            __html: `try{var t=localStorage.getItem('theme')||'system';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);document.documentElement.classList.toggle('light',!d);}catch(e){document.documentElement.classList.add('dark');}`,
           }}
         />
         {/* The cyan gradient bars that used to sit behind every page are gone.

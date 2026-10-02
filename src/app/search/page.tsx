@@ -75,7 +75,7 @@ function SearchInner() {
             type="button"
             onClick={() => setQ("")}
             aria-label="Clear"
-            className="press absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full hover:bg-white/[0.08]"
+            className="press absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full hover:bg-foreground/[0.08]"
           >
             <X className="h-4 w-4 opacity-60" aria-hidden />
           </button>
@@ -92,10 +92,10 @@ function SearchInner() {
         {loading && accounts.length === 0 &&
           [0, 1, 2, 3].map((i) => (
             <div key={i} className="flex items-center gap-3 px-2 py-2.5">
-              <div className="h-11 w-11 animate-pulse rounded-full bg-white/[0.06]" />
+              <div className="h-11 w-11 animate-pulse rounded-full bg-foreground/[0.06]" />
               <div className="flex-1">
-                <div className="h-3.5 w-32 animate-pulse rounded bg-white/[0.06]" />
-                <div className="mt-1.5 h-3 w-20 animate-pulse rounded bg-white/[0.04]" />
+                <div className="h-3.5 w-32 animate-pulse rounded bg-foreground/[0.06]" />
+                <div className="mt-1.5 h-3 w-20 animate-pulse rounded bg-foreground/[0.04]" />
               </div>
             </div>
           ))}
@@ -105,7 +105,7 @@ function SearchInner() {
             key={a.username}
             type="button"
             onClick={() => router.push(`/channel/${encodeURIComponent(a.username)}`)}
-            className="press flex w-full items-center gap-3 rounded-card px-2 py-2.5 text-left transition-colors hover:bg-white/[0.05]"
+            className="press flex w-full items-center gap-3 rounded-card px-2 py-2.5 text-left transition-colors hover:bg-foreground/[0.05]"
           >
             <Avatar src={a.image} size={44} />
             <span className="min-w-0 flex-1">

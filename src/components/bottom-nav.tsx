@@ -51,7 +51,7 @@ export function BottomNav() {
     <>
       <nav
         aria-label="Main"
-        className="fixed inset-x-0 bottom-0 z-[60] bg-black"
+        className="fixed inset-x-0 bottom-0 z-[60] bg-background"
         // The home-indicator strip, so the row sits above it rather than under
         // it. The layout keeps every page one pixel taller than the viewport,
         // which settles Safari's bottom toolbar before first paint -- without
@@ -80,10 +80,10 @@ export function BottomNav() {
                   <span
                     className={cn(
                       "press absolute -top-3 flex h-16 w-16 items-center justify-center rounded-full",
-                      "border-2 border-white bg-black shadow-[var(--glow)]",
+                      "border-2 border-foreground bg-background shadow-[var(--glow)]",
                     )}
                   >
-                    <ScanLine className="h-7 w-7 text-white" strokeWidth={1.75} aria-hidden />
+                    <ScanLine className="h-7 w-7 text-foreground" strokeWidth={1.75} aria-hidden />
                   </span>
                   <span className="sr-only">{label}</span>
                 </Link>
@@ -99,7 +99,7 @@ export function BottomNav() {
                 className="press flex min-h-11 flex-1 flex-col items-center justify-center gap-1"
               >
                 <Icon
-                  className={cn("h-6 w-6", active ? "text-white" : "text-[var(--color-muted-text)]")}
+                  className={cn("h-6 w-6", active ? "text-foreground" : "text-[var(--color-muted-text)]")}
                   strokeWidth={1.75}
                   // Filled when current. Not colour alone: the label changes
                   // weight and shade with it.
@@ -109,7 +109,7 @@ export function BottomNav() {
                 <span
                   className={cn(
                     "text-[12px] leading-none",
-                    active ? "font-semibold text-white" : "text-[var(--color-muted-text)]",
+                    active ? "font-semibold text-foreground" : "text-[var(--color-muted-text)]",
                   )}
                 >
                   {label}

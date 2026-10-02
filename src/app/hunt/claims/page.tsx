@@ -46,7 +46,7 @@ export default function ClaimsPage() {
         {loading ? (
           <div className="mt-6 h-40 animate-pulse rounded-card bg-foreground/[0.04]" />
         ) : status !== "authenticated" ? (
-          <div className="mt-8 rounded-card border border-foreground/[0.06] bg-[var(--color-surface)] text-white p-8 text-center">
+          <div className="mt-8 rounded-card border border-foreground/[0.06] bg-[var(--color-surface)] text-foreground p-8 text-center">
             <h3 className="text-lg font-bold">Owner only</h3>
             <p className="mt-1 text-sm ">Sign in with the owner account to see claims.</p>
             <GoogleSignInButton callbackUrl="/hunt/claims" />
@@ -56,14 +56,14 @@ export default function ClaimsPage() {
             This page is only visible to the hunt owner.
           </div>
         ) : claims.length === 0 ? (
-          <div className="mt-8 rounded-card border border-foreground/[0.06] bg-[var(--color-surface)] text-white p-8 text-center">
+          <div className="mt-8 rounded-card border border-foreground/[0.06] bg-[var(--color-surface)] text-foreground p-8 text-center">
             <Inbox className="mx-auto h-9 w-9 opacity-40" strokeWidth={1.5} aria-hidden />
             <h3 className="mt-2 font-bold">No claims yet</h3>
           </div>
         ) : (
           <div className="mt-6 space-y-3">
             {claims.map((c) => (
-              <div key={c.id} className="flex gap-3 rounded-card border border-foreground/[0.07] bg-[var(--color-surface)] text-white p-3">
+              <div key={c.id} className="flex gap-3 rounded-card border border-foreground/[0.07] bg-[var(--color-surface)] text-foreground p-3">
                 <div className="h-20 w-24 shrink-0 overflow-hidden rounded-xl bg-foreground/[0.04]">
                   {c.image ? (
                     // eslint-disable-next-line @next/next/no-img-element

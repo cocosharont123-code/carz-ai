@@ -184,7 +184,7 @@ export function CarzBotChat() {
                   className={cn(
                     "max-w-[85%] whitespace-pre-wrap rounded-card px-4 py-3 text-sm leading-relaxed",
                     t.role === "user"
-                      ? "ml-auto bg-white text-neutral-900"
+                      ? "ml-auto bg-carz text-neutral-900"
                       : "glass-card",
                   )}
                 >
@@ -265,8 +265,8 @@ export function CarzBotChat() {
                 className={cn(
                   "press flex h-10 w-10 items-center justify-center rounded-full transition-colors disabled:cursor-not-allowed",
                   value.trim() && !busy
-                    ? "bg-white text-neutral-900"
-                    : "bg-white/[0.06] text-white/40",
+                    ? "bg-carz text-neutral-900"
+                    : "bg-foreground/[0.06] text-foreground/40",
                 )}
               >
                 <ArrowUpIcon className="h-4 w-4" aria-hidden />

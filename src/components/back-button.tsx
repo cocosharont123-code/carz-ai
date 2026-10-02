@@ -40,7 +40,7 @@ export function BackButton() {
         style={{ top: "calc(var(--safe-top) + 0.75rem)" }}
         className="press glass-bubble fixed left-3 z-[62] flex h-10 w-10 items-center justify-center rounded-full"
       >
-        <ChevronLeft className="h-5 w-5 text-white" strokeWidth={2.5} aria-hidden />
+        <ChevronLeft className="h-5 w-5 text-foreground" strokeWidth={2.5} aria-hidden />
       </button>
 
       {/* Holds the page down by the arrow's own height, the way the nav's

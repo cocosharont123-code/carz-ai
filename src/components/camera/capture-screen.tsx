@@ -119,7 +119,7 @@ export function CaptureScreen({
   const blocked = status === "denied" || status === "unsupported";
 
   return (
-    <div className="absolute inset-0 overflow-hidden bg-black">
+    <div className="absolute inset-0 overflow-hidden bg-background">
       {/* The viewfinder. object-cover so it fills the screen the way a camera
           app does rather than letterboxing onto black. */}
       <video
@@ -146,7 +146,7 @@ export function CaptureScreen({
 
       {/* Shutter flash. A white sheet at 180ms — long enough to register as a
           shutter, short enough not to hide the next frame. */}
-      {flash && <div aria-hidden className="pointer-events-none absolute inset-0 bg-white" />}
+      {flash && <div aria-hidden className="pointer-events-none absolute inset-0 bg-carz" />}
 
       {/* Always there, whatever the camera is doing. A full-screen viewfinder
           with no way out is a trap if anything below it misbehaves. */}
@@ -158,7 +158,7 @@ export function CaptureScreen({
           style={{ top: "calc(var(--safe-top) + 0.75rem)" }}
           className="press glass-bubble absolute right-3 z-20 flex h-10 w-10 items-center justify-center rounded-full"
         >
-          <X className="h-5 w-5 text-white" strokeWidth={2.5} aria-hidden />
+          <X className="h-5 w-5 text-foreground" strokeWidth={2.5} aria-hidden />
         </button>
       )}
 
@@ -200,7 +200,7 @@ export function CaptureScreen({
 
       {hint && !blocked && (
         <p
-          className="pointer-events-none absolute inset-x-0 text-center text-[15px] text-white/75 drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]"
+          className="pointer-events-none absolute inset-x-0 text-center text-[15px] text-foreground/75 drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]"
           style={{ bottom: "calc(var(--nav-h) + 5.5rem)" }}
         >
           {hint}
@@ -269,7 +269,7 @@ function Shutter({
       {/* The inner mark: a disc for a photo, a square while recording. */}
       <span
         className={cn(
-          "bg-white transition-all duration-200",
+          "bg-carz transition-all duration-200",
           recording ? "h-6 w-6 rounded-[6px]" : "h-[58px] w-[58px] rounded-full",
         )}
       />
@@ -306,7 +306,7 @@ function Blocked({
             <button
               type="button"
               onClick={onRetry}
-              className="press min-h-11 rounded-full bg-white text-sm font-bold text-black"
+              className="press min-h-11 rounded-full bg-carz text-sm font-bold text-carz-ink"
             >
               Try again
             </button>

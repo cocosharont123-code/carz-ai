@@ -115,7 +115,7 @@ function HuntInner() {
         role="status"
         aria-live="polite"
         aria-busy="true"
-        className="fixed inset-0 z-[80] flex flex-col items-center justify-center gap-6 bg-black/85 backdrop-blur-xl"
+        className="fixed inset-0 z-[80] flex flex-col items-center justify-center gap-6 bg-background/85 backdrop-blur-xl"
       >
         <ThinkingOrb state="connecting" size={64} theme="dark" aria-label="" />
         <div className="text-center">
@@ -138,11 +138,11 @@ function HuntInner() {
   return (
     <main className="mx-auto w-full max-w-[480px] px-5 pb-6">
       <header className="flex h-14 items-center justify-between">
-        <h1 className="text-[34px] font-bold tracking-tight text-white">Hunt</h1>
+        <h1 className="text-[34px] font-bold tracking-tight text-foreground">Hunt</h1>
         <button
           type="button"
           onClick={() => setRulesOpen(true)}
-          className="press min-h-11 rounded-full border border-[var(--line-button)] bg-[var(--color-surface)] px-4 text-[14px] font-semibold text-white"
+          className="press min-h-11 rounded-full border border-[var(--line-button)] bg-[var(--color-surface)] px-4 text-[14px] font-semibold text-foreground"
         >
           How it works
         </button>
@@ -153,15 +153,15 @@ function HuntInner() {
           the spec's own fallback is the active count. */}
       <div className="mt-3 grid grid-cols-2 gap-3">
         <div className="rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] p-4">
-          <Crosshair className="h-6 w-6 text-white" strokeWidth={1.75} aria-hidden />
-          <div className="mt-3 text-[17px] font-semibold text-white">Active Hunts</div>
+          <Crosshair className="h-6 w-6 text-foreground" strokeWidth={1.75} aria-hidden />
+          <div className="mt-3 text-[17px] font-semibold text-foreground">Active Hunts</div>
           <div className="mt-0.5 text-[14px] text-[var(--color-secondary-text)]">
             {WANTED.length - found} active
           </div>
         </div>
         <div className="rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] p-4">
-          <Trophy className="h-6 w-6 text-white" strokeWidth={1.75} aria-hidden />
-          <div className="mt-3 text-[17px] font-semibold text-white">Your Rewards</div>
+          <Trophy className="h-6 w-6 text-foreground" strokeWidth={1.75} aria-hidden />
+          <div className="mt-3 text-[17px] font-semibold text-foreground">Your Rewards</div>
           <div className="mt-0.5 text-[14px] text-[var(--color-secondary-text)]">
             {money(earned)} earned
           </div>
@@ -173,16 +173,16 @@ function HuntInner() {
           the mockup has nowhere for it. */}
       <section className="mt-5 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] p-4">
         <div className="flex items-baseline justify-between">
-          <span className="text-[20px] font-bold tabular-nums text-white">
+          <span className="text-[20px] font-bold tabular-nums text-foreground">
             {status ? count(entrants) : "—"}
           </span>
           <span className="text-[14px] text-[var(--color-secondary-text)]">
             of {count(goal)} hunters
           </span>
         </div>
-        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
           <div
-            className="h-full rounded-full bg-white transition-[width] duration-500"
+            className="h-full rounded-full bg-carz transition-[width] duration-500"
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -232,7 +232,7 @@ function HuntInner() {
                 claimed && "opacity-60",
               )}
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-sm font-bold tabular-nums">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-foreground/[0.06] text-sm font-bold tabular-nums">
                 {i + 1}
               </span>
 
@@ -254,7 +254,7 @@ function HuntInner() {
                   <span className="util-label opacity-60">
                     {claimed ? "Claimed" : tierLabel(w.bounty)}
                   </span>
-                  <span className="util-label rounded bg-white/[0.06] px-1.5 py-0.5 opacity-70">
+                  <span className="util-label rounded bg-foreground/[0.06] px-1.5 py-0.5 opacity-70">
                     {w.colorLabel}
                   </span>
                 </div>
@@ -280,7 +280,7 @@ function HuntInner() {
           role="dialog"
           aria-modal="true"
           aria-label="How the hunt works"
-          className="fixed inset-0 z-[70] flex items-end justify-center bg-black/70"
+          className="fixed inset-0 z-[70] flex items-end justify-center bg-background/70"
           onClick={() => setRulesOpen(false)}
         >
           <div
@@ -290,19 +290,19 @@ function HuntInner() {
             {/* Grabber, then the rules. The text is the app's own HUNT_RULE
                 plus the three steps the feature actually implements -- nothing
                 here describes a rule the code does not enforce. */}
-            <div aria-hidden className="mx-auto h-1 w-10 rounded-full bg-white/25" />
+            <div aria-hidden className="mx-auto h-1 w-10 rounded-full bg-foreground/25" />
             <div className="mt-4 flex items-center justify-between">
-              <h2 className="text-[20px] font-bold text-white">How it works</h2>
+              <h2 className="text-[20px] font-bold text-foreground">How it works</h2>
               <button
                 type="button"
                 onClick={() => setRulesOpen(false)}
                 aria-label="Close"
                 className="press flex h-11 w-11 items-center justify-center rounded-full"
               >
-                <X className="h-5 w-5 text-white" strokeWidth={1.75} aria-hidden />
+                <X className="h-5 w-5 text-foreground" strokeWidth={1.75} aria-hidden />
               </button>
             </div>
-            <ol className="mt-3 space-y-3 text-[15px] leading-relaxed text-white">
+            <ol className="mt-3 space-y-3 text-[15px] leading-relaxed text-foreground">
               <li>1. Pick a car off the wanted board below.</li>
               <li>2. Spot it out on the road and photograph it with the hunt camera.</li>
               <li>3. If it matches, claim its bounty and get paid.</li>

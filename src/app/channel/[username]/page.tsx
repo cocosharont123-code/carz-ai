@@ -73,7 +73,7 @@ export default function ChannelPage({
         </p>
         <Link
           href="/search"
-          className="press mt-6 inline-flex min-h-11 items-center rounded-full bg-white px-6 text-sm font-bold text-neutral-900"
+          className="press mt-6 inline-flex min-h-11 items-center rounded-full bg-carz px-6 text-sm font-bold text-neutral-900"
         >
           Search for someone
         </Link>
@@ -92,18 +92,18 @@ export default function ChannelPage({
 function ChannelSkeleton() {
   return (
     <main className="mx-auto w-full max-w-2xl pb-16" aria-busy="true">
-      <div className="h-36 w-full animate-pulse bg-white/[0.06] sm:h-44" />
+      <div className="h-36 w-full animate-pulse bg-foreground/[0.06] sm:h-44" />
       <div className="px-5">
-        <div className="-mt-10 h-20 w-20 animate-pulse rounded-full bg-white/[0.08] ring-4 ring-black" />
-        <div className="mt-3 h-5 w-40 animate-pulse rounded bg-white/[0.06]" />
-        <div className="mt-2 h-3 w-24 animate-pulse rounded bg-white/[0.05]" />
-        <div className="mt-4 h-3 w-full max-w-sm animate-pulse rounded bg-white/[0.05]" />
+        <div className="-mt-10 h-20 w-20 animate-pulse rounded-full bg-foreground/[0.08] ring-4 ring-black" />
+        <div className="mt-3 h-5 w-40 animate-pulse rounded bg-foreground/[0.06]" />
+        <div className="mt-2 h-3 w-24 animate-pulse rounded bg-foreground/[0.05]" />
+        <div className="mt-4 h-3 w-full max-w-sm animate-pulse rounded bg-foreground/[0.05]" />
         <div className="mt-5 flex gap-6">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-8 w-14 animate-pulse rounded bg-white/[0.05]" />
+            <div key={i} className="h-8 w-14 animate-pulse rounded bg-foreground/[0.05]" />
           ))}
         </div>
-        <div className="mt-5 h-10 w-full animate-pulse rounded-full bg-white/[0.06]" />
+        <div className="mt-5 h-10 w-full animate-pulse rounded-full bg-foreground/[0.06]" />
       </div>
     </main>
   );

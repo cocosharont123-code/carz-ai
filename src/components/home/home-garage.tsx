@@ -93,7 +93,7 @@ export function HomeGarage() {
             key={c.id}
             href="/garage"
             aria-label={`${c.make} ${c.model} in your garage`}
-            className="press group relative aspect-square overflow-hidden rounded-xl bg-white/[0.04]"
+            className="press group relative aspect-square overflow-hidden rounded-xl bg-foreground/[0.04]"
           >
             <CarPhoto
               src={c.image}

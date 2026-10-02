@@ -77,18 +77,18 @@ function Lightbox({
       role="dialog"
       aria-modal="true"
       aria-label={`${car.make} ${car.model}`}
-      className="fixed inset-0 z-[70] flex flex-col bg-black/95"
+      className="fixed inset-0 z-[70] flex flex-col bg-background/95"
       onClick={onClose}
     >
       <div className="flex items-center justify-between p-4">
-        <span className="util-label text-white/60">
+        <span className="util-label text-foreground/60">
           {index + 1} / {cars.length}
         </span>
         <button
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="press flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+          className="press flex h-9 w-9 items-center justify-center rounded-full bg-foreground/10 text-foreground transition hover:bg-foreground/20"
         >
           <X className="h-4 w-4" aria-hidden />
         </button>
@@ -114,16 +114,16 @@ function Lightbox({
             onClick={() => onMove(index - 1)}
             disabled={index === 0}
             aria-label="Previous"
-            className="press flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 disabled:opacity-25"
+            className="press flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-foreground transition hover:bg-foreground/20 disabled:opacity-25"
           >
             <ChevronLeft className="h-5 w-5" aria-hidden />
           </button>
 
-          <div className="min-w-0 flex-1 text-center text-white">
+          <div className="min-w-0 flex-1 text-center text-foreground">
             <p className="truncate text-sm font-bold">
               {car.make} {car.model}
             </p>
-            <p className="util-label mt-0.5 truncate text-white/50">
+            <p className="util-label mt-0.5 truncate text-foreground/50">
               {car.yearRange}
               {car.priceRange ? ` · ${car.priceRange}` : ""} · {fmtDate(car.ts)}
             </p>
@@ -134,7 +134,7 @@ function Lightbox({
             onClick={() => onMove(index + 1)}
             disabled={index === cars.length - 1}
             aria-label="Next"
-            className="press flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 disabled:opacity-25"
+            className="press flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-foreground transition hover:bg-foreground/20 disabled:opacity-25"
           >
             <ChevronRight className="h-5 w-5" aria-hidden />
           </button>
@@ -144,7 +144,7 @@ function Lightbox({
           <button
             type="button"
             onClick={() => onRemove(car.id)}
-            className="press inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-[15px] font-semibold text-white transition hover:bg-white/20"
+            className="press inline-flex items-center gap-1.5 rounded-full bg-foreground/10 px-4 py-2 text-[15px] font-semibold text-foreground transition hover:bg-foreground/20"
           >
             <Trash2 className="h-3.5 w-3.5" aria-hidden />
             Remove from garage
@@ -207,7 +207,7 @@ function GarageInner() {
             ))}
           </div>
         ) : cars.length === 0 ? (
-          <div className="mt-8 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-white p-10 text-center">
+          <div className="mt-8 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-foreground p-10 text-center">
             <Images className="mx-auto h-8 w-8 opacity-40" strokeWidth={1.5} aria-hidden />
             <h3 className="display mt-3 text-3xl">Album empty</h3>
             <p className="mx-auto mt-2 max-w-sm text-sm opacity-70">
@@ -244,7 +244,7 @@ function GarageInner() {
                   type="button"
                   onClick={() => setOpen(i)}
                   aria-label={`Open ${c.make} ${c.model}`}
-                  className="press group relative aspect-square overflow-hidden bg-white/[0.04]"
+                  className="press group relative aspect-square overflow-hidden bg-foreground/[0.04]"
                 >
                   <CarPhoto
                     src={c.image}
@@ -261,11 +261,11 @@ function GarageInner() {
 
                   {/* Caption rides on the photo behind a scrim, so a white car
                       can't wash the text out. */}
-                  <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-2 text-left">
-                    <span className="block truncate text-[12px] font-bold text-white">
+                  <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-2 text-left text-white">
+                    <span className="block truncate text-[12px] font-bold text-foreground">
                       {c.make} {c.model}
                     </span>
-                    <span className="block truncate text-[10px] text-white/60">{c.yearRange}</span>
+                    <span className="block truncate text-[10px] text-foreground/60">{c.yearRange}</span>
                   </span>
                 </button>
               ))}

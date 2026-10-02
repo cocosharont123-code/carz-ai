@@ -95,12 +95,12 @@ function LeaderboardInner() {
             ))}
           </div>
         ) : !configured ? (
-          <div className="mt-8 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-white p-8 text-center">
+          <div className="mt-8 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-foreground p-8 text-center">
             <Eyebrow yellow className="justify-center">Warming up</Eyebrow>
             <p className="mt-2 text-sm ">The board is connecting its database. Check back in a moment.</p>
           </div>
         ) : cars.length === 0 ? (
-          <div className="mt-8 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-white p-10 text-center">
+          <div className="mt-8 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-foreground p-10 text-center">
             <h3 className="display text-3xl">No cars yet</h3>
             <p className="mx-auto mt-2 max-w-sm text-sm ">
               The board is empty. Spot a rare car and claim the top slot.
@@ -244,7 +244,7 @@ function CarViewer({
 
   return (
     <>
-      <div onClick={onClose} aria-hidden className="fixed inset-0 z-[75] bg-black/70 backdrop-blur-sm" />
+      <div onClick={onClose} aria-hidden className="fixed inset-0 z-[75] bg-background/70 backdrop-blur-sm" />
       <div
         role="dialog"
         aria-modal="true"
@@ -269,7 +269,7 @@ function CarViewer({
               width — the board stores a thumbnail, and blowing one up is
               exactly what made it look pixelated. Small photos render small and
               sharp rather than large and soft. */}
-          <div className="flex items-center justify-center overflow-hidden rounded-[26%] bg-black/30">
+          <div className="flex items-center justify-center overflow-hidden rounded-[26%] bg-background/30">
             {car.image ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -315,7 +315,7 @@ function CarViewer({
               "mt-4 rounded-card p-3.5",
               ultra
                 ? "bg-gradient-to-r from-neon-red/20 via-neon-green/12 to-neon-blue/20"
-                : "bg-white/[0.06]",
+                : "bg-foreground/[0.06]",
             )}
           >
             <div className="flex items-baseline justify-between">
@@ -324,7 +324,7 @@ function CarViewer({
                 {raw}/100 · <span className="text-neon-red">{rarityLabel(raw)}</span>
               </span>
             </div>
-            <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-black/40">
+            <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-background/40">
               <div
                 className={cn(
                   "h-full rounded-full transition-[width] duration-500",
@@ -358,7 +358,7 @@ function CarViewer({
           <button
             type="button"
             onClick={onClose}
-            className="press mt-2 min-h-11 w-full rounded-full bg-white text-sm font-bold text-black"
+            className="press mt-2 min-h-11 w-full rounded-full bg-carz text-sm font-bold text-carz-ink"
           >
             Close
           </button>

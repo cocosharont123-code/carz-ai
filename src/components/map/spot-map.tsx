@@ -347,7 +347,7 @@ export function SpotMap() {
     : spots;
 
   return (
-    <div className="relative h-full w-full bg-black">
+    <div className="relative h-full w-full bg-background">
       <div ref={holder} className="h-full w-full" />
 
       {/* Floating search. No filter button beside it: the spec asks for one
@@ -370,7 +370,7 @@ export function SpotMap() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search cars, events, or places"
             aria-label="Search the map"
-            className="h-[52px] w-full rounded-full border border-[var(--line-card)] bg-[var(--color-surface)] pl-11 pr-4 text-[15px] text-white outline-none placeholder:text-[var(--color-muted-text)] [&::-webkit-search-cancel-button]:appearance-none"
+            className="h-[52px] w-full rounded-full border border-[var(--line-card)] bg-[var(--color-surface)] pl-11 pr-4 text-[15px] text-foreground outline-none placeholder:text-[var(--color-muted-text)] [&::-webkit-search-cancel-button]:appearance-none"
           />
         </div>
       </div>
@@ -386,11 +386,11 @@ export function SpotMap() {
           to see what is on the map without hunting for pins, and on a phone
           most of the pins are off screen. */}
       <div
-        className="absolute inset-x-0 bottom-0 z-10 rounded-t-sheet border-t border-[var(--line-card)] bg-black/95 px-5 pb-4 pt-2"
+        className="absolute inset-x-0 bottom-0 z-10 rounded-t-sheet border-t border-[var(--line-card)] bg-background/95 px-5 pb-4 pt-2"
         style={{ paddingBottom: "1rem" }}
       >
-        <div aria-hidden className="mx-auto h-1 w-10 rounded-full bg-white/25" />
-        <h2 className="mt-3 text-[17px] font-semibold text-white">Cars Near You</h2>
+        <div aria-hidden className="mx-auto h-1 w-10 rounded-full bg-foreground/25" />
+        <h2 className="mt-3 text-[17px] font-semibold text-foreground">Cars Near You</h2>
 
         {shown.length === 0 ? (
           <p className="mt-2 pb-1 text-[14px] text-[var(--color-secondary-text)]">
@@ -414,7 +414,7 @@ export function SpotMap() {
                 }}
                 className="press w-36 shrink-0 text-left"
               >
-                <span className="block truncate text-[15px] font-semibold text-white">
+                <span className="block truncate text-[15px] font-semibold text-foreground">
                   {`${sp.make} ${sp.model}`.trim()}
                 </span>
                 {/* No distance: a spot is rounded to about 110 metres and the

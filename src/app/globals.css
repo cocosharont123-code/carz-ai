@@ -54,36 +54,37 @@
 
    The one real colour is #FF453A, and only for errors.
    ========================================================================== */
-@theme {
-  /* Surfaces */
-  --color-surface: #121212;
-  --color-raised: #1a1a1a;
+@theme inline {
+  /* Every one of these resolves through a raw variable defined under :root
+     and .dark below, so the whole palette inverts with the theme class rather
+     than being baked in. They were literals while the app was dark-only. */
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
 
-  /* Type */
-  --color-secondary-text: #a3a3a3;
-  --color-muted-text: #808080;
-  --color-hero-2: #c2c2c2;
+  --color-secondary-text: var(--secondary-text);
+  --color-muted-text: var(--muted-text);
+  --color-hero-2: var(--hero-2);
 
-  /* The accent, and what sits on it */
-  --color-carz: #ffffff;
-  --color-carz-ink: #000000;
+  /* The accent, and what sits on it. White on black, black on white. */
+  --color-carz: var(--accent-ink-bg);
+  --color-carz-ink: var(--accent-ink-fg);
 
-  /* Error, and only error */
-  --color-error: #ff453a;
+  /* Error, and only error. The one colour, and it is readable on both. */
+  --color-error: var(--error);
 
   /* Former neons. Kept as names, emptied of colour. */
-  --color-neon-blue: #ffffff;
-  --color-neon-green: #ffffff;
-  --color-neon-red: #ff453a;
-  --color-nblue: #ffffff;
-  --color-nred: #ff453a;
-  --color-ngreen: #ffffff;
+  --color-neon-blue: var(--foreground);
+  --color-neon-green: var(--foreground);
+  --color-neon-red: var(--error);
+  --color-nblue: var(--foreground);
+  --color-nred: var(--error);
+  --color-ngreen: var(--foreground);
 
   /* Former podium metals. A rank is a number, not a colour. */
-  --color-rank-1: #ffffff;
-  --color-rank-2: #a3a3a3;
-  --color-rank-3: #808080;
-  --color-success-600: #ffffff;
+  --color-rank-1: var(--foreground);
+  --color-rank-2: var(--secondary-text);
+  --color-rank-3: var(--muted-text);
+  --color-success-600: var(--foreground);
 
   /* Radii, per the spec */
   --radius-card: 20px;
@@ -94,11 +95,43 @@
 }
 
 :root {
-  /* Lines. Three weights: a card's edge, a secondary button's edge, a divider. */
+  /* Light. Same system, inverted: the page is white, the ink is black, and
+     every grey is still R=G=B. */
+  color-scheme: light;
+
+  --surface: #f5f5f5;
+  --raised: #ebebeb;
+  --secondary-text: #5c5c5c;
+  --muted-text: #7a7a7a;
+  --hero-2: #4d4d4d;
+  --accent-ink-bg: #000000;
+  --accent-ink-fg: #ffffff;
+  --error: #d70015;
+
+  /* Lines are black at low alpha on white, as they are white on black. */
+  --line-card: rgba(0, 0, 0, 0.12);
+  --line-button: rgba(0, 0, 0, 0.24);
+  --line-divider: rgba(0, 0, 0, 0.09);
+  /* A glow is a dark-mode idea. On white it becomes a soft drop shadow,
+     because light does not bloom off a white page. */
+  --glow: 0 2px 14px rgba(0, 0, 0, 0.18);
+}
+
+.dark {
+  color-scheme: dark;
+
+  --surface: #121212;
+  --raised: #1a1a1a;
+  --secondary-text: #a3a3a3;
+  --muted-text: #808080;
+  --hero-2: #c2c2c2;
+  --accent-ink-bg: #ffffff;
+  --accent-ink-fg: #000000;
+  --error: #ff453a;
+
   --line-card: rgba(255, 255, 255, 0.10);
   --line-button: rgba(255, 255, 255, 0.20);
   --line-divider: rgba(255, 255, 255, 0.08);
-  /* The only glow left, and it is white. */
   --glow: 0 0 24px rgba(255, 255, 255, 0.35);
 }
 
@@ -148,47 +181,47 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Dark only.
+/* The light theme.
    
-   These were the light-theme values. The app forces .dark on <html> before
-   first paint, so they were never meant to be seen -- but "never meant to be
-   seen" is how a white flash happens when a class lands a frame late, and how
-   a browser with JS disabled renders the whole site inverted. The light theme
-   is not overridden any more, it is gone: :root holds the dark values and
-   .dark repeats them. */
+   These were the dark values under :root while the app was dark-only. Light is
+   a real theme again, chosen in Settings, so :root is light and .dark below
+   carries the dark set.
+   
+   Still the same system: no hue anywhere, every grey R=G=B, one accent that is
+   simply the ink colour. On white that accent is black. */
 :root {
-  --background: #000000;
-  --foreground: #ffffff;
-  --card: #121212;
-  --card-foreground: #ffffff;
-  --popover: #121212;
-  --popover-foreground: #ffffff;
-  --primary: #ffffff;
-  --primary-foreground: #000000;
-  --secondary: #1a1a1a;
-  --secondary-foreground: #ffffff;
-  --muted: #1a1a1a;
-  --muted-foreground: #a3a3a3;
-  --accent: #ffffff;
-  --accent-foreground: #000000;
-  --destructive: #ff453a;
-  --border: rgba(255, 255, 255, 0.10);
-  --input: rgba(255, 255, 255, 0.20);
-  --ring: #ffffff;
-  --chart-1: #ffffff;
-  --chart-2: #a3a3a3;
-  --chart-3: #808080;
-  --chart-4: #4d4d4d;
-  --chart-5: #2b2b2b;
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #f5f5f5;
+  --card-foreground: #000000;
+  --popover: #f5f5f5;
+  --popover-foreground: #000000;
+  --primary: #000000;
+  --primary-foreground: #ffffff;
+  --secondary: #ebebeb;
+  --secondary-foreground: #000000;
+  --muted: #ebebeb;
+  --muted-foreground: #5c5c5c;
+  --accent: #000000;
+  --accent-foreground: #ffffff;
+  --destructive: #d70015;
+  --border: rgba(0, 0, 0, 0.12);
+  --input: rgba(0, 0, 0, 0.24);
+  --ring: #000000;
+  --chart-1: #000000;
+  --chart-2: #5c5c5c;
+  --chart-3: #7a7a7a;
+  --chart-4: #b0b0b0;
+  --chart-5: #d4d4d4;
   --radius: 0.9rem;
-  --sidebar: #121212;
-  --sidebar-foreground: #ffffff;
-  --sidebar-primary: #ffffff;
-  --sidebar-primary-foreground: #000000;
-  --sidebar-accent: #1a1a1a;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: rgba(255, 255, 255, 0.10);
-  --sidebar-ring: #ffffff;
+  --sidebar: #f5f5f5;
+  --sidebar-foreground: #000000;
+  --sidebar-primary: #000000;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #ebebeb;
+  --sidebar-accent-foreground: #000000;
+  --sidebar-border: rgba(0, 0, 0, 0.12);
+  --sidebar-ring: #000000;
 }
 
 .dark {
@@ -262,7 +295,7 @@
 /* --- Default profile avatar. Was green, blue and red radials cycling; now a
        flat raised surface, which is what every other surface in the app is. --- */
 .carz-neon-bg {
-  background: #1a1a1a;
+  background: var(--raised);
 }
 .carz-car { animation: carzBob 1.8s ease-in-out infinite; }
 @keyframes carzBob {
@@ -276,25 +309,25 @@
        gold / purple / blue rarity tiers. Rarity is carried by the label text
        now; the tiers differ only in how bright their edge is. --- */
 .hunt-banner {
-  background: #121212;
+  background: var(--surface);
 }
 .hunt-title {
-  color: #ffffff;
+  color: var(--foreground);
 }
 .hunt-glow {
   box-shadow: var(--glow);
 }
 .hunt-legendary {
-  background: #1a1a1a;
+  background: var(--raised);
   border-color: rgba(255, 255, 255, 0.40);
   box-shadow: var(--glow);
 }
 .hunt-epic {
-  background: #1a1a1a;
+  background: var(--raised);
   border-color: rgba(255, 255, 255, 0.24);
 }
 .hunt-rare {
-  background: #1a1a1a;
+  background: var(--raised);
   border-color: rgba(255, 255, 255, 0.14);
 }
 
@@ -469,13 +502,13 @@ body {
 }
 
 /* Token for RippleButton (multi-type-ripple-buttons). */
-:root, .dark { --button-ripple-color: rgba(255, 255, 255, 0.5); }
+:root, .dark { --button-ripple-color: color-mix(in srgb, var(--foreground) 50%, transparent); }
 
 /* .blur-behind blurred what was behind an element. Nothing blurs now, so it
    paints the surface instead -- the class is still applied in several places
    and an empty rule there would leave transparent boxes on black. */
 .blur-behind {
-  background: var(--color-surface);
+  background: var(--surface);
 }
 
 /* These three each need a positioned box for their ::before to fill, but only
@@ -510,15 +543,15 @@ body {
    left the nav rendering at the bottom of the document instead of fixed to the
    screen. */
 .glass-card {
-  color: #ffffff;
-  background: var(--color-surface);
+  color: var(--foreground);
+  background: var(--surface);
   border: 1px solid var(--line-card);
   transition: border-color 300ms var(--ease-apple);
 }
 
 .glass-bubble {
-  color: #ffffff;
-  background: var(--color-surface);
+  color: var(--foreground);
+  background: var(--surface);
   border: 1px solid var(--line-card);
 }
 
@@ -530,9 +563,8 @@ body {
    width is a fraction of the row set from the target count, so nothing has to
    be measured and no layout is read during the animation. */
 .nav-lens {
-  /* Was cyan. White at a low alpha, which on #000 is the same object without
-     the hue. */
-  background: rgba(255, 255, 255, 0.14);
+  /* Was cyan. The ink colour at low alpha, so it reads on either theme. */
+  background: color-mix(in srgb, var(--foreground) 14%, transparent);
   transition:
     transform 420ms var(--ease-apple),
     opacity 220ms var(--ease-apple);
@@ -585,10 +617,6 @@ body {
    appears in a search for "blue". This block is that list.
    ========================================================================== */
 
-:root {
-  color-scheme: dark;
-}
-
 /* A link is whatever colour its text already is. */
 a {
   color: inherit;
@@ -597,30 +625,31 @@ a {
 /* Visible focus, on everything, always. A white ring with a black gap so it
    reads on a white button as well as on black. */
 :focus-visible {
-  outline: 2px solid #ffffff;
+  /* The ink colour, so the ring is white on black and black on white. */
+  outline: 2px solid var(--foreground);
   outline-offset: 2px;
 }
 
 /* Checkboxes, radios, range sliders and progress bars. */
 :root {
-  accent-color: #ffffff;
+  accent-color: var(--foreground);
 }
 
 input,
 textarea,
 select,
 [contenteditable] {
-  caret-color: #ffffff;
+  caret-color: var(--foreground);
 }
 
 ::selection {
-  background: #ffffff;
-  color: #000000;
+  background: var(--foreground);
+  color: var(--background);
 }
 
 ::-moz-selection {
-  background: #ffffff;
-  color: #000000;
+  background: var(--foreground);
+  color: var(--background);
 }
 
 /* iOS paints a translucent grey-blue box over anything tapped. */
@@ -635,10 +664,10 @@ input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 textarea:-webkit-autofill,
 select:-webkit-autofill {
-  -webkit-text-fill-color: #ffffff;
-  -webkit-box-shadow: 0 0 0 1000px var(--color-surface) inset;
-  box-shadow: 0 0 0 1000px var(--color-surface) inset;
-  caret-color: #ffffff;
+  -webkit-text-fill-color: var(--foreground);
+  -webkit-box-shadow: 0 0 0 1000px var(--surface) inset;
+  box-shadow: 0 0 0 1000px var(--surface) inset;
+  caret-color: var(--foreground);
   transition: background-color 9999s ease-in-out 0s;
 }
 
@@ -646,13 +675,13 @@ select:-webkit-autofill {
 progress,
 progress::-webkit-progress-value,
 progress::-moz-progress-bar {
-  accent-color: #ffffff;
-  color: #ffffff;
+  accent-color: var(--foreground);
+  color: var(--foreground);
 }
 
 /* Scrollbars, where they are drawn at all. */
 * {
-  scrollbar-color: rgba(255, 255, 255, 0.24) transparent;
+  scrollbar-color: var(--line-button) transparent;
 }
 
 ::-webkit-scrollbar {
@@ -661,7 +690,7 @@ progress::-moz-progress-bar {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.24);
+  background: var(--line-button);
   border-radius: 9999px;
 }
 

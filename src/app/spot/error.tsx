@@ -38,7 +38,7 @@ export default function SpotError({
       <button
         type="button"
         onClick={reset}
-        className="press mt-6 min-h-11 w-full rounded-full bg-white text-sm font-bold text-black"
+        className="press mt-6 min-h-11 w-full rounded-full bg-carz text-sm font-bold text-carz-ink"
       >
         Try again
       </button>

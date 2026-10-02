@@ -271,7 +271,7 @@ export default function PricingPage() {
                 type="button"
                 onClick={removePromo}
                 aria-label={`Remove promo code ${promo.code.toUpperCase()}`}
-                className="press flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carz/60"
+                className="press flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition hover:bg-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carz/60"
               >
                 <X className="h-4 w-4" strokeWidth={2} aria-hidden />
               </button>
@@ -298,7 +298,7 @@ export default function PricingPage() {
               <button
                 type="button"
                 onClick={applyPromo}
-                className="press glass-card min-h-11 shrink-0 rounded-full px-5 text-sm font-semibold transition hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carz/60"
+                className="press glass-card min-h-11 shrink-0 rounded-full px-5 text-sm font-semibold transition hover:bg-foreground/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carz/60"
               >
                 Apply
               </button>

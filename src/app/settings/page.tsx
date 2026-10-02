@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { Gauge, Crosshair, Lock } from "lucide-react";
 import { Button, PageMasthead, Skeleton } from "@/components/ui/editorial";
+import { ThemePicker } from "@/components/theme-picker";
 import { cn } from "@/lib/utils";
 import { SCAN_MODE_META, type ScanMode } from "@/lib/scan-mode";
 import { DeleteAccount } from "@/components/delete-account";
@@ -47,7 +48,7 @@ function ScanModeCard({
         "press relative w-full rounded-card border p-5 text-left transition disabled:cursor-not-allowed",
         selected
           ? "border-neon-blue/70 bg-neon-blue/[0.07] shadow-[0_0_28px_-14px_rgba(255,255,255,0.9)]"
-          : "border-[var(--line-card)] bg-white/[0.02] hover:border-[var(--line-button)] hover:bg-white/[0.05]",
+          : "border-[var(--line-card)] bg-foreground/[0.02] hover:border-[var(--line-button)] hover:bg-foreground/[0.05]",
         locked && "opacity-60",
       )}
     >
@@ -132,7 +133,17 @@ export default function SettingsPage() {
         <PageMasthead title="Settings" eyebrow="Your account" />
 
         {/* --- Identification --- */}
+        {/* First, because it is the one setting that changes the whole app and
+            the one most people come here looking for. */}
         <section className="mt-8">
+          <h2 className="text-xl font-bold">Appearance</h2>
+          <p className="mt-1 text-[15px] text-[var(--color-secondary-text)]">
+            Follow your phone, or pick one and keep it.
+          </p>
+          <ThemePicker />
+        </section>
+
+        <section className="mt-10">
           <h2 className="text-xl font-bold">Identification</h2>
           <p className="mt-1 text-[15px] opacity-60">
             How hard a scan works before it answers.
@@ -195,7 +206,7 @@ export default function SettingsPage() {
             <div className="mt-3 space-y-2">
               <Link
                 href="/profile"
-                className="flex items-center justify-between rounded-xl border border-[var(--line-card)] bg-white/[0.02] px-4 py-3 text-sm font-semibold transition hover:border-[var(--line-button)] hover:bg-white/[0.05]"
+                className="flex items-center justify-between rounded-xl border border-[var(--line-card)] bg-foreground/[0.02] px-4 py-3 text-sm font-semibold transition hover:border-[var(--line-button)] hover:bg-foreground/[0.05]"
               >
                 <span>Edit profile</span>
                 <span className="opacity-50">Username, display name, picture →</span>
@@ -203,14 +214,14 @@ export default function SettingsPage() {
               <button
                 type="button"
                 onClick={() => signOut({ callbackUrl: "/" })}
-                className="press flex w-full items-center justify-between rounded-xl border border-[var(--line-card)] bg-white/[0.02] px-4 py-3 text-left text-sm font-semibold transition hover:border-[var(--line-button)] hover:bg-white/[0.05]"
+                className="press flex w-full items-center justify-between rounded-xl border border-[var(--line-card)] bg-foreground/[0.02] px-4 py-3 text-left text-sm font-semibold transition hover:border-[var(--line-button)] hover:bg-foreground/[0.05]"
               >
                 <span>Sign out</span>
                 <span className="opacity-50">→</span>
               </button>
             </div>
           ) : (
-            <div className="mt-3 rounded-card border border-[var(--line-card)] bg-white/[0.02] p-5">
+            <div className="mt-3 rounded-card border border-[var(--line-card)] bg-foreground/[0.02] p-5">
               <p className="text-sm opacity-75">
                 Sign in to manage your profile, membership and account.
               </p>
@@ -227,7 +238,7 @@ export default function SettingsPage() {
           <div className="mt-3">
             <Link
               href="/terms"
-              className="flex items-center justify-between rounded-xl border border-[var(--line-card)] bg-white/[0.02] px-4 py-3 text-sm font-semibold transition hover:border-[var(--line-button)] hover:bg-white/[0.05]"
+              className="flex items-center justify-between rounded-xl border border-[var(--line-card)] bg-foreground/[0.02] px-4 py-3 text-sm font-semibold transition hover:border-[var(--line-button)] hover:bg-foreground/[0.05]"
             >
               <span>Terms of Service</span>
               <span className="opacity-50">Read and accept →</span>

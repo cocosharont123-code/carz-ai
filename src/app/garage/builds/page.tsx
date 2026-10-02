@@ -131,13 +131,13 @@ function BuildsInner() {
         {loading ? (
           <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
             {[0, 1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="overflow-hidden rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-white">
+              <div key={i} className="overflow-hidden rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-foreground">
                 <Skeleton className="aspect-square w-full" />
               </div>
             ))}
           </div>
         ) : builds.length === 0 ? (
-          <div className="mt-8 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-white p-10 text-center">
+          <div className="mt-8 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-foreground p-10 text-center">
             <h3 className="display text-3xl">No builds yet</h3>
             <p className="mx-auto mt-2 max-w-sm text-sm ">
               Spot a car and customize the look — every config you generate is saved here automatically.
@@ -154,12 +154,12 @@ function BuildsInner() {
 
             <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
               {builds.map((b) => (
-                <div key={b.id} className="reveal press lift group relative overflow-hidden rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-white">
+                <div key={b.id} className="reveal press lift group relative overflow-hidden rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-foreground">
                   <button
                     onClick={() => remove(b.id)}
                     disabled={pendingId === b.id}
                     title="Delete config"
-                    className="absolute rounded-lg right-2 top-2 z-10 hidden h-6 w-6 items-center justify-center bg-black/70 text-white text-xs  group-hover:flex hover:bg-carz "
+                    className="absolute rounded-lg right-2 top-2 z-10 hidden h-6 w-6 items-center justify-center bg-background/70 text-foreground text-xs  group-hover:flex hover:bg-carz "
                   >
                     {pendingId === b.id ? <Spinner className="h-3 w-3" /> : <X className="h-3.5 w-3.5" aria-hidden />}
                   </button>
@@ -173,7 +173,7 @@ function BuildsInner() {
                       className="h-full w-full"
                     />
                     {!b.image && (
-                      <span className="absolute bottom-2 left-2 rounded-md bg-black/70 px-1.5 py-0.5 text-[10px] text-white">
+                      <span className="absolute bottom-2 left-2 rounded-md bg-background/70 px-1.5 py-0.5 text-[10px] text-foreground">
                         Rendered on another device
                       </span>
                     )}

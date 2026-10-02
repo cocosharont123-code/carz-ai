@@ -68,16 +68,16 @@ export const PricingSwitch = ({
         // h-12, not the original's h-10: 40px is under the 44pt tap minimum.
         "press relative z-10 h-12 w-full rounded-full px-4 text-sm font-semibold transition-colors sm:h-14 sm:px-6",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carz/60",
-        selected === key ? "text-black" : "opacity-70 hover:opacity-100",
+        selected === key ? "text-carz-ink" : "opacity-70 hover:opacity-100",
       )}
     >
       {selected === key &&
         (reduceMotion ? (
-          <span className="absolute inset-0 rounded-full bg-white" />
+          <span className="absolute inset-0 rounded-full bg-carz" />
         ) : (
           <motion.span
             layoutId={switchLayoutId}
-            className="absolute inset-0 rounded-full bg-white"
+            className="absolute inset-0 rounded-full bg-carz"
             transition={{ type: "spring", stiffness: 500, damping: 30 }}
           />
         ))}
@@ -203,8 +203,8 @@ function TierCard({
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carz/60",
             "disabled:cursor-not-allowed disabled:opacity-50",
             tier.featured
-              ? "bg-white text-black hover:opacity-90"
-              : "glass-card hover:bg-white/[0.08]",
+              ? "bg-carz text-carz-ink hover:opacity-90"
+              : "glass-card hover:bg-foreground/[0.08]",
           )}
         >
           {tier.cta}

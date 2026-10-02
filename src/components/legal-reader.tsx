@@ -105,7 +105,7 @@ export function LegalReader({
     <>
       {/* The document scrolls in its own pane, so "reached the end" is a fact
           about the text rather than about where the page happens to be. */}
-      <div className="overflow-hidden rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-white">
+      <div className="overflow-hidden rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-foreground">
         <div
           ref={scrollerRef}
           onScroll={measure}
@@ -173,9 +173,9 @@ export function LegalReader({
         </div>
 
         {/* How far through the document the reader is. */}
-        <div className="h-1 w-full bg-white/[0.04]">
+        <div className="h-1 w-full bg-foreground/[0.04]">
           <div
-            className="h-full bg-black transition-[width] duration-150"
+            className="h-full bg-background transition-[width] duration-150"
             style={{ width: `${reachedEnd ? 100 : progress}%` }}
           />
         </div>
@@ -191,7 +191,7 @@ export function LegalReader({
             className={cn(
               "press flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-bold transition",
               reachedEnd
-                ? "bg-white text-black hover:opacity-90"
+                ? "bg-carz text-carz-ink hover:opacity-90"
                 : "cursor-not-allowed border border-[var(--line-card)] opacity-40",
             )}
           >

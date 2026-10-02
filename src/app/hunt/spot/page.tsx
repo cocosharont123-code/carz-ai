@@ -188,7 +188,7 @@ function HuntSpotInner() {
           </div>
         </div>
 
-        <div className="mt-4 overflow-hidden rounded-card border border-foreground/[0.08] bg-black text-white">
+        <div className="mt-4 overflow-hidden rounded-card border border-foreground/[0.08] bg-background text-foreground">
           <div className="relative aspect-[3/4] w-full">
             {/* Live viewfinder */}
             <video
@@ -212,14 +212,14 @@ function HuntSpotInner() {
                 </p>
                 <button
                   onClick={startCam}
-                  className="rounded-xl bg-white px-6 py-2.5 font-bold text-[#1f1f1f]"
+                  className="rounded-xl bg-carz px-6 py-2.5 font-bold text-[#1f1f1f]"
                 >
                   {camError ? "Try again" : "Turn on camera"}
                 </button>
               </div>
             )}
             {busy && (
-              <div className="absolute rounded-lg inset-0 flex items-center justify-center bg-black/50 text-white text-sm font-semibold ">
+              <div className="absolute rounded-lg inset-0 flex items-center justify-center bg-background/50 text-foreground text-sm font-semibold ">
                 Identifying…
               </div>
             )}
@@ -357,7 +357,7 @@ function ClaimPrize({ carId, bounty, shot }: { carId: string; bounty: number; sh
     return (
       <button
         onClick={() => setOpen(true)}
-        className="mt-4 w-full rounded-xl bg-white py-2.5 font-black text-[#1f1f1f] transition hover:opacity-90"
+        className="mt-4 w-full rounded-xl bg-carz py-2.5 font-black text-[#1f1f1f] transition hover:opacity-90"
       >
         Claim prize
       </button>

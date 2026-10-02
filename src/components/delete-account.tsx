@@ -59,13 +59,13 @@ export function DeleteAccount() {
           <button
             type="button"
             onClick={() => setConfirming(true)}
-            className="press mt-4 rounded-full bg-neon-red px-6 py-2.5 text-sm font-bold text-white transition hover:brightness-110"
+            className="press mt-4 rounded-full bg-neon-red px-6 py-2.5 text-sm font-bold text-foreground transition hover:brightness-110"
           >
             Delete account
           </button>
         </>
       ) : (
-        <div className="mt-3 rounded-xl border border-neon-red/50 bg-black/40 p-4">
+        <div className="mt-3 rounded-xl border border-neon-red/50 bg-background/40 p-4">
           <p className="text-sm font-bold">Are you sure you want to delete your account?</p>
           <p className="mt-1.5 max-w-prose text-[15px] leading-relaxed opacity-75">
             This cannot be undone. Your username is released for anyone else to take, and any
@@ -87,7 +87,7 @@ export function DeleteAccount() {
               onClick={reallyDelete}
               disabled={deleting}
               aria-busy={deleting || undefined}
-              className="press inline-flex items-center gap-2 rounded-full bg-neon-red px-6 py-2.5 text-sm font-bold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+              className="press inline-flex items-center gap-2 rounded-full bg-neon-red px-6 py-2.5 text-sm font-bold text-foreground transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {deleting && <Spinner className="h-3.5 w-3.5" />}
               {deleting ? "Deleting…" : "Yes, delete my account"}
@@ -99,7 +99,7 @@ export function DeleteAccount() {
                 setError("");
               }}
               disabled={deleting}
-              className="press rounded-full border border-[var(--line-button)] px-6 py-2.5 text-sm font-semibold transition hover:border-white/40 disabled:opacity-40"
+              className="press rounded-full border border-[var(--line-button)] px-6 py-2.5 text-sm font-semibold transition hover:border-foreground/40 disabled:opacity-40"
             >
               Cancel
             </button>

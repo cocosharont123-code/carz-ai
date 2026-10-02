@@ -38,9 +38,9 @@ type ButtonProps = {
  * hover. No glass, and no scale: a 3% grow on press fights the 97% shrink
  * .press already applies.
  */
-const PRIMARY = "bg-white text-black hover:bg-white/90";
+const PRIMARY = "bg-carz text-carz-ink hover:bg-foreground/90";
 const SECONDARY =
-  "bg-[var(--color-surface)] text-white border border-[var(--line-button)] hover:bg-[var(--color-raised)]";
+  "bg-[var(--color-surface)] text-foreground border border-[var(--line-button)] hover:bg-[var(--color-raised)]";
 
 export function Button({
   href,
@@ -58,7 +58,7 @@ export function Button({
   const variants = {
     solid: PRIMARY,
     outline: SECONDARY,
-    ghost: "text-white hover:bg-white/[0.06]",
+    ghost: "text-foreground hover:bg-foreground/[0.06]",
   };
   // 52px is the spec's button. sm stays smaller for the few places a button
   // sits inline inside a row, where a 52px pill would set the row's height.
@@ -109,7 +109,7 @@ export function Card({ children, className, hover }: { children: ReactNode; clas
   return (
     <div
       className={cn(
-        "rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-white",
+        "rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-foreground",
         hover && "transition-colors hover:border-[var(--line-button)]",
         className,
       )}
@@ -138,7 +138,7 @@ export function PageMasthead({
         {/* 34px bold, the spec's page title. It was .display at text-4xl, which
             is the condensed face the hero uses -- at page-title size that read
             as a second hero on every screen. */}
-        <h1 className="text-[34px] font-bold leading-tight tracking-tight text-white">{title}</h1>
+        <h1 className="text-[34px] font-bold leading-tight tracking-tight text-foreground">{title}</h1>
         <div className="flex items-center gap-4 pb-1">
           {count != null && (
             <span className="text-[14px] text-[var(--color-secondary-text)]">{count}</span>
@@ -175,7 +175,7 @@ export function StatRow({
     <div
       className={cn(
         "flex flex-col justify-center rounded-card border border-[var(--line-card)] p-6",
-        yellow ? "bg-carz " : "bg-[var(--color-surface)] text-white",
+        yellow ? "bg-carz " : "bg-[var(--color-surface)] text-foreground",
         className,
       )}
     >
@@ -255,7 +255,7 @@ export function CarPhoto({
 }) {
   if (!src) {
     return (
-      <div className={cn("flex items-center justify-center bg-white/[0.04]", !color && "grayscale", className)}>
+      <div className={cn("flex items-center justify-center bg-foreground/[0.04]", !color && "grayscale", className)}>
         {fallback ?? <Car className="h-9 w-9 opacity-40" strokeWidth={1.5} aria-hidden />}
       </div>
     );
@@ -273,12 +273,12 @@ export function CarPhoto({
 
 /* --- Skeleton --------------------------------------------------------------- */
 export function Skeleton({ className }: { className?: string }) {
-  return <div className={cn("animate-pulse rounded-xl bg-white/[0.06]", className)} />;
+  return <div className={cn("animate-pulse rounded-xl bg-foreground/[0.06]", className)} />;
 }
 
 /* --- LiveDot: the single yellow live indicator ------------------------------ */
 export function LiveDot({ className }: { className?: string }) {
-  return <span className={cn("carz-live-dot inline-block h-2 w-2 rounded-full bg-white", className)} />;
+  return <span className={cn("carz-live-dot inline-block h-2 w-2 rounded-full bg-carz", className)} />;
 }
 
 /* --- SearchPill: 52px, surface, with a white go button on the right --------- */
@@ -317,7 +317,7 @@ export function SearchPill({
         autoFocus={autoFocus}
         className={cn(
           "h-[52px] w-full rounded-full border border-[var(--line-card)] bg-[var(--color-surface)]",
-          "pl-11 text-[15px] text-white outline-none",
+          "pl-11 text-[15px] text-foreground outline-none",
           "placeholder:text-[var(--color-muted-text)]",
           // Safari draws its own X inside type=search and it is not ours.
           "[&::-webkit-search-cancel-button]:appearance-none",
@@ -328,9 +328,9 @@ export function SearchPill({
         <button
           type="submit"
           aria-label={label}
-          className="press absolute right-1.5 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white"
+          className="press absolute right-1.5 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-carz"
         >
-          <ArrowRight className="h-[18px] w-[18px] text-black" strokeWidth={2.25} aria-hidden />
+          <ArrowRight className="h-[18px] w-[18px] text-carz-ink" strokeWidth={2.25} aria-hidden />
         </button>
       )}
     </>
@@ -357,7 +357,7 @@ export function SearchPill({
 export function StatBox({ value, label }: { value: ReactNode; label: string }) {
   return (
     <div className="rounded-stat border border-[var(--line-card)] bg-[var(--color-surface)] px-3 py-3.5 text-center">
-      <div className="text-[17px] font-bold leading-tight text-white">{value}</div>
+      <div className="text-[17px] font-bold leading-tight text-foreground">{value}</div>
       <div className="mt-1 text-[12px] leading-tight text-[var(--color-secondary-text)]">{label}</div>
     </div>
   );
@@ -383,9 +383,9 @@ export function ListRow({
 }) {
   const inner = (
     <>
-      {icon && <span className="shrink-0 text-white">{icon}</span>}
+      {icon && <span className="shrink-0 text-foreground">{icon}</span>}
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[15px] font-medium text-white">{label}</span>
+        <span className="block truncate text-[15px] font-medium text-foreground">{label}</span>
         {meta && (
           <span className="block truncate text-[14px] text-[var(--color-secondary-text)]">{meta}</span>
         )}
@@ -442,7 +442,7 @@ export function TextTabs<T extends string>({
               "press min-h-11 flex-1 pb-3 pt-1 text-[15px] font-semibold transition-colors",
               // -1px so the underline sits on the divider rather than above it.
               active
-                ? "-mb-px border-b-2 border-white text-white"
+                ? "-mb-px border-b-2 border-foreground text-foreground"
                 : "text-[var(--color-secondary-text)]",
             )}
           >

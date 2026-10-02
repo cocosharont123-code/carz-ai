@@ -92,7 +92,7 @@ function ScanningButton({
       role="status"
       aria-live="polite"
       aria-busy="true"
-      className="w-full rounded-card border border-[var(--line-card)] bg-white/[0.02] px-5 py-6"
+      className="w-full rounded-card border border-[var(--line-card)] bg-foreground/[0.02] px-5 py-6"
       // The loader reads its palette from these. It was the brand blue; a
       // loading bar is not where the one allowed colour gets spent.
       style={
@@ -118,8 +118,8 @@ function ScanningButton({
             value={progress}
             phases={phases}
             className="max-w-none gap-4"
-            textClassName="text-xl font-bold text-white sm:text-2xl"
-            barClassName="h-3 bg-white/10"
+            textClassName="text-xl font-bold text-foreground sm:text-2xl"
+            barClassName="h-3 bg-foreground/10"
           />
         </div>
       </div>
@@ -184,7 +184,7 @@ function SaveToGarage({ car, image }: { car: CarReport; image: string }) {
           "press flex h-[52px] flex-1 items-center justify-center gap-2 rounded-full border text-[15px] font-semibold transition",
           saved
             ? "cursor-default border-[var(--line-card)] bg-[var(--color-surface)] text-[var(--color-secondary-text)]"
-            : "border-[var(--line-button)] bg-[var(--color-surface)] text-white hover:bg-[var(--color-raised)] disabled:opacity-50",
+            : "border-[var(--line-button)] bg-[var(--color-surface)] text-foreground hover:bg-[var(--color-raised)] disabled:opacity-50",
         )}
       >
         {saved ? (
@@ -251,7 +251,7 @@ async function objectUrlToDataUrl(url: string): Promise<string> {
 function Spec({ k, v }: { k: string; v?: string }) {
   if (!v) return null;
   return (
-    <div className="rounded-xl bg-white/[0.04] p-3">
+    <div className="rounded-xl bg-foreground/[0.04] p-3">
       <div className="text-[12px] uppercase tracking-wide ">{k}</div>
       <div className="mt-0.5 font-semibold">{v}</div>
     </div>
@@ -284,7 +284,7 @@ function RarityMeter({ score, reason }: { score: number; reason?: string }) {
       className={`mt-4 rounded-card p-4 ${
         ultra
           ? "bg-gradient-to-r from-neon-red/15 via-neon-green/10 to-neon-blue/15 shadow-[0_0_25px_-8px_rgba(255,255,255,0.7)]"
-          : "bg-white/[0.04]"
+          : "bg-foreground/[0.04]"
       }`}
     >
       <div className="flex items-baseline justify-between">
@@ -295,7 +295,7 @@ function RarityMeter({ score, reason }: { score: number; reason?: string }) {
       </div>
       {/* A pure-black track punched a hole in the grey card. A tint of black
           reads as the same unfilled groove without the hard edge. */}
-      <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-black/15">
+      <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-background/15">
         <div
           className={`h-full rounded-full ${
             ultra
@@ -327,7 +327,7 @@ function ValueChart({ points }: { points: { year: string; usd: number }[] }) {
   // read. Both lines are white.
   const stroke = "#ffffff";
   return (
-    <div className="mt-4 rounded-card bg-white/[0.04] p-4">
+    <div className="mt-4 rounded-card bg-foreground/[0.04] p-4">
       <div className="flex items-baseline justify-between">
         <span className="text-xs font-bold uppercase tracking-wide ">
           Market value over time
@@ -390,7 +390,7 @@ function DetailRow({
   if (!has) return null;
   return (
     <details className="group border-b border-[var(--line-divider)]">
-      <summary className="press flex min-h-14 cursor-pointer list-none items-center justify-between py-3 text-[15px] font-medium text-white [&::-webkit-details-marker]:hidden">
+      <summary className="press flex min-h-14 cursor-pointer list-none items-center justify-between py-3 text-[15px] font-medium text-foreground [&::-webkit-details-marker]:hidden">
         {label}
         <ChevronDown
           className="h-[18px] w-[18px] shrink-0 text-[var(--color-muted-text)] transition-transform group-open:rotate-180"
@@ -408,10 +408,10 @@ function DetailRow({
  * than an SVG, so they stay hairline-crisp at any pixel density.
  */
 const CORNERS = [
-  { key: "tl", cls: "left-4 top-4 border-l-2 border-t-2 rounded-tl-lg border-white" },
-  { key: "tr", cls: "right-4 top-4 border-r-2 border-t-2 rounded-tr-lg border-white" },
-  { key: "bl", cls: "bottom-4 left-4 border-b-2 border-l-2 rounded-bl-lg border-white" },
-  { key: "br", cls: "bottom-4 right-4 border-b-2 border-r-2 rounded-br-lg border-white" },
+  { key: "tl", cls: "left-4 top-4 border-l-2 border-t-2 rounded-tl-lg border-foreground" },
+  { key: "tr", cls: "right-4 top-4 border-r-2 border-t-2 rounded-tr-lg border-foreground" },
+  { key: "bl", cls: "bottom-4 left-4 border-b-2 border-l-2 rounded-bl-lg border-foreground" },
+  { key: "br", cls: "bottom-4 right-4 border-b-2 border-r-2 rounded-br-lg border-foreground" },
 ] as const;
 
 export default function SpotPage() {
@@ -721,9 +721,9 @@ export default function SpotPage() {
             aria-label="Close scanner"
             className="press -ml-2 flex h-11 w-11 items-center justify-center rounded-full"
           >
-            <X className="h-6 w-6 text-white" strokeWidth={1.75} aria-hidden />
+            <X className="h-6 w-6 text-foreground" strokeWidth={1.75} aria-hidden />
           </button>
-          <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-[17px] font-bold lowercase tracking-tight text-white">
+          <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-[17px] font-bold lowercase tracking-tight text-foreground">
             carz
           </span>
         </header>
@@ -819,7 +819,7 @@ export default function SpotPage() {
                 // Square and black: this is where the photo will be, framed
                 // the way a camera frames it. Drag and drop still lands here,
                 // which is the only way to use this screen on a desktop.
-                "relative aspect-square w-full overflow-hidden rounded-card bg-black transition-colors",
+                "relative aspect-square w-full overflow-hidden rounded-card bg-background transition-colors",
                 isDragging && "bg-[var(--color-surface)]",
               )}
             >
@@ -842,7 +842,7 @@ export default function SpotPage() {
                   alt="Car preview"
                   className="h-full w-full object-cover brightness-75 transition-transform duration-300 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-black/40 text-white opacity-0 transition-opacity group-hover:opacity-100" />
+                <div className="absolute inset-0 bg-background/40 text-foreground opacity-0 transition-opacity group-hover:opacity-100" />
                 <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
                   <Button size="sm" variant="secondary" onClick={handleThumbnailClick} className="h-9 w-9 p-0">
                     <Upload className="h-4 w-4" />
@@ -873,9 +873,9 @@ export default function SpotPage() {
                 type="button"
                 onClick={handleThumbnailClick}
                 aria-label="Choose a photo from your library"
-                className="press flex h-12 w-12 items-center justify-center rounded-full bg-white/10"
+                className="press flex h-12 w-12 items-center justify-center rounded-full bg-foreground/10"
               >
-                <ImagePlus className="h-5 w-5 text-white" strokeWidth={1.75} aria-hidden />
+                <ImagePlus className="h-5 w-5 text-foreground" strokeWidth={1.75} aria-hidden />
               </button>
 
               <button
@@ -885,9 +885,9 @@ export default function SpotPage() {
                   cameraInputRef.current?.click();
                 }}
                 aria-label="Take a photo"
-                className="press flex h-[68px] w-[68px] items-center justify-center rounded-full border-2 border-white bg-black shadow-[var(--glow)]"
+                className="press flex h-[68px] w-[68px] items-center justify-center rounded-full border-2 border-foreground bg-background shadow-[var(--glow)]"
               >
-                <ScanLine className="h-7 w-7 text-white" strokeWidth={1.75} aria-hidden />
+                <ScanLine className="h-7 w-7 text-foreground" strokeWidth={1.75} aria-hidden />
               </button>
 
               {/* Balances the row against the gallery button so the shutter is
@@ -935,7 +935,7 @@ export default function SpotPage() {
         )}
 
         {limitHit && (
-          <div className="mt-4 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-white p-6 text-center">
+          <div className="mt-4 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-foreground p-6 text-center">
             <TrafficCone className="mx-auto h-8 w-8 opacity-50" strokeWidth={1.5} aria-hidden />
             <h3 className="display mt-2 text-2xl">Out of free scans</h3>
             <p className="mx-auto mt-1 max-w-sm text-[15px] opacity-70">
@@ -960,8 +960,8 @@ export default function SpotPage() {
           <section className="mt-2">
             {car.isCar ? (
               <>
-                <h2 className="text-[20px] font-normal leading-tight text-white">{car.make}</h2>
-                <p className="text-[34px] font-bold leading-tight tracking-tight text-white">
+                <h2 className="text-[20px] font-normal leading-tight text-foreground">{car.make}</h2>
+                <p className="text-[34px] font-bold leading-tight tracking-tight text-foreground">
                   {car.model}
                 </p>
                 {car.yearRange && (
@@ -977,7 +977,7 @@ export default function SpotPage() {
                     <img src={spottedImage} alt={`${car.make} ${car.model}`} className="w-full" />
                     <div
                       aria-hidden
-                      className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-black"
+                      className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-background"
                     />
                   </div>
                 )}
@@ -994,7 +994,7 @@ export default function SpotPage() {
 
                 {car.notes && (
                   <>
-                    <h3 className="mt-6 text-[20px] font-bold text-white">Overview</h3>
+                    <h3 className="mt-6 text-[20px] font-bold text-foreground">Overview</h3>
                     <p className="mt-2 text-[15px] leading-relaxed text-[var(--color-secondary-text)]">
                       {car.notes}
                     </p>
@@ -1034,13 +1034,13 @@ export default function SpotPage() {
                   >
                     <Spec k="Retail" v={car.priceRangeUsed} />
                     {car.valuation && (
-                      <p className="text-[15px] leading-relaxed text-white">{car.valuation}</p>
+                      <p className="text-[15px] leading-relaxed text-foreground">{car.valuation}</p>
                     )}
                     {car.reliability && (
-                      <p className="text-[15px] leading-relaxed text-white">{car.reliability}</p>
+                      <p className="text-[15px] leading-relaxed text-foreground">{car.reliability}</p>
                     )}
                     {car.collectibility && (
-                      <p className="text-[15px] leading-relaxed text-white">{car.collectibility}</p>
+                      <p className="text-[15px] leading-relaxed text-foreground">{car.collectibility}</p>
                     )}
                     <ValueChart points={car.valueTimeline} />
                   </DetailRow>
@@ -1050,7 +1050,7 @@ export default function SpotPage() {
                   </DetailRow>
 
                   <DetailRow label="Similar models" has={!!car.alsoConsidered}>
-                    <p className="text-[15px] leading-relaxed text-white">{car.alsoConsidered}</p>
+                    <p className="text-[15px] leading-relaxed text-foreground">{car.alsoConsidered}</p>
                   </DetailRow>
 
                   {/* No "Photos & Videos" row. One photo exists -- the one you
@@ -1066,7 +1066,7 @@ export default function SpotPage() {
                     dropped one and to the map itself otherwise, which is the
                     difference between a deep link and a dead one. */}
                 <div
-                  className="fixed inset-x-0 bottom-0 z-[55] mx-auto flex max-w-[480px] gap-3 border-t border-[var(--line-divider)] bg-black px-5 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] pt-3"
+                  className="fixed inset-x-0 bottom-0 z-[55] mx-auto flex max-w-[480px] gap-3 border-t border-[var(--line-divider)] bg-background px-5 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] pt-3"
                 >
                   <SaveToGarage
                     key={`${car.make}|${car.model}|${car.yearRange}`}
@@ -1075,7 +1075,7 @@ export default function SpotPage() {
                   />
                   <Link
                     href={placedSpotId ? `/map?spot=${encodeURIComponent(placedSpotId)}` : "/map"}
-                    className="press flex h-[52px] flex-1 items-center justify-center gap-2 rounded-full bg-white text-[15px] font-semibold text-black"
+                    className="press flex h-[52px] flex-1 items-center justify-center gap-2 rounded-full bg-carz text-[15px] font-semibold text-carz-ink"
                   >
                     <Navigation className="h-[18px] w-[18px]" strokeWidth={2.25} aria-hidden />
                     View on Map
@@ -1086,7 +1086,7 @@ export default function SpotPage() {
               </>
             ) : (
               <>
-                <h2 className="text-[20px] font-bold text-white">No car detected</h2>
+                <h2 className="text-[20px] font-bold text-foreground">No car detected</h2>
                 <p className="mt-1 text-[15px] text-[var(--color-secondary-text)]">
                   {car.notes || "Try a clearer photo of the car."}
                 </p>
@@ -1097,13 +1097,13 @@ export default function SpotPage() {
 
         {/* History (Pro/Max) */}
         {status?.saveHistory && status.history && status.history.length > 0 && (
-          <section className="mt-6 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-white p-6">
+          <section className="mt-6 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-foreground p-6">
             <h3 className="font-bold">Your spotting history</h3>
             <div className="mt-3 space-y-2">
               {status.history.map((h, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between rounded-xl bg-white/[0.04] px-3 py-2 text-sm"
+                  className="flex items-center justify-between rounded-xl bg-foreground/[0.04] px-3 py-2 text-sm"
                 >
                   <span className="font-semibold">
                     {h.make} {h.model}{" "}

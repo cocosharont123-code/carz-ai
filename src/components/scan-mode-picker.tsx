@@ -82,7 +82,7 @@ export function ScanModePicker({ onModeChange }: { onModeChange?: (mode: ScanMod
 
   // Reserve the space rather than popping the button down when it arrives.
   if (!settings) {
-    return <div className="h-[74px] animate-pulse rounded-card bg-white/[0.04]" />;
+    return <div className="h-[74px] animate-pulse rounded-card bg-foreground/[0.04]" />;
   }
 
   return (
@@ -122,7 +122,7 @@ export function ScanModePicker({ onModeChange }: { onModeChange?: (mode: ScanMod
           const cls = cn(
             "press w-full rounded-card p-3 text-left transition",
             selected
-              ? "bg-white text-neutral-900 shadow-[0_2px_14px_rgba(0,0,0,0.35)]"
+              ? "bg-carz text-neutral-900 shadow-[0_2px_14px_rgba(0,0,0,0.35)]"
               : "glass-card",
             locked && "opacity-70",
           );

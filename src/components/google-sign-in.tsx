@@ -77,7 +77,7 @@ export function GoogleSignInButton({
           // between two straight edges.
           "press glass-bubble group flex w-full flex-col items-center justify-center gap-4",
           "aspect-[5/4] max-h-[16rem] rounded-[28%] px-6",
-          "transition-colors hover:bg-white/[0.06]",
+          "transition-colors hover:bg-foreground/[0.06]",
           "disabled:cursor-not-allowed disabled:opacity-40",
           className,
         )}
@@ -95,7 +95,7 @@ export function GoogleSignInButton({
       disabled={disabled}
       className={cn(
         "press glass-card inline-flex items-center justify-center gap-3 rounded-full px-6 py-3.5",
-        "text-sm font-semibold transition-colors hover:bg-white/[0.08]",
+        "text-sm font-semibold transition-colors hover:bg-foreground/[0.08]",
         "disabled:cursor-not-allowed disabled:opacity-40",
         full && "w-full",
         className,

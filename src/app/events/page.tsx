@@ -8,13 +8,13 @@ import { PageMasthead, Button, Skeleton } from "@/components/ui/editorial";
 type Ev = { name: string; type: string; venue?: string; city: string; when: string; note?: string };
 
 const TYPE_STYLE: Record<string, string> = {
-  "Cars & Coffee": "bg-white/10 text-white",
-  Concours: "bg-white/10 text-white",
-  Auction: "bg-white/10 text-white",
-  "Track day": "bg-white/10 text-white",
-  "Car show": "bg-white/10 text-white",
-  Rally: "bg-white/10 text-white",
-  Meet: "bg-white/10 text-white",
+  "Cars & Coffee": "bg-foreground/10 text-foreground",
+  Concours: "bg-foreground/10 text-foreground",
+  Auction: "bg-foreground/10 text-foreground",
+  "Track day": "bg-foreground/10 text-foreground",
+  "Car show": "bg-foreground/10 text-foreground",
+  Rally: "bg-foreground/10 text-foreground",
+  Meet: "bg-foreground/10 text-foreground",
 };
 
 const searchUrl = (e: Ev) =>
@@ -108,7 +108,7 @@ function EventsInner() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder={needCity ? "Enter your city…" : "Different city? Type it here…"}
             aria-label="City"
-            className="h-[52px] w-full rounded-full border border-[var(--line-card)] bg-[var(--color-surface)] px-4 text-[15px] text-white outline-none placeholder:text-[var(--color-muted-text)]"
+            className="h-[52px] w-full rounded-full border border-[var(--line-card)] bg-[var(--color-surface)] px-4 text-[15px] text-foreground outline-none placeholder:text-[var(--color-muted-text)]"
           />
           <Button type="submit" size="md">
             Find
@@ -141,8 +141,8 @@ function EventsInner() {
                     image on an event and no way to save one, so neither is
                     drawn rather than filled with a placeholder. */}
                 <div className="flex items-start justify-between gap-3">
-                  <p className="min-w-0 text-[17px] font-semibold leading-tight text-white">{e.name}</p>
-                  <span className={`shrink-0 rounded-full px-2.5 py-1 util-label ${TYPE_STYLE[e.type] || "bg-white/10 text-white"}`}>
+                  <p className="min-w-0 text-[17px] font-semibold leading-tight text-foreground">{e.name}</p>
+                  <span className={`shrink-0 rounded-full px-2.5 py-1 util-label ${TYPE_STYLE[e.type] || "bg-foreground/10 text-foreground"}`}>
                     {e.type}
                   </span>
                 </div>

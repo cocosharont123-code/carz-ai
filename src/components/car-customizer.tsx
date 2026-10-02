@@ -190,7 +190,7 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
     return (
       <div className="mt-6 border-t border-[var(--line-card)] pt-5">
         <h3 className="text-xs font-bold uppercase tracking-wide text-carz">Customize this car</h3>
-        <div className="mt-3 rounded-card border border-[var(--line-card)] bg-white/[0.04] p-5 text-center">
+        <div className="mt-3 rounded-card border border-[var(--line-card)] bg-foreground/[0.04] p-5 text-center">
           <p className="text-sm font-bold">The customizer is a Carz MAX feature</p>
           <p className="mx-auto mt-1.5 max-w-sm text-[15px] opacity-70">
             Carz MAX gets {access.cap} AI repaints a day. Extras are $
@@ -198,7 +198,7 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
           </p>
           <Link
             href="/pricing"
-            className="press mt-4 inline-flex rounded-full bg-black px-6 py-2.5 text-sm font-bold text-white transition hover:opacity-90"
+            className="press mt-4 inline-flex rounded-full bg-background px-6 py-2.5 text-sm font-bold text-foreground transition hover:opacity-90"
           >
             Get Carz MAX
           </Link>
@@ -286,7 +286,7 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
         onClick={generate}
         disabled={!anyChange || busy}
         aria-busy={busy || undefined}
-        className="press mt-5 flex w-full items-center justify-center gap-2 rounded-card bg-carz py-3 text-sm font-bold text-black transition hover:brightness-110 disabled:opacity-40"
+        className="press mt-5 flex w-full items-center justify-center gap-2 rounded-card bg-carz py-3 text-sm font-bold text-carz-ink transition hover:brightness-110 disabled:opacity-40"
       >
         {busy && <Spinner className="h-4 w-4" />}
         {busy ? "Rendering your build…" : "Generate customized photo"}
@@ -310,7 +310,7 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
           {/* Only offered once the free three are actually gone — selling an
               extra while one is still free would be taking money for nothing. */}
           {outOfQuota && (
-            <div className="mt-3 rounded-card border border-[var(--line-card)] bg-white/[0.04] p-4">
+            <div className="mt-3 rounded-card border border-[var(--line-card)] bg-foreground/[0.04] p-4">
               <p className="text-[15px] font-bold">Out of customizations for today</p>
               <p className="mt-1 text-[15px] opacity-70">
                 Get one more for ${price.toFixed(2)}, or come back tomorrow for {cap} more.
@@ -320,7 +320,7 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
                 onClick={buyExtra}
                 disabled={buying}
                 aria-busy={buying || undefined}
-                className="press mt-3 inline-flex items-center gap-2 rounded-full bg-black px-5 py-2.5 text-[15px] font-bold text-white transition hover:opacity-90 disabled:opacity-50"
+                className="press mt-3 inline-flex items-center gap-2 rounded-full bg-background px-5 py-2.5 text-[15px] font-bold text-foreground transition hover:opacity-90 disabled:opacity-50"
               >
                 {buying && <Spinner className="h-3.5 w-3.5" />}
                 {buying ? "Adding…" : `Add 1 for $${price.toFixed(2)}`}
