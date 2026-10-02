@@ -216,7 +216,7 @@ function NewAuctionInner() {
         </p>
 
         {status === "unauthenticated" ? (
-          <div className="mt-8 rounded-3xl border border-foreground/[0.06] bg-card text-card-foreground p-8 text-center">
+          <div className="mt-8 rounded-card border border-foreground/[0.06] bg-[var(--color-surface)] text-white p-8 text-center">
             <KeyRound className="mx-auto h-9 w-9 opacity-50" strokeWidth={1.5} aria-hidden />
             <h3 className="mt-3 text-lg font-bold">Sign in to list a car</h3>
             <GoogleSignInButton callbackUrl="/auctions/new" />

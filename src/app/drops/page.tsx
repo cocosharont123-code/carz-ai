@@ -30,7 +30,7 @@ function money(n: number): string {
 
 function DropCard({ drop }: { drop: Drop }) {
   return (
-    <article className="rounded-3xl border border-black/10 bg-card text-card-foreground p-5">
+    <article className="rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-white p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="util-label opacity-60">{drop.make}</p>
@@ -45,36 +45,35 @@ function DropCard({ drop }: { drop: Drop }) {
       <div className="mt-3 flex flex-wrap gap-1.5">
         <span
           className={cn(
-            "rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide",
-            drop.category === "Hypercar"
-              ? "bg-neon-red/15 text-neon-red"
-              : drop.category === "Supercar"
-                ? "bg-carz/15 text-carz-ink"
-                : "bg-black/[0.07]",
+            "rounded-full px-2.5 py-1 text-[12px] font-bold uppercase tracking-wide",
+            // Was red for Hypercar and cyan for Supercar. A category is not a
+            // status and nothing here is an error, so all three are the same
+            // chip and the word carries the distinction.
+            "bg-white/10 text-white",
           )}
         >
           {drop.category}
         </span>
-        <span className="rounded-full bg-black/[0.06] px-2.5 py-1 text-[11px] font-semibold">
+        <span className="rounded-full bg-white/[0.04] px-2.5 py-1 text-[12px] font-semibold">
           {drop.status}
         </span>
-        <span className="rounded-full bg-black/[0.06] px-2.5 py-1 text-[11px] font-semibold">
+        <span className="rounded-full bg-white/[0.04] px-2.5 py-1 text-[12px] font-semibold">
           {drop.timing}
         </span>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3">
-        <div className="rounded-xl bg-black/[0.05] p-3">
-          <div className="text-[11px] uppercase tracking-wide opacity-60">Powertrain</div>
-          <div className="mt-0.5 text-[13px] font-semibold">{drop.powertrain}</div>
+        <div className="rounded-xl bg-white/[0.04] p-3">
+          <div className="text-[12px] uppercase tracking-wide opacity-60">Powertrain</div>
+          <div className="mt-0.5 text-[15px] font-semibold">{drop.powertrain}</div>
         </div>
-        <div className="rounded-xl bg-black/[0.05] p-3">
-          <div className="text-[11px] uppercase tracking-wide opacity-60">Headline</div>
-          <div className="mt-0.5 text-[13px] font-semibold">{drop.headline}</div>
+        <div className="rounded-xl bg-white/[0.04] p-3">
+          <div className="text-[12px] uppercase tracking-wide opacity-60">Headline</div>
+          <div className="mt-0.5 text-[15px] font-semibold">{drop.headline}</div>
         </div>
       </div>
 
-      {drop.note && <p className="mt-3 text-[13px] leading-relaxed opacity-70">{drop.note}</p>}
+      {drop.note && <p className="mt-3 text-[15px] leading-relaxed opacity-70">{drop.note}</p>}
     </article>
   );
 }
@@ -121,7 +120,7 @@ export default function DropsPage() {
           count={loading ? "—" : `${shown.length} listed`}
         />
 
-        <p className="mt-3 max-w-prose text-[13px] leading-relaxed opacity-60">
+        <p className="mt-3 max-w-prose text-[15px] leading-relaxed opacity-60">
           Hypercars, supercars and luxury cars that have just been revealed, opened for order, or
           started deliveries. Nothing under ${MIN_PRICE_USD.toLocaleString("en-US")}.
         </p>
@@ -138,10 +137,10 @@ export default function DropsPage() {
                   onClick={() => setFilter(f)}
                   aria-pressed={filter === f}
                   className={cn(
-                    "press rounded-full px-4 py-1.5 text-[13px] font-semibold transition",
+                    "press rounded-full px-4 py-1.5 text-[15px] font-semibold transition",
                     filter === f
                       ? "bg-white text-black"
-                      : "border border-white/15 hover:border-white/40",
+                      : "border border-[var(--line-card)] hover:border-white/40",
                   )}
                 >
                   {f}
@@ -155,24 +154,24 @@ export default function DropsPage() {
         {loading ? (
           <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
             {[0, 1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-56 w-full rounded-3xl" />
+              <Skeleton key={i} className="h-56 w-full rounded-card" />
             ))}
           </div>
         ) : !configured ? (
-          <div className="mt-8 rounded-3xl border border-black/10 bg-card text-card-foreground p-10 text-center">
+          <div className="mt-8 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-white p-10 text-center">
             <Rocket className="mx-auto h-8 w-8 opacity-40" strokeWidth={1.5} aria-hidden />
             <h2 className="mt-3 text-lg font-bold">Drops aren&apos;t switched on yet</h2>
-            <p className="mx-auto mt-1.5 max-w-sm text-[13px] opacity-60">
+            <p className="mx-auto mt-1.5 max-w-sm text-[15px] opacity-60">
               This section needs <code>ANTHROPIC_API_KEY</code> set on the server.
             </p>
           </div>
         ) : error || shown.length === 0 ? (
-          <div className="mt-8 rounded-3xl border border-black/10 bg-card text-card-foreground p-10 text-center">
+          <div className="mt-8 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-white p-10 text-center">
             <Rocket className="mx-auto h-8 w-8 opacity-40" strokeWidth={1.5} aria-hidden />
             <h2 className="mt-3 text-lg font-bold">
               {error ? "Couldn't load new drops" : "Nothing in this class right now"}
             </h2>
-            <p className="mx-auto mt-1.5 max-w-sm text-[13px] opacity-60">
+            <p className="mx-auto mt-1.5 max-w-sm text-[15px] opacity-60">
               {error || "Try another category."}
             </p>
             {error && (
@@ -193,7 +192,7 @@ export default function DropsPage() {
             manufacturer feed. Saying so plainly beats implying a price is
             authoritative when someone might act on it. */}
         {!loading && shown.length > 0 && (
-          <p className="mt-8 flex items-start justify-center gap-1.5 text-center text-[11px] leading-relaxed opacity-45">
+          <p className="mt-8 flex items-start justify-center gap-1.5 text-center text-[12px] leading-relaxed opacity-45">
             <Sparkles className="mt-0.5 h-3 w-3 shrink-0" aria-hidden />
             <span>
               Compiled by AI, not a manufacturer feed — prices and timing are indicative. Check with

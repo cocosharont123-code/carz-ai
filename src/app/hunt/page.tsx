@@ -120,7 +120,7 @@ function HuntInner() {
         <ThinkingOrb state="connecting" size={64} theme="dark" aria-label="" />
         <div className="text-center">
           <p className="display text-2xl">Entering the hunt</p>
-          <p className="mt-2 text-[13px] opacity-60">Putting your name on the board…</p>
+          <p className="mt-2 text-[15px] opacity-60">Putting your name on the board…</p>
         </div>
       </div>
     );
@@ -260,7 +260,7 @@ function HuntInner() {
             <div
               key={w.id}
               className={cn(
-                "glass-card flex items-center gap-3 rounded-2xl p-3.5",
+                "glass-card flex items-center gap-3 rounded-card p-3.5",
                 claimed && "opacity-60",
               )}
             >
@@ -269,7 +269,7 @@ function HuntInner() {
               </span>
 
               <span
-                className="h-6 w-6 shrink-0 rounded-full border border-white/25"
+                className="h-6 w-6 shrink-0 rounded-full border border-[var(--line-button)]"
                 style={{
                   background:
                     // A real car colour is a real colour and stays one -- the swatch is

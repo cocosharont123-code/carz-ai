@@ -37,12 +37,12 @@ export function AuthShell({
         <h1 className="display mt-6 text-center text-5xl leading-[0.95] sm:text-6xl">
           {title}
         </h1>
-        <p className="mx-auto mt-4 max-w-[17rem] text-center text-[13px] leading-relaxed opacity-60">
+        <p className="mx-auto mt-4 max-w-[17rem] text-center text-[15px] leading-relaxed opacity-60">
           {subtitle}
         </p>
 
         {/* The glass the rest of the app uses, at the size a form needs. */}
-        <div className="glass-card mt-8 rounded-3xl p-5">{children}</div>
+        <div className="glass-card mt-8 rounded-card p-5">{children}</div>
 
         {footer && <div className="mt-5">{footer}</div>}
 
@@ -50,7 +50,7 @@ export function AuthShell({
             notice is hidden on these screens: a line pinned to the bottom of a
             full-height sign-in page is a line nobody reads at the moment they
             are actually agreeing to something. */}
-        <p className="mt-6 text-center text-[11px] leading-relaxed opacity-45">
+        <p className="mt-6 text-center text-[12px] leading-relaxed opacity-45">
           By continuing you agree to our{" "}
           <Link href="/terms" className="underline underline-offset-2 hover:opacity-100">
             Terms of Service

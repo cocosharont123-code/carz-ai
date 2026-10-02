@@ -173,7 +173,7 @@ export function CarzBotChat() {
             />
             <div>
               <h1 className="display text-4xl">CarzBot</h1>
-              <p className="mt-1.5 text-[13px] opacity-60">Ask anything about cars.</p>
+              <p className="mt-1.5 text-[15px] opacity-60">Ask anything about cars.</p>
             </div>
           </div>
         ) : (
@@ -182,7 +182,7 @@ export function CarzBotChat() {
                 <div
                   key={i}
                   className={cn(
-                    "max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-relaxed",
+                    "max-w-[85%] whitespace-pre-wrap rounded-card px-4 py-3 text-sm leading-relaxed",
                     t.role === "user"
                       ? "ml-auto bg-white text-neutral-900"
                       : "glass-card",
@@ -196,7 +196,7 @@ export function CarzBotChat() {
               <div
                 role="status"
                 aria-live="polite"
-                className="glass-card flex max-w-[85%] items-center gap-3 rounded-2xl px-4 py-3"
+                className="glass-card flex max-w-[85%] items-center gap-3 rounded-card px-4 py-3"
               >
                 {/* "searching" rather than the default: what it is waiting on
                     is a lookup about a car, and the orb says which kind of
@@ -214,7 +214,7 @@ export function CarzBotChat() {
       <div className="shrink-0 px-4 pb-4">
         <div className="mx-auto w-full max-w-2xl">
           {error && (
-            <p role="alert" className="mb-2 text-center text-[13px] text-neon-red">
+            <p role="alert" className="mb-2 text-center text-[15px] text-neon-red">
               {error}
             </p>
           )}
@@ -235,7 +235,7 @@ export function CarzBotChat() {
             </div>
           )}
 
-          <div className="glass-card rounded-3xl p-2">
+          <div className="glass-card rounded-card p-2">
             <Textarea
               ref={textareaRef}
               value={value}

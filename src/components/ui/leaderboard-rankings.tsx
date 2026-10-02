@@ -111,7 +111,7 @@ export function LeaderboardRankings({
                 {row.rank}
               </span>
 
-              <span className="bg-muted flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-[11px] font-bold">
+              <span className="bg-muted flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-[12px] font-bold">
                 {row.avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={row.avatarUrl} alt="" className="h-full w-full object-cover" />

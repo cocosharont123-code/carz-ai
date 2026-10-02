@@ -150,7 +150,7 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
           All auctions
         </Link>
 
-        <div className="mt-4 rounded-2xl border border-white/10 bg-card text-card-foreground">
+        <div className="mt-4 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-white">
           <div className="relative aspect-[16/9] w-full overflow-hidden">
             <CarPhoto src={a.image} alt={a.title} />
             <span className="absolute rounded-lg left-3 top-3 flex items-center gap-1.5 bg-black/70 text-white px-3 py-1.5">
@@ -173,7 +173,7 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
             )}
 
             {/* Current bid — giant display number */}
-            <div className="mt-6 flex items-end justify-between border-y border-white/10 py-6">
+            <div className="mt-6 flex items-end justify-between border-y border-[var(--line-card)] py-6">
               <div>
                 <div className="util-label ">{a.bidCount > 0 ? "Current bid" : "Starting bid"}</div>
                 <div className="display text-6xl  sm:text-7xl">{money(a.currentBid)}</div>
@@ -195,12 +195,12 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
                 <ResultBox a={a} />
               </div>
             ) : a.youAreSeller ? (
-              <p className="mt-6 rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm ">
+              <p className="mt-6 rounded-xl border border-[var(--line-card)] bg-white/[0.03] p-4 text-sm ">
                 This is your listing — you can&apos;t bid on it. Share the link to start a bidding war.
               </p>
             ) : (
               <div className="mt-6">
-                <div className="flex gap-px rounded-xl border border-white/15 bg-white/10">
+                <div className="flex gap-px rounded-xl border border-[var(--line-card)] bg-white/10">
                   <div className="flex flex-1 items-center bg-black text-white px-3">
                     <span className="">$</span>
                     <input
@@ -221,14 +221,14 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
             )}
 
             {a.description && (
-              <div className="mt-8 border-t border-white/10 pt-6">
+              <div className="mt-8 border-t border-[var(--line-card)] pt-6">
                 <div className="util-label ">Description</div>
                 <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed ">{a.description}</p>
               </div>
             )}
 
             {a.bids.length > 0 && (
-              <div className="mt-8 border-t border-white/10 pt-6">
+              <div className="mt-8 border-t border-[var(--line-card)] pt-6">
                 <div className="util-label mb-2 ">Bid history</div>
                 <DataTable
                   head={["Bidder", "Bid"]}
@@ -246,7 +246,7 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
 function ResultBox({ a }: { a: Auction }) {
   if (a.bidCount === 0) {
     return (
-      <p className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm ">
+      <p className="rounded-xl border border-[var(--line-card)] bg-white/[0.03] p-4 text-sm ">
         This auction ended with no bids.
       </p>
     );
@@ -264,14 +264,14 @@ function ResultBox({ a }: { a: Auction }) {
   }
   if (a.youAreSeller) {
     return (
-      <div className="rounded-xl border border-white/15 bg-white/[0.03] p-5">
+      <div className="rounded-xl border border-[var(--line-card)] bg-white/[0.03] p-5">
         <div className="util-label ">Sold</div>
         <h3 className="display mt-1 text-2xl">Sold for {money(a.currentBid)}</h3>
         <p className="mt-2 text-sm ">
           Winner: <span className="font-semibold ">{a.topBidderName}</span> — they&apos;ve been shown your contact to reach out.
         </p>
         {a.contact && (
-          <p className="mt-2 select-all border border-white/10 bg-black text-white px-3 py-2 font-mono text-sm ">
+          <p className="mt-2 select-all border border-[var(--line-card)] bg-black text-white px-3 py-2 font-mono text-sm ">
             Your contact: {a.contact}
           </p>
         )}
@@ -279,7 +279,7 @@ function ResultBox({ a }: { a: Auction }) {
     );
   }
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
+    <div className="rounded-xl border border-[var(--line-card)] bg-white/[0.03] p-5">
       <h3 className="display text-2xl">Won by {a.topBidderName}</h3>
       <p className="mt-1 text-sm ">Final bid {money(a.currentBid)}. The winner gets the seller&apos;s contact.</p>
     </div>

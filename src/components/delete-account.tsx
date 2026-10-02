@@ -44,7 +44,7 @@ export function DeleteAccount() {
   }
 
   return (
-    <section className="mt-10 rounded-2xl border border-neon-red/30 bg-neon-red/[0.04] p-5">
+    <section className="mt-10 rounded-card border border-neon-red/30 bg-neon-red/[0.04] p-5">
       <div className="flex items-center gap-2">
         <TriangleAlert className="h-4 w-4 text-neon-red" strokeWidth={2} aria-hidden />
         <h2 className="text-sm font-bold uppercase tracking-wide text-neon-red">Danger zone</h2>
@@ -52,7 +52,7 @@ export function DeleteAccount() {
 
       {!confirming ? (
         <>
-          <p className="mt-2 max-w-prose text-[13px] leading-relaxed opacity-70">
+          <p className="mt-2 max-w-prose text-[15px] leading-relaxed opacity-70">
             Permanently erase your account — username, picture, Carz+ membership, day streak,
             spotting history and scan counts.
           </p>
@@ -67,7 +67,7 @@ export function DeleteAccount() {
       ) : (
         <div className="mt-3 rounded-xl border border-neon-red/50 bg-black/40 p-4">
           <p className="text-sm font-bold">Are you sure you want to delete your account?</p>
-          <p className="mt-1.5 max-w-prose text-[13px] leading-relaxed opacity-75">
+          <p className="mt-1.5 max-w-prose text-[15px] leading-relaxed opacity-75">
             This cannot be undone. Your username is released for anyone else to take, and any
             Carz+ membership is lost immediately without a refund.
           </p>
@@ -75,7 +75,7 @@ export function DeleteAccount() {
           {error && (
             <div
               role="alert"
-              className="mt-3 rounded-lg border border-neon-red/50 bg-neon-red/10 p-2.5 text-[13px] text-neon-red"
+              className="mt-3 rounded-lg border border-neon-red/50 bg-neon-red/10 p-2.5 text-[15px] text-neon-red"
             >
               {error}
             </div>
@@ -99,7 +99,7 @@ export function DeleteAccount() {
                 setError("");
               }}
               disabled={deleting}
-              className="press rounded-full border border-white/20 px-6 py-2.5 text-sm font-semibold transition hover:border-white/40 disabled:opacity-40"
+              className="press rounded-full border border-[var(--line-button)] px-6 py-2.5 text-sm font-semibold transition hover:border-white/40 disabled:opacity-40"
             >
               Cancel
             </button>

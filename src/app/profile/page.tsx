@@ -125,7 +125,7 @@ function ProfileInner() {
         {loading ? (
           <Skeleton className="mt-8 h-64 w-full" />
         ) : authStatus === "unauthenticated" ? (
-          <div className="mt-8 rounded-2xl border border-white/10 bg-card text-card-foreground p-10 text-center">
+          <div className="mt-8 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-white p-10 text-center">
             <h3 className="display text-3xl">Sign in</h3>
             <p className="mx-auto mt-2 max-w-sm text-sm ">Set up your profile to appear on the board.</p>
             <GoogleSignInButton callbackUrl="/profile" />
@@ -172,7 +172,7 @@ function ProfileInner() {
 
             <div>
               <label className="util-label ">Username <span className="">*</span></label>
-              <div className="mt-2 flex items-center rounded-xl border border-white/15 bg-white/[0.03] px-3">
+              <div className="mt-2 flex items-center rounded-xl border border-[var(--line-card)] bg-white/[0.03] px-3">
                 <span className="">@</span>
                 <input
                   value={username}
@@ -194,7 +194,7 @@ function ProfileInner() {
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="How your name shows (optional)"
                 maxLength={40}
-                className="mt-2 w-full rounded-xl border border-white/15 bg-white/[0.03] px-3 py-3 text-sm  outline-none "
+                className="mt-2 w-full rounded-xl border border-[var(--line-card)] bg-white/[0.03] px-3 py-3 text-sm  outline-none "
               />
             </div>
 
@@ -207,7 +207,7 @@ function ProfileInner() {
                 placeholder="A line or two about you and what you drive"
                 maxLength={200}
                 rows={3}
-                className="mt-2 w-full resize-none rounded-xl border border-white/15 bg-white/[0.03] px-3 py-3 text-sm outline-none"
+                className="mt-2 w-full resize-none rounded-xl border border-[var(--line-card)] bg-white/[0.03] px-3 py-3 text-sm outline-none"
               />
               <p className="mt-1.5 flex justify-between text-xs opacity-60">
                 <span>Shown on your channel.</span>
@@ -226,7 +226,7 @@ function ProfileInner() {
                   aria-label="Birth month"
                   value={birthday.slice(0, 2)}
                   onChange={(e) => setBirthday(e.target.value ? `${e.target.value}-${birthday.slice(3) || "01"}` : "")}
-                  className="w-full rounded-xl border border-white/15 bg-white/[0.03] px-3 py-3 text-sm outline-none"
+                  className="w-full rounded-xl border border-[var(--line-card)] bg-white/[0.03] px-3 py-3 text-sm outline-none"
                 >
                   <option value="">Month</option>
                   {MONTHS.map((m, i) => (
@@ -238,7 +238,7 @@ function ProfileInner() {
                   value={birthday.slice(3)}
                   disabled={!birthday.slice(0, 2)}
                   onChange={(e) => setBirthday(`${birthday.slice(0, 2)}-${e.target.value}`)}
-                  className="w-full rounded-xl border border-white/15 bg-white/[0.03] px-3 py-3 text-sm outline-none disabled:opacity-40"
+                  className="w-full rounded-xl border border-[var(--line-card)] bg-white/[0.03] px-3 py-3 text-sm outline-none disabled:opacity-40"
                 >
                   {/* A placeholder that matches the empty value: without one
                       React has a select whose value is not among its options. */}

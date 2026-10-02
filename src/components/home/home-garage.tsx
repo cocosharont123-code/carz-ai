@@ -81,7 +81,7 @@ export function HomeGarage() {
         <span className="util-label opacity-60">
           Your garage · {cars.length} saved
         </span>
-        <span className="flex items-center gap-1 text-[13px] font-semibold opacity-70">
+        <span className="flex items-center gap-1 text-[15px] font-semibold opacity-70">
           Open
           <ChevronRight className="h-4 w-4" strokeWidth={2} aria-hidden />
         </span>

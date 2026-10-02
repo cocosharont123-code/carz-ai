@@ -68,7 +68,7 @@ export default function ChannelPage({
     return (
       <main className="mx-auto w-full max-w-2xl px-5 py-20 text-center">
         <h1 className="display text-3xl">No such channel</h1>
-        <p className="mx-auto mt-2 max-w-sm text-[13px] opacity-60">
+        <p className="mx-auto mt-2 max-w-sm text-[15px] opacity-60">
           Nobody here goes by @{handle}.
         </p>
         <Link

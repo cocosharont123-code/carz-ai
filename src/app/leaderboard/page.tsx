@@ -95,12 +95,12 @@ function LeaderboardInner() {
             ))}
           </div>
         ) : !configured ? (
-          <div className="mt-8 rounded-2xl border border-white/10 bg-card text-card-foreground p-8 text-center">
+          <div className="mt-8 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-white p-8 text-center">
             <Eyebrow yellow className="justify-center">Warming up</Eyebrow>
             <p className="mt-2 text-sm ">The board is connecting its database. Check back in a moment.</p>
           </div>
         ) : cars.length === 0 ? (
-          <div className="mt-8 rounded-2xl border border-white/10 bg-card text-card-foreground p-10 text-center">
+          <div className="mt-8 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-white p-10 text-center">
             <h3 className="display text-3xl">No cars yet</h3>
             <p className="mx-auto mt-2 max-w-sm text-sm ">
               The board is empty. Spot a rare car and claim the top slot.
@@ -108,9 +108,9 @@ function LeaderboardInner() {
             <Button href="/spot" className="mt-6">Spot a car</Button>
           </div>
         ) : (
-          <div className="reveal mt-6 overflow-hidden rounded-2xl border border-white/10">
+          <div className="reveal mt-6 overflow-hidden rounded-card border border-[var(--line-card)]">
             {/* header */}
-            <div className="hidden grid-cols-[3rem_5rem_1fr_5rem] items-center gap-3 border-b border-white/15 px-4 py-2.5 sm:grid">
+            <div className="hidden grid-cols-[3rem_5rem_1fr_5rem] items-center gap-3 border-b border-[var(--line-card)] px-4 py-2.5 sm:grid">
               <span className="util-label ">#</span>
               <span className="util-label ">Car</span>
               <span className="util-label ">Spotter</span>
@@ -126,7 +126,7 @@ function LeaderboardInner() {
                 <div
                   key={c.id}
                   className={cn(
-                    "group grid grid-cols-[2.5rem_4rem_1fr_auto] items-center gap-3 border-b border-white/10 px-4 sm:grid-cols-[3rem_5rem_1fr_5rem]",
+                    "group grid grid-cols-[2.5rem_4rem_1fr_auto] items-center gap-3 border-b border-[var(--line-card)] px-4 sm:grid-cols-[3rem_5rem_1fr_5rem]",
                     top ? "bg-carz/10" : "",
                     top ? "py-4" : "py-3",
                   )}
@@ -166,7 +166,7 @@ function LeaderboardInner() {
                           className="inline-flex shrink-0 items-center"
                         >
                           <Crown
-                            className="h-3.5 w-3.5 text-rank-1 drop-shadow-[0_0_6px_rgba(250,204,21,0.45)]"
+                            className="h-3.5 w-3.5 text-rank-1 drop-shadow-[0_0_6px_rgba(255,255,255,0.45)]"
                             strokeWidth={2}
                             fill="currentColor"
                             aria-hidden
@@ -306,13 +306,13 @@ function CarViewer({
             {car.make} {car.model}
           </p>
           {car.yearRange && (
-            <p className="mt-0.5 text-center text-[13px] opacity-60">{car.yearRange}</p>
+            <p className="mt-0.5 text-center text-[15px] opacity-60">{car.yearRange}</p>
           )}
 
           {/* The meter, directly under the photo. */}
           <div
             className={cn(
-              "mt-4 rounded-2xl p-3.5",
+              "mt-4 rounded-card p-3.5",
               ultra
                 ? "bg-gradient-to-r from-neon-red/20 via-neon-green/12 to-neon-blue/20"
                 : "bg-white/[0.06]",
@@ -336,7 +336,7 @@ function CarViewer({
               />
             </div>
             {car.rarityReason && (
-              <p className="mt-2.5 line-clamp-3 text-[13px] leading-relaxed opacity-75">
+              <p className="mt-2.5 line-clamp-3 text-[15px] leading-relaxed opacity-75">
                 {car.rarityReason}
               </p>
             )}
@@ -387,7 +387,7 @@ function LeaderboardFallback() {
       <PageMasthead eyebrow="The board" title="Rarest Cars" count="—" />
       <div className="mt-6 space-y-2">
         {Array.from({ length: 6 }, (_, i) => (
-          <Skeleton key={i} className="h-20 w-full rounded-2xl" />
+          <Skeleton key={i} className="h-20 w-full rounded-card" />
         ))}
       </div>
     </main>

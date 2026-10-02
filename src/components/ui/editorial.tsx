@@ -63,7 +63,7 @@ export function Button({
   // 52px is the spec's button. sm stays smaller for the few places a button
   // sits inline inside a row, where a 52px pill would set the row's height.
   const sizes = {
-    sm: "min-h-11 px-5 text-[13px]",
+    sm: "min-h-11 px-5 text-[15px]",
     md: "h-[52px] px-6 text-[15px]",
     lg: "h-[52px] px-8 text-[15px]",
   };
@@ -110,7 +110,7 @@ export function Card({ children, className, hover }: { children: ReactNode; clas
     <div
       className={cn(
         "rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-white",
-        hover && "transition-colors hover:border-white/20",
+        hover && "transition-colors hover:border-[var(--line-button)]",
         className,
       )}
     >
@@ -174,8 +174,8 @@ export function StatRow({
   return (
     <div
       className={cn(
-        "flex flex-col justify-center rounded-2xl border border-white/10 p-6",
-        yellow ? "bg-carz " : "bg-card text-card-foreground",
+        "flex flex-col justify-center rounded-card border border-[var(--line-card)] p-6",
+        yellow ? "bg-carz " : "bg-[var(--color-surface)] text-white",
         className,
       )}
     >
@@ -201,7 +201,7 @@ export function DataTable({
     <table className={cn("w-full border-collapse text-left", className)}>
       {head && (
         <thead>
-          <tr className="border-b border-white/15">
+          <tr className="border-b border-[var(--line-card)]">
             {head.map((h, i) => (
               <th key={i} className="util-label px-3 py-2.5  first:pl-0 last:pr-0 last:text-right">
                 {h}
@@ -215,7 +215,7 @@ export function DataTable({
           <tr
             key={i}
             className={cn(
-              "border-b border-white/10",
+              "border-b border-[var(--line-card)]",
               r.highlight ? "bg-carz " : "",
             )}
           >

@@ -108,7 +108,7 @@ export function BottomNav() {
                 />
                 <span
                   className={cn(
-                    "text-[11px] leading-none",
+                    "text-[12px] leading-none",
                     active ? "font-semibold text-white" : "text-[var(--color-muted-text)]",
                   )}
                 >

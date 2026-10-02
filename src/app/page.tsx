@@ -71,7 +71,7 @@ export default function Home() {
             className="press flex flex-col items-center gap-2 rounded-tile border border-[var(--line-card)] bg-[var(--color-surface)] px-1.5 py-4 text-center"
           >
             <Icon className="h-6 w-6 shrink-0 text-white" strokeWidth={1.75} aria-hidden />
-            <span className="text-[13px] font-semibold leading-tight text-white">{title}</span>
+            <span className="text-[15px] font-semibold leading-tight text-white">{title}</span>
             <span className="whitespace-pre-line text-[12px] leading-snug text-[var(--color-secondary-text)]">
               {caption}
             </span>

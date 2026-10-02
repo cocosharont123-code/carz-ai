@@ -101,14 +101,14 @@ export function EmailStep({
           aria-invalid={!!error}
           aria-describedby={error ? "email-error" : undefined}
           placeholder="you@example.com"
-          className="mt-2 h-12 w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 text-[17px] outline-none transition placeholder:opacity-35 focus:border-carz/60 focus:bg-white/[0.08]"
+          className="mt-2 h-12 w-full rounded-card border border-[var(--line-card)] bg-white/[0.06] px-4 text-[17px] outline-none transition placeholder:opacity-35 focus:border-carz/60 focus:bg-white/[0.08]"
         />
 
         {/* Held open whether or not it is filled, so the button does not jump
             out from under a thumb when the message appears. */}
         <div className="min-h-[1.25rem] pt-1.5">
           {error && (
-            <p id="email-error" role="alert" className="text-[11px] leading-snug text-neon-red">
+            <p id="email-error" role="alert" className="text-[12px] leading-snug text-neon-red">
               {error}
             </p>
           )}
@@ -117,7 +117,7 @@ export function EmailStep({
         <button
           type="submit"
           disabled={!authEnabled}
-          className="press mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-carz text-[15px] font-semibold text-carz-ink transition disabled:opacity-40"
+          className="press mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-card bg-carz text-[15px] font-semibold text-carz-ink transition disabled:opacity-40"
         >
           Continue
           <ArrowRight className="h-[18px] w-[18px]" strokeWidth={2.5} aria-hidden />
@@ -125,7 +125,7 @@ export function EmailStep({
       </form>
 
       {!authEnabled && (
-        <p role="status" className="mt-4 text-[13px] leading-snug opacity-70">
+        <p role="status" className="mt-4 text-[15px] leading-snug opacity-70">
           Sign-in is being set up and isn&apos;t available just yet.
         </p>
       )}

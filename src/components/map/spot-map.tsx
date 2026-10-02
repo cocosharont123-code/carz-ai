@@ -325,10 +325,10 @@ export function SpotMap() {
   if (!token || failed) {
     return (
       <div className="flex h-full w-full items-center justify-center px-6">
-        <div className="glass-card w-full max-w-sm rounded-3xl p-6 text-center">
+        <div className="glass-card w-full max-w-sm rounded-card p-6 text-center">
           <MapPinOff className="mx-auto h-7 w-7 opacity-50" strokeWidth={1.5} aria-hidden />
           <h2 className="display mt-3 text-2xl">Map is off</h2>
-          <p className="mx-auto mt-2 max-w-xs text-[13px] leading-relaxed opacity-70">
+          <p className="mx-auto mt-2 max-w-xs text-[15px] leading-relaxed opacity-70">
             {!token
               ? "NEXT_PUBLIC_MAPBOX_TOKEN isn't set on this deployment, so there is no map to draw."
               : "The map couldn't start on this device."}

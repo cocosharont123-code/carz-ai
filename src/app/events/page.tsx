@@ -124,7 +124,7 @@ function EventsInner() {
         ) : error ? (
           <div className="mt-8 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] p-8 text-center">
             <h3 className="display text-2xl">Couldn&apos;t load events</h3>
-            <p className="mt-2 text-[13px] opacity-70">{error}</p>
+            <p className="mt-2 text-[15px] opacity-70">{error}</p>
           </div>
         ) : events && events.length > 0 ? (
           <div className="mt-6 space-y-3">
@@ -134,7 +134,7 @@ function EventsInner() {
                 href={searchUrl(e)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="press block rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] p-4 transition hover:border-white/20"
+                className="press block rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] p-4 transition hover:border-[var(--line-button)]"
               >
                 {/* No banner photo and no bookmark. The events feed carries a
                     name, a type, a venue, a city and a when -- there is no
@@ -163,7 +163,7 @@ function EventsInner() {
         ) : (
           <div className="mt-8 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] p-8 text-center">
             <h3 className="display text-2xl">No events found</h3>
-            <p className="mt-2 text-[13px] opacity-70">Try a bigger nearby city.</p>
+            <p className="mt-2 text-[15px] opacity-70">Try a bigger nearby city.</p>
           </div>
         )}
 

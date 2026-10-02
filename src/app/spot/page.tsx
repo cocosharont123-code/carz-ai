@@ -92,7 +92,7 @@ function ScanningButton({
       role="status"
       aria-live="polite"
       aria-busy="true"
-      className="w-full rounded-2xl border border-white/10 bg-white/[0.02] px-5 py-6"
+      className="w-full rounded-card border border-[var(--line-card)] bg-white/[0.02] px-5 py-6"
       // The loader reads its palette from these. It was the brand blue; a
       // loading bar is not where the one allowed colour gets spent.
       style={
@@ -251,8 +251,8 @@ async function objectUrlToDataUrl(url: string): Promise<string> {
 function Spec({ k, v }: { k: string; v?: string }) {
   if (!v) return null;
   return (
-    <div className="rounded-xl bg-black/[0.05] p-3">
-      <div className="text-[11px] uppercase tracking-wide ">{k}</div>
+    <div className="rounded-xl bg-white/[0.04] p-3">
+      <div className="text-[12px] uppercase tracking-wide ">{k}</div>
       <div className="mt-0.5 font-semibold">{v}</div>
     </div>
   );
@@ -281,10 +281,10 @@ function RarityMeter({ score, reason }: { score: number; reason?: string }) {
             : "Common";
   return (
     <div
-      className={`mt-4 rounded-2xl p-4 ${
+      className={`mt-4 rounded-card p-4 ${
         ultra
-          ? "bg-gradient-to-r from-neon-red/15 via-neon-green/10 to-neon-blue/15 shadow-[0_0_25px_-8px_rgba(57,255,20,0.7)]"
-          : "bg-black/[0.04]"
+          ? "bg-gradient-to-r from-neon-red/15 via-neon-green/10 to-neon-blue/15 shadow-[0_0_25px_-8px_rgba(255,255,255,0.7)]"
+          : "bg-white/[0.04]"
       }`}
     >
       <div className="flex items-baseline justify-between">
@@ -327,7 +327,7 @@ function ValueChart({ points }: { points: { year: string; usd: number }[] }) {
   // read. Both lines are white.
   const stroke = "#ffffff";
   return (
-    <div className="mt-4 rounded-2xl bg-black/[0.04] p-4">
+    <div className="mt-4 rounded-card bg-white/[0.04] p-4">
       <div className="flex items-baseline justify-between">
         <span className="text-xs font-bold uppercase tracking-wide ">
           Market value over time
@@ -927,10 +927,10 @@ export default function SpotPage() {
         )}
 
         {limitHit && (
-          <div className="mt-4 rounded-2xl border border-white/12 bg-card text-card-foreground p-6 text-center">
+          <div className="mt-4 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-white p-6 text-center">
             <TrafficCone className="mx-auto h-8 w-8 opacity-50" strokeWidth={1.5} aria-hidden />
             <h3 className="display mt-2 text-2xl">Out of free scans</h3>
-            <p className="mx-auto mt-1 max-w-sm text-[13px] opacity-70">
+            <p className="mx-auto mt-1 max-w-sm text-[15px] opacity-70">
               You&apos;ve used all 3 of today&apos;s free scans. Get Carz+ for unlimited scanning.
             </p>
             <GlassButton href="/pricing" className="mt-4">Get Carz+ · {carzPlusMonthly()}/mo</GlassButton>
@@ -1089,13 +1089,13 @@ export default function SpotPage() {
 
         {/* History (Pro/Max) */}
         {status?.saveHistory && status.history && status.history.length > 0 && (
-          <section className="mt-6 rounded-3xl border border-black/10 bg-card text-card-foreground p-6">
+          <section className="mt-6 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-white p-6">
             <h3 className="font-bold">Your spotting history</h3>
             <div className="mt-3 space-y-2">
               {status.history.map((h, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between rounded-xl bg-black/[0.04] px-3 py-2 text-sm"
+                  className="flex items-center justify-between rounded-xl bg-white/[0.04] px-3 py-2 text-sm"
                 >
                   <span className="font-semibold">
                     {h.make} {h.model}{" "}
