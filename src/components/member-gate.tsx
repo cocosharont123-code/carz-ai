@@ -85,15 +85,15 @@ export function MemberGate({
       <>
         {tabs}
         <main className="mx-auto w-full max-w-lg px-5 py-16">
-          <div className="glass-card rounded-3xl p-8 text-center">
+          <div className="glass-card rounded-card p-8 text-center">
             <div className="util-label text-carz">{planName} members only</div>
             <h1 className="display mt-2 text-3xl">{title}</h1>
-            <p className="mx-auto mt-2 max-w-sm text-[13px] opacity-70">{blurb}</p>
+            <p className="mx-auto mt-2 max-w-sm text-[15px] opacity-70">{blurb}</p>
 
             {points && points.length > 0 && (
               <ul className="mx-auto mt-5 max-w-sm space-y-2 text-left">
                 {points.map((p) => (
-                  <li key={p} className="flex items-start gap-2.5 text-[13px]">
+                  <li key={p} className="flex items-start gap-2.5 text-[15px]">
                     <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-carz" />
                     <span className="opacity-90">{p}</span>
                   </li>

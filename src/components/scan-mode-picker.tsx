@@ -82,7 +82,7 @@ export function ScanModePicker({ onModeChange }: { onModeChange?: (mode: ScanMod
 
   // Reserve the space rather than popping the button down when it arrives.
   if (!settings) {
-    return <div className="h-[74px] animate-pulse rounded-2xl bg-white/[0.04]" />;
+    return <div className="h-[74px] animate-pulse rounded-card bg-white/[0.04]" />;
   }
 
   return (
@@ -107,7 +107,7 @@ export function ScanModePicker({ onModeChange }: { onModeChange?: (mode: ScanMod
                 <span className="text-sm font-bold">{meta.name}</span>
                 {locked && <Lock className="h-3 w-3 shrink-0 opacity-60" aria-hidden />}
               </div>
-              <p className={cn("mt-1 text-[11px] leading-snug", selected ? "opacity-70" : "opacity-60")}>
+              <p className={cn("mt-1 text-[12px] leading-snug", selected ? "opacity-70" : "opacity-60")}>
                 {meta.tagline}
               </p>
             </>
@@ -120,7 +120,7 @@ export function ScanModePicker({ onModeChange }: { onModeChange?: (mode: ScanMod
           // and it is the same "this is the active one" language the rest of
           // the app already uses for its primary buttons.
           const cls = cn(
-            "press w-full rounded-2xl p-3 text-left transition",
+            "press w-full rounded-card p-3 text-left transition",
             selected
               ? "bg-white text-neutral-900 shadow-[0_2px_14px_rgba(0,0,0,0.35)]"
               : "glass-card",
@@ -147,7 +147,7 @@ export function ScanModePicker({ onModeChange }: { onModeChange?: (mode: ScanMod
       </div>
 
       {!settings.member && (
-        <p className="mt-2 text-center text-[11px] opacity-60">
+        <p className="mt-2 text-center text-[12px] opacity-60">
           <Link href="/pricing" className="underline underline-offset-2 hover:opacity-80">
             Get Carz+
           </Link>{" "}
@@ -156,7 +156,7 @@ export function ScanModePicker({ onModeChange }: { onModeChange?: (mode: ScanMod
       )}
 
       {error && (
-        <p role="alert" className="mt-2 text-center text-[11px] text-neon-red">
+        <p role="alert" className="mt-2 text-center text-[12px] text-neon-red">
           {error}
         </p>
       )}

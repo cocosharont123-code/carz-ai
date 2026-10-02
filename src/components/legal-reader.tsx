@@ -105,7 +105,7 @@ export function LegalReader({
     <>
       {/* The document scrolls in its own pane, so "reached the end" is a fact
           about the text rather than about where the page happens to be. */}
-      <div className="overflow-hidden rounded-3xl border border-black/10 bg-card text-card-foreground">
+      <div className="overflow-hidden rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-white">
         <div
           ref={scrollerRef}
           onScroll={measure}
@@ -117,7 +117,7 @@ export function LegalReader({
             paneHeightClass,
           )}
         >
-          <p className="text-[13px] leading-relaxed">{doc.intro}</p>
+          <p className="text-[15px] leading-relaxed">{doc.intro}</p>
 
           {doc.sections.map((section, i) => (
             <section key={section.title} className="mt-7">
@@ -127,7 +127,7 @@ export function LegalReader({
               {section.blocks.map((block, j) => {
                 if (block.kind === "h3") {
                   return (
-                    <h3 key={j} className="mt-4 text-[13px] font-bold">
+                    <h3 key={j} className="mt-4 text-[15px] font-bold">
                       {block.text}
                     </h3>
                   );
@@ -136,7 +136,7 @@ export function LegalReader({
                   return (
                     <ul key={j} className="mt-2 list-disc space-y-1.5 pl-5">
                       {block.items.map((item) => (
-                        <li key={item} className="text-[13px] leading-relaxed">
+                        <li key={item} className="text-[15px] leading-relaxed">
                           {item}
                         </li>
                       ))}
@@ -144,7 +144,7 @@ export function LegalReader({
                   );
                 }
                 return (
-                  <p key={j} className="mt-2 text-[13px] leading-relaxed">
+                  <p key={j} className="mt-2 text-[15px] leading-relaxed">
                     {block.text}
                   </p>
                 );
@@ -161,10 +161,10 @@ export function LegalReader({
             </section>
           ))}
 
-          <p className="mt-8 border-t border-black/10 pt-5 text-[13px] font-semibold">
+          <p className="mt-8 border-t border-[var(--line-card)] pt-5 text-[15px] font-semibold">
             {doc.entity}
           </p>
-          <p className="mt-1 text-[13px] opacity-70">
+          <p className="mt-1 text-[15px] opacity-70">
             Questions:{" "}
             <a href={`mailto:${doc.contactEmail}`} className="underline underline-offset-2">
               {doc.contactEmail}
@@ -173,7 +173,7 @@ export function LegalReader({
         </div>
 
         {/* How far through the document the reader is. */}
-        <div className="h-1 w-full bg-black/[0.08]">
+        <div className="h-1 w-full bg-white/[0.04]">
           <div
             className="h-full bg-black transition-[width] duration-150"
             style={{ width: `${reachedEnd ? 100 : progress}%` }}
@@ -192,7 +192,7 @@ export function LegalReader({
               "press flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-bold transition",
               reachedEnd
                 ? "bg-white text-black hover:opacity-90"
-                : "cursor-not-allowed border border-white/15 opacity-40",
+                : "cursor-not-allowed border border-[var(--line-card)] opacity-40",
             )}
           >
             <Check className="h-4 w-4" strokeWidth={2.5} aria-hidden />
@@ -203,13 +203,13 @@ export function LegalReader({
             <button
               type="button"
               onClick={jumpToEnd}
-              className="press mx-auto mt-3 flex items-center gap-1.5 text-[11px] uppercase tracking-wide opacity-60 transition hover:opacity-100"
+              className="press mx-auto mt-3 flex items-center gap-1.5 text-[12px] uppercase tracking-wide opacity-60 transition hover:opacity-100"
             >
               <ArrowDown className="h-3 w-3" aria-hidden />
               Scroll to the end to accept · {progress}% read
             </button>
           ) : (
-            <p className="mt-3 text-center text-[11px] uppercase tracking-wide opacity-50">
+            <p className="mt-3 text-center text-[12px] uppercase tracking-wide opacity-50">
               You&apos;ve reached the end. You can accept now.
             </p>
           )}

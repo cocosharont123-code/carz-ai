@@ -84,7 +84,7 @@ export function ColorWheel({
         onPointerMove={(e) => {
           if (e.buttons === 1) pick(e.clientX, e.clientY);
         }}
-        className="relative aspect-square w-full max-w-[268px] cursor-crosshair touch-none overflow-hidden rounded-[28%] border border-black/15 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.5),0_10px_28px_-14px_rgba(0,0,0,0.55)]"
+        className="relative aspect-square w-full max-w-[268px] cursor-crosshair touch-none overflow-hidden rounded-[28%] border border-[var(--line-card)] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.5),0_10px_28px_-14px_rgba(0,0,0,0.55)]"
       >
         {/* Hue around, saturation outward. */}
         <div

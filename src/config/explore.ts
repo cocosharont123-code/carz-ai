@@ -18,6 +18,10 @@ import {
   Bot,
   Crosshair,
   Crown,
+  Gavel,
+  Heart,
+  Settings,
+  Sparkles,
   Trophy,
   Images,
   ScanLine,
@@ -116,6 +120,35 @@ export const EXPLORE_BUBBLES: ExploreItem[] = [
     description: "Everything membership unlocks",
     href: "/pricing",
     icon: Crown,
+  },
+  // Added when the nav's menu was removed and Home took over as the list of
+  // everything the app does. These four routes exist and had no link into them
+  // from anywhere except that menu -- /settings, /wishlist and /drops had no
+  // other inbound link at all, so they were one commit away from being pages
+  // only a typed URL could reach.
+  {
+    label: "Auctions",
+    description: "Bid on cars people are selling",
+    href: "/auctions",
+    icon: Gavel,
+  },
+  {
+    label: "Wishlist",
+    description: "Cars you are watching",
+    href: "/wishlist",
+    icon: Heart,
+  },
+  {
+    label: "Drops",
+    description: "New supercar launches",
+    href: "/drops",
+    icon: Sparkles,
+  },
+  {
+    label: "Settings",
+    description: "Scan mode, account and sign out",
+    href: "/settings",
+    icon: Settings,
   },
 ];
 

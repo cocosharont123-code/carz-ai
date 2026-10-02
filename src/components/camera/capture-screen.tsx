@@ -173,7 +173,7 @@ export function CaptureScreen({
           <button
             type="button"
             onClick={onPickFile}
-            className="press glass-bubble pointer-events-auto flex min-h-11 items-center gap-2 rounded-full px-4 text-[13px] font-bold"
+            className="press glass-bubble pointer-events-auto flex min-h-11 items-center gap-2 rounded-full px-4 text-[15px] font-bold"
           >
             <ImagePlus className="h-4 w-4" strokeWidth={2} aria-hidden />
             Upload
@@ -200,7 +200,7 @@ export function CaptureScreen({
 
       {hint && !blocked && (
         <p
-          className="pointer-events-none absolute inset-x-0 text-center text-[13px] text-white/75 drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]"
+          className="pointer-events-none absolute inset-x-0 text-center text-[15px] text-white/75 drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]"
           style={{ bottom: "calc(var(--nav-h) + 5.5rem)" }}
         >
           {hint}
@@ -290,12 +290,12 @@ function Blocked({
   const denied = status === "denied";
   return (
     <div className="absolute inset-0 flex items-center justify-center px-6">
-      <div className="glass-card w-full max-w-sm rounded-3xl p-6 text-center">
+      <div className="glass-card w-full max-w-sm rounded-card p-6 text-center">
         <CameraOff className="mx-auto h-7 w-7 opacity-50" strokeWidth={1.5} aria-hidden />
         <h2 className="display mt-3 text-2xl">
           {denied ? "Camera is blocked" : "No camera here"}
         </h2>
-        <p className="mx-auto mt-2 max-w-xs text-[13px] leading-relaxed opacity-70">
+        <p className="mx-auto mt-2 max-w-xs text-[15px] leading-relaxed opacity-70">
           {denied
             ? "Carz needs the camera to spot a car. Allow it in your browser's site settings for carz.dev, then try again."
             : "This browser won't give a live camera. You can still choose a photo from your library."}

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { MapPinOff } from "lucide-react";
+import { MapPinOff, Search } from "lucide-react";
 import { claimGpu } from "@/components/camera/camera-in-use";
 import { applyMidnight } from "@/components/map/night-style";
 import { MapHud } from "@/components/map/map-hud";
@@ -90,6 +90,7 @@ export function SpotMap() {
   const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
   const [failed, setFailed] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [query, setQuery] = useState("");
   const [tilted, setTilted] = useState(true);
 
   useEffect(() => {
@@ -213,13 +214,15 @@ export function SpotMap() {
       pins.current = spots.map((s) => {
         // Kept so a deep link can find this pin again by its spot id.
         const el = document.createElement("div");
-        // Rare cars burn brighter. Everything else is the app's cyan.
+        // Rare cars burn brighter. It was amber against cyan; it is a solid
+        // white dot against a hollow one, so rarity still reads at a glance
+        // without a hue doing the work.
         const rare = s.rarityScore >= 70;
         el.style.cssText = [
           "width:14px;height:14px;border-radius:9999px;cursor:pointer",
-          `background:${rare ? "#ffad42" : "#00e5ff"}`,
-          "border:2px solid rgba(255,255,255,0.85)",
-          `box-shadow:0 0 12px ${rare ? "rgba(255,173,66,0.9)" : "rgba(0,229,255,0.9)"}`,
+          `background:${rare ? "#ffffff" : "#000000"}`,
+          "border:2px solid #ffffff",
+          rare ? "box-shadow:0 0 12px rgba(255,255,255,0.9)" : "",
         ].join(";");
 
         const name = `${s.make} ${s.model}`.trim();
@@ -243,7 +246,7 @@ export function SpotMap() {
                    entryId
                      ? `<a href="/leaderboard?car=${encodeURIComponent(entryId)}"
                           style="display:flex;align-items:center;min-height:44px;margin-top:6px;
-                                 color:#00e5ff;font-weight:600;text-decoration:none">
+                                 color:#ffffff;font-weight:600;text-decoration:underline">
                           See it on the leaderboard &rsaquo;
                         </a>`
                      : ""
@@ -303,7 +306,16 @@ export function SpotMap() {
         const at: [number, number] = [pos.coords.longitude, pos.coords.latitude];
         m.flyTo({ center: at, zoom: 14, essential: true, duration: 2000 });
         marker.current?.remove();
-        marker.current = new mapboxgl.Marker({ color: "#00e5ff" }).setLngLat(at).addTo(m);
+        // The viewer's own position: a white dot, per the spec. Mapbox's default
+        // marker is a teardrop pin, which is the shape used for cars -- a plain
+        // circle keeps "where I am" distinct from "where a car was".
+        const dot = document.createElement("div");
+        dot.style.cssText = [
+          "width:16px;height:16px;border-radius:9999px",
+          "background:#ffffff",
+          "box-shadow:0 0 0 4px rgba(255,255,255,0.25), 0 0 18px rgba(255,255,255,0.65)",
+        ].join(";");
+        marker.current = new mapboxgl.Marker({ element: dot }).setLngLat(at).addTo(m);
       },
       () => setLocating(false),
       { enableHighAccuracy: true, timeout: 8000 },
@@ -313,10 +325,10 @@ export function SpotMap() {
   if (!token || failed) {
     return (
       <div className="flex h-full w-full items-center justify-center px-6">
-        <div className="glass-card w-full max-w-sm rounded-3xl p-6 text-center">
+        <div className="glass-card w-full max-w-sm rounded-card p-6 text-center">
           <MapPinOff className="mx-auto h-7 w-7 opacity-50" strokeWidth={1.5} aria-hidden />
           <h2 className="display mt-3 text-2xl">Map is off</h2>
-          <p className="mx-auto mt-2 max-w-xs text-[13px] leading-relaxed opacity-70">
+          <p className="mx-auto mt-2 max-w-xs text-[15px] leading-relaxed opacity-70">
             {!token
               ? "NEXT_PUBLIC_MAPBOX_TOKEN isn't set on this deployment, so there is no map to draw."
               : "The map couldn't start on this device."}
@@ -326,9 +338,43 @@ export function SpotMap() {
     );
   }
 
+  // Filters the pins as you type. Matched against make, model and the spotter,
+  // so typing a handle finds what that person found.
+  const shown = query.trim()
+    ? spots.filter((sp) =>
+        `${sp.make} ${sp.model} ${sp.spotter}`.toLowerCase().includes(query.trim().toLowerCase()),
+      )
+    : spots;
+
   return (
-    <div className="relative h-full w-full bg-[#04040d]">
+    <div className="relative h-full w-full bg-black">
       <div ref={holder} className="h-full w-full" />
+
+      {/* Floating search. No filter button beside it: the spec asks for one
+          only if we have filters, and a spot carries a car, a spotter and a
+          time -- there is nothing here to filter by that this field does not
+          already match on. */}
+      <div
+        className="absolute inset-x-3 z-10"
+        style={{ top: "calc(var(--safe-top) + 0.75rem)" }}
+      >
+        <div className="relative mr-14">
+          <Search
+            className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[var(--color-muted-text)]"
+            strokeWidth={1.75}
+            aria-hidden
+          />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search cars, events, or places"
+            aria-label="Search the map"
+            className="h-[52px] w-full rounded-full border border-[var(--line-card)] bg-[var(--color-surface)] pl-11 pr-4 text-[15px] text-white outline-none placeholder:text-[var(--color-muted-text)] [&::-webkit-search-cancel-button]:appearance-none"
+          />
+        </div>
+      </div>
+
       <MapHud
         tilted={tilted}
         onTilt={toggleTilt}
@@ -336,16 +382,52 @@ export function SpotMap() {
         locating={locating}
       />
 
-      {/* Only when there is nothing to see, so an empty map reads as new
-          rather than as broken. */}
-      {spots.length === 0 && (
-        <p
-          className="pointer-events-none absolute inset-x-0 text-center text-[11px] text-white/55"
-          style={{ bottom: "calc(var(--nav-h) + 0.75rem)" }}
-        >
-          Cars appear here when they are scanned live in the app.
-        </p>
-      )}
+      {/* Cars Near You. A sheet rather than a line of text: it is the only way
+          to see what is on the map without hunting for pins, and on a phone
+          most of the pins are off screen. */}
+      <div
+        className="absolute inset-x-0 bottom-0 z-10 rounded-t-sheet border-t border-[var(--line-card)] bg-black/95 px-5 pb-4 pt-2"
+        style={{ paddingBottom: "1rem" }}
+      >
+        <div aria-hidden className="mx-auto h-1 w-10 rounded-full bg-white/25" />
+        <h2 className="mt-3 text-[17px] font-semibold text-white">Cars Near You</h2>
+
+        {shown.length === 0 ? (
+          <p className="mt-2 pb-1 text-[14px] text-[var(--color-secondary-text)]">
+            {spots.length === 0
+              ? "Cars appear here when they are scanned live in the app."
+              : "Nothing matches that."}
+          </p>
+        ) : (
+          // Horizontal, so the sheet stays short enough to leave most of the
+          // map visible.
+          <div className="-mx-5 mt-3 flex gap-3 overflow-x-auto px-5 pb-1">
+            {shown.slice(0, 12).map((sp) => (
+              <button
+                key={sp.id}
+                type="button"
+                onClick={() => {
+                  const m = map.current;
+                  if (!m) return;
+                  m.flyTo({ center: [sp.lng, sp.lat], zoom: 15.5, duration: 1400, essential: true });
+                  m.once("moveend", () => byId.current.get(sp.id)?.togglePopup());
+                }}
+                className="press w-36 shrink-0 text-left"
+              >
+                <span className="block truncate text-[15px] font-semibold text-white">
+                  {`${sp.make} ${sp.model}`.trim()}
+                </span>
+                {/* No distance: a spot is rounded to about 110 metres and the
+                    viewer's position is only known if they asked to be found,
+                    so a figure here would be invented most of the time. */}
+                <span className="block truncate text-[14px] text-[var(--color-secondary-text)]">
+                  {sp.spotter} · {timeAgo(sp.at)}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

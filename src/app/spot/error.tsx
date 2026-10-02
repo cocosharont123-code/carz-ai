@@ -26,11 +26,11 @@ export default function SpotError({
   return (
     <main className="mx-auto flex w-full max-w-md flex-col items-center px-5 py-16 text-center">
       <h1 className="display text-4xl">Spot hit a snag</h1>
-      <p className="mt-3 text-[13px] leading-relaxed opacity-70">
+      <p className="mt-3 text-[15px] leading-relaxed opacity-70">
         Something went wrong opening this screen. Trying again usually clears it.
       </p>
       {error?.message && (
-        <p className="glass-card mt-4 w-full rounded-2xl px-4 py-3 text-left text-[12px] leading-relaxed opacity-80">
+        <p className="glass-card mt-4 w-full rounded-card px-4 py-3 text-left text-[12px] leading-relaxed opacity-80">
           {error.message}
           {error.digest ? ` (${error.digest})` : ""}
         </p>

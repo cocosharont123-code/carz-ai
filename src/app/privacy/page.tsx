@@ -25,7 +25,7 @@ export default function PrivacyPage() {
         <PrivacyReader showAccept={false} />
       </div>
 
-      <p className="mt-8 text-center text-[11px] uppercase tracking-wide opacity-40">
+      <p className="mt-8 text-center text-[12px] uppercase tracking-wide opacity-40">
         <Link href="/terms" className="hover:opacity-80">
           Read the Terms of Service
         </Link>

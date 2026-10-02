@@ -188,11 +188,11 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
   // then discovers on submit that it was never available to them.
   if (access && access.signedIn && !access.member) {
     return (
-      <div className="mt-6 border-t border-black/15 pt-5">
+      <div className="mt-6 border-t border-[var(--line-card)] pt-5">
         <h3 className="text-xs font-bold uppercase tracking-wide text-carz">Customize this car</h3>
-        <div className="mt-3 rounded-2xl border border-black/15 bg-black/[0.04] p-5 text-center">
+        <div className="mt-3 rounded-card border border-[var(--line-card)] bg-white/[0.04] p-5 text-center">
           <p className="text-sm font-bold">The customizer is a Carz MAX feature</p>
-          <p className="mx-auto mt-1.5 max-w-sm text-[13px] opacity-70">
+          <p className="mx-auto mt-1.5 max-w-sm text-[15px] opacity-70">
             Carz MAX gets {access.cap} AI repaints a day. Extras are $
             {access.extraPriceUsd.toFixed(2)} each.
           </p>
@@ -212,7 +212,7 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
   const outOfQuota = !!quota && quota.available <= 0;
 
   return (
-    <div className="mt-6 border-t border-black/15 pt-5">
+    <div className="mt-6 border-t border-[var(--line-card)] pt-5">
       <h3 className="text-xs font-bold uppercase tracking-wide text-carz">Customize this car</h3>
       <p className="mb-3 mt-1 text-sm opacity-70">
         Pick a look and the AI repaints your photo — same car, same shot, new style.
@@ -286,7 +286,7 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
         onClick={generate}
         disabled={!anyChange || busy}
         aria-busy={busy || undefined}
-        className="press mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-carz py-3 text-sm font-bold text-black transition hover:brightness-110 disabled:opacity-40"
+        className="press mt-5 flex w-full items-center justify-center gap-2 rounded-card bg-carz py-3 text-sm font-bold text-black transition hover:brightness-110 disabled:opacity-40"
       >
         {busy && <Spinner className="h-4 w-4" />}
         {busy ? "Rendering your build…" : "Generate customized photo"}
@@ -310,9 +310,9 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
           {/* Only offered once the free three are actually gone — selling an
               extra while one is still free would be taking money for nothing. */}
           {outOfQuota && (
-            <div className="mt-3 rounded-2xl border border-black/15 bg-black/[0.04] p-4">
-              <p className="text-[13px] font-bold">Out of customizations for today</p>
-              <p className="mt-1 text-[13px] opacity-70">
+            <div className="mt-3 rounded-card border border-[var(--line-card)] bg-white/[0.04] p-4">
+              <p className="text-[15px] font-bold">Out of customizations for today</p>
+              <p className="mt-1 text-[15px] opacity-70">
                 Get one more for ${price.toFixed(2)}, or come back tomorrow for {cap} more.
               </p>
               <button
@@ -320,7 +320,7 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
                 onClick={buyExtra}
                 disabled={buying}
                 aria-busy={buying || undefined}
-                className="press mt-3 inline-flex items-center gap-2 rounded-full bg-black px-5 py-2.5 text-[13px] font-bold text-white transition hover:opacity-90 disabled:opacity-50"
+                className="press mt-3 inline-flex items-center gap-2 rounded-full bg-black px-5 py-2.5 text-[15px] font-bold text-white transition hover:opacity-90 disabled:opacity-50"
               >
                 {buying && <Spinner className="h-3.5 w-3.5" />}
                 {buying ? "Adding…" : `Add 1 for $${price.toFixed(2)}`}
@@ -333,7 +333,7 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
 
       {result && (
         <div className="mt-4">
-          <div className="overflow-hidden rounded-2xl border border-black/15">
+          <div className="overflow-hidden rounded-card border border-[var(--line-card)]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={result} alt={`Customized ${car.make} ${car.model}`} className="w-full" />
           </div>

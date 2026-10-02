@@ -103,7 +103,7 @@ function Lightbox({
           src={car.image}
           alt={`${car.make} ${car.model}`}
           color
-          className="max-h-full max-w-full rounded-2xl object-contain"
+          className="max-h-full max-w-full rounded-card object-contain"
         />
       </div>
 
@@ -144,7 +144,7 @@ function Lightbox({
           <button
             type="button"
             onClick={() => onRemove(car.id)}
-            className="press inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-white/20"
+            className="press inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-[15px] font-semibold text-white transition hover:bg-white/20"
           >
             <Trash2 className="h-3.5 w-3.5" aria-hidden />
             Remove from garage
@@ -201,13 +201,13 @@ function GarageInner() {
         />
 
         {loading ? (
-          <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+          <div className="-mx-5 mt-6 grid grid-cols-3 gap-px">
             {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
-              <Skeleton key={i} className="aspect-square w-full" />
+              <Skeleton key={i} className="aspect-square w-full rounded-none" />
             ))}
           </div>
         ) : cars.length === 0 ? (
-          <div className="mt-8 rounded-2xl border border-white/10 bg-card text-card-foreground p-10 text-center">
+          <div className="mt-8 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-white p-10 text-center">
             <Images className="mx-auto h-8 w-8 opacity-40" strokeWidth={1.5} aria-hidden />
             <h3 className="display mt-3 text-3xl">Album empty</h3>
             <p className="mx-auto mt-2 max-w-sm text-sm opacity-70">
@@ -233,14 +233,18 @@ function GarageInner() {
 
             {/* The album: photos edge to edge, captions on the tile rather than
                 in a card below it, so the page reads as pictures first. */}
-            <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+            {/* Flush, three across, a hairline between. An Explore grid is
+                read as one sheet of photographs, and gaps and rounded corners
+                turn it back into a list of cards. Full-bleed too -- the page's
+                20px padding would otherwise frame the sheet. */}
+            <div className="-mx-5 mt-6 grid grid-cols-3 gap-px">
               {cars.map((c, i) => (
                 <button
                   key={c.id}
                   type="button"
                   onClick={() => setOpen(i)}
                   aria-label={`Open ${c.make} ${c.model}`}
-                  className="press group relative aspect-square overflow-hidden rounded-xl bg-white/[0.04]"
+                  className="press group relative aspect-square overflow-hidden bg-white/[0.04]"
                 >
                   <CarPhoto
                     src={c.image}

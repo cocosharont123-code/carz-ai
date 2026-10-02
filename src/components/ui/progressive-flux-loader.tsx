@@ -69,15 +69,15 @@ const DEFAULT_PHASES: ProgressiveFluxPhase[] = [
 // on shadcn theme tokens, so the loader still adapts to light and dark. These
 // are component-level custom properties, so the v3 build leaves them untouched
 // and the fill renders identically on Tailwind v3 and v4.
-const FLUX_FROM = "var(--flux-from, #1d6ffb)";
-const FLUX_TO = "var(--flux-to, #74e1ff)";
+const FLUX_FROM = "var(--flux-from, #808080)";
+const FLUX_TO = "var(--flux-to, #ffffff)";
 const FLUX_MID = `color-mix(in oklab, ${FLUX_FROM}, ${FLUX_TO})`;
 
 const DEFAULT_GRADIENT = `linear-gradient(90deg, ${FLUX_FROM} 0%, ${FLUX_MID} 35%, ${FLUX_TO} 55%, ${FLUX_MID} 78%, ${FLUX_FROM} 100%)`;
 
 // Colored glow drawn from the same flux palette, a white top-edge highlight,
 // and a deep-blue inset for depth.
-const BAR_SHADOW = `0 0 18px color-mix(in oklab, ${FLUX_FROM} 55%, transparent), 0 0 32px color-mix(in oklab, ${FLUX_TO} 40%, transparent), inset 0 1.5px 0 rgba(255, 255, 255, 0.5), inset 0 -2px 3px rgba(0, 40, 120, 0.35)`;
+const BAR_SHADOW = `0 0 18px color-mix(in oklab, ${FLUX_FROM} 55%, transparent), 0 0 32px color-mix(in oklab, ${FLUX_TO} 40%, transparent), inset 0 1.5px 0 rgba(255, 255, 255, 0.5), inset 0 -2px 3px rgba(60, 60, 60, 0.35)`;
 
 // White sweep over the colored fill (blended with `screen`), so the highlight
 // reads as a bright glide regardless of theme.

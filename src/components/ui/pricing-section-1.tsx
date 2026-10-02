@@ -143,7 +143,7 @@ function TierCard({
       timelineRef={sectionRef}
       customVariants={variants}
       className={cn(
-        "glass-card flex h-full flex-col rounded-3xl p-6 sm:p-7",
+        "glass-card flex h-full flex-col rounded-card p-6 sm:p-7",
         // Only when it is not already ringed by the beam, or the two stack up
         // into a double outline.
         tier.featured ? "ring-0" : undefined,

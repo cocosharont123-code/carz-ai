@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { WANTED, HUNT_RULE, getHunt, joinHunt, totalEarned, type HuntState } from "@/lib/hunt";
-import { Button, LiveDot } from "@/components/ui/editorial";
+import { Lock, Trophy, Crosshair, X } from "lucide-react";
+import { Button } from "@/components/ui/editorial";
 import { MemberGate } from "@/components/member-gate";
 import { cn } from "@/lib/utils";
 import { ThinkingOrb } from "thinking-orbs";
@@ -46,6 +47,7 @@ function HuntInner() {
   const [hunt, setHunt] = useState<HuntState | null>(null);
   const [status, setStatus] = useState<Status | null>(null);
   const [joining, setJoining] = useState(false);
+  const [rulesOpen, setRulesOpen] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -118,7 +120,7 @@ function HuntInner() {
         <ThinkingOrb state="connecting" size={64} theme="dark" aria-label="" />
         <div className="text-center">
           <p className="display text-2xl">Entering the hunt</p>
-          <p className="mt-2 text-[13px] opacity-60">Putting your name on the board…</p>
+          <p className="mt-2 text-[15px] opacity-60">Putting your name on the board…</p>
         </div>
       </div>
     );
@@ -126,7 +128,6 @@ function HuntInner() {
 
   const earned = hunt ? totalEarned(hunt) : 0;
   const found = hunt ? Object.keys(hunt.claimed).length : 0;
-  const totalPot = WANTED.reduce((t, w) => t + w.bounty, 0);
 
   const entered = !!status?.entered || !!hunt?.joined;
   const started = !!status?.started;
@@ -134,81 +135,120 @@ function HuntInner() {
   const entrants = status?.count ?? 0;
   const pct = Math.min(100, Math.round((entrants / Math.max(1, goal)) * 100));
 
-  return (
-    <main className="mx-auto w-full max-w-2xl px-5 py-8">
-      {/* Heading */}
-      <header className="glass-card rounded-3xl px-6 py-10 text-center">
-        <h1 className="display text-6xl leading-none sm:text-7xl">Hunt</h1>
-        <p className="util-label mt-2 opacity-60">Carz AI</p>
+  // The biggest bounty still unclaimed. The card is advertising what is on
+  // offer, so a car somebody already found is the wrong number to show.
+  const topBounty = WANTED.filter((w) => !hunt?.claimed?.[w.id]).reduce(
+    (best, w) => Math.max(best, w.bounty),
+    0,
+  );
 
-        <p className="mx-auto mt-4 max-w-md text-[13px] leading-relaxed opacity-70">
-          Spot one of the cars on the wanted board out on the road and claim its bounty.
+  return (
+    <main className="mx-auto w-full max-w-[480px] px-5 pb-6">
+      <header className="flex h-14 items-center justify-between">
+        <h1 className="text-[34px] font-bold tracking-tight text-white">Hunt</h1>
+        <button
+          type="button"
+          onClick={() => setRulesOpen(true)}
+          className="press min-h-11 rounded-full border border-[var(--line-button)] bg-[var(--color-surface)] px-4 text-[14px] font-semibold text-white"
+        >
+          How it works
+        </button>
+      </header>
+
+      {/* The bounty card. /hunt-cover.jpg as a background-image rather than an
+          <img>, so a missing file is black instead of a broken-image glyph. */}
+      <section className="relative mt-2 overflow-hidden rounded-card border border-white shadow-[var(--glow)]">
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-black bg-cover bg-center"
+          style={{ backgroundImage: "url('/hunt-cover.jpg')" }}
+        />
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/40" />
+        <div className="relative px-5 pb-5 pt-8">
+          <Lock className="h-7 w-7 text-white" strokeWidth={1.75} aria-hidden />
+          <h2 className="mt-4 max-w-[14rem] text-[20px] font-bold leading-tight text-white">
+            Find a wrapped car. Win the bounty.
+          </h2>
+          {topBounty > 0 && (
+            <>
+              <span className="mt-4 inline-block rounded-full bg-black/80 px-4 py-1.5 text-[20px] font-bold text-white">
+                {money(topBounty)}
+              </span>
+              <p className="mt-1.5 text-[14px] text-[var(--color-secondary-text)]">Current Bounty</p>
+            </>
+          )}
+        </div>
+      </section>
+
+      {/* Two stat cards. "N active" rather than "N nearby": there is no
+          location on a wanted car, so nothing here knows what is near you, and
+          the spec's own fallback is the active count. */}
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        <div className="rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] p-4">
+          <Crosshair className="h-6 w-6 text-white" strokeWidth={1.75} aria-hidden />
+          <div className="mt-3 text-[17px] font-semibold text-white">Active Hunts</div>
+          <div className="mt-0.5 text-[14px] text-[var(--color-secondary-text)]">
+            {WANTED.length - found} active
+          </div>
+        </div>
+        <div className="rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] p-4">
+          <Trophy className="h-6 w-6 text-white" strokeWidth={1.75} aria-hidden />
+          <div className="mt-3 text-[17px] font-semibold text-white">Your Rewards</div>
+          <div className="mt-0.5 text-[14px] text-[var(--color-secondary-text)]">
+            {money(earned)} earned
+          </div>
+        </div>
+      </div>
+
+      {/* Entering, and how close the hunt is to starting. Kept from the old
+          header: it is the only control on this screen that does anything, and
+          the mockup has nowhere for it. */}
+      <section className="mt-5 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] p-4">
+        <div className="flex items-baseline justify-between">
+          <span className="text-[20px] font-bold tabular-nums text-white">
+            {status ? count(entrants) : "—"}
+          </span>
+          <span className="text-[14px] text-[var(--color-secondary-text)]">
+            of {count(goal)} hunters
+          </span>
+        </div>
+        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+          <div
+            className="h-full rounded-full bg-white transition-[width] duration-500"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <p className="mt-2 text-[14px] text-[var(--color-secondary-text)]">
+          {started
+            ? "The hunt is live."
+            : `The hunt starts once ${count(goal)} hunters have entered.`}
         </p>
 
-        <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-          <span className="util-label rounded-full bg-white/[0.06] px-4 py-1.5">
-            Pot {money(totalPot)}
-          </span>
-          <span className="util-label rounded-full bg-white/[0.06] px-4 py-1.5">
-            On the road only
-          </span>
-        </div>
-
-        {/* How many are in, and how many it takes to start. */}
-        <div className="mx-auto mt-7 max-w-sm">
-          <div className="flex items-baseline justify-between">
-            <span className="display text-3xl tabular-nums">
-              {status ? count(entrants) : "—"}
-            </span>
-            <span className="util-label opacity-60">of {count(goal)} hunters</span>
-          </div>
-          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-            <div
-              className="h-full rounded-full bg-white/70 transition-[width] duration-500"
-              style={{ width: `${pct}%` }}
-            />
-          </div>
-          <p className="mt-2 text-xs opacity-60">
-            {started
-              ? "The hunt is live."
-              : `The hunt starts once ${count(goal)} hunters have entered.`}
-          </p>
-        </div>
-
         {entered ? (
-          <div className="mt-6 flex flex-col items-center gap-3">
-            <div className="flex flex-wrap justify-center gap-2">
-              <span className="util-label flex items-center gap-1.5 rounded-full bg-white/[0.06] px-3 py-1">
-                <LiveDot /> {money(earned)} earned
-              </span>
-              <span className="util-label rounded-full bg-white/[0.06] px-3 py-1">
-                {found}/{WANTED.length} found
-              </span>
-            </div>
-            {started ? (
-              <Button href="/hunt/spot" size="lg">Start hunting</Button>
-            ) : (
-              <p className="util-label opacity-60">You&apos;re in — waiting on the rest.</p>
-            )}
-          </div>
+          started ? (
+            <Button href="/hunt/spot" className="mt-4 w-full">Start hunting</Button>
+          ) : (
+            <p className="mt-4 text-[14px] text-[var(--color-secondary-text)]">
+              You&apos;re in — waiting on the rest.
+            </p>
+          )
         ) : (
-          <div className="mt-6 flex flex-col items-center gap-2">
-            <Button onClick={enter} loading={joining} size="lg">Enter the hunt</Button>
-            <p className="util-label opacity-60">Entering reserves your place.</p>
-          </div>
+          <Button onClick={enter} loading={joining} className="mt-4 w-full">
+            Enter the hunt
+          </Button>
         )}
 
         {error && (
-          <p role="alert" className="mt-3 text-[13px] text-neon-red">
+          <p role="alert" className="mt-3 text-[14px] text-error">
             {error}
           </p>
         )}
         {status && !status.configured && (
-          <p className="mt-3 text-xs opacity-60">
+          <p className="mt-3 text-[14px] text-[var(--color-secondary-text)]">
             Entries aren&apos;t connected yet, so the counter can&apos;t be read.
           </p>
         )}
-      </header>
+      </section>
 
       {/* Wanted board */}
       <h2 className="util-label mt-10 text-center opacity-60">Wanted board</h2>
@@ -220,7 +260,7 @@ function HuntInner() {
             <div
               key={w.id}
               className={cn(
-                "glass-card flex items-center gap-3 rounded-2xl p-3.5",
+                "glass-card flex items-center gap-3 rounded-card p-3.5",
                 claimed && "opacity-60",
               )}
             >
@@ -229,10 +269,13 @@ function HuntInner() {
               </span>
 
               <span
-                className="h-6 w-6 shrink-0 rounded-full border border-white/25"
+                className="h-6 w-6 shrink-0 rounded-full border border-[var(--line-button)]"
                 style={{
                   background:
-                    w.swatch ?? "conic-gradient(#ef4444,#facc15,#22c55e,#3b82f6,#ef4444)",
+                    // A real car colour is a real colour and stays one -- the swatch is
+                    // what the hunt is asking you to find. Only the "any colour"
+                    // fallback loses its rainbow, which was decoration.
+                    w.swatch ?? "#1a1a1a",
                 }}
                 aria-hidden
               />
@@ -256,7 +299,7 @@ function HuntInner() {
       </div>
 
       <div className="mt-6 space-y-1 text-center">
-        <p className="util-label opacity-50">{HUNT_RULE}</p>
+        <p className="text-[14px] text-[var(--color-secondary-text)]">{HUNT_RULE}</p>
         <p className="util-label opacity-50">
           Each car must be the exact colour shown (except any-colour).
         </p>
@@ -264,6 +307,43 @@ function HuntInner() {
           Spot it live in the Hunt camera — camera roll doesn&apos;t count.
         </p>
       </div>
+      {rulesOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="How the hunt works"
+          className="fixed inset-0 z-[70] flex items-end justify-center bg-black/70"
+          onClick={() => setRulesOpen(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-[480px] rounded-t-sheet border-t border-[var(--line-card)] bg-[var(--color-surface)] px-5 pb-10 pt-3"
+          >
+            {/* Grabber, then the rules. The text is the app's own HUNT_RULE
+                plus the three steps the feature actually implements -- nothing
+                here describes a rule the code does not enforce. */}
+            <div aria-hidden className="mx-auto h-1 w-10 rounded-full bg-white/25" />
+            <div className="mt-4 flex items-center justify-between">
+              <h2 className="text-[20px] font-bold text-white">How it works</h2>
+              <button
+                type="button"
+                onClick={() => setRulesOpen(false)}
+                aria-label="Close"
+                className="press flex h-11 w-11 items-center justify-center rounded-full"
+              >
+                <X className="h-5 w-5 text-white" strokeWidth={1.75} aria-hidden />
+              </button>
+            </div>
+            <ol className="mt-3 space-y-3 text-[15px] leading-relaxed text-white">
+              <li>1. Pick a car off the wanted board below.</li>
+              <li>2. Spot it out on the road and photograph it with the hunt camera.</li>
+              <li>3. If it matches, claim its bounty and get paid.</li>
+            </ol>
+            <p className="mt-4 text-[14px] text-[var(--color-secondary-text)]">{HUNT_RULE}</p>
+          </div>
+        </div>
+      )}
+
     </main>
   );
 }

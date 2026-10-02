@@ -83,7 +83,7 @@ function SearchInner() {
       </div>
 
       {q.startsWith("#") && (
-        <p className="mt-3 text-[13px] opacity-60">
+        <p className="mt-3 text-[15px] opacity-60">
           Hashtag search isn&apos;t indexed yet — this searches accounts.
         </p>
       )}
@@ -105,7 +105,7 @@ function SearchInner() {
             key={a.username}
             type="button"
             onClick={() => router.push(`/channel/${encodeURIComponent(a.username)}`)}
-            className="press flex w-full items-center gap-3 rounded-2xl px-2 py-2.5 text-left transition-colors hover:bg-white/[0.05]"
+            className="press flex w-full items-center gap-3 rounded-card px-2 py-2.5 text-left transition-colors hover:bg-white/[0.05]"
           >
             <Avatar src={a.image} size={44} />
             <span className="min-w-0 flex-1">
@@ -115,20 +115,20 @@ function SearchInner() {
                   <Crown className="h-3.5 w-3.5 shrink-0 text-rank-1" fill="currentColor" strokeWidth={2} aria-hidden />
                 )}
               </span>
-              <span className="block truncate text-[13px] opacity-50">@{a.username}</span>
-              {a.bio && <span className="mt-0.5 block truncate text-[11px] opacity-40">{a.bio}</span>}
+              <span className="block truncate text-[15px] opacity-50">@{a.username}</span>
+              {a.bio && <span className="mt-0.5 block truncate text-[12px] opacity-40">{a.bio}</span>}
             </span>
           </button>
         ))}
 
         {searched && !loading && accounts.length === 0 && (
-          <p className="py-10 text-center text-[13px] opacity-60">
+          <p className="py-10 text-center text-[15px] opacity-60">
             Nobody matches “{q.trim()}”.
           </p>
         )}
 
         {!searched && !loading && (
-          <p className="py-10 text-center text-[13px] opacity-50">
+          <p className="py-10 text-center text-[15px] opacity-50">
             Search for someone by name or @handle.
           </p>
         )}

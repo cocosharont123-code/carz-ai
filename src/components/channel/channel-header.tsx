@@ -99,7 +99,7 @@ export function ChannelHeader({
           {channel.member && (
             <span role="img" aria-label="Carz+ member" title="Carz+ member">
               <Crown
-                className="h-4 w-4 text-rank-1 drop-shadow-[0_0_6px_rgba(250,204,21,0.45)]"
+                className="h-4 w-4 text-rank-1 drop-shadow-[0_0_6px_rgba(255,255,255,0.45)]"
                 strokeWidth={2}
                 fill="currentColor"
                 aria-hidden
@@ -107,10 +107,10 @@ export function ChannelHeader({
             </span>
           )}
         </div>
-        <p className="mt-0.5 text-[13px] opacity-50">@{channel.username}</p>
+        <p className="mt-0.5 text-[15px] opacity-50">@{channel.username}</p>
 
         {channel.bio && (
-          <p className="mt-3 max-w-prose whitespace-pre-wrap text-[13px] leading-relaxed opacity-80">
+          <p className="mt-3 max-w-prose whitespace-pre-wrap text-[15px] leading-relaxed opacity-80">
             {channel.bio}
           </p>
         )}
@@ -138,7 +138,7 @@ export function ChannelHeader({
         )}
 
         {error && (
-          <p role="alert" className="mt-2 text-center text-[13px] text-neon-red">
+          <p role="alert" className="mt-2 text-center text-[15px] text-neon-red">
             {error}
           </p>
         )}

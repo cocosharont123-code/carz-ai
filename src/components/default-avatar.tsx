@@ -32,8 +32,8 @@ export function DefaultAvatar({
           strokeWidth="0.5"
         />
         {/* windows (subtle sheen so it reads as a car) */}
-        <path d="M21 17.5 L26.5 13.3 L37.5 13.3 L43 17.5 Z" fill="#20242b" />
-        <path d="M21 17.5 L26.5 13.3 L31 13.3 L26 17.5 Z" fill="#2c333d" opacity="0.7" />
+        <path d="M21 17.5 L26.5 13.3 L37.5 13.3 L43 17.5 Z" fill="#242424" />
+        <path d="M21 17.5 L26.5 13.3 L31 13.3 L26 17.5 Z" fill="#333333" opacity="0.7" />
 
         {/* rear wheel */}
         <circle cx="18" cy="26" r="5.2" fill="#0a0a0a" />
@@ -52,7 +52,7 @@ export function DefaultAvatar({
         </g>
 
         {/* headlight glow */}
-        <circle cx="58.5" cy="22.2" r="1" fill="#bfefff" opacity="0.9" />
+        <circle cx="58.5" cy="22.2" r="1" fill="#ffffff" opacity="0.9" />
       </svg>
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ImagePlus,
   Upload,
@@ -11,10 +12,11 @@ import {
   Check,
   BookmarkPlus,
   ChevronDown,
-  Camera,
+  ScanLine,
+  Navigation,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Button as GlassButton } from "@/components/ui/editorial";
+import { Button as GlassButton, StatBox } from "@/components/ui/editorial";
 import { ProgressiveFluxLoader } from "@/components/ui/progressive-flux-loader";
 import { ThinkingOrb, type OrbState } from "thinking-orbs";
 import { Input } from "@/components/ui/input";
@@ -90,13 +92,13 @@ function ScanningButton({
       role="status"
       aria-live="polite"
       aria-busy="true"
-      className="w-full rounded-2xl border border-white/10 bg-white/[0.02] px-5 py-6"
-      // The loader reads its palette from these, so the brand blue is applied
-      // per instance rather than by editing the component.
+      className="w-full rounded-card border border-[var(--line-card)] bg-white/[0.02] px-5 py-6"
+      // The loader reads its palette from these. It was the brand blue; a
+      // loading bar is not where the one allowed colour gets spent.
       style={
         {
-          "--flux-from": "#0a84ff",
-          "--flux-to": "#00e5ff",
+          "--flux-from": "#808080",
+          "--flux-to": "#ffffff",
         } as React.CSSProperties
       }
     >
@@ -168,46 +170,44 @@ function SaveToGarage({ car, image }: { car: CarReport; image: string }) {
     }
   }
 
+  // The secondary half of the sticky bar. Same handler, same states; it is a
+  // 52px surface pill beside the primary action now rather than a full-width
+  // black slab in the middle of the page.
   return (
-    <div className="mt-4">
+    <>
       <button
         type="button"
         onClick={save}
         disabled={saved || busy}
         aria-busy={busy || undefined}
         className={cn(
-          "press flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-sm font-bold transition",
+          "press flex h-[52px] flex-1 items-center justify-center gap-2 rounded-full border text-[15px] font-semibold transition",
           saved
-            ? "cursor-default bg-black/[0.06] text-black/60"
-            : "bg-black text-white hover:opacity-90 disabled:opacity-50",
+            ? "cursor-default border-[var(--line-card)] bg-[var(--color-surface)] text-[var(--color-secondary-text)]"
+            : "border-[var(--line-button)] bg-[var(--color-surface)] text-white hover:bg-[var(--color-raised)] disabled:opacity-50",
         )}
       >
         {saved ? (
           <>
-            <Check className="h-4 w-4" strokeWidth={2.5} aria-hidden />
-            Saved to garage
+            <Check className="h-[18px] w-[18px]" strokeWidth={2.5} aria-hidden />
+            Saved
           </>
         ) : (
           <>
-            <BookmarkPlus className="h-4 w-4" strokeWidth={2} aria-hidden />
-            {busy ? "Saving…" : "Save to garage"}
+            <BookmarkPlus className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden />
+            {busy ? "Saving…" : "Save"}
           </>
         )}
       </button>
-
-      {saved && (
-        <p className="mt-2 text-center text-[11px] uppercase tracking-wide opacity-50">
-          <Link href="/garage" className="underline underline-offset-2 hover:opacity-80">
-            View your garage
-          </Link>
-        </p>
-      )}
+      {/* A full-storage failure has to be said somewhere, and the sticky bar
+          has no room for a line of text. Announced to assistive tech and shown
+          on the button itself, which stays un-saved so the state is honest. */}
       {error && (
-        <p role="alert" className="mt-2 text-center text-[13px] font-medium">
+        <p role="alert" className="sr-only">
           {error}
         </p>
       )}
-    </div>
+    </>
   );
 }
 
@@ -251,8 +251,8 @@ async function objectUrlToDataUrl(url: string): Promise<string> {
 function Spec({ k, v }: { k: string; v?: string }) {
   if (!v) return null;
   return (
-    <div className="rounded-xl bg-black/[0.05] p-3">
-      <div className="text-[11px] uppercase tracking-wide ">{k}</div>
+    <div className="rounded-xl bg-white/[0.04] p-3">
+      <div className="text-[12px] uppercase tracking-wide ">{k}</div>
       <div className="mt-0.5 font-semibold">{v}</div>
     </div>
   );
@@ -281,10 +281,10 @@ function RarityMeter({ score, reason }: { score: number; reason?: string }) {
             : "Common";
   return (
     <div
-      className={`mt-4 rounded-2xl p-4 ${
+      className={`mt-4 rounded-card p-4 ${
         ultra
-          ? "bg-gradient-to-r from-neon-red/15 via-neon-green/10 to-neon-blue/15 shadow-[0_0_25px_-8px_rgba(57,255,20,0.7)]"
-          : "bg-black/[0.04]"
+          ? "bg-gradient-to-r from-neon-red/15 via-neon-green/10 to-neon-blue/15 shadow-[0_0_25px_-8px_rgba(255,255,255,0.7)]"
+          : "bg-white/[0.04]"
       }`}
     >
       <div className="flex items-baseline justify-between">
@@ -321,10 +321,13 @@ function ValueChart({ points }: { points: { year: string; usd: number }[] }) {
   const y = (v: number) => padY + (1 - (v - min) / span) * (H - padY * 2);
   const line = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(p.usd)}`).join(" ");
   const area = `${line} L ${x(pts.length - 1)} ${H - padY} L ${x(0)} ${H - padY} Z`;
-  const trendUp = pts[pts.length - 1].usd >= pts[0].usd;
-  const stroke = trendUp ? "#34d399" : "#f87171";
+  // Was green up, red down. Direction is already carried by the shape of the
+  // line and by the figure beside it, so the colour was saying it a third time
+  // -- and it was the one thing on this chart a colour-blind reader could not
+  // read. Both lines are white.
+  const stroke = "#ffffff";
   return (
-    <div className="mt-4 rounded-2xl bg-black/[0.04] p-4">
+    <div className="mt-4 rounded-card bg-white/[0.04] p-4">
       <div className="flex items-baseline justify-between">
         <span className="text-xs font-bold uppercase tracking-wide ">
           Market value over time
@@ -368,6 +371,49 @@ function newScanId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+/**
+ * One collapsible row of the car detail.
+ *
+ * `has` rather than checking children for emptiness: a row whose fields are all
+ * blank still renders a non-empty children array, so the row would open onto
+ * nothing. The caller knows whether it has the data.
+ */
+function DetailRow({
+  label,
+  has,
+  children,
+}: {
+  label: string;
+  has: boolean;
+  children: React.ReactNode;
+}) {
+  if (!has) return null;
+  return (
+    <details className="group border-b border-[var(--line-divider)]">
+      <summary className="press flex min-h-14 cursor-pointer list-none items-center justify-between py-3 text-[15px] font-medium text-white [&::-webkit-details-marker]:hidden">
+        {label}
+        <ChevronDown
+          className="h-[18px] w-[18px] shrink-0 text-[var(--color-muted-text)] transition-transform group-open:rotate-180"
+          strokeWidth={1.75}
+          aria-hidden
+        />
+      </summary>
+      <div className="space-y-3 pb-4">{children}</div>
+    </details>
+  );
+}
+
+/**
+ * The four white brackets round the frame. Borders on four small boxes rather
+ * than an SVG, so they stay hairline-crisp at any pixel density.
+ */
+const CORNERS = [
+  { key: "tl", cls: "left-4 top-4 border-l-2 border-t-2 rounded-tl-lg border-white" },
+  { key: "tr", cls: "right-4 top-4 border-r-2 border-t-2 rounded-tr-lg border-white" },
+  { key: "bl", cls: "bottom-4 left-4 border-b-2 border-l-2 rounded-bl-lg border-white" },
+  { key: "br", cls: "bottom-4 right-4 border-b-2 border-r-2 rounded-br-lg border-white" },
+] as const;
+
 export default function SpotPage() {
   const [status, setStatus] = useState<Status | null>(null);
   const [car, setCar] = useState<CarReport | null>(null);
@@ -383,6 +429,9 @@ export default function SpotPage() {
   // Its own input, separate from the library picker: `capture` is what sends a
   // phone straight to its camera rather than to the photo roll, and the two
   // need different behaviour from the same page.
+  const router = useRouter();
+  /** The map pin this scan created, when it created one. */
+  const [placedSpotId, setPlacedSpotId] = useState<string | null>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   /**
    * Whether the photo being scanned was taken here and now.
@@ -548,7 +597,7 @@ export default function SpotPage() {
           maximumAge: 60_000,
         });
       });
-      await fetch("/api/spots", {
+      const res = await fetch("/api/spots", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -562,6 +611,12 @@ export default function SpotPage() {
           scanId,
         }),
       });
+      // Kept so the detail screen's "View on Map" can open this car's own pin
+      // rather than the map in general. Silently ignored if the write did not
+      // record one -- coordinates can be unusable, and a dead deep link is
+      // worse than no deep link.
+      const data = await res.json().catch(() => null);
+      if (data?.spot?.id) setPlacedSpotId(data.spot.id as string);
     } catch {
       /* no location, no pin. The scan stands on its own. */
     }
@@ -656,7 +711,22 @@ export default function SpotPage() {
           spacer sits above this and the nav's sits below it, so the page was
           padding twice at both ends — which is the room to scroll above the
           heading and below the identify button. */}
-      <main className="mx-auto w-full max-w-2xl px-5 py-2">
+      <main className="mx-auto w-full max-w-[480px] px-5 py-2">
+        {/* X, wordmark. The app's floating back arrow is suppressed on this
+            route so there are not two ways back sitting on top of each other. */}
+        <header className="relative flex h-14 items-center">
+          <button
+            type="button"
+            onClick={() => (window.history.length > 1 ? router.back() : router.push("/"))}
+            aria-label="Close scanner"
+            className="press -ml-2 flex h-11 w-11 items-center justify-center rounded-full"
+          >
+            <X className="h-6 w-6 text-white" strokeWidth={1.75} aria-hidden />
+          </button>
+          <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-[17px] font-bold lowercase tracking-tight text-white">
+            carz
+          </span>
+        </header>
         {/* No "Spot a car" headline. The nav says which page this is, and the
             two buttons under it say what to do — a 7xl restatement of the tab
             you just tapped was taking a third of the screen to add nothing.
@@ -699,35 +769,23 @@ export default function SpotPage() {
             opens outside the browser, returns a file, and cannot take this
             page down with it, because this page is not running while it is up.
             
-            The trade is a still photo only. No live preview, no hold-to-record
-            — which is no loss, since a recording was only ever scanned as its
-            first frame anyway. */}
+            Which is why this screen has no flash button and no flip button.
+            The spec asks for both only if a live camera is really used, and
+            there is no live camera here to flip or to light — those controls
+            would be two switches wired to nothing. */}
         {!previewUrl && !car && (
-          <>
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              className="hidden"
-              ref={cameraInputRef}
-              onChange={(e) => {
-                handleFileChange(e);
-                const file = e.target.files?.[0];
-                if (file) void identifyFile(file);
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => {
-                liveCapture.current = true;
-                cameraInputRef.current?.click();
-              }}
-              className="press mt-6 flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-carz py-3.5 text-sm font-bold text-black transition hover:brightness-110"
-            >
-              <Camera className="h-4 w-4" strokeWidth={2.25} aria-hidden />
-              Take a photo
-            </button>
-          </>
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            ref={cameraInputRef}
+            onChange={(e) => {
+              handleFileChange(e);
+              const file = e.target.files?.[0];
+              if (file) void identifyFile(file);
+            }}
+          />
         )}
 
         {/* Upload card */}
@@ -745,27 +803,27 @@ export default function SpotPage() {
 
           {!previewUrl ? (
             <div
-              onClick={handleThumbnailClick}
               onDragOver={handleDragOver}
               onDragEnter={handleDragEnter}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               className={cn(
-                "flex h-64 cursor-pointer flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-foreground/15 bg-foreground/[0.02] transition-colors hover:bg-foreground/[0.04]",
-                isDragging && "border-neon-blue/60 bg-neon-blue/5",
+                // Square and black: this is where the photo will be, framed
+                // the way a camera frames it. Drag and drop still lands here,
+                // which is the only way to use this screen on a desktop.
+                "relative aspect-square w-full overflow-hidden rounded-card bg-black transition-colors",
+                isDragging && "bg-[var(--color-surface)]",
               )}
             >
-              <div className="rounded-full bg-background p-3 shadow-sm">
-                <ImagePlus className="h-6 w-6 " />
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-medium">
-                  Click to select a car photo
-                </p>
-                <p className="text-xs ">
-                  or drag and drop it here
-                </p>
-              </div>
+              {/* Four corner brackets. Drawn as borders on four absolutely
+                  placed boxes rather than as an SVG, so they stay hairline-
+                  crisp at any density. */}
+              {CORNERS.map((c) => (
+                <span key={c.key} aria-hidden className={cn("pointer-events-none absolute h-8 w-8", c.cls)} />
+              ))}
+              <p className="absolute inset-x-0 bottom-5 text-center text-[14px] text-[var(--color-secondary-text)]">
+                Point your camera at any car
+              </p>
             </div>
           ) : (
             <div className="relative">
@@ -794,6 +852,39 @@ export default function SpotPage() {
                   </button>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Gallery and shutter. No flip: there is no live camera to flip.
+              The shutter opens the same camera input the page already used,
+              and the gallery opens the same library picker -- both handlers
+              are untouched, only their presentation changed. */}
+          {!previewUrl && !car && (
+            <div className="flex items-center justify-center gap-10 pt-2">
+              <button
+                type="button"
+                onClick={handleThumbnailClick}
+                aria-label="Choose a photo from your library"
+                className="press flex h-12 w-12 items-center justify-center rounded-full bg-white/10"
+              >
+                <ImagePlus className="h-5 w-5 text-white" strokeWidth={1.75} aria-hidden />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  liveCapture.current = true;
+                  cameraInputRef.current?.click();
+                }}
+                aria-label="Take a photo"
+                className="press flex h-[68px] w-[68px] items-center justify-center rounded-full border-2 border-white bg-black shadow-[var(--glow)]"
+              >
+                <ScanLine className="h-7 w-7 text-white" strokeWidth={1.75} aria-hidden />
+              </button>
+
+              {/* Balances the row against the gallery button so the shutter is
+                  actually centred rather than nearly centred. */}
+              <span aria-hidden className="h-12 w-12" />
             </div>
           )}
 
@@ -836,10 +927,10 @@ export default function SpotPage() {
         )}
 
         {limitHit && (
-          <div className="mt-4 rounded-2xl border border-white/12 bg-card text-card-foreground p-6 text-center">
+          <div className="mt-4 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-white p-6 text-center">
             <TrafficCone className="mx-auto h-8 w-8 opacity-50" strokeWidth={1.5} aria-hidden />
             <h3 className="display mt-2 text-2xl">Out of free scans</h3>
-            <p className="mx-auto mt-1 max-w-sm text-[13px] opacity-70">
+            <p className="mx-auto mt-1 max-w-sm text-[15px] opacity-70">
               You&apos;ve used all 3 of today&apos;s free scans. Get Carz+ for unlimited scanning.
             </p>
             <GlassButton href="/pricing" className="mt-4">Get Carz+ · {carzPlusMonthly()}/mo</GlassButton>
@@ -849,146 +940,146 @@ export default function SpotPage() {
           </div>
         )}
 
-        {/* Result */}
+        {/* Car detail.
+            
+            Make, model and year at three different weights, then the photo,
+            then three figures, then everything else behind rows. The whole
+            answer used to be one long card: every spec, the rarity meter, the
+            value chart and the customizer stacked in a single scroll. The rows
+            are collapsed by default, so the screen opens on what the car is
+            rather than on everything known about it. */}
         {car && !limitHit && (
-          <section className="mt-6 rounded-3xl border border-black/10 bg-card text-card-foreground p-6">
+          <section className="mt-2">
             {car.isCar ? (
               <>
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <h2 className="text-2xl font-extrabold">
-                    {car.make} {car.model} {car.yearRange}
-                  </h2>
-                  <span
-                    className={cn(
-                      "rounded-full px-2.5 py-1 text-xs font-bold",
-                      car.confidence === "high"
-                        ? "bg-neon-green/15 text-neon-green"
-                        : car.confidence === "medium"
-                          ? "bg-neon-red/15 text-neon-red"
-                          : "bg-neon-red/15 text-neon-red",
-                    )}
-                  >
-                    {car.confidence} confidence
-                  </span>
-                </div>
-                {car.notes && <p className="mt-1 text-sm ">{car.notes}</p>}
-                {specsPending && (
-                  <p className="mt-1.5 flex items-center gap-2 text-xs opacity-60">
-                    <span className="inline-block h-1.5 w-1.5 animate-ping rounded-full bg-current" />
-                    Loading specs, rarity and values…
+                <h2 className="text-[20px] font-normal leading-tight text-white">{car.make}</h2>
+                <p className="text-[34px] font-bold leading-tight tracking-tight text-white">
+                  {car.model}
+                </p>
+                {car.yearRange && (
+                  <p className="text-[20px] leading-tight text-[var(--color-secondary-text)]">
+                    {car.yearRange}
                   </p>
                 )}
-                {car.crossChecked && car.crossCheckNote && (
-                  <p className="mt-1.5 text-xs opacity-70">{car.crossCheckNote}</p>
-                )}
-                {car.visualEvidence?.length > 0 && (
-                  <details className="mt-2">
-                    <summary className="cursor-pointer text-xs opacity-60 hover:opacity-100">
-                      What gave it away
-                    </summary>
-                    <ul className="mt-1.5 space-y-1">
-                      {car.visualEvidence.map((e) => (
-                        <li key={e} className="flex items-start gap-2 text-xs opacity-80">
-                          <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-carz" />
-                          <span>{e}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    {car.alsoConsidered && (
-                      <p className="mt-2 text-xs opacity-60">Ruled out: {car.alsoConsidered}</p>
-                    )}
-                  </details>
-                )}
 
-                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <Spec k="Engine" v={car.engine} />
-                  <Spec k="Drivetrain" v={car.drivetrain} />
-                  <Spec k="Horsepower" v={car.horsepower} />
-                  <Spec k="0–60 mph" v={car.zeroToSixty} />
-                  <Spec k="Top speed" v={car.topSpeed} />
-                  <Spec k="Origin" v={car.countryOfOrigin} />
-                  <Spec k="Parent company" v={car.parentCompany} />
-                  <Spec k="Retail" v={car.priceRangeUsed} />
-                </div>
-
-                {/* Body style, generation, trim and colour are the four the
-                    model is least sure of — a trim is a guess by its own label.
-                    Behind a disclosure they are still one tap away without
-                    sitting at the top of the answer as though they were as
-                    solid as the engine. */}
-                {(car.bodyStyle || car.generation || car.trimGuess || car.color) && (
-                  <details className="group mt-3">
-                    {/* Liquid glass, mixed for this surface rather than the
-                        .glass-card utility: that one is built for the black
-                        shader background and forces near-white text, which on
-                        this near-white card would be an invisible label. Same
-                        language — translucent, blurred, lit along the top edge
-                        — over a light panel, so the text stays readable. */}
-                    <summary className="press flex min-h-11 cursor-pointer list-none items-center justify-between rounded-xl border border-black/10 bg-gradient-to-b from-white/80 to-white/40 px-4 text-sm font-semibold shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9),0_6px_16px_-10px_rgba(0,0,0,0.45)] backdrop-blur-md transition-colors hover:from-white/95 hover:to-white/55 [&::-webkit-details-marker]:hidden">
-                      <span>More info</span>
-                      <ChevronDown
-                        className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180"
-                        strokeWidth={2}
-                        aria-hidden
-                      />
-                    </summary>
-                    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      <Spec k="Body style" v={car.bodyStyle} />
-                      <Spec k="Generation" v={car.generation} />
-                      <Spec k="Trim (guess)" v={car.trimGuess} />
-                      <Spec k="Color" v={car.color} />
-                    </div>
-                  </details>
-                )}
-
-                {/* Keyed on the identification so a re-scan remounts it and the
-                    "saved" state can't carry over onto a different car. */}
-                <SaveToGarage
-                  key={`${car.make}|${car.model}|${car.yearRange}`}
-                  car={car}
-                  image={spottedImage}
-                />
-
-                <RarityMeter score={car.rarityScore} reason={car.rarityReason} />
-                <ValueChart points={car.valueTimeline} />
-
-                {(car.valuation || car.reliability || car.collectibility) && (
-                  <div className="mt-6 border-t border-black/15 pt-5">
-                    {car.valuation && (
-                      <>
-                        <h3 className="text-xs font-bold uppercase tracking-wide text-neon-green">
-                          Valuation
-                        </h3>
-                        <p className="mb-3 mt-1 text-sm">{car.valuation}</p>
-                      </>
-                    )}
-                    {car.reliability && (
-                      <>
-                        <h3 className="text-xs font-bold uppercase tracking-wide text-neon-green">
-                          Reliability
-                        </h3>
-                        <p className="mb-3 mt-1 text-sm">{car.reliability}</p>
-                      </>
-                    )}
-                    {car.collectibility && (
-                      <>
-                        <h3 className="text-xs font-bold uppercase tracking-wide text-neon-green">
-                          Collectibility
-                        </h3>
-                        <p className="mt-1 text-sm">{car.collectibility}</p>
-                      </>
-                    )}
+                {/* Full-bleed and fading to black, the one gradient allowed. */}
+                {spottedImage && (
+                  <div className="relative -mx-5 mt-4">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={spottedImage} alt={`${car.make} ${car.model}`} className="w-full" />
+                    <div
+                      aria-hidden
+                      className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-black"
+                    />
                   </div>
                 )}
 
-                {spottedImage && <CarCustomizer image={spottedImage} car={car} />}
+                {/* Only the figures we actually have. A stat box reading "—" is
+                    a box that costs a third of the row to say nothing. */}
+                {(car.priceRangeUsed || car.horsepower || car.zeroToSixty) && (
+                  <div className="mt-5 grid grid-cols-3 gap-3">
+                    {car.priceRangeUsed && <StatBox value={car.priceRangeUsed} label="Retail" />}
+                    {car.horsepower && <StatBox value={car.horsepower} label="Horsepower" />}
+                    {car.zeroToSixty && <StatBox value={car.zeroToSixty} label="0–60 mph" />}
+                  </div>
+                )}
+
+                {car.notes && (
+                  <>
+                    <h3 className="mt-6 text-[20px] font-bold text-white">Overview</h3>
+                    <p className="mt-2 text-[15px] leading-relaxed text-[var(--color-secondary-text)]">
+                      {car.notes}
+                    </p>
+                  </>
+                )}
+
+                {specsPending && (
+                  <p className="mt-3 text-[14px] text-[var(--color-secondary-text)]">
+                    Loading specs, rarity and values…
+                  </p>
+                )}
+
+                <div className="mt-6">
+                  <DetailRow label="Specs" has={!!(car.engine || car.drivetrain || car.bodyStyle)}>
+                    <Spec k="Engine" v={car.engine} />
+                    <Spec k="Drivetrain" v={car.drivetrain} />
+                    <Spec k="Body style" v={car.bodyStyle} />
+                    <Spec k="Generation" v={car.generation} />
+                    <Spec k="Trim (guess)" v={car.trimGuess} />
+                    <Spec k="Colour" v={car.color} />
+                    <Spec k="Origin" v={car.countryOfOrigin} />
+                    <Spec k="Parent company" v={car.parentCompany} />
+                  </DetailRow>
+
+                  <DetailRow
+                    label="Performance"
+                    has={!!(car.horsepower || car.zeroToSixty || car.topSpeed)}
+                  >
+                    <Spec k="Horsepower" v={car.horsepower} />
+                    <Spec k="0–60 mph" v={car.zeroToSixty} />
+                    <Spec k="Top speed" v={car.topSpeed} />
+                  </DetailRow>
+
+                  <DetailRow
+                    label="Market value"
+                    has={!!(car.priceRangeUsed || car.valuation || car.valueTimeline?.length)}
+                  >
+                    <Spec k="Retail" v={car.priceRangeUsed} />
+                    {car.valuation && (
+                      <p className="text-[15px] leading-relaxed text-white">{car.valuation}</p>
+                    )}
+                    {car.reliability && (
+                      <p className="text-[15px] leading-relaxed text-white">{car.reliability}</p>
+                    )}
+                    {car.collectibility && (
+                      <p className="text-[15px] leading-relaxed text-white">{car.collectibility}</p>
+                    )}
+                    <ValueChart points={car.valueTimeline} />
+                  </DetailRow>
+
+                  <DetailRow label="Rarity" has={car.rarityScore > 0}>
+                    <RarityMeter score={car.rarityScore} reason={car.rarityReason} />
+                  </DetailRow>
+
+                  <DetailRow label="Similar models" has={!!car.alsoConsidered}>
+                    <p className="text-[15px] leading-relaxed text-white">{car.alsoConsidered}</p>
+                  </DetailRow>
+
+                  {/* No "Photos & Videos" row. One photo exists -- the one you
+                      just took, and it is already at the top of this screen. */}
+
+                  <DetailRow label="Customize this car" has={!!spottedImage}>
+                    {spottedImage && <CarCustomizer image={spottedImage} car={car} />}
+                  </DetailRow>
+                </div>
+
+                {/* Sticky actions. Save keeps its own handler and its own saved
+                    state; View on Map goes to this car's pin when the scan
+                    dropped one and to the map itself otherwise, which is the
+                    difference between a deep link and a dead one. */}
+                <div
+                  className="fixed inset-x-0 bottom-0 z-[55] mx-auto flex max-w-[480px] gap-3 border-t border-[var(--line-divider)] bg-black px-5 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] pt-3"
+                >
+                  <SaveToGarage
+                    key={`${car.make}|${car.model}|${car.yearRange}`}
+                    car={car}
+                    image={spottedImage}
+                  />
+                  <Link
+                    href={placedSpotId ? `/map?spot=${encodeURIComponent(placedSpotId)}` : "/map"}
+                    className="press flex h-[52px] flex-1 items-center justify-center gap-2 rounded-full bg-white text-[15px] font-semibold text-black"
+                  >
+                    <Navigation className="h-[18px] w-[18px]" strokeWidth={2.25} aria-hidden />
+                    View on Map
+                  </Link>
+                </div>
+                {/* Clears the sticky bar so the last row is reachable. */}
+                <div aria-hidden style={{ height: "calc(env(safe-area-inset-bottom,0px) + 76px)" }} />
               </>
             ) : (
               <>
-                <h2 className="text-xl font-bold">
-                  No car detected
-                </h2>
-                <p className="mt-1 text-sm ">
+                <h2 className="text-[20px] font-bold text-white">No car detected</h2>
+                <p className="mt-1 text-[15px] text-[var(--color-secondary-text)]">
                   {car.notes || "Try a clearer photo of the car."}
                 </p>
               </>
@@ -998,13 +1089,13 @@ export default function SpotPage() {
 
         {/* History (Pro/Max) */}
         {status?.saveHistory && status.history && status.history.length > 0 && (
-          <section className="mt-6 rounded-3xl border border-black/10 bg-card text-card-foreground p-6">
+          <section className="mt-6 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-white p-6">
             <h3 className="font-bold">Your spotting history</h3>
             <div className="mt-3 space-y-2">
               {status.history.map((h, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between rounded-xl bg-black/[0.04] px-3 py-2 text-sm"
+                  className="flex items-center justify-between rounded-xl bg-white/[0.04] px-3 py-2 text-sm"
                 >
                   <span className="font-semibold">
                     {h.make} {h.model}{" "}

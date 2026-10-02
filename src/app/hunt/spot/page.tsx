@@ -151,7 +151,7 @@ function HuntSpotInner() {
     return (
       <>
         <main className="mx-auto w-full max-w-lg px-5 py-10">
-          <div className="h-80 animate-pulse rounded-3xl bg-foreground/[0.04]" />
+          <div className="h-80 animate-pulse rounded-card bg-foreground/[0.04]" />
         </main>
       </>
     );
@@ -188,7 +188,7 @@ function HuntSpotInner() {
           </div>
         </div>
 
-        <div className="mt-4 overflow-hidden rounded-3xl border border-foreground/[0.08] bg-black text-white">
+        <div className="mt-4 overflow-hidden rounded-card border border-foreground/[0.08] bg-black text-white">
           <div className="relative aspect-[3/4] w-full">
             {/* Live viewfinder */}
             <video
@@ -260,7 +260,7 @@ function ResultCard({ result, shot, onAgain }: { result: Result; shot: string; o
   let body;
   if (result.match && result.colorOk) {
     body = (
-      <div className="rounded-2xl border border-neon-green/50 bg-neon-green/15 p-4 text-center">
+      <div className="rounded-card border border-neon-green/50 bg-neon-green/15 p-4 text-center">
         <h3 className="mt-1 text-lg font-black text-neon-green">
           {result.awarded > 0 ? "Bounty found!" : "You spotted a wanted car!"}
         </h3>
@@ -273,7 +273,7 @@ function ResultCard({ result, shot, onAgain }: { result: Result; shot: string; o
     );
   } else if (result.match && !result.colorOk) {
     body = (
-      <div className="rounded-2xl border border-neon-red/40 bg-neon-red/10 p-4 text-center">
+      <div className="rounded-card border border-neon-red/40 bg-neon-red/10 p-4 text-center">
         <h3 className="mt-1 font-black text-neon-red">Wrong color!</h3>
         <p className="mt-1 text-sm">
           That&apos;s a <span className="font-bold">{result.match.name}</span>, but only the{" "}
@@ -284,14 +284,14 @@ function ResultCard({ result, shot, onAgain }: { result: Result; shot: string; o
     );
   } else if (result.isCar) {
     body = (
-      <div className="rounded-2xl border border-foreground/10 bg-foreground/[0.03] p-4 text-center">
+      <div className="rounded-card border border-foreground/10 bg-foreground/[0.03] p-4 text-center">
         <h3 className="mt-1 font-bold">{car || "A car"} — not wanted</h3>
         <p className="mt-1 text-sm ">That one&apos;s not on the Miami board. Keep hunting!</p>
       </div>
     );
   } else {
     body = (
-      <div className="rounded-2xl border border-foreground/10 bg-foreground/[0.03] p-4 text-center">
+      <div className="rounded-card border border-foreground/10 bg-foreground/[0.03] p-4 text-center">
         <h3 className="mt-1 font-bold">No car detected</h3>
         <p className="mt-1 text-sm ">Get closer and make sure the car fills the frame.</p>
       </div>

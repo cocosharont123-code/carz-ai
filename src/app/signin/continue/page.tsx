@@ -57,7 +57,7 @@ export default async function ContinuePage({
         <Link
           href={backToStepOne}
           replace
-          className="press mx-auto flex h-11 items-center justify-center gap-1 px-4 text-[13px] font-semibold opacity-60"
+          className="press mx-auto flex h-11 items-center justify-center gap-1 px-4 text-[15px] font-semibold opacity-60"
         >
           <ChevronLeft className="h-4 w-4" strokeWidth={2.5} aria-hidden />
           Use a different email
