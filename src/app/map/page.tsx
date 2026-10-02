@@ -14,9 +14,13 @@ export default function MapPage() {
     <div
       className="relative w-full overflow-hidden"
       style={{
-        height: "100dvh",
-        marginTop: "calc(-1 * (var(--safe-top) + var(--back-h)))",
-        marginBottom: "calc(-1 * var(--nav-h))",
+        // Fills what is left between the notch and the tab bar. It used to be
+        // a full 100dvh with the nav's spacer cancelled by a negative margin,
+        // which was right while the nav was a floating bubble the map could
+        // run under. The bar is solid and docked now, and Map is one of its
+        // tabs, so the map stops above it instead of hiding behind it.
+        height: "calc(100dvh - var(--safe-top) - var(--nav-h))",
+        marginTop: "calc(-1 * var(--back-h))",
       }}
     >
       <SpotMap />
