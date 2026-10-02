@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { WANTED, HUNT_RULE, getHunt, joinHunt, totalEarned, type HuntState } from "@/lib/hunt";
-import { Lock, Trophy, Crosshair, X } from "lucide-react";
+import { Trophy, Crosshair, X } from "lucide-react";
 import { Button } from "@/components/ui/editorial";
 import { MemberGate } from "@/components/member-gate";
 import { cn } from "@/lib/utils";
@@ -135,13 +135,6 @@ function HuntInner() {
   const entrants = status?.count ?? 0;
   const pct = Math.min(100, Math.round((entrants / Math.max(1, goal)) * 100));
 
-  // The biggest bounty still unclaimed. The card is advertising what is on
-  // offer, so a car somebody already found is the wrong number to show.
-  const topBounty = WANTED.filter((w) => !hunt?.claimed?.[w.id]).reduce(
-    (best, w) => Math.max(best, w.bounty),
-    0,
-  );
-
   return (
     <main className="mx-auto w-full max-w-[480px] px-5 pb-6">
       <header className="flex h-14 items-center justify-between">
@@ -154,31 +147,6 @@ function HuntInner() {
           How it works
         </button>
       </header>
-
-      {/* The bounty card. /hunt-cover.jpg as a background-image rather than an
-          <img>, so a missing file is black instead of a broken-image glyph. */}
-      <section className="relative mt-2 overflow-hidden rounded-card border border-white shadow-[var(--glow)]">
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-black bg-cover bg-center"
-          style={{ backgroundImage: "url('/hunt-cover.jpg')" }}
-        />
-        <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/40" />
-        <div className="relative px-5 pb-5 pt-8">
-          <Lock className="h-7 w-7 text-white" strokeWidth={1.75} aria-hidden />
-          <h2 className="mt-4 max-w-[14rem] text-[20px] font-bold leading-tight text-white">
-            Find a wrapped car. Win the bounty.
-          </h2>
-          {topBounty > 0 && (
-            <>
-              <span className="mt-4 inline-block rounded-full bg-black/80 px-4 py-1.5 text-[20px] font-bold text-white">
-                {money(topBounty)}
-              </span>
-              <p className="mt-1.5 text-[14px] text-[var(--color-secondary-text)]">Current Bounty</p>
-            </>
-          )}
-        </div>
-      </section>
 
       {/* Two stat cards. "N active" rather than "N nearby": there is no
           location on a wanted car, so nothing here knows what is near you, and
