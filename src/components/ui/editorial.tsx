@@ -40,7 +40,7 @@ type ButtonProps = {
  */
 const PRIMARY = "bg-carz text-carz-ink hover:bg-foreground/90";
 const SECONDARY =
-  "bg-[var(--color-surface)] text-foreground border border-[var(--line-button)] hover:bg-[var(--color-raised)]";
+  "glass-card border-[var(--line-button)] text-foreground hover:bg-[var(--color-raised)]";
 
 export function Button({
   href,
@@ -109,7 +109,7 @@ export function Card({ children, className, hover }: { children: ReactNode; clas
   return (
     <div
       className={cn(
-        "rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-foreground",
+        "rounded-card glass-card",
         hover && "transition-colors hover:border-[var(--line-button)]",
         className,
       )}
@@ -175,7 +175,7 @@ export function StatRow({
     <div
       className={cn(
         "flex flex-col justify-center rounded-card border border-[var(--line-card)] p-6",
-        yellow ? "bg-carz " : "bg-[var(--color-surface)] text-foreground",
+        yellow ? "bg-carz " : "glass-card",
         className,
       )}
     >
@@ -316,7 +316,7 @@ export function SearchPill({
         aria-label={label}
         autoFocus={autoFocus}
         className={cn(
-          "h-[52px] w-full rounded-full border border-[var(--line-card)] bg-[var(--color-surface)]",
+          "h-[52px] w-full rounded-full glass-card",
           "pl-11 text-[15px] text-foreground outline-none",
           "placeholder:text-[var(--color-muted-text)]",
           // Safari draws its own X inside type=search and it is not ours.
@@ -356,7 +356,7 @@ export function SearchPill({
 /* --- StatBox: a bold value over a grey label -------------------------------- */
 export function StatBox({ value, label }: { value: ReactNode; label: string }) {
   return (
-    <div className="rounded-stat border border-[var(--line-card)] bg-[var(--color-surface)] px-3 py-3.5 text-center">
+    <div className="rounded-stat glass-card px-3 py-3.5 text-center">
       <div className="text-[17px] font-bold leading-tight text-foreground">{value}</div>
       <div className="mt-1 text-[12px] leading-tight text-[var(--color-secondary-text)]">{label}</div>
     </div>

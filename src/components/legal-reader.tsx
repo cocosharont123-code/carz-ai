@@ -105,7 +105,7 @@ export function LegalReader({
     <>
       {/* The document scrolls in its own pane, so "reached the end" is a fact
           about the text rather than about where the page happens to be. */}
-      <div className="overflow-hidden rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-foreground">
+      <div className="overflow-hidden rounded-card glass-card">
         <div
           ref={scrollerRef}
           onScroll={measure}

@@ -112,6 +112,21 @@
   --line-card: rgba(0, 0, 0, 0.12);
   --line-button: rgba(0, 0, 0, 0.24);
   --line-divider: rgba(0, 0, 0, 0.09);
+
+  /* Liquid glass, light.
+     
+     White at 68%. That number is the readability floor, not a taste: measured
+     against the worst possible backdrop -- a pure black photo sliding under the
+     panel -- black text on it is 9.36:1, well clear of AA. Thinner glass looks
+     better on a plain page and fails the moment a photo passes behind it. */
+  --glass-fill: rgba(255, 255, 255, 0.68);
+  --glass-blur: 20px;
+  --glass-edge: rgba(0, 0, 0, 0.14);
+  /* The lit edge. On light glass the highlight is white and the shade beneath
+     it is a soft grey, which is what a bevel on white actually looks like. */
+  --glass-rim-hi: rgba(255, 255, 255, 0.95);
+  --glass-rim-lo: rgba(0, 0, 0, 0.06);
+  --glass-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.25);
   /* A glow is a dark-mode idea. On white it becomes a soft drop shadow,
      because light does not bloom off a white page. */
   --glow: 0 2px 14px rgba(0, 0, 0, 0.18);
@@ -133,6 +148,20 @@
   --line-button: rgba(255, 255, 255, 0.20);
   --line-divider: rgba(255, 255, 255, 0.08);
   --glow: 0 0 24px rgba(255, 255, 255, 0.35);
+
+  /* Liquid glass, dark.
+     
+     Black at 60%, not white at 10%. This is the whole readability fix: the old
+     glass was a pale translucent panel, so anything bright passing behind it
+     left white text on near-white. A darkening material contrasts with its own
+     white text no matter what is underneath -- 5.74:1 against a pure white
+     photo, which is the worst case there is. */
+  --glass-fill: rgba(0, 0, 0, 0.60);
+  --glass-blur: 20px;
+  --glass-edge: rgba(255, 255, 255, 0.14);
+  --glass-rim-hi: rgba(255, 255, 255, 0.45);
+  --glass-rim-lo: rgba(255, 255, 255, 0.06);
+  --glass-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.8);
 }
 
 @theme inline {
@@ -527,41 +556,145 @@ body {
   }
 }
 
-/* Surfaces, not glass.
+/* Liquid glass.
    
-   .glass-card and .glass-bubble were the app's material: a white gradient over
-   a backdrop-filter, a specular rim and a cyan bloom. All three are gone -- the
-   spec allows no blur, no glass and no gradient except a photo fading to black.
+   Three layers, and each one is doing a job.
    
-   The class names stay. They are applied in sixty-odd places, and a rename is
-   sixty chances to leave one behind still asking for glass that no longer
-   exists. Both now paint the same thing every other surface paints: #121212
-   with a hairline edge.
+   The fill is a *darkening* material in dark mode and a lightening one in
+   light. That is the readability fix. The glass this replaces was a pale panel
+   in both, so a bright photo sliding behind it left white text sitting on
+   near-white. A material that always moves the backdrop towards its own
+   background colour can never lose contrast with its own text, whatever passes
+   under it.
+   
+   The blur lives on a ::before at z-index -1 rather than on the element.
+   backdrop-filter promotes whatever carries it to its own composited layer, and
+   that costs the text inside subpixel antialiasing -- glyphs get resampled and
+   read as faintly smeared. Keeping the filter on a pseudo-element behind the
+   content leaves the text crisp, which is the single biggest difference between
+   glass that looks expensive and glass that looks cheap.
+   
+   The rim is a masked gradient on ::after: lit hardest where the light lands,
+   falling off to nothing before it comes round again. A real glass edge is not
+   evenly lit, and one hairline ring does more for the material than any amount
+   of extra blur.
    
    position:relative stays inside @layer components, which is load-bearing.
-   Declared unlayered it outranks Tailwind's own .fixed -- that is what once
-   left the nav rendering at the bottom of the document instead of fixed to the
-   screen. */
-.glass-card {
-  color: var(--foreground);
-  background: var(--surface);
-  border: 1px solid var(--line-card);
-  transition: border-color 300ms var(--ease-apple);
+   Declared unlayered it outranks Tailwind's own .fixed, which once left the nav
+   rendering at the bottom of the document instead of fixed to the screen. */
+
+.glass-card,
+.glass-bubble,
+.blur-behind {
+  isolation: isolate; /* keeps the -1 layer behind this box, not the page */
+  background: var(--glass-fill);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-shadow);
 }
 
+.glass-card,
 .glass-bubble {
   color: var(--foreground);
-  background: var(--surface);
-  border: 1px solid var(--line-card);
+
+  /* Secondary type gets a notch more contrast on glass than on the flat page.
+     
+     The material sits over whatever is scrolling behind it, so its effective
+     background is lighter (dark mode) or darker (light mode) than the page it
+     would otherwise be measured against. Against a mid-grey backdrop the normal
+     greys land at 5.01:1 and 4.60:1 -- passing, but with almost nothing to
+     spare. These give 5.83 and 5.38.
+     
+     Scoped to the material rather than changed in the palette, so the flat-page
+     greys stay exactly as specified. */
+  --secondary-text: #b0b0b0;
 }
 
-/* The travelling lens: the brighter pane of glass that sits under whichever
-   target is current and slides to the next one.
-   
-   A moving highlight rather than a marker that blinks out here and in there —
-   the eye follows one object across the bar and the bar stays one object. Its
-   width is a fraction of the row set from the target count, so nothing has to
-   be measured and no layout is read during the animation. */
+:root:not(.dark) .glass-card,
+:root:not(.dark) .glass-bubble {
+  --secondary-text: #525252;
+}
+
+.glass-card::before,
+.glass-bubble::before,
+.blur-behind::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  backdrop-filter: blur(var(--glass-blur)) saturate(170%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(170%);
+  pointer-events: none;
+}
+
+.glass-card::after,
+.glass-bubble::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    var(--glass-rim-hi),
+    var(--glass-rim-lo) 38%,
+    transparent 62%,
+    var(--glass-rim-hi)
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* The bubble is the same material lit harder: it floats free rather than being
+   tucked against an edge, so the rim has to read all the way round. */
+.glass-bubble {
+  --glass-blur: 28px;
+}
+
+.glass-bubble::after {
+  opacity: 0.8;
+}
+
+.glass-card:hover {
+  border-color: var(--line-button);
+}
+
+/* No backdrop-filter, no glass. Firefox without the flag, older WebViews, and
+   anything running on a GPU the browser has given up on all land here, and a
+   translucent panel with nothing blurring behind it is just a washed-out box.
+   The fill goes opaque instead. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-card,
+  .glass-bubble,
+  .blur-behind {
+    background: var(--surface);
+  }
+}
+
+/* Asked not to see transparency. iOS has had this switch for years and it is
+   exactly this effect it is asking about. */
+@media (prefers-reduced-transparency: reduce) {
+  .glass-card,
+  .glass-bubble,
+  .blur-behind {
+    background: var(--surface);
+  }
+  .glass-card::before,
+  .glass-bubble::before,
+  .blur-behind::before {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .glass-card::after,
+  .glass-bubble::after {
+    opacity: 0.25;
+  }
+}
+
 .nav-lens {
   /* Was cyan. The ink colour at low alpha, so it reads on either theme. */
   background: color-mix(in srgb, var(--foreground) 14%, transparent);

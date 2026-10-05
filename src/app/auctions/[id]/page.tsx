@@ -150,7 +150,7 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
           All auctions
         </Link>
 
-        <div className="mt-4 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-foreground">
+        <div className="mt-4 rounded-card glass-card">
           <div className="relative aspect-[16/9] w-full overflow-hidden">
             <CarPhoto src={a.image} alt={a.title} />
             <span className="absolute rounded-lg left-3 top-3 flex items-center gap-1.5 bg-background/70 text-foreground px-3 py-1.5">

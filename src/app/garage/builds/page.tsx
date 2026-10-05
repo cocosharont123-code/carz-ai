@@ -131,13 +131,13 @@ function BuildsInner() {
         {loading ? (
           <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
             {[0, 1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="overflow-hidden rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-foreground">
+              <div key={i} className="overflow-hidden rounded-card glass-card">
                 <Skeleton className="aspect-square w-full" />
               </div>
             ))}
           </div>
         ) : builds.length === 0 ? (
-          <div className="mt-8 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-foreground p-10 text-center">
+          <div className="mt-8 rounded-card glass-card p-10 text-center">
             <h3 className="display text-3xl">No builds yet</h3>
             <p className="mx-auto mt-2 max-w-sm text-sm ">
               Spot a car and customize the look — every config you generate is saved here automatically.
@@ -154,7 +154,7 @@ function BuildsInner() {
 
             <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
               {builds.map((b) => (
-                <div key={b.id} className="reveal press lift group relative overflow-hidden rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-foreground">
+                <div key={b.id} className="reveal press lift group relative overflow-hidden rounded-card glass-card">
                   <button
                     onClick={() => remove(b.id)}
                     disabled={pendingId === b.id}

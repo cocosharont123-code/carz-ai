@@ -39,7 +39,7 @@ function WishlistInner() {
         <PageMasthead eyebrow="Cars you love" title="Wishlist" count={items ? `${items.length} saved` : "—"} />
 
         {items === null ? null : items.length === 0 ? (
-          <div className="mt-8 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-foreground p-10 text-center">
+          <div className="mt-8 rounded-card glass-card p-10 text-center">
             <h3 className="display text-3xl">Nothing saved yet</h3>
             <p className="mx-auto mt-2 max-w-sm text-[15px] opacity-70">
               Tap the heart on any auction to save it here. Carz+ members get alerted when a wishlisted car is
@@ -50,7 +50,7 @@ function WishlistInner() {
         ) : (
           <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
             {items.map((w) => (
-              <div key={w.id} className="reveal press lift group relative overflow-hidden rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-foreground">
+              <div key={w.id} className="reveal press lift group relative overflow-hidden rounded-card glass-card">
                 <button
                   onClick={() => setItems(removeWish(w.id))}
                   title="Remove"

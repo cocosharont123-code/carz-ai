@@ -30,7 +30,7 @@ function money(n: number): string {
 
 function DropCard({ drop }: { drop: Drop }) {
   return (
-    <article className="rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-foreground p-5">
+    <article className="rounded-card glass-card p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="util-label opacity-60">{drop.make}</p>
@@ -158,7 +158,7 @@ export default function DropsPage() {
             ))}
           </div>
         ) : !configured ? (
-          <div className="mt-8 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-foreground p-10 text-center">
+          <div className="mt-8 rounded-card glass-card p-10 text-center">
             <Rocket className="mx-auto h-8 w-8 opacity-40" strokeWidth={1.5} aria-hidden />
             <h2 className="mt-3 text-lg font-bold">Drops aren&apos;t switched on yet</h2>
             <p className="mx-auto mt-1.5 max-w-sm text-[15px] opacity-60">
@@ -166,7 +166,7 @@ export default function DropsPage() {
             </p>
           </div>
         ) : error || shown.length === 0 ? (
-          <div className="mt-8 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-foreground p-10 text-center">
+          <div className="mt-8 rounded-card glass-card p-10 text-center">
             <Rocket className="mx-auto h-8 w-8 opacity-40" strokeWidth={1.5} aria-hidden />
             <h2 className="mt-3 text-lg font-bold">
               {error ? "Couldn't load new drops" : "Nothing in this class right now"}

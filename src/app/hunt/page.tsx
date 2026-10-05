@@ -142,7 +142,7 @@ function HuntInner() {
         <button
           type="button"
           onClick={() => setRulesOpen(true)}
-          className="press min-h-11 rounded-full border border-[var(--line-button)] bg-[var(--color-surface)] px-4 text-[14px] font-semibold text-foreground"
+          className="press min-h-11 rounded-full border glass-card border-[var(--line-button)] px-4 text-[14px] font-semibold text-foreground"
         >
           How it works
         </button>
@@ -152,14 +152,14 @@ function HuntInner() {
           location on a wanted car, so nothing here knows what is near you, and
           the spec's own fallback is the active count. */}
       <div className="mt-3 grid grid-cols-2 gap-3">
-        <div className="rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] p-4">
+        <div className="rounded-card glass-card p-4">
           <Crosshair className="h-6 w-6 text-foreground" strokeWidth={1.75} aria-hidden />
           <div className="mt-3 text-[17px] font-semibold text-foreground">Active Hunts</div>
           <div className="mt-0.5 text-[14px] text-[var(--color-secondary-text)]">
             {WANTED.length - found} active
           </div>
         </div>
-        <div className="rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] p-4">
+        <div className="rounded-card glass-card p-4">
           <Trophy className="h-6 w-6 text-foreground" strokeWidth={1.75} aria-hidden />
           <div className="mt-3 text-[17px] font-semibold text-foreground">Your Rewards</div>
           <div className="mt-0.5 text-[14px] text-[var(--color-secondary-text)]">
@@ -171,7 +171,7 @@ function HuntInner() {
       {/* Entering, and how close the hunt is to starting. Kept from the old
           header: it is the only control on this screen that does anything, and
           the mockup has nowhere for it. */}
-      <section className="mt-5 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] p-4">
+      <section className="mt-5 rounded-card glass-card p-4">
         <div className="flex items-baseline justify-between">
           <span className="text-[20px] font-bold tabular-nums text-foreground">
             {status ? count(entrants) : "—"}
@@ -285,7 +285,7 @@ function HuntInner() {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-[480px] rounded-t-sheet border-t border-[var(--line-card)] bg-[var(--color-surface)] px-5 pb-10 pt-3"
+            className="glass-card w-full max-w-[480px] rounded-t-sheet rounded-b-none border-x-0 border-b-0 px-5 pb-10 pt-3"
           >
             {/* Grabber, then the rules. The text is the app's own HUNT_RULE
                 plus the three steps the feature actually implements -- nothing

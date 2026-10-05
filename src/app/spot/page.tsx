@@ -183,8 +183,8 @@ function SaveToGarage({ car, image }: { car: CarReport; image: string }) {
         className={cn(
           "press flex h-[52px] flex-1 items-center justify-center gap-2 rounded-full border text-[15px] font-semibold transition",
           saved
-            ? "cursor-default border-[var(--line-card)] bg-[var(--color-surface)] text-[var(--color-secondary-text)]"
-            : "border-[var(--line-button)] bg-[var(--color-surface)] text-foreground hover:bg-[var(--color-raised)] disabled:opacity-50",
+            ? "cursor-default glass-card text-[var(--color-secondary-text)]"
+            : "glass-card border-[var(--line-button)] text-foreground hover:bg-[var(--color-raised)] disabled:opacity-50",
         )}
       >
         {saved ? (
@@ -935,7 +935,7 @@ export default function SpotPage() {
         )}
 
         {limitHit && (
-          <div className="mt-4 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-foreground p-6 text-center">
+          <div className="mt-4 rounded-card glass-card p-6 text-center">
             <TrafficCone className="mx-auto h-8 w-8 opacity-50" strokeWidth={1.5} aria-hidden />
             <h3 className="display mt-2 text-2xl">Out of free scans</h3>
             <p className="mx-auto mt-1 max-w-sm text-[15px] opacity-70">
@@ -1066,7 +1066,7 @@ export default function SpotPage() {
                     dropped one and to the map itself otherwise, which is the
                     difference between a deep link and a dead one. */}
                 <div
-                  className="fixed inset-x-0 bottom-0 z-[55] mx-auto flex max-w-[480px] gap-3 border-t border-[var(--line-divider)] bg-background px-5 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] pt-3"
+                  className="blur-behind fixed inset-x-0 bottom-0 z-[55] mx-auto flex max-w-[480px] gap-3 border-x-0 border-b-0 px-5 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] pt-3"
                 >
                   <SaveToGarage
                     key={`${car.make}|${car.model}|${car.yearRange}`}
@@ -1097,7 +1097,7 @@ export default function SpotPage() {
 
         {/* History (Pro/Max) */}
         {status?.saveHistory && status.history && status.history.length > 0 && (
-          <section className="mt-6 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-foreground p-6">
+          <section className="mt-6 rounded-card glass-card p-6">
             <h3 className="font-bold">Your spotting history</h3>
             <div className="mt-3 space-y-2">
               {status.history.map((h, i) => (

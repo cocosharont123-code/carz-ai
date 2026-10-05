@@ -370,7 +370,7 @@ export function SpotMap() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search cars, events, or places"
             aria-label="Search the map"
-            className="h-[52px] w-full rounded-full border border-[var(--line-card)] bg-[var(--color-surface)] pl-11 pr-4 text-[15px] text-foreground outline-none placeholder:text-[var(--color-muted-text)] [&::-webkit-search-cancel-button]:appearance-none"
+            className="h-[52px] w-full rounded-full glass-card pl-11 pr-4 text-[15px] text-foreground outline-none placeholder:text-[var(--color-muted-text)] [&::-webkit-search-cancel-button]:appearance-none"
           />
         </div>
       </div>
@@ -386,7 +386,7 @@ export function SpotMap() {
           to see what is on the map without hunting for pins, and on a phone
           most of the pins are off screen. */}
       <div
-        className="absolute inset-x-0 bottom-0 z-10 rounded-t-sheet border-t border-[var(--line-card)] bg-background/95 px-5 pb-4 pt-2"
+        className="glass-card absolute inset-x-0 bottom-0 z-10 rounded-t-sheet rounded-b-none border-x-0 border-b-0 px-5 pb-4 pt-2"
         style={{ paddingBottom: "1rem" }}
       >
         <div aria-hidden className="mx-auto h-1 w-10 rounded-full bg-foreground/25" />

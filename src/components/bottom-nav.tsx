@@ -51,7 +51,11 @@ export function BottomNav() {
     <>
       <nav
         aria-label="Main"
-        className="fixed inset-x-0 bottom-0 z-[60] bg-background"
+        // blur-behind rather than a solid fill: the page scrolls under this
+        // bar, so there is real content for the material to work on. It carries
+        // no border of its own -- the spec asks for none -- so the rim comes
+        // from blur-behind's edge alone.
+        className="blur-behind fixed inset-x-0 bottom-0 z-[60] border-0"
         // The home-indicator strip, so the row sits above it rather than under
         // it. The layout keeps every page one pixel taller than the viewport,
         // which settles Safari's bottom toolbar before first paint -- without

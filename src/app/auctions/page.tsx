@@ -48,7 +48,7 @@ function timeLeft(endsAt: number, now: number): { text: string; ending: boolean;
 function AuctionCard({ a, now }: { a: Auction; now: number }) {
   const tl = timeLeft(a.endsAt, now);
   return (
-    <Link href={`/auctions/${a.id}`} className="reveal press lift group flex flex-col overflow-hidden rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-foreground transition-colors hover:border-[var(--line-button)]">
+    <Link href={`/auctions/${a.id}`} className="reveal press lift group flex flex-col overflow-hidden rounded-card glass-card transition-colors hover:border-[var(--line-button)]">
       <div className="relative aspect-[4/3] w-full overflow-hidden">
         <CarPhoto src={a.image} alt={a.title} />
         <span className="absolute rounded-lg left-3 top-3 flex items-center gap-1.5 bg-background/70 text-foreground px-2 py-1">
@@ -117,7 +117,7 @@ export default function AuctionsPage() {
         {loading ? (
           <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
             {[0, 1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-foreground p-4">
+              <div key={i} className="rounded-card glass-card p-4">
                 <Skeleton className="aspect-[4/3] w-full" />
                 <Skeleton className="mt-3 h-4 w-2/3" />
                 <Skeleton className="mt-2 h-8 w-1/2" />
@@ -125,7 +125,7 @@ export default function AuctionsPage() {
             ))}
           </div>
         ) : items.length === 0 ? (
-          <div className="mt-10 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-foreground p-12 text-center">
+          <div className="mt-10 rounded-card glass-card p-12 text-center">
             <h3 className="display text-4xl">No auctions live</h3>
             <p className="mx-auto mt-2 max-w-sm text-sm ">Be the first — list a car and start a bidding war.</p>
             <Button href="/auctions/new" className="mt-6">List your car</Button>

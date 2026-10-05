@@ -207,7 +207,7 @@ function GarageInner() {
             ))}
           </div>
         ) : cars.length === 0 ? (
-          <div className="mt-8 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-foreground p-10 text-center">
+          <div className="mt-8 rounded-card glass-card p-10 text-center">
             <Images className="mx-auto h-8 w-8 opacity-40" strokeWidth={1.5} aria-hidden />
             <h3 className="display mt-3 text-3xl">Album empty</h3>
             <p className="mx-auto mt-2 max-w-sm text-sm opacity-70">

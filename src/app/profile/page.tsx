@@ -125,7 +125,7 @@ function ProfileInner() {
         {loading ? (
           <Skeleton className="mt-8 h-64 w-full" />
         ) : authStatus === "unauthenticated" ? (
-          <div className="mt-8 rounded-card border border-[var(--line-card)] bg-[var(--color-surface)] text-foreground p-10 text-center">
+          <div className="mt-8 rounded-card glass-card p-10 text-center">
             <h3 className="display text-3xl">Sign in</h3>
             <p className="mx-auto mt-2 max-w-sm text-sm ">Set up your profile to appear on the board.</p>
             <GoogleSignInButton callbackUrl="/profile" />

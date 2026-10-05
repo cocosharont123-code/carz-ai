@@ -94,7 +94,7 @@ export function ThemePicker() {
               "press flex min-h-11 flex-col items-center justify-center gap-1.5 rounded-card border py-3 transition-colors",
               active
                 ? "border-foreground bg-carz text-carz-ink"
-                : "border-[var(--line-card)] bg-[var(--color-surface)] text-foreground",
+                : "glass-card",
             )}
           >
             <Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden />
