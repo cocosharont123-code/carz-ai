@@ -180,7 +180,7 @@ function HuntInner() {
             of {count(goal)} hunters
           </span>
         </div>
-        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
+        <div className="mt-2 h-1.5 w-full overflow-hidden glass-chip rounded-full">
           <div
             className="h-full rounded-full bg-carz transition-[width] duration-500"
             style={{ width: `${pct}%` }}
@@ -232,7 +232,7 @@ function HuntInner() {
                 claimed && "opacity-60",
               )}
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-foreground/[0.06] text-[14px] font-bold tabular-nums">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center glass-chip rounded-full text-[14px] font-bold tabular-nums">
                 {i + 1}
               </span>
 

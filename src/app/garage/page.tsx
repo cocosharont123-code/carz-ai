@@ -88,7 +88,7 @@ function Lightbox({
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="press flex h-9 w-9 items-center justify-center rounded-full bg-foreground/10 text-foreground transition hover:bg-foreground/20"
+          className="press flex h-9 w-9 items-center justify-center glass-chip rounded-full text-foreground transition hover:bg-foreground/20"
         >
           <X className="h-4 w-4" aria-hidden />
         </button>
@@ -114,7 +114,7 @@ function Lightbox({
             onClick={() => onMove(index - 1)}
             disabled={index === 0}
             aria-label="Previous"
-            className="press flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-foreground transition hover:bg-foreground/20 disabled:opacity-25"
+            className="press flex h-10 w-10 shrink-0 items-center justify-center glass-chip rounded-full text-foreground transition hover:bg-foreground/20 disabled:opacity-25"
           >
             <ChevronLeft className="h-5 w-5" aria-hidden />
           </button>
@@ -134,7 +134,7 @@ function Lightbox({
             onClick={() => onMove(index + 1)}
             disabled={index === cars.length - 1}
             aria-label="Next"
-            className="press flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-foreground transition hover:bg-foreground/20 disabled:opacity-25"
+            className="press flex h-10 w-10 shrink-0 items-center justify-center glass-chip rounded-full text-foreground transition hover:bg-foreground/20 disabled:opacity-25"
           >
             <ChevronRight className="h-5 w-5" aria-hidden />
           </button>
@@ -144,7 +144,7 @@ function Lightbox({
           <button
             type="button"
             onClick={() => onRemove(car.id)}
-            className="press inline-flex items-center gap-1.5 rounded-full bg-foreground/10 px-4 py-2 text-[15px] font-semibold text-foreground transition hover:bg-foreground/20"
+            className="press inline-flex items-center gap-1.5 glass-chip rounded-full px-4 py-2 text-[15px] font-semibold text-foreground transition hover:bg-foreground/20"
           >
             <Trash2 className="h-3.5 w-3.5" aria-hidden />
             Remove from garage
@@ -201,9 +201,9 @@ function GarageInner() {
         />
 
         {loading ? (
-          <div className="-mx-5 mt-6 grid grid-cols-3 gap-px">
+          <div className="mt-6 grid grid-cols-3 gap-3">
             {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
-              <Skeleton key={i} className="aspect-square w-full rounded-none" />
+              <Skeleton key={i} className="aspect-square w-full rounded-[28%]" />
             ))}
           </div>
         ) : cars.length === 0 ? (
@@ -237,20 +237,28 @@ function GarageInner() {
                 read as one sheet of photographs, and gaps and rounded corners
                 turn it back into a list of cards. Full-bleed too -- the page's
                 20px padding would otherwise frame the sheet. */}
-            <div className="-mx-5 mt-6 grid grid-cols-3 gap-px">
+            <div className="mt-6 grid grid-cols-3 gap-3">
               {cars.map((c, i) => (
                 <button
                   key={c.id}
                   type="button"
                   onClick={() => setOpen(i)}
                   aria-label={`Open ${c.make} ${c.model}`}
-                  className="press group relative aspect-square overflow-hidden bg-foreground/[0.04]"
+                  // rounded-[28%] rather than a pixel radius: a squircle's corner
+                    // has to scale with the tile, and these are a third of the
+                    // viewport on a phone and fixed at 480 on a desktop. One
+                    // fixed radius reads tight on one and clumsy on the other.
+                    //
+                    // The glass is the frame, not a film over the photo. p-px
+                    // insets the image by the width of the rim, so the material
+                    // shows as an edge and the car underneath stays untouched.
+                    className="press glass-card group relative aspect-square overflow-hidden rounded-[28%] p-px"
                 >
                   <CarPhoto
                     src={c.image}
                     alt={`${c.make} ${c.model}`}
                     color
-                    className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]"
+                    className="h-full w-full rounded-[28%] object-cover transition duration-300 group-hover:scale-[1.04]"
                   />
 
                   {c.rarityScore >= 70 && (

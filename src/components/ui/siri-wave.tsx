@@ -129,7 +129,10 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord){
     float gauss = exp(-pow(xN*FALLOFF, 2.0));
     col *= mix(1.0, em*gauss, res);
     col *= res;
-    fragColor = vec4(col, 1.0);
+    // Alpha follows how lit the pixel is, so the space around the wave is
+    // actually empty instead of black. It was vec4(col, 1.0), which made the
+    // whole canvas opaque and drew a black square behind the design.
+    fragColor = vec4(col, max(col.r, max(col.g, col.b)));
 }
 void main(){ mainImage(gl_FragColor, gl_FragCoord.xy); }`
 
@@ -270,7 +273,10 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord){
     col = min(col, 1.0);
     float n = fract(sin(dot(fragCoord, vec2(12.9898,78.233)))*43758.5453);
     col += (n - 0.5)/255.0;
-    fragColor = vec4(col, 1.0);
+    // Alpha follows how lit the pixel is, so the space around the wave is
+    // actually empty instead of black. It was vec4(col, 1.0), which made the
+    // whole canvas opaque and drew a black square behind the design.
+    fragColor = vec4(col, max(col.r, max(col.g, col.b)));
 }
 void main(){ mainImage(gl_FragColor, gl_FragCoord.xy); }`
 
@@ -302,8 +308,11 @@ export function SiriWave({
   React.useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    const gl = canvas.getContext("webgl")
+    // premultipliedAlpha off because the shader writes straight alpha.
+    const gl = canvas.getContext("webgl", { alpha: true, premultipliedAlpha: false })
     if (!gl) return
+    gl.enable(gl.BLEND)
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
     const compile = (type: number, src: string) => {
       const shader = gl.createShader(type)!
@@ -411,7 +420,7 @@ export function SiriWave({
   return (
     <canvas
       ref={canvasRef}
-      className={cn("block rounded-[20px] bg-background", className)}
+      className={cn("block bg-transparent", className)}
       style={{ width: size, height: size, ...style }}
       {...props}
     />

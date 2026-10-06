@@ -227,7 +227,7 @@ function NewAuctionInner() {
             <div>
               <label className="text-[14px] font-semibold">Photo</label>
               <div className="mt-1 flex items-center gap-4">
-                <div className="h-24 w-32 shrink-0 overflow-hidden rounded-thumb bg-foreground/[0.04]">
+                <div className="h-24 w-32 shrink-0 overflow-hidden glass-chip rounded-thumb">
                   {image ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={image} alt="car" className="h-full w-full object-cover" />

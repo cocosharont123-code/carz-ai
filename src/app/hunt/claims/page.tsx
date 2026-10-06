@@ -64,7 +64,7 @@ export default function ClaimsPage() {
           <div className="mt-6 space-y-3">
             {claims.map((c) => (
               <div key={c.id} className="flex gap-3 rounded-card glass-card p-3">
-                <div className="h-20 w-24 shrink-0 overflow-hidden rounded-thumb bg-foreground/[0.04]">
+                <div className="h-20 w-24 shrink-0 overflow-hidden glass-chip rounded-thumb">
                   {c.image ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={c.image} alt={c.carName} className="h-full w-full object-cover" />

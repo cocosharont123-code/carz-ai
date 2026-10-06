@@ -92,7 +92,7 @@ function SearchInner() {
         {loading && accounts.length === 0 &&
           [0, 1, 2, 3].map((i) => (
             <div key={i} className="flex items-center gap-3 px-2 py-2.5">
-              <div className="h-11 w-11 animate-pulse rounded-full bg-foreground/[0.06]" />
+              <div className="h-11 w-11 animate-pulse glass-chip rounded-full" />
               <div className="flex-1">
                 <div className="h-3.5 w-32 animate-pulse rounded bg-foreground/[0.06]" />
                 <div className="mt-1.5 h-3 w-20 animate-pulse rounded bg-foreground/[0.04]" />

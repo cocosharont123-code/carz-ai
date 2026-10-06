@@ -663,6 +663,42 @@ body {
   border-color: var(--line-button);
 }
 
+/* Glass, small.
+   
+   The same material at a grade that suits chips, inputs, icon buttons and
+   anything else only a few dozen pixels tall. A 20px blur and a full specular
+   rim on a 36px control reads as a smudge rather than as glass, so the blur is
+   halved and the rim left off; the fill and the edge are the parts that still
+   do something at that size.
+   
+   Deliberately not .glass-card with a modifier: these sit inside cards that are
+   already glass, and stacking two full-strength materials turns both opaque. */
+.glass-chip {
+  isolation: isolate;
+  background: var(--glass-fill);
+  border: 1px solid var(--glass-edge);
+}
+
+.glass-chip::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  backdrop-filter: blur(10px) saturate(160%);
+  -webkit-backdrop-filter: blur(10px) saturate(160%);
+  pointer-events: none;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-chip { background: var(--surface); }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass-chip { background: var(--surface); }
+  .glass-chip::before { backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
+
 /* No backdrop-filter, no glass. Firefox without the flag, older WebViews, and
    anything running on a GPU the browser has given up on all land here, and a
    translucent panel with nothing blurring behind it is just a washed-out box.

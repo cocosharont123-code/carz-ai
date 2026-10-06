@@ -273,7 +273,7 @@ export function CarPhoto({
 
 /* --- Skeleton --------------------------------------------------------------- */
 export function Skeleton({ className }: { className?: string }) {
-  return <div className={cn("animate-pulse rounded-thumb bg-foreground/[0.06]", className)} />;
+  return <div className={cn("animate-pulse glass-chip rounded-thumb", className)} />;
 }
 
 /* --- LiveDot: the single yellow live indicator ------------------------------ */

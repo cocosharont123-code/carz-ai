@@ -22,7 +22,6 @@ import { ThinkingOrb, type OrbState } from "thinking-orbs";
 import { Input } from "@/components/ui/input";
 import { useImageUpload } from "@/components/hooks/use-image-upload";
 import { CarCustomizer } from "@/components/car-customizer";
-import { ScanModePicker } from "@/components/scan-mode-picker";
 import { addToGarage } from "@/lib/garage-local";
 import { carzPlusMonthly, carzPlusAnnual, carzPlusAnnualSaving } from "@/lib/plans";
 import { SCAN_MODE_META, type ScanMode } from "@/lib/scan-mode";
@@ -251,7 +250,7 @@ async function objectUrlToDataUrl(url: string): Promise<string> {
 function Spec({ k, v }: { k: string; v?: string }) {
   if (!v) return null;
   return (
-    <div className="rounded-thumb bg-foreground/[0.04] p-3">
+    <div className="glass-chip rounded-thumb p-3">
       <div className="text-[12px] uppercase tracking-wide ">{k}</div>
       <div className="mt-0.5 font-semibold">{v}</div>
     </div>
@@ -444,7 +443,35 @@ export default function SpotPage() {
   const liveCapture = useRef(false);
   // Mirrored from the picker purely so the loader can say which mode is
   // running — PRO is the slower one, and the wait makes more sense named.
+  /**
+   * Which pipeline will run, for the loading copy and nothing else.
+   *
+   * The choice itself lives in Settings now. It was a picker sitting on this
+   * screen as well, which meant two controls for one setting and a mode you
+   * could change in the middle of pointing a camera at a car.
+   *
+   * Read rather than chosen: /api/identify takes the mode from a cookie and
+   * downgrades it for non-members, so the client was never the authority on
+   * this. effectiveScanMode is what will actually run, which is what the
+   * progress text has to describe.
+   */
   const [scanMode, setScanMode] = useState<ScanMode>("fast");
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/settings", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        // Silent on failure: the copy falls back to Lightning's wording, and a
+        // scan is not worth blocking over which sentence appears under a
+        // progress bar.
+        if (!cancelled && d?.effectiveScanMode) setScanMode(d.effectiveScanMode);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const {
     previewUrl,
@@ -873,7 +900,7 @@ export default function SpotPage() {
                 type="button"
                 onClick={handleThumbnailClick}
                 aria-label="Choose a photo from your library"
-                className="press flex h-12 w-12 items-center justify-center rounded-full bg-foreground/10"
+                className="press flex h-12 w-12 items-center justify-center glass-chip rounded-full"
               >
                 <ImagePlus className="h-5 w-5 text-foreground" strokeWidth={1.75} aria-hidden />
               </button>
@@ -895,8 +922,6 @@ export default function SpotPage() {
               <span aria-hidden className="h-12 w-12" />
             </div>
           )}
-
-          {!loading && <ScanModePicker onModeChange={setScanMode} />}
 
           {loading ? (
             <ScanningButton
@@ -1103,7 +1128,7 @@ export default function SpotPage() {
               {status.history.map((h, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between rounded-thumb bg-foreground/[0.04] px-3 py-2 text-[14px]"
+                  className="flex items-center justify-between glass-chip rounded-thumb px-3 py-2 text-[14px]"
                 >
                   <span className="font-semibold">
                     {h.make} {h.model}{" "}

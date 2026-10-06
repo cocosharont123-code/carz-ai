@@ -54,20 +54,20 @@ function DropCard({ drop }: { drop: Drop }) {
         >
           {drop.category}
         </span>
-        <span className="rounded-full bg-foreground/[0.04] px-2.5 py-1 text-[12px] font-semibold">
+        <span className="glass-chip rounded-full px-2.5 py-1 text-[12px] font-semibold">
           {drop.status}
         </span>
-        <span className="rounded-full bg-foreground/[0.04] px-2.5 py-1 text-[12px] font-semibold">
+        <span className="glass-chip rounded-full px-2.5 py-1 text-[12px] font-semibold">
           {drop.timing}
         </span>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3">
-        <div className="rounded-thumb bg-foreground/[0.04] p-3">
+        <div className="glass-chip rounded-thumb p-3">
           <div className="text-[12px] uppercase tracking-wide opacity-60">Powertrain</div>
           <div className="mt-0.5 text-[15px] font-semibold">{drop.powertrain}</div>
         </div>
-        <div className="rounded-thumb bg-foreground/[0.04] p-3">
+        <div className="glass-chip rounded-thumb p-3">
           <div className="text-[12px] uppercase tracking-wide opacity-60">Headline</div>
           <div className="mt-0.5 text-[15px] font-semibold">{drop.headline}</div>
         </div>
