@@ -78,7 +78,14 @@ const TITLE: Record<Kind, string> = {
 
 export function HomeWidgets() {
   const [live, setLive] = useState<Live | null>(null);
-  const [order, setOrder] = useState<WidgetItem[] | null>(null);
+  // Starts on the default arrangement rather than null.
+  //
+  // It was null until localStorage had been read, which meant Home rendered a
+  // 520px empty box on the server and on first paint -- the same blank-first-
+  // paint problem the sign-in page had. A saved arrangement usually matches the
+  // default anyway, and when it does not the grid animates into place, which
+  // reads as the layout settling rather than as a fault.
+  const [order, setOrder] = useState<WidgetItem[]>(WIDGETS as WidgetItem[]);
 
   // The saved arrangement, deferred a microtask: localStorage is an external
   // system and a synchronous state write in an effect body cascades renders.
@@ -149,12 +156,6 @@ export function HomeWidgets() {
     },
     [live],
   );
-
-  // Nothing until the saved order is known: rendering the default first and
-  // then reshuffling is a visible jump on every load.
-  if (!order) {
-    return <div aria-hidden className="mt-6 h-[520px] w-full" />;
-  }
 
   return (
     <DraggableWidgetGrid
