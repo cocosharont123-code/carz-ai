@@ -715,6 +715,42 @@ body {
   .glass-chip::before { backdrop-filter: none; -webkit-backdrop-filter: none; }
 }
 
+/* Glass inside glass does not blur again.
+   
+   This is a performance fix before it is a visual one. Opening a row on the
+   car detail screen mounts eight spec chips at once, each asking for its own
+   backdrop-filter, inside a card that is already one, inside a page with a
+   blurred sticky bar over it. Every one of those is a separate composited
+   layer the compositor re-renders on scroll, and on a phone that is enough to
+   lock the screen -- which is exactly what pressing Market value did.
+   
+   It is also the right look. Two translucent materials stacked do not read as
+   two panes of glass, they read as mud: the second blur has nothing to work
+   on but the first one's output, and the two fills multiply towards opaque.
+   
+   The fill and the edge stay, so a nested chip is still a distinct surface.
+   Only the expensive layer goes. */
+.glass-card .glass-card::before,
+.glass-card .glass-chip::before,
+.glass-card .blur-behind::before,
+.glass-bubble .glass-card::before,
+.glass-bubble .glass-chip::before,
+.blur-behind .glass-card::before,
+.blur-behind .glass-chip::before,
+.glass-chip .glass-chip::before {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* A nested surface leans on --raised instead, so it still separates from the
+   pane it sits on now that it is not blurring. */
+.glass-card .glass-chip,
+.glass-bubble .glass-chip,
+.blur-behind .glass-chip,
+.glass-card .glass-card {
+  background: var(--raised);
+}
+
 /* No backdrop-filter, no glass. Firefox without the flag, older WebViews, and
    anything running on a GPU the browser has given up on all land here, and a
    translucent panel with nothing blurring behind it is just a washed-out box.

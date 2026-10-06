@@ -73,7 +73,11 @@ export function GlassPane({
   style?: React.CSSProperties;
 }) {
   return (
-    <div className={`relative isolate overflow-hidden ${className}`} style={style}>
+    // No overflow-hidden. Each layer below is inset-0 with rounded-[inherit],
+    // so they are already clipped to the pane's shape by their own radius --
+    // clipping the container as well cut the heads off anything deliberately
+    // raised out of it, which is what beheaded the Scan button.
+    <div className={`relative isolate ${className}`} style={style}>
       {/* Blurred and displaced backdrop. */}
       <div
         aria-hidden

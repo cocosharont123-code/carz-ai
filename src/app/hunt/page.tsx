@@ -280,12 +280,15 @@ function HuntInner() {
           role="dialog"
           aria-modal="true"
           aria-label="How the hunt works"
-          className="fixed inset-0 z-[70] flex items-end justify-center bg-background/70"
+          // Centred, not anchored to the bottom. As a bottom sheet it landed
+          // below the fold on a tall page and had to be scrolled to, which is
+          // the opposite of what a sheet is for.
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-background/70 p-5"
           onClick={() => setRulesOpen(false)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="glass-card w-full max-w-[480px] rounded-t-sheet rounded-b-none border-x-0 border-b-0 px-5 pb-10 pt-3"
+            className="glass-card max-h-[80dvh] w-full max-w-[480px] overflow-y-auto rounded-sheet px-5 pb-6 pt-3"
           >
             {/* Grabber, then the rules. The text is the app's own HUNT_RULE
                 plus the three steps the feature actually implements -- nothing

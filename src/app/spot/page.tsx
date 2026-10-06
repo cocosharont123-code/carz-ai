@@ -96,8 +96,12 @@ function ScanningButton({
       // loading bar is not where the one allowed colour gets spent.
       style={
         {
-          "--flux-from": "#808080",
-          "--flux-to": "#ffffff",
+          // Solid ink, not a grey-to-white gradient -- that gradient was the
+          // silver look. var(--foreground) is black on the light theme and
+          // white on the dark one; a literal black bar would be invisible
+          // against a black page, so the bar follows the text colour instead.
+          "--flux-from": "var(--foreground)",
+          "--flux-to": "var(--foreground)",
         } as React.CSSProperties
       }
     >
@@ -867,7 +871,7 @@ export default function SpotPage() {
                 <img
                   src={previewUrl}
                   alt="Car preview"
-                  className="h-full w-full object-cover brightness-75 transition-transform duration-300 group-hover:scale-105"
+                  className="h-full w-full rounded-card object-cover brightness-75 transition-transform duration-300 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-background/40 text-foreground opacity-0 transition-opacity group-hover:opacity-100" />
                 <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
@@ -997,12 +1001,19 @@ export default function SpotPage() {
 
                 {/* Full-bleed and fading to black, the one gradient allowed. */}
                 {spottedImage && (
-                  <div className="relative -mx-5 mt-4">
+                  <div className="relative mt-4">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={spottedImage} alt={`${car.make} ${car.model}`} className="w-full" />
+                    {/* Rounded, and no longer full-bleed: a photo running edge to edge
+                        cannot have corners, and square corners are the one thing
+                        left on this screen that looked unfinished. */}
+                    <img
+                      src={spottedImage}
+                      alt={`${car.make} ${car.model}`}
+                      className="w-full rounded-card"
+                    />
                     <div
                       aria-hidden
-                      className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-background"
+                      className="pointer-events-none absolute inset-x-0 bottom-0 h-24 rounded-b-card bg-gradient-to-b from-transparent to-background"
                     />
                   </div>
                 )}
