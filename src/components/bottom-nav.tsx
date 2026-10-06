@@ -24,16 +24,17 @@ import { cn } from "@/lib/utils";
 const BAR_H = "56px";
 
 /**
- * Where the bar is not drawn.
+ * Where the bar is not drawn: the sign-in wall, and nothing else.
  *
- * The scanner owns the whole viewport and has its own X to leave by, and the
- * sign-in flow is a wall with nothing behind it to tab to.
+ * Scan came off this list. The same reasoning that kept Map on the bar applies
+ * to it and I missed it the first time -- Scan is one of the five tabs, and a
+ * tab that hides the bar is a screen you can only leave the one way its own X
+ * allows. Switching to Hunt from the scanner meant closing it first.
  *
- * Map is deliberately not on this list even though it is full-bleed: it is one
- * of the five tabs, and a tab that hides the bar is a screen you cannot leave.
- * The map sits above the bar instead.
+ * The sign-in flow stays hidden because there is genuinely nothing behind it
+ * to tab to.
  */
-const FULL_SCREEN = ["/spot", "/signin"];
+const FULL_SCREEN = ["/signin"];
 
 const TABS = [
   { href: "/", label: "Home", Icon: Home, match: (p: string) => p === "/" },

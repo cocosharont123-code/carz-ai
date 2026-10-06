@@ -329,13 +329,40 @@
 .carz-neon-bg {
   background: var(--raised);
 }
-.carz-car { animation: carzBob 1.8s ease-in-out infinite; }
+/* The default avatar's bob and wheel spin.
+   
+   will-change promotes each to its own layer. A transform animation inside an
+   SVG is repainted rather than composited in most browsers, so without this
+   the whole avatar re-rasterises every frame -- which at 132px on the profile
+   page, over a backdrop-filtered surface, is the stutter.
+   
+   Promotion is not free, so it is scoped to these two selectors rather than
+   applied broadly, and both stop entirely under reduced motion. */
+.carz-car {
+  animation: carzBob 1.8s ease-in-out infinite;
+  will-change: transform;
+}
 @keyframes carzBob {
   0%, 100% { transform: translateY(3%); }
   50%      { transform: translateY(-6%); }
 }
-.carz-wheel { transform-box: fill-box; transform-origin: center; animation: carzWheel 0.9s linear infinite; }
+.carz-wheel {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: carzWheel 0.9s linear infinite;
+  will-change: transform;
+}
 @keyframes carzWheel { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  /* They were not covered before: a spinning wheel is decoration, and
+     decoration is exactly what this setting is asking to stop. */
+  .carz-car,
+  .carz-wheel {
+    animation: none;
+    will-change: auto;
+  }
+}
 
 /* --- Car Hunt. Was a seven-stop rainbow banner, a gradient-clipped title and
        gold / purple / blue rarity tiers. Rarity is carried by the label text
