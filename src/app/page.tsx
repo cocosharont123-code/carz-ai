@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { EXPLORE_BUBBLES } from "@/config/explore";
-import { SearchPill, ListRow } from "@/components/ui/editorial";
-import { HomeGarage } from "@/components/home/home-garage";
+import { SearchPill } from "@/components/ui/editorial";
+import { HomeWidgets } from "@/components/home/home-widgets";
 
 /**
  * Home.
@@ -16,32 +15,17 @@ import { HomeGarage } from "@/components/home/home-garage";
  */
 
 /**
- * Not repeated as a row, because the tab bar's own icon is already the way in.
+ * Home is the widget grid.
  *
- * Hunt is not on this list even though it is a tab. CarzBot, Events, Hunt and
- * Carz PRO were four tiles across the top; all four are rows now, and Hunt was one
- * of them, so it stays in the list rather than being the one of the four that
- * quietly disappeared.
+ * The rows and the four tiles before them are gone. Every destination they
+ * carried is a widget now, which keeps the rule that nothing in the app is
+ * reachable only by typing a URL -- and the widgets show real figures where
+ * there are any instead of only naming the feature.
  */
-const ON_THE_TABS = new Set(["/spot", "/map"]);
-
-/**
- * Asked to come off Home.
- *
- * The routes stay and so does every other way in -- /auctions is linked from
- * the auction pages and the wishlist, /wishlist from the heart on any auction.
- * /drops had no other inbound link, so it is now reachable only by URL; say if
- * it should be removed outright rather than just unlisted.
- */
-const OFF_HOME = new Set(["/auctions", "/wishlist", "/drops"]);
 
 export default function Home() {
   const router = useRouter();
   const [q, setQ] = useState("");
-
-  const rows = EXPLORE_BUBBLES.filter(
-    (item) => !ON_THE_TABS.has(item.href) && !OFF_HOME.has(item.href),
-  );
 
   return (
     <main className="mx-auto w-full max-w-[480px] px-5 pb-6">
@@ -65,22 +49,8 @@ export default function Home() {
         label="Search any car"
       />
 
-      <section className="mt-6">
-        {rows.map((item) => {
-          const Icon = item.icon;
-          return (
-            <ListRow
-              key={item.href}
-              href={item.href}
-              icon={<Icon className="h-[22px] w-[22px]" strokeWidth={1.75} aria-hidden />}
-              label={item.label}
-              meta={item.description}
-            />
-          );
-        })}
-      </section>
+      <HomeWidgets />
 
-      <HomeGarage />
     </main>
   );
 }
