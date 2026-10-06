@@ -99,7 +99,10 @@ export function GlassPane({
             "inset 1.5px 1.5px 1px 0 var(--glass-rim-hi), inset -1px -1px 1px 1px var(--glass-rim-lo)",
         }}
       />
-      {children}
+      {/* Explicitly above every layer. The bevel above is positioned and the
+          children are not, which in paint order puts the glass over the
+          content unless the content is given a layer of its own. */}
+      <div className="relative z-10 flex w-full">{children}</div>
     </div>
   );
 }

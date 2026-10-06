@@ -635,6 +635,18 @@ body {
   content: "";
   position: absolute;
   inset: 0;
+  /* Behind the content, above the fill.
+     
+     Without this the rim had no z-index at all, and a positioned
+     pseudo-element with no z-index paints after every child -- so the glass
+     was drawn on top of the thing it was supposed to be behind. Masked to a
+     hairline it should only have been an edge, but any device that does not
+     apply mask-composite got the whole gradient as a veil over the text.
+     
+     -1 works here because the element isolates, so the layer cannot escape
+     behind the page; it lands above the element's own background and below
+     anything written on it. */
+  z-index: -1;
   border-radius: inherit;
   padding: 1px;
   background: linear-gradient(
@@ -677,6 +689,7 @@ body {
    Deliberately not .glass-card with a modifier: these sit inside cards that are
    already glass, and stacking two full-strength materials turns both opaque. */
 .glass-chip {
+  position: relative;
   isolation: isolate;
   background: var(--glass-fill);
   border: 1px solid var(--glass-edge);
