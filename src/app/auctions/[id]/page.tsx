@@ -195,7 +195,7 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
                 <ResultBox a={a} />
               </div>
             ) : a.youAreSeller ? (
-              <p className="mt-6 rounded-thumb border border-[var(--line-card)] bg-foreground/[0.03] p-4 text-[14px] ">
+              <p className="mt-6 rounded-thumb border border-[var(--line-card)] glass-chip p-4 text-[14px] ">
                 This is your listing — you can&apos;t bid on it. Share the link to start a bidding war.
               </p>
             ) : (
@@ -246,7 +246,7 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
 function ResultBox({ a }: { a: Auction }) {
   if (a.bidCount === 0) {
     return (
-      <p className="rounded-thumb border border-[var(--line-card)] bg-foreground/[0.03] p-4 text-[14px] ">
+      <p className="rounded-thumb border border-[var(--line-card)] glass-chip p-4 text-[14px] ">
         This auction ended with no bids.
       </p>
     );
@@ -264,7 +264,7 @@ function ResultBox({ a }: { a: Auction }) {
   }
   if (a.youAreSeller) {
     return (
-      <div className="rounded-thumb border border-[var(--line-card)] bg-foreground/[0.03] p-5">
+      <div className="rounded-thumb border border-[var(--line-card)] glass-chip p-5">
         <div className="util-label ">Sold</div>
         <h3 className="display mt-1 text-[20px]">Sold for {money(a.currentBid)}</h3>
         <p className="mt-2 text-[14px] ">
@@ -279,7 +279,7 @@ function ResultBox({ a }: { a: Auction }) {
     );
   }
   return (
-    <div className="rounded-thumb border border-[var(--line-card)] bg-foreground/[0.03] p-5">
+    <div className="rounded-thumb border border-[var(--line-card)] glass-chip p-5">
       <h3 className="display text-[20px]">Won by {a.topBidderName}</h3>
       <p className="mt-1 text-[14px] ">Final bid {money(a.currentBid)}. The winner gets the seller&apos;s contact.</p>
     </div>

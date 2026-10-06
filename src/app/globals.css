@@ -769,13 +769,23 @@ body {
   -webkit-backdrop-filter: none;
 }
 
-/* A nested surface leans on --raised instead, so it still separates from the
-   pane it sits on now that it is not blurring. */
+/* A nested surface is still glass, just not a second blur.
+   
+   It used --raised, which is opaque -- so a chip inside a card stopped being
+   glass and became a solid box sitting on it. A translucent tint over the
+   parent keeps the material continuous: you see the parent's blurred backdrop
+   through it, and the chip reads as a thicker part of the same pane rather
+   than as a different object.
+   
+   8% is the readability ceiling, measured against the worst case there is --
+   the parent glass over a full-contrast photo. At 8% body text is 4.81:1 in
+   dark and 7.93:1 in light; at 14% dark falls to 4.23 and fails. */
 .glass-card .glass-chip,
 .glass-bubble .glass-chip,
 .blur-behind .glass-chip,
-.glass-card .glass-card {
-  background: var(--raised);
+.glass-card .glass-card,
+.glass-card .blur-behind {
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
 }
 
 /* No backdrop-filter, no glass. Firefox without the flag, older WebViews, and

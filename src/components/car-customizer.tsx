@@ -190,7 +190,7 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
     return (
       <div className="mt-6 border-t border-[var(--line-card)] pt-5">
         <h3 className="text-[12px] font-bold uppercase tracking-wide text-carz">Customize this car</h3>
-        <div className="mt-3 rounded-card border border-[var(--line-card)] bg-foreground/[0.04] p-5 text-center">
+        <div className="mt-3 rounded-card border border-[var(--line-card)] glass-chip p-5 text-center">
           <p className="text-[14px] font-bold">The customizer is a Carz MAX feature</p>
           <p className="mx-auto mt-1.5 max-w-sm text-[15px] opacity-70">
             Carz MAX gets {access.cap} AI repaints a day. Extras are $
@@ -310,7 +310,7 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
           {/* Only offered once the free three are actually gone — selling an
               extra while one is still free would be taking money for nothing. */}
           {outOfQuota && (
-            <div className="mt-3 rounded-card border border-[var(--line-card)] bg-foreground/[0.04] p-4">
+            <div className="mt-3 rounded-card border border-[var(--line-card)] glass-chip p-4">
               <p className="text-[15px] font-bold">Out of customizations for today</p>
               <p className="mt-1 text-[15px] opacity-70">
                 Get one more for ${price.toFixed(2)}, or come back tomorrow for {cap} more.

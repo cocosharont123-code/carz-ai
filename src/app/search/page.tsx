@@ -105,7 +105,7 @@ function SearchInner() {
             key={a.username}
             type="button"
             onClick={() => router.push(`/channel/${encodeURIComponent(a.username)}`)}
-            className="press flex w-full items-center gap-3 rounded-card px-2 py-2.5 text-left transition-colors hover:bg-foreground/[0.05]"
+            className="press flex w-full items-center gap-3 rounded-card px-2 py-2.5 text-left transition-colors hover:glass-chip"
           >
             <Avatar src={a.image} size={44} />
             <span className="min-w-0 flex-1">

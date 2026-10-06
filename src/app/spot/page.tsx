@@ -91,7 +91,7 @@ function ScanningButton({
       role="status"
       aria-live="polite"
       aria-busy="true"
-      className="w-full rounded-card border border-[var(--line-card)] bg-foreground/[0.02] px-5 py-6"
+      className="w-full rounded-card border border-[var(--line-card)] glass-chip px-5 py-6"
       // The loader reads its palette from these. It was the brand blue; a
       // loading bar is not where the one allowed colour gets spent.
       style={
@@ -287,7 +287,7 @@ function RarityMeter({ score, reason }: { score: number; reason?: string }) {
       className={`mt-4 rounded-card p-4 ${
         ultra
           ? "bg-gradient-to-r from-neon-red/15 via-neon-green/10 to-neon-blue/15 shadow-[0_0_25px_-8px_rgba(255,255,255,0.7)]"
-          : "bg-foreground/[0.04]"
+          : "glass-chip"
       }`}
     >
       <div className="flex items-baseline justify-between">
@@ -334,7 +334,7 @@ function ValueChart({ points }: { points: { year: string; usd: number }[] }) {
   // already in the shape of the line and in the figures beside it.
   const stroke = "currentColor";
   return (
-    <div className="mt-4 rounded-card bg-foreground/[0.04] p-4 text-foreground">
+    <div className="mt-4 rounded-card glass-chip p-4 text-foreground">
       <div className="flex items-baseline justify-between">
         <span className="text-[12px] font-bold uppercase tracking-wide ">
           Market value over time

@@ -173,7 +173,7 @@ function ProfileInner() {
 
             <div>
               <label className="util-label ">Username <span className="">*</span></label>
-              <div className="mt-2 flex items-center rounded-thumb border border-[var(--line-card)] bg-foreground/[0.03] px-3">
+              <div className="mt-2 flex items-center rounded-thumb border border-[var(--line-card)] glass-chip px-3">
                 <span className="">@</span>
                 <input
                   value={username}
@@ -195,7 +195,7 @@ function ProfileInner() {
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="How your name shows (optional)"
                 maxLength={40}
-                className="mt-2 w-full rounded-thumb border border-[var(--line-card)] bg-foreground/[0.03] px-3 py-3 text-[14px]  outline-none "
+                className="mt-2 w-full rounded-thumb border border-[var(--line-card)] glass-chip px-3 py-3 text-[14px]  outline-none "
               />
             </div>
 
@@ -208,7 +208,7 @@ function ProfileInner() {
                 placeholder="A line or two about you and what you drive"
                 maxLength={200}
                 rows={3}
-                className="mt-2 w-full resize-none rounded-thumb border border-[var(--line-card)] bg-foreground/[0.03] px-3 py-3 text-[14px] outline-none"
+                className="mt-2 w-full resize-none rounded-thumb border border-[var(--line-card)] glass-chip px-3 py-3 text-[14px] outline-none"
               />
               <p className="mt-1.5 flex justify-between text-[12px] opacity-60">
                 <span>Shown on your channel.</span>
@@ -227,7 +227,7 @@ function ProfileInner() {
                   aria-label="Birth month"
                   value={birthday.slice(0, 2)}
                   onChange={(e) => setBirthday(e.target.value ? `${e.target.value}-${birthday.slice(3) || "01"}` : "")}
-                  className="w-full rounded-thumb border border-[var(--line-card)] bg-foreground/[0.03] px-3 py-3 text-[14px] outline-none"
+                  className="w-full rounded-thumb border border-[var(--line-card)] glass-chip px-3 py-3 text-[14px] outline-none"
                 >
                   <option value="">Month</option>
                   {MONTHS.map((m, i) => (
@@ -239,7 +239,7 @@ function ProfileInner() {
                   value={birthday.slice(3)}
                   disabled={!birthday.slice(0, 2)}
                   onChange={(e) => setBirthday(`${birthday.slice(0, 2)}-${e.target.value}`)}
-                  className="w-full rounded-thumb border border-[var(--line-card)] bg-foreground/[0.03] px-3 py-3 text-[14px] outline-none disabled:opacity-40"
+                  className="w-full rounded-thumb border border-[var(--line-card)] glass-chip px-3 py-3 text-[14px] outline-none disabled:opacity-40"
                 >
                   {/* A placeholder that matches the empty value: without one
                       React has a select whose value is not among its options. */}

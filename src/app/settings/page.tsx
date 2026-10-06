@@ -206,7 +206,7 @@ export default function SettingsPage() {
             <div className="mt-3 space-y-2">
               <Link
                 href="/profile"
-                className="flex items-center justify-between rounded-thumb border border-[var(--line-card)] bg-foreground/[0.02] px-4 py-3 text-[14px] font-semibold transition hover:border-[var(--line-button)] hover:bg-foreground/[0.05]"
+                className="flex items-center justify-between rounded-thumb border border-[var(--line-card)] glass-chip px-4 py-3 text-[14px] font-semibold transition hover:border-[var(--line-button)] hover:bg-foreground/[0.05]"
               >
                 <span>Edit profile</span>
                 <span className="opacity-50">Username, display name, picture →</span>
@@ -214,14 +214,14 @@ export default function SettingsPage() {
               <button
                 type="button"
                 onClick={() => signOut({ callbackUrl: "/" })}
-                className="press flex w-full items-center justify-between rounded-thumb border border-[var(--line-card)] bg-foreground/[0.02] px-4 py-3 text-left text-[14px] font-semibold transition hover:border-[var(--line-button)] hover:bg-foreground/[0.05]"
+                className="press flex w-full items-center justify-between rounded-thumb border border-[var(--line-card)] glass-chip px-4 py-3 text-left text-[14px] font-semibold transition hover:border-[var(--line-button)] hover:bg-foreground/[0.05]"
               >
                 <span>Sign out</span>
                 <span className="opacity-50">→</span>
               </button>
             </div>
           ) : (
-            <div className="mt-3 rounded-card border border-[var(--line-card)] bg-foreground/[0.02] p-5">
+            <div className="mt-3 rounded-card border border-[var(--line-card)] glass-chip p-5">
               <p className="text-[14px] opacity-75">
                 Sign in to manage your profile, membership and account.
               </p>
@@ -238,7 +238,7 @@ export default function SettingsPage() {
           <div className="mt-3">
             <Link
               href="/terms"
-              className="flex items-center justify-between rounded-thumb border border-[var(--line-card)] bg-foreground/[0.02] px-4 py-3 text-[14px] font-semibold transition hover:border-[var(--line-button)] hover:bg-foreground/[0.05]"
+              className="flex items-center justify-between rounded-thumb border border-[var(--line-card)] glass-chip px-4 py-3 text-[14px] font-semibold transition hover:border-[var(--line-button)] hover:bg-foreground/[0.05]"
             >
               <span>Terms of Service</span>
               <span className="opacity-50">Read and accept →</span>

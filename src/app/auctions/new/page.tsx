@@ -239,7 +239,7 @@ function NewAuctionInner() {
                 </div>
                 <button
                   onClick={() => fileRef.current?.click()}
-                  className="rounded-thumb border border-foreground/15 bg-foreground/[0.06] px-4 py-2 text-[14px] font-semibold hover:bg-foreground/[0.12]"
+                  className="rounded-thumb border border-foreground/15 glass-chip px-4 py-2 text-[14px] font-semibold hover:bg-foreground/[0.12]"
                 >
                   {image ? "Change photo" : "Upload photo"}
                 </button>

@@ -284,14 +284,14 @@ function ResultCard({ result, shot, onAgain }: { result: Result; shot: string; o
     );
   } else if (result.isCar) {
     body = (
-      <div className="rounded-card border border-foreground/10 bg-foreground/[0.03] p-4 text-center">
+      <div className="rounded-card border border-foreground/10 glass-chip p-4 text-center">
         <h3 className="mt-1 font-bold">{car || "A car"} — not wanted</h3>
         <p className="mt-1 text-[14px] ">That one&apos;s not on the Miami board. Keep hunting!</p>
       </div>
     );
   } else {
     body = (
-      <div className="rounded-card border border-foreground/10 bg-foreground/[0.03] p-4 text-center">
+      <div className="rounded-card border border-foreground/10 glass-chip p-4 text-center">
         <h3 className="mt-1 font-bold">No car detected</h3>
         <p className="mt-1 text-[14px] ">Get closer and make sure the car fills the frame.</p>
       </div>
@@ -302,7 +302,7 @@ function ResultCard({ result, shot, onAgain }: { result: Result; shot: string; o
       {body}
       <button
         onClick={onAgain}
-        className="mt-3 w-full rounded-thumb border border-foreground/15 bg-foreground/[0.06] py-3 font-bold hover:bg-foreground/[0.12]"
+        className="mt-3 w-full rounded-thumb border border-foreground/15 glass-chip py-3 font-bold hover:bg-foreground/[0.12]"
       >
         Hunt another
       </button>
@@ -376,7 +376,7 @@ function ClaimPrize({ carId, bounty, shot }: { carId: string; bounty: number; sh
         onChange={(e) => setCashapp(e.target.value)}
         placeholder="$YourCashtag"
         maxLength={60}
-        className="mt-2 w-full rounded-lg border border-foreground/15 bg-foreground/[0.04] px-3 py-2.5 text-[14px] outline-none focus:border-foreground/30"
+        className="mt-2 w-full rounded-lg border border-foreground/15 glass-chip px-3 py-2.5 text-[14px] outline-none focus:border-foreground/30"
       />
       {error && <p className="mt-1.5 text-[12px] text-neon-red">{error}</p>}
       <button

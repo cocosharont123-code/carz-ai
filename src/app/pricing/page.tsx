@@ -298,7 +298,7 @@ export default function PricingPage() {
               <button
                 type="button"
                 onClick={applyPromo}
-                className="press glass-card min-h-11 shrink-0 rounded-full px-5 text-[14px] font-semibold transition hover:bg-foreground/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carz/60"
+                className="press glass-card min-h-11 shrink-0 rounded-full px-5 text-[14px] font-semibold transition hover:glass-chip focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carz/60"
               >
                 Apply
               </button>

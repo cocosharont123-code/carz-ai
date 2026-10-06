@@ -40,7 +40,10 @@ type ButtonProps = {
  */
 const PRIMARY = "bg-carz text-carz-ink hover:bg-foreground/90";
 const SECONDARY =
-  "glass-card border-[var(--line-button)] text-foreground hover:bg-[var(--color-raised)]";
+  // The hover was bg-[var(--color-raised)] -- an opaque fill, so touching a
+  // glass button turned it into a solid box. It brightens the material
+  // instead, which is what glass does when it catches more light.
+  "glass-card border-[var(--line-button)] text-foreground hover:border-foreground/35";
 
 export function Button({
   href,
