@@ -172,7 +172,7 @@ export function CarzBotChat() {
               className="bg-transparent"
             />
             <div>
-              <h1 className="display text-4xl">CarzBot</h1>
+              <h1 className="display text-[34px]">CarzBot</h1>
               <p className="mt-1.5 text-[15px] opacity-60">Ask anything about cars.</p>
             </div>
           </div>
@@ -182,7 +182,7 @@ export function CarzBotChat() {
                 <div
                   key={i}
                   className={cn(
-                    "max-w-[85%] whitespace-pre-wrap rounded-card px-4 py-3 text-sm leading-relaxed",
+                    "max-w-[85%] whitespace-pre-wrap rounded-card px-4 py-3 text-[14px] leading-relaxed",
                     t.role === "user"
                       ? "ml-auto bg-carz text-neutral-900"
                       : "glass-card",
@@ -204,7 +204,7 @@ export function CarzBotChat() {
                     64 and 20 are separate tuned designs, not a scale, so this
                     takes the chat-avatar one as shipped. */}
                 <ThinkingOrb state="searching" size={64} theme="dark" aria-label="" />
-                <span className="text-sm opacity-60">Thinking…</span>
+                <span className="text-[14px] opacity-60">Thinking…</span>
               </div>
             )}
           </div>
@@ -226,7 +226,7 @@ export function CarzBotChat() {
                   key={p.label}
                   type="button"
                   onClick={() => void ask(p.prompt)}
-                  className="press glass-card flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold"
+                  className="press glass-card flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-[12px] font-semibold"
                 >
                   <p.Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
                   {p.label}
@@ -251,7 +251,7 @@ export function CarzBotChat() {
               }}
               placeholder="Ask about any car…"
               rows={1}
-              className="min-h-[56px] w-full resize-none border-none bg-transparent px-3 py-3 text-sm shadow-none placeholder:text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="min-h-[56px] w-full resize-none border-none bg-transparent px-3 py-3 text-[14px] shadow-none placeholder:text-[14px] focus-visible:ring-0 focus-visible:ring-offset-0"
               style={{ overflow: "hidden" }}
             />
 

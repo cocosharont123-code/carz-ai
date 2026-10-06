@@ -114,7 +114,7 @@ interface FluxLabelProps {
 // progress via `aria-valuetext`. Under reduced motion it is plain static text.
 function FluxLabel({ label, reduced, className }: FluxLabelProps) {
   const base = cn(
-    "absolute inset-0 flex items-center justify-center text-center text-3xl font-semibold tracking-tight text-muted-foreground sm:text-4xl",
+    "absolute inset-0 flex items-center justify-center text-center text-[34px] font-semibold tracking-tight text-muted-foreground sm:text-[34px]",
     className,
   );
 

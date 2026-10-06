@@ -189,7 +189,7 @@ export function LegalReader({
             disabled={!reachedEnd}
             aria-disabled={!reachedEnd}
             className={cn(
-              "press flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-bold transition",
+              "press flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 text-[14px] font-bold transition",
               reachedEnd
                 ? "bg-carz text-carz-ink hover:opacity-90"
                 : "cursor-not-allowed border border-[var(--line-card)] opacity-40",

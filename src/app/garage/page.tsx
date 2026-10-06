@@ -120,7 +120,7 @@ function Lightbox({
           </button>
 
           <div className="min-w-0 flex-1 text-center text-foreground">
-            <p className="truncate text-sm font-bold">
+            <p className="truncate text-[14px] font-bold">
               {car.make} {car.model}
             </p>
             <p className="util-label mt-0.5 truncate text-foreground/50">
@@ -209,8 +209,8 @@ function GarageInner() {
         ) : cars.length === 0 ? (
           <div className="mt-8 rounded-card glass-card p-10 text-center">
             <Images className="mx-auto h-8 w-8 opacity-40" strokeWidth={1.5} aria-hidden />
-            <h3 className="display mt-3 text-3xl">Album empty</h3>
-            <p className="mx-auto mt-2 max-w-sm text-sm opacity-70">
+            <h3 className="display mt-3 text-[34px]">Album empty</h3>
+            <p className="mx-auto mt-2 max-w-sm text-[14px] opacity-70">
               Nothing saved yet. Identify a car and press{" "}
               <span className="font-semibold">Save to garage</span> to add it here.
             </p>
@@ -224,7 +224,7 @@ function GarageInner() {
                 the album underneath; the count is the one anybody was reading. */}
             <div className="mt-6 flex justify-center">
               <div className="glass-card flex aspect-square w-full max-w-[260px] flex-col items-center justify-center rounded-[2.75rem] p-6 text-center">
-                <div className="display text-6xl leading-none sm:text-7xl">{cars.length}</div>
+                <div className="display text-[50px] leading-none sm:text-[50px]">{cars.length}</div>
                 <div className="util-label mt-3 opacity-70">
                   {cars.length === 1 ? "Car found" : "Cars found"}
                 </div>

@@ -119,7 +119,7 @@ function HuntInner() {
       >
         <ThinkingOrb state="connecting" size={64} theme="dark" aria-label="" />
         <div className="text-center">
-          <p className="display text-2xl">Entering the hunt</p>
+          <p className="display text-[20px]">Entering the hunt</p>
           <p className="mt-2 text-[15px] opacity-60">Putting your name on the board…</p>
         </div>
       </div>
@@ -232,7 +232,7 @@ function HuntInner() {
                 claimed && "opacity-60",
               )}
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-foreground/[0.06] text-sm font-bold tabular-nums">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-foreground/[0.06] text-[14px] font-bold tabular-nums">
                 {i + 1}
               </span>
 
@@ -260,7 +260,7 @@ function HuntInner() {
                 </div>
               </div>
 
-              <span className="shrink-0 text-base font-bold tabular-nums">{money(w.bounty)}</span>
+              <span className="shrink-0 text-[15px] font-bold tabular-nums">{money(w.bounty)}</span>
             </div>
           );
         })}

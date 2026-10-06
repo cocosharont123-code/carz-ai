@@ -25,7 +25,7 @@ export default function SpotError({
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-col items-center px-5 py-16 text-center">
-      <h1 className="display text-4xl">Spot hit a snag</h1>
+      <h1 className="display text-[34px]">Spot hit a snag</h1>
       <p className="mt-3 text-[15px] leading-relaxed opacity-70">
         Something went wrong opening this screen. Trying again usually clears it.
       </p>
@@ -38,13 +38,13 @@ export default function SpotError({
       <button
         type="button"
         onClick={reset}
-        className="press mt-6 min-h-11 w-full rounded-full bg-carz text-sm font-bold text-carz-ink"
+        className="press mt-6 min-h-11 w-full rounded-full bg-carz text-[14px] font-bold text-carz-ink"
       >
         Try again
       </button>
       <Link
         href="/"
-        className="press glass-card mt-2 flex min-h-11 w-full items-center justify-center rounded-full text-sm font-bold"
+        className="press glass-card mt-2 flex min-h-11 w-full items-center justify-center rounded-full text-[14px] font-bold"
       >
         Back to home
       </Link>

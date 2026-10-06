@@ -126,8 +126,8 @@ function ProfileInner() {
           <Skeleton className="mt-8 h-64 w-full" />
         ) : authStatus === "unauthenticated" ? (
           <div className="mt-8 rounded-card glass-card p-10 text-center">
-            <h3 className="display text-3xl">Sign in</h3>
-            <p className="mx-auto mt-2 max-w-sm text-sm ">Set up your profile to appear on the board.</p>
+            <h3 className="display text-[34px]">Sign in</h3>
+            <p className="mx-auto mt-2 max-w-sm text-[14px] ">Set up your profile to appear on the board.</p>
             <GoogleSignInButton callbackUrl="/profile" />
           </div>
         ) : (
@@ -167,23 +167,23 @@ function ProfileInner() {
                   </button>
                 )}
               </div>
-              <p className="mt-1.5 text-xs opacity-60">Empty gives the animated car avatar.</p>
+              <p className="mt-1.5 text-[12px] opacity-60">Empty gives the animated car avatar.</p>
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickFile} />
             </div>
 
             <div>
               <label className="util-label ">Username <span className="">*</span></label>
-              <div className="mt-2 flex items-center rounded-xl border border-[var(--line-card)] bg-foreground/[0.03] px-3">
+              <div className="mt-2 flex items-center rounded-thumb border border-[var(--line-card)] bg-foreground/[0.03] px-3">
                 <span className="">@</span>
                 <input
                   value={username}
                   onChange={(e) => setUsername(e.target.value.toLowerCase())}
                   placeholder="yourname"
                   maxLength={20}
-                  className="w-full bg-transparent px-1 py-3 text-sm  outline-none "
+                  className="w-full bg-transparent px-1 py-3 text-[14px]  outline-none "
                 />
               </div>
-              <p className="mt-1.5 text-xs ">
+              <p className="mt-1.5 text-[12px] ">
                 We picked this for you — change it if you like. 3–20 chars · letters, numbers, underscores.
               </p>
             </div>
@@ -195,7 +195,7 @@ function ProfileInner() {
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="How your name shows (optional)"
                 maxLength={40}
-                className="mt-2 w-full rounded-xl border border-[var(--line-card)] bg-foreground/[0.03] px-3 py-3 text-sm  outline-none "
+                className="mt-2 w-full rounded-thumb border border-[var(--line-card)] bg-foreground/[0.03] px-3 py-3 text-[14px]  outline-none "
               />
             </div>
 
@@ -208,9 +208,9 @@ function ProfileInner() {
                 placeholder="A line or two about you and what you drive"
                 maxLength={200}
                 rows={3}
-                className="mt-2 w-full resize-none rounded-xl border border-[var(--line-card)] bg-foreground/[0.03] px-3 py-3 text-sm outline-none"
+                className="mt-2 w-full resize-none rounded-thumb border border-[var(--line-card)] bg-foreground/[0.03] px-3 py-3 text-[14px] outline-none"
               />
-              <p className="mt-1.5 flex justify-between text-xs opacity-60">
+              <p className="mt-1.5 flex justify-between text-[12px] opacity-60">
                 <span>Shown on your channel.</span>
                 <span className="tabular-nums">{bio.length}/200</span>
               </p>
@@ -227,7 +227,7 @@ function ProfileInner() {
                   aria-label="Birth month"
                   value={birthday.slice(0, 2)}
                   onChange={(e) => setBirthday(e.target.value ? `${e.target.value}-${birthday.slice(3) || "01"}` : "")}
-                  className="w-full rounded-xl border border-[var(--line-card)] bg-foreground/[0.03] px-3 py-3 text-sm outline-none"
+                  className="w-full rounded-thumb border border-[var(--line-card)] bg-foreground/[0.03] px-3 py-3 text-[14px] outline-none"
                 >
                   <option value="">Month</option>
                   {MONTHS.map((m, i) => (
@@ -239,7 +239,7 @@ function ProfileInner() {
                   value={birthday.slice(3)}
                   disabled={!birthday.slice(0, 2)}
                   onChange={(e) => setBirthday(`${birthday.slice(0, 2)}-${e.target.value}`)}
-                  className="w-full rounded-xl border border-[var(--line-card)] bg-foreground/[0.03] px-3 py-3 text-sm outline-none disabled:opacity-40"
+                  className="w-full rounded-thumb border border-[var(--line-card)] bg-foreground/[0.03] px-3 py-3 text-[14px] outline-none disabled:opacity-40"
                 >
                   {/* A placeholder that matches the empty value: without one
                       React has a select whose value is not among its options. */}
@@ -249,7 +249,7 @@ function ProfileInner() {
                   ))}
                 </select>
               </div>
-              <p className="mt-1.5 text-xs opacity-60">
+              <p className="mt-1.5 text-[12px] opacity-60">
                 Day and month only — we never ask for the year.
                 {birthday && (
                   <>
@@ -266,7 +266,7 @@ function ProfileInner() {
               </p>
             </div>
 
-            {error && <div className="border border-carz/40 bg-carz/10 p-3 text-sm ">{error}</div>}
+            {error && <div className="border border-carz/40 bg-carz/10 p-3 text-[14px] ">{error}</div>}
 
             <Button
               onClick={save}

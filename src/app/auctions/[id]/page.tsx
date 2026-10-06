@@ -130,8 +130,8 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
     return (
       <>
         <main className="mx-auto w-full max-w-3xl px-5 py-24 text-center">
-          <h1 className="display text-5xl">Not found</h1>
-          <p className="mt-2 text-sm ">This auction doesn&apos;t exist or was removed.</p>
+          <h1 className="display text-[50px]">Not found</h1>
+          <p className="mt-2 text-[14px] ">This auction doesn&apos;t exist or was removed.</p>
           <Link href="/auctions" className="util-label mt-6 inline-block  hover:brightness-110">
             Back to auctions
           </Link>
@@ -160,7 +160,7 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
           </div>
 
           <div className="p-6">
-            <h1 className="display text-4xl">{a.title}</h1>
+            <h1 className="display text-[34px]">{a.title}</h1>
             <p className="util-label mt-2 ">
               {a.sellerName}
               {a.year || a.make || a.model ? ` — ${[a.year, a.make, a.model].filter(Boolean).join(" ")}` : ""}
@@ -176,7 +176,7 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
             <div className="mt-6 flex items-end justify-between border-y border-[var(--line-card)] py-6">
               <div>
                 <div className="util-label ">{a.bidCount > 0 ? "Current bid" : "Starting bid"}</div>
-                <div className="display text-6xl  sm:text-7xl">{money(a.currentBid)}</div>
+                <div className="display text-[50px]  sm:text-[50px]">{money(a.currentBid)}</div>
                 <div className="util-label mt-1 ">
                   {a.bidCount} bids{a.topBidderName ? ` · top ${a.topBidderName}` : ""}
                 </div>
@@ -184,7 +184,7 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
               {!ended && (
                 <div className="text-right">
                   <div className="util-label ">Ends in</div>
-                  <div className="display text-2xl">{countdown(a.endsAt, now)}</div>
+                  <div className="display text-[20px]">{countdown(a.endsAt, now)}</div>
                 </div>
               )}
             </div>
@@ -195,12 +195,12 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
                 <ResultBox a={a} />
               </div>
             ) : a.youAreSeller ? (
-              <p className="mt-6 rounded-xl border border-[var(--line-card)] bg-foreground/[0.03] p-4 text-sm ">
+              <p className="mt-6 rounded-thumb border border-[var(--line-card)] bg-foreground/[0.03] p-4 text-[14px] ">
                 This is your listing — you can&apos;t bid on it. Share the link to start a bidding war.
               </p>
             ) : (
               <div className="mt-6">
-                <div className="flex gap-px rounded-xl border border-[var(--line-card)] bg-foreground/10">
+                <div className="flex gap-px rounded-thumb border border-[var(--line-card)] bg-foreground/10">
                   <div className="flex flex-1 items-center bg-background text-foreground px-3">
                     <span className="">$</span>
                     <input
@@ -208,7 +208,7 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
                       onChange={(e) => setAmount(e.target.value.replace(/[^0-9]/g, ""))}
                       inputMode="numeric"
                       placeholder={`${minNext.toLocaleString()} or more`}
-                      className="w-full bg-transparent px-2 py-3.5 text-sm  outline-none "
+                      className="w-full bg-transparent px-2 py-3.5 text-[14px]  outline-none "
                     />
                   </div>
                   <Button onClick={placeBid} disabled={bidding} className="px-6">
@@ -216,14 +216,14 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
                   </Button>
                 </div>
                 <p className="util-label mt-2 ">Minimum next bid: {money(minNext)}</p>
-                {msg && <p className="mt-2 text-sm ">{msg}</p>}
+                {msg && <p className="mt-2 text-[14px] ">{msg}</p>}
               </div>
             )}
 
             {a.description && (
               <div className="mt-8 border-t border-[var(--line-card)] pt-6">
                 <div className="util-label ">Description</div>
-                <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed ">{a.description}</p>
+                <p className="mt-2 whitespace-pre-wrap text-[14px] leading-relaxed ">{a.description}</p>
               </div>
             )}
 
@@ -246,7 +246,7 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
 function ResultBox({ a }: { a: Auction }) {
   if (a.bidCount === 0) {
     return (
-      <p className="rounded-xl border border-[var(--line-card)] bg-foreground/[0.03] p-4 text-sm ">
+      <p className="rounded-thumb border border-[var(--line-card)] bg-foreground/[0.03] p-4 text-[14px] ">
         This auction ended with no bids.
       </p>
     );
@@ -256,22 +256,22 @@ function ResultBox({ a }: { a: Auction }) {
     return (
       <div className="bg-carz p-5 ">
         <div className="util-label">You won</div>
-        <h3 className="display mt-1 text-3xl">Won for {money(a.currentBid)}</h3>
-        <p className="mt-2 text-sm font-medium">Contact the seller to arrange the sale:</p>
-        <p className="mt-2 select-all bg-carz-ink px-3 py-2 font-mono text-sm ">{a.contact}</p>
+        <h3 className="display mt-1 text-[34px]">Won for {money(a.currentBid)}</h3>
+        <p className="mt-2 text-[14px] font-medium">Contact the seller to arrange the sale:</p>
+        <p className="mt-2 select-all bg-carz-ink px-3 py-2 font-mono text-[14px] ">{a.contact}</p>
       </div>
     );
   }
   if (a.youAreSeller) {
     return (
-      <div className="rounded-xl border border-[var(--line-card)] bg-foreground/[0.03] p-5">
+      <div className="rounded-thumb border border-[var(--line-card)] bg-foreground/[0.03] p-5">
         <div className="util-label ">Sold</div>
-        <h3 className="display mt-1 text-2xl">Sold for {money(a.currentBid)}</h3>
-        <p className="mt-2 text-sm ">
+        <h3 className="display mt-1 text-[20px]">Sold for {money(a.currentBid)}</h3>
+        <p className="mt-2 text-[14px] ">
           Winner: <span className="font-semibold ">{a.topBidderName}</span> — they&apos;ve been shown your contact to reach out.
         </p>
         {a.contact && (
-          <p className="mt-2 select-all border border-[var(--line-card)] bg-background text-foreground px-3 py-2 font-mono text-sm ">
+          <p className="mt-2 select-all border border-[var(--line-card)] bg-background text-foreground px-3 py-2 font-mono text-[14px] ">
             Your contact: {a.contact}
           </p>
         )}
@@ -279,9 +279,9 @@ function ResultBox({ a }: { a: Auction }) {
     );
   }
   return (
-    <div className="rounded-xl border border-[var(--line-card)] bg-foreground/[0.03] p-5">
-      <h3 className="display text-2xl">Won by {a.topBidderName}</h3>
-      <p className="mt-1 text-sm ">Final bid {money(a.currentBid)}. The winner gets the seller&apos;s contact.</p>
+    <div className="rounded-thumb border border-[var(--line-card)] bg-foreground/[0.03] p-5">
+      <h3 className="display text-[20px]">Won by {a.topBidderName}</h3>
+      <p className="mt-1 text-[14px] ">Final bid {money(a.currentBid)}. The winner gets the seller&apos;s contact.</p>
     </div>
   );
 }

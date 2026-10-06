@@ -82,7 +82,7 @@ export function LeaderboardRankings({
 
   if (rows.length === 0) {
     return (
-      <p className={cn("text-muted-foreground py-6 text-center text-sm", className)}>
+      <p className={cn("text-muted-foreground py-6 text-center text-[14px]", className)}>
         No rankings yet.
       </p>
     )
@@ -98,13 +98,13 @@ export function LeaderboardRankings({
               key={row.userId}
               aria-current={isYou ? "true" : undefined}
               className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors",
+                "flex items-center gap-3 rounded-thumb px-3 py-2.5 transition-colors",
                 isYou ? "bg-primary/10 ring-primary/30 ring-1" : "hover:bg-muted/50",
               )}
             >
               <span
                 className={cn(
-                  "w-6 shrink-0 text-center text-sm font-bold tabular-nums",
+                  "w-6 shrink-0 text-center text-[14px] font-bold tabular-nums",
                   RANK_TEXT[row.rank] ?? "text-muted-foreground",
                 )}
               >
@@ -121,13 +121,13 @@ export function LeaderboardRankings({
               </span>
 
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-semibold">{row.userName}</span>
+                <span className="block truncate text-[14px] font-semibold">{row.userName}</span>
                 {row.byline && (
-                  <span className="text-muted-foreground block truncate text-xs">{row.byline}</span>
+                  <span className="text-muted-foreground block truncate text-[12px]">{row.byline}</span>
                 )}
               </span>
 
-              <span className="shrink-0 text-sm font-semibold tabular-nums">
+              <span className="shrink-0 text-[14px] font-semibold tabular-nums">
                 {nf.format(row.value)}
               </span>
             </li>
@@ -147,7 +147,7 @@ export function LeaderboardRankings({
             <ChevronLeft className="h-4 w-4" aria-hidden />
           </button>
 
-          <span className="text-muted-foreground text-xs tabular-nums">
+          <span className="text-muted-foreground text-[12px] tabular-nums">
             Page {page + 1} of {pageCount}
           </span>
 

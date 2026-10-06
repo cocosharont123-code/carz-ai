@@ -87,7 +87,7 @@ export function MemberGate({
         <main className="mx-auto w-full max-w-lg px-5 py-16">
           <div className="glass-card rounded-card p-8 text-center">
             <div className="util-label text-carz">{planName} members only</div>
-            <h1 className="display mt-2 text-3xl">{title}</h1>
+            <h1 className="display mt-2 text-[34px]">{title}</h1>
             <p className="mx-auto mt-2 max-w-sm text-[15px] opacity-70">{blurb}</p>
 
             {points && points.length > 0 && (
@@ -104,7 +104,7 @@ export function MemberGate({
             <Button href="/pricing" className="mt-6">
               Get {planName} · {monthly}/mo
             </Button>
-            <p className="mt-3 text-xs opacity-60">
+            <p className="mt-3 text-[12px] opacity-60">
               or {annual}/year — save {saving}%
             </p>
           </div>

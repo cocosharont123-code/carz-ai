@@ -95,7 +95,7 @@ export function ChannelHeader({
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <h1 className="display text-2xl leading-none">{channel.displayName}</h1>
+          <h1 className="display text-[20px] leading-none">{channel.displayName}</h1>
           {channel.member && (
             <span role="img" aria-label="Carz+ member" title="Carz+ member">
               <Crown
@@ -127,7 +127,7 @@ export function ChannelHeader({
             disabled={busy}
             aria-pressed={following}
             className={cn(
-              "press mt-5 w-full rounded-full py-3 text-sm font-bold transition-colors disabled:opacity-60",
+              "press mt-5 w-full rounded-full py-3 text-[14px] font-bold transition-colors disabled:opacity-60",
               following
                 ? "glass-card hover:bg-foreground/[0.08]"
                 : "bg-carz text-neutral-900 hover:opacity-90",
@@ -150,7 +150,7 @@ export function ChannelHeader({
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div>
-      <dd className="display text-xl leading-none tabular-nums">{nf.format(value)}</dd>
+      <dd className="display text-[20px] leading-none tabular-nums">{nf.format(value)}</dd>
       <dt className="util-label mt-1 opacity-50">{label}</dt>
     </div>
   );

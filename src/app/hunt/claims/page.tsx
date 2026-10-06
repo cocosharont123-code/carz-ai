@@ -40,19 +40,19 @@ export default function ClaimsPage() {
   return (
     <>
       <main className="mx-auto w-full max-w-2xl px-5 py-8">
-        <h1 className="text-2xl font-black tracking-tight">Prize claims</h1>
-        <p className="mt-1 text-sm ">Review verified spots and pay out via CashApp.</p>
+        <h1 className="text-[20px] font-black tracking-tight">Prize claims</h1>
+        <p className="mt-1 text-[14px] ">Review verified spots and pay out via CashApp.</p>
 
         {loading ? (
           <div className="mt-6 h-40 animate-pulse rounded-card bg-foreground/[0.04]" />
         ) : status !== "authenticated" ? (
           <div className="mt-8 rounded-card glass-card p-8 text-center">
-            <h3 className="text-lg font-bold">Owner only</h3>
-            <p className="mt-1 text-sm ">Sign in with the owner account to see claims.</p>
+            <h3 className="text-[17px] font-bold">Owner only</h3>
+            <p className="mt-1 text-[14px] ">Sign in with the owner account to see claims.</p>
             <GoogleSignInButton callbackUrl="/hunt/claims" />
           </div>
         ) : !isOwner ? (
-          <div className="mt-8 rounded-card border border-neon-red/30 bg-neon-red/10 p-6 text-center text-sm text-neon-red">
+          <div className="mt-8 rounded-card border border-neon-red/30 bg-neon-red/10 p-6 text-center text-[14px] text-neon-red">
             This page is only visible to the hunt owner.
           </div>
         ) : claims.length === 0 ? (
@@ -64,7 +64,7 @@ export default function ClaimsPage() {
           <div className="mt-6 space-y-3">
             {claims.map((c) => (
               <div key={c.id} className="flex gap-3 rounded-card glass-card p-3">
-                <div className="h-20 w-24 shrink-0 overflow-hidden rounded-xl bg-foreground/[0.04]">
+                <div className="h-20 w-24 shrink-0 overflow-hidden rounded-thumb bg-foreground/[0.04]">
                   {c.image ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={c.image} alt={c.carName} className="h-full w-full object-cover" />
@@ -78,10 +78,10 @@ export default function ClaimsPage() {
                   <p className="font-bold">
                     {c.carName} · <span className="text-neon-green">{money(c.bounty)}</span>
                   </p>
-                  <p className="mt-0.5 text-sm">
+                  <p className="mt-0.5 text-[14px]">
                     Pay: <span className="select-all font-mono font-bold">{c.cashapp}</span>
                   </p>
-                  <p className="text-xs ">
+                  <p className="text-[12px] ">
                     by {c.spotter} · {fmt(c.ts)} · {c.status}
                   </p>
                 </div>

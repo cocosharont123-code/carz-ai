@@ -58,11 +58,11 @@ function AuctionCard({ a, now }: { a: Auction; now: number }) {
         <WishlistButton item={{ id: a.id, title: a.title, image: a.image, ts: 0 }} className="absolute right-3 top-3 z-10" />
       </div>
       <div className="flex flex-1 flex-col p-4">
-        <p className="line-clamp-2 min-h-[2.5rem] text-sm font-semibold leading-snug ">{a.title}</p>
+        <p className="line-clamp-2 min-h-[2.5rem] text-[14px] font-semibold leading-snug ">{a.title}</p>
         <div className="mt-2 flex items-end justify-between">
           <div>
             <div className="util-label ">{a.bidCount > 0 ? "Current bid" : "Starting"}</div>
-            <div className="display text-3xl ">{money(a.currentBid)}</div>
+            <div className="display text-[34px] ">{money(a.currentBid)}</div>
           </div>
           <div className="text-right">
             <div className="util-label ">{a.bidCount} bids</div>
@@ -126,8 +126,8 @@ export default function AuctionsPage() {
           </div>
         ) : items.length === 0 ? (
           <div className="mt-10 rounded-card glass-card p-12 text-center">
-            <h3 className="display text-4xl">No auctions live</h3>
-            <p className="mx-auto mt-2 max-w-sm text-sm ">Be the first — list a car and start a bidding war.</p>
+            <h3 className="display text-[34px]">No auctions live</h3>
+            <p className="mx-auto mt-2 max-w-sm text-[14px] ">Be the first — list a car and start a bidding war.</p>
             <Button href="/auctions/new" className="mt-6">List your car</Button>
           </div>
         ) : (

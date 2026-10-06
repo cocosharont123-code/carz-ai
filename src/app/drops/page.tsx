@@ -34,10 +34,10 @@ function DropCard({ drop }: { drop: Drop }) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="util-label opacity-60">{drop.make}</p>
-          <h2 className="mt-0.5 truncate text-lg font-extrabold tracking-tight">{drop.model}</h2>
+          <h2 className="mt-0.5 truncate text-[17px] font-extrabold tracking-tight">{drop.model}</h2>
         </div>
         <div className="shrink-0 text-right">
-          <div className="display text-3xl leading-none">{money(drop.startingPriceUsd)}</div>
+          <div className="display text-[34px] leading-none">{money(drop.startingPriceUsd)}</div>
           <p className="util-label mt-1 opacity-50">from</p>
         </div>
       </div>
@@ -63,11 +63,11 @@ function DropCard({ drop }: { drop: Drop }) {
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3">
-        <div className="rounded-xl bg-foreground/[0.04] p-3">
+        <div className="rounded-thumb bg-foreground/[0.04] p-3">
           <div className="text-[12px] uppercase tracking-wide opacity-60">Powertrain</div>
           <div className="mt-0.5 text-[15px] font-semibold">{drop.powertrain}</div>
         </div>
-        <div className="rounded-xl bg-foreground/[0.04] p-3">
+        <div className="rounded-thumb bg-foreground/[0.04] p-3">
           <div className="text-[12px] uppercase tracking-wide opacity-60">Headline</div>
           <div className="mt-0.5 text-[15px] font-semibold">{drop.headline}</div>
         </div>
@@ -160,7 +160,7 @@ export default function DropsPage() {
         ) : !configured ? (
           <div className="mt-8 rounded-card glass-card p-10 text-center">
             <Rocket className="mx-auto h-8 w-8 opacity-40" strokeWidth={1.5} aria-hidden />
-            <h2 className="mt-3 text-lg font-bold">Drops aren&apos;t switched on yet</h2>
+            <h2 className="mt-3 text-[17px] font-bold">Drops aren&apos;t switched on yet</h2>
             <p className="mx-auto mt-1.5 max-w-sm text-[15px] opacity-60">
               This section needs <code>ANTHROPIC_API_KEY</code> set on the server.
             </p>
@@ -168,7 +168,7 @@ export default function DropsPage() {
         ) : error || shown.length === 0 ? (
           <div className="mt-8 rounded-card glass-card p-10 text-center">
             <Rocket className="mx-auto h-8 w-8 opacity-40" strokeWidth={1.5} aria-hidden />
-            <h2 className="mt-3 text-lg font-bold">
+            <h2 className="mt-3 text-[17px] font-bold">
               {error ? "Couldn't load new drops" : "Nothing in this class right now"}
             </h2>
             <p className="mx-auto mt-1.5 max-w-sm text-[15px] opacity-60">

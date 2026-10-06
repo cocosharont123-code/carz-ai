@@ -95,7 +95,7 @@ export function GoogleSignInButton({
       disabled={disabled}
       className={cn(
         "press glass-card inline-flex items-center justify-center gap-3 rounded-full px-6 py-3.5",
-        "text-sm font-semibold transition-colors hover:bg-foreground/[0.08]",
+        "text-[14px] font-semibold transition-colors hover:bg-foreground/[0.08]",
         "disabled:cursor-not-allowed disabled:opacity-40",
         full && "w-full",
         className,

@@ -53,7 +53,7 @@ function PodiumPlace({ entry }: { entry: LeaderboardRanking }) {
 
       <span
         className={cn(
-          "flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-bold ring-2",
+          "flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-muted text-[14px] font-bold ring-2",
           style.ring,
         )}
       >
@@ -69,10 +69,10 @@ function PodiumPlace({ entry }: { entry: LeaderboardRanking }) {
         )}
       </span>
 
-      <span className="mt-2 w-full truncate px-1 text-center text-xs font-semibold">
+      <span className="mt-2 w-full truncate px-1 text-center text-[12px] font-semibold">
         {entry.userName}
       </span>
-      <span className="text-muted-foreground text-xs tabular-nums">{nf.format(entry.value)}</span>
+      <span className="text-muted-foreground text-[12px] tabular-nums">{nf.format(entry.value)}</span>
 
       {/* The block itself. Height carries the ranking, so the shape reads
           before any of the text does. */}
@@ -82,7 +82,7 @@ function PodiumPlace({ entry }: { entry: LeaderboardRanking }) {
           style.height,
         )}
       >
-        <span className={cn("text-lg font-bold tabular-nums", style.text)}>{entry.rank}</span>
+        <span className={cn("text-[17px] font-bold tabular-nums", style.text)}>{entry.rank}</span>
       </div>
     </div>
   )

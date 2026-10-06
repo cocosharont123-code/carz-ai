@@ -244,12 +244,12 @@ export default function PricingPage() {
             type="button"
             onClick={() => void cancel()}
             disabled={busy !== null}
-            className="press min-h-11 rounded-full px-5 text-sm opacity-60 transition hover:opacity-100 disabled:opacity-30"
+            className="press min-h-11 rounded-full px-5 text-[14px] opacity-60 transition hover:opacity-100 disabled:opacity-30"
           >
             {busy ? "Cancelling…" : "Cancel membership"}
           </button>
           {joinError && (
-            <p role="alert" className="mt-2 text-sm text-neon-red">
+            <p role="alert" className="mt-2 text-[14px] text-neon-red">
               {joinError}
             </p>
           )}
@@ -260,7 +260,7 @@ export default function PricingPage() {
         <div className="mx-auto mt-7 max-w-sm">
           {promo ? (
             <div className="glass-card flex min-h-11 items-center justify-between gap-3 rounded-full px-4 py-2">
-              <p className="text-sm">
+              <p className="text-[14px]">
                 <span className="font-bold">{promo.code.toUpperCase()}</span>
                 <span className="opacity-70">
                   {" "}
@@ -293,12 +293,12 @@ export default function PricingPage() {
                 autoComplete="off"
                 autoCapitalize="none"
                 spellCheck={false}
-                className="glass-card min-h-11 flex-1 rounded-full bg-transparent px-4 text-sm outline-none placeholder:opacity-40 focus-visible:ring-2 focus-visible:ring-carz/60"
+                className="glass-card min-h-11 flex-1 rounded-full bg-transparent px-4 text-[14px] outline-none placeholder:opacity-40 focus-visible:ring-2 focus-visible:ring-carz/60"
               />
               <button
                 type="button"
                 onClick={applyPromo}
-                className="press glass-card min-h-11 shrink-0 rounded-full px-5 text-sm font-semibold transition hover:bg-foreground/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carz/60"
+                className="press glass-card min-h-11 shrink-0 rounded-full px-5 text-[14px] font-semibold transition hover:bg-foreground/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carz/60"
               >
                 Apply
               </button>
@@ -307,12 +307,12 @@ export default function PricingPage() {
 
           {/* Errors are text, not a red border alone. */}
           {promoError && (
-            <p role="alert" className="mt-2 text-center text-sm text-neon-red">
+            <p role="alert" className="mt-2 text-center text-[14px] text-neon-red">
               {promoError}
             </p>
           )}
           {joinError && (
-            <p role="alert" className="mt-2 text-center text-sm text-neon-red">
+            <p role="alert" className="mt-2 text-center text-[14px] text-neon-red">
               {joinError}
             </p>
           )}

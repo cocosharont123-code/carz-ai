@@ -14,7 +14,7 @@ const SwitchToggleThemeDemo = () => {
       <span
         id={`${id}-light`}
         className={cn(
-          "cursor-pointer text-left text-sm font-medium",
+          "cursor-pointer text-left text-[14px] font-medium",
           isDark && "",
         )}
         aria-controls={id}
@@ -34,7 +34,7 @@ const SwitchToggleThemeDemo = () => {
       <span
         id={`${id}-dark`}
         className={cn(
-          "cursor-pointer text-right text-sm font-medium",
+          "cursor-pointer text-right text-[14px] font-medium",
           isDark || "",
         )}
         aria-controls={id}
