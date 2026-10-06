@@ -25,11 +25,23 @@ import { HomeGarage } from "@/components/home/home-garage";
  */
 const ON_THE_TABS = new Set(["/spot", "/map"]);
 
+/**
+ * Asked to come off Home.
+ *
+ * The routes stay and so does every other way in -- /auctions is linked from
+ * the auction pages and the wishlist, /wishlist from the heart on any auction.
+ * /drops had no other inbound link, so it is now reachable only by URL; say if
+ * it should be removed outright rather than just unlisted.
+ */
+const OFF_HOME = new Set(["/auctions", "/wishlist", "/drops"]);
+
 export default function Home() {
   const router = useRouter();
   const [q, setQ] = useState("");
 
-  const rows = EXPLORE_BUBBLES.filter((item) => !ON_THE_TABS.has(item.href));
+  const rows = EXPLORE_BUBBLES.filter(
+    (item) => !ON_THE_TABS.has(item.href) && !OFF_HOME.has(item.href),
+  );
 
   return (
     <main className="mx-auto w-full max-w-[480px] px-5 pb-6">

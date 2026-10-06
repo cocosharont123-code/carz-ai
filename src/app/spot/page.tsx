@@ -328,9 +328,13 @@ function ValueChart({ points }: { points: { year: string; usd: number }[] }) {
   // line and by the figure beside it, so the colour was saying it a third time
   // -- and it was the one thing on this chart a colour-blind reader could not
   // read. Both lines are white.
-  const stroke = "#ffffff";
+  // currentColor, not #ffffff -- a literal white is invisible on the light
+  // theme. Inheriting the text colour makes the line black on white and white
+  // on black. Still one colour rather than green-up / red-down: direction is
+  // already in the shape of the line and in the figures beside it.
+  const stroke = "currentColor";
   return (
-    <div className="mt-4 rounded-card bg-foreground/[0.04] p-4">
+    <div className="mt-4 rounded-card bg-foreground/[0.04] p-4 text-foreground">
       <div className="flex items-baseline justify-between">
         <span className="text-[12px] font-bold uppercase tracking-wide ">
           Market value over time
@@ -346,12 +350,25 @@ function ValueChart({ points }: { points: { year: string; usd: number }[] }) {
             <stop offset="100%" stopColor={stroke} stopOpacity="0" />
           </linearGradient>
         </defs>
+        {/* Three gridlines with their value, so the shape reads as amounts and
+            not only as a direction. */}
+        {[0, 0.5, 1].map((f) => {
+          const gy = padY + f * (H - padY * 2);
+          return (
+            <g key={f}>
+              <line x1={padX} y1={gy} x2={W - padX} y2={gy} stroke="currentColor" strokeOpacity="0.12" />
+              <text x={padX - 8} y={gy + 3} textAnchor="end" fontSize="10" fill="currentColor" fillOpacity="0.5">
+                {fmtUsd(max - f * (max - min))}
+              </text>
+            </g>
+          );
+        })}
         <path d={area} fill="url(#valfill)" />
         <path d={line} fill="none" stroke={stroke} strokeWidth="2.5" strokeLinejoin="round" />
         {pts.map((p, i) => (
           <g key={i}>
             <circle cx={x(i)} cy={y(p.usd)} r="3.5" fill={stroke} />
-            <text x={x(i)} y={H - 6} textAnchor="middle" className="fill-muted-foreground" fontSize="10">
+            <text x={x(i)} y={H - 6} textAnchor="middle" fontSize="10" fill="currentColor" fillOpacity="0.5">
               {p.year}
             </text>
           </g>
@@ -384,15 +401,18 @@ function newScanId(): string {
 function DetailRow({
   label,
   has,
+  open,
   children,
 }: {
   label: string;
   has: boolean;
+  /** Starts expanded. Still collapsible -- it is the initial state, not a lock. */
+  open?: boolean;
   children: React.ReactNode;
 }) {
   if (!has) return null;
   return (
-    <details className="group border-b border-[var(--line-divider)]">
+    <details open={open} className="group border-b border-[var(--line-divider)]">
       <summary className="press flex min-h-14 cursor-pointer list-none items-center justify-between py-3 text-[15px] font-medium text-foreground [&::-webkit-details-marker]:hidden">
         {label}
         <ChevronDown
@@ -1057,6 +1077,7 @@ export default function SpotPage() {
 
                   <DetailRow
                     label="Performance"
+                    open
                     has={!!(car.horsepower || car.zeroToSixty || car.topSpeed)}
                   >
                     <Spec k="Horsepower" v={car.horsepower} />
@@ -1081,7 +1102,8 @@ export default function SpotPage() {
                     <ValueChart points={car.valueTimeline} />
                   </DetailRow>
 
-                  <DetailRow label="Rarity" has={car.rarityScore > 0}>
+                  <DetailRow label="Rarity"
+                    open has={car.rarityScore > 0}>
                     <RarityMeter score={car.rarityScore} reason={car.rarityReason} />
                   </DetailRow>
 
@@ -1092,7 +1114,11 @@ export default function SpotPage() {
                   {/* No "Photos & Videos" row. One photo exists -- the one you
                       just took, and it is already at the top of this screen. */}
 
-                  <DetailRow label="Customize this car" has={!!spottedImage}>
+                  {/* Open by default like the two above it. The customizer is the
+                      heaviest thing on this screen, so it is the one row where
+                      "already open" costs something -- worth knowing if the
+                      detail screen starts feeling slow to arrive. */}
+                  <DetailRow label="Customize this car" has={!!spottedImage} open>
                     {spottedImage && <CarCustomizer image={spottedImage} car={car} />}
                   </DetailRow>
                 </div>
