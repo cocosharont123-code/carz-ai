@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Map, ScanLine, Crosshair, User } from "lucide-react";
+import { GlassFilter, GlassPane } from "@/components/ui/liquid-glass";
 import { cn } from "@/lib/utils";
 
 /**
@@ -49,21 +50,26 @@ export function BottomNav() {
 
   return (
     <>
+      {/* Defines #glass-distortion for the pane below. Mounted here because the
+          nav is the one component on every page that uses it. */}
+      <GlassFilter />
+
       <nav
         aria-label="Main"
-        // blur-behind rather than a solid fill: the page scrolls under this
-        // bar, so there is real content for the material to work on. It carries
-        // no border of its own -- the spec asks for none -- so the rim comes
-        // from blur-behind's edge alone.
-        className="blur-behind fixed inset-x-0 bottom-0 z-[60] border-0"
-        // The home-indicator strip, so the row sits above it rather than under
-        // it. The layout keeps every page one pixel taller than the viewport,
-        // which settles Safari's bottom toolbar before first paint -- without
-        // that this inset changes from 0 to ~34px the moment a page becomes
+        className="fixed inset-x-0 bottom-0 z-[60] flex justify-center px-3"
+        // The home-indicator strip plus the gap the dock floats above it. The
+        // layout keeps every page one pixel taller than the viewport, which
+        // settles Safari's bottom toolbar before first paint -- without that
+        // this inset flips from 0 to ~34px the moment a page becomes
         // scrollable, and a bar measured from it jumps.
-        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 10px)" }}
       >
-        <div className="mx-auto flex max-w-[480px] items-stretch" style={{ height: BAR_H }}>
+        {/* A floating dock rather than a bar welded to the edge. The pane is
+            the layered material: displaced backdrop, contrast fill, bevel. */}
+        <GlassPane
+          className="flex w-full max-w-[480px] items-stretch rounded-[28px]"
+          style={{ height: BAR_H }}
+        >
           {TABS.map(({ href, label, Icon, match, ...rest }) => {
             const active = match(pathname);
             const center = "center" in rest && rest.center;
@@ -122,7 +128,7 @@ export function BottomNav() {
               </Link>
             );
           })}
-        </div>
+        </GlassPane>
       </nav>
 
       {/* Holds the page clear of the bar by exactly its height plus the strip
@@ -131,7 +137,7 @@ export function BottomNav() {
       <div
         aria-hidden
         className="shrink-0"
-        style={{ height: `calc(${BAR_H} + env(safe-area-inset-bottom, 0px))` }}
+        style={{ height: `calc(${BAR_H} + env(safe-area-inset-bottom, 0px) + 20px)` }}
       />
     </>
   );

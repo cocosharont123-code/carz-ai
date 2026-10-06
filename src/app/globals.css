@@ -36,7 +36,10 @@
      it, so what a page has to keep clear is the bar plus the home-indicator
      strip under it -- no gap either side. Kept under the same names because
      every full-bleed page measures from --nav-h. */
-  --nav-h: calc(var(--nav-bubble-h) + env(safe-area-inset-bottom, 0px));
+  /* The dock floats now rather than sitting on the edge, so what a page has
+     to keep clear is the bar, the home-indicator strip, and the 20px of gap
+     above and below it. */
+  --nav-h: calc(var(--nav-bubble-h) + env(safe-area-inset-bottom, 0px) + 20px);
 }
 
 /* ==========================================================================
