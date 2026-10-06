@@ -24,9 +24,19 @@ export function AppChrome() {
   const pathname = usePathname();
   if (pathname.startsWith("/signin")) return null;
 
+  /**
+   * Full-bleed pages get the nav but not the standing legal line.
+   *
+   * The line is a paragraph in the flow, so on a page already sized to the
+   * whole viewport it is pure extra height -- which is the stray scroll on the
+   * map. The notice still appears under every page that scrolls anyway, which is
+   * every other one, so nothing stops binding by use.
+   */
+  const fullBleed = pathname.startsWith("/map");
+
   return (
     <>
-      <LegalNotice />
+      {!fullBleed && <LegalNotice />}
       <BottomNav />
     </>
   );
