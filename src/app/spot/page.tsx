@@ -772,7 +772,7 @@ export default function SpotPage() {
                 {Math.max(0, (status.dailyLimit ?? 3) - status.usedToday)} of {status.dailyLimit ?? 3} free scans
                 left today ·{" "}
                 <Link href="/pricing" className="underline underline-offset-2">
-                  Get Carz+
+                  Get Carz PRO
                 </Link>
               </>
             )}
@@ -964,9 +964,9 @@ export default function SpotPage() {
             <TrafficCone className="mx-auto h-8 w-8 opacity-50" strokeWidth={1.5} aria-hidden />
             <h3 className="display mt-2 text-[20px]">Out of free scans</h3>
             <p className="mx-auto mt-1 max-w-sm text-[15px] opacity-70">
-              You&apos;ve used all 3 of today&apos;s free scans. Get Carz+ for unlimited scanning.
+              You&apos;ve used all 3 of today&apos;s free scans. Get Carz PRO for unlimited scanning.
             </p>
-            <GlassButton href="/pricing" className="mt-4">Get Carz+ · {carzPlusMonthly()}/mo</GlassButton>
+            <GlassButton href="/pricing" className="mt-4">Get Carz PRO · {carzPlusMonthly()}/mo</GlassButton>
             <p className="mt-3 text-[12px] opacity-60">
               or {carzPlusAnnual()}/year — save {carzPlusAnnualSaving()}%
             </p>

@@ -70,7 +70,7 @@ export default function PricingPage() {
   }
 
   const isFree = promo?.percentOff === 100;
-  // A member whose tier did not come back is treated as Carz+ rather than as
+  // A member whose tier did not come back is treated as Carz PRO rather than as
   // nothing: the failure mode then is offering an upgrade they may not need,
   // not stranding them on a page with no controls at all.
   const heldTier: TierId | null = member ? (tier ?? "plus") : null;
@@ -90,7 +90,7 @@ export default function PricingPage() {
 
   async function join(id: TierId) {
     if (busy) return;
-    // The tier already held has no button. Upgrading from Carz+ to MAX does,
+    // The tier already held has no button. Upgrading from Carz PRO to MAX does,
     // and takes the same join path — setMembership overwrites the tier.
     if (member && !(canUpgrade && id === "max")) return;
     if (status !== "authenticated") {
@@ -107,7 +107,7 @@ export default function PricingPage() {
       } else if (annual) {
         d = await post({ action: "join", interval: "annual", code: promo?.code, tier: id });
       } else if (id === "plus") {
-        // The trial is a Carz+ monthly path only: startTrial grants no tier, so
+        // The trial is a Carz PRO monthly path only: startTrial grants no tier, so
         // routing MAX through it would sell the cheaper membership.
         d = await post({ action: "trial" });
         if (!d?.ok && !d?.needUsername) {
@@ -172,7 +172,7 @@ export default function PricingPage() {
       if (heldTier === id) return "Your current plan";
       // Upgrading keeps the interval they are already billed on.
       if (canUpgrade && id === "max") {
-        return `Billed ${billing === "annual" ? "yearly" : "monthly"}, like your Carz+`;
+        return `Billed ${billing === "annual" ? "yearly" : "monthly"}, like your Carz PRO`;
       }
       return undefined;
     }

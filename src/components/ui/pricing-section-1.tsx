@@ -111,7 +111,7 @@ export type PricingTier = {
   /** Struck through beside the price when a promo is applied. */
   wasPrice?: number;
   interval: "mo" | "yr";
-  /** Sits above the list, e.g. "Everything in Carz+, plus:". */
+  /** Sits above the list, e.g. "Everything in Carz PRO, plus:". */
   perksLead?: string;
   perks: readonly { readonly title: string; readonly desc?: string }[];
   /** Ranked first visually. Paired with a text badge, never colour alone. */

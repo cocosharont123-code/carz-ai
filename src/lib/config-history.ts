@@ -3,7 +3,7 @@ import { createHash, randomUUID } from "crypto";
 import { blobToken, blobConfigured } from "./blob-token";
 
 /**
- * Carz+ car-configuration history. Every customizer render a member generates
+ * Carz PRO car-configuration history. Every customizer render a member generates
  * is recorded here, so the list follows the account instead of the browser.
  * Keyed by a hash of the email so raw emails never land in the blob — same
  * shape as restyle-usage.ts.

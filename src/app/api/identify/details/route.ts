@@ -42,7 +42,7 @@ export async function POST(req: Request) {
   const effectivePlan = isPlanId(cookiePlan) ? cookiePlan : user.plan;
   const plan = PLANS[effectivePlan] ?? PLANS.free;
 
-  // Market-value insight is the MAX tier's, so Carz+ does not get it either —
+  // Market-value insight is the MAX tier's, so Carz PRO does not get it either —
   // decided by membership here rather than by the plan record, which is the
   // same for everyone.
   const session = await auth();

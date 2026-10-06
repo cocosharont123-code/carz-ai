@@ -15,7 +15,7 @@ export async function GET() {
     return NextResponse.json({ configured: false, cars: [] });
   }
   const cars = await readBoard();
-  // Flag which spotters are current Carz+ members so the board can badge them.
+  // Flag which spotters are current Carz PRO members so the board can badge them.
   const members = await memberUsernames();
   const withMembership = cars.map((c) => ({
     ...c,

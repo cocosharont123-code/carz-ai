@@ -18,7 +18,7 @@ export const PLANS: Record<PlanId, Plan> = {
     id: "free",
     name: "Free",
     price: 0,
-    dailyLimit: 3, // Carz+ members get unlimited (enforced in /api/identify)
+    dailyLimit: 3, // Carz PRO members get unlimited (enforced in /api/identify)
     premiumReport: true,
     saveHistory: true,
     blurb: "3 scans a day, free.",
@@ -48,7 +48,7 @@ export const DAILY_SCANS = {
 
 export const CARZ_PLUS = {
   id: "plus" as const,
-  name: "Carz+",
+  name: "Carz PRO",
   monthly: 5.99,
   annual: 59.99,
   blurb: "For spotting regularly.",
@@ -64,8 +64,8 @@ export const CARZ_MAX = {
   name: "Carz MAX",
   monthly: 9.99,
   annual: 99.99,
-  blurb: "Everything in Carz+, without the ceiling.",
-  /** Shown under "Everything in Carz+, plus:" — these are the additions. */
+  blurb: "Everything in Carz PRO, without the ceiling.",
+  /** Shown under "Everything in Carz PRO, plus:" — these are the additions. */
   perks: [
     { title: "Unlimited car scans", desc: "No daily cap, ever." },
     { title: "Market-value insight", desc: "See how far over or under market value a car is selling." },

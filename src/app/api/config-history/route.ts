@@ -11,7 +11,7 @@ import {
 export const runtime = "nodejs";
 
 /**
- * The signed-in member's saved car-configuration history. Carz+ only — the
+ * The signed-in member's saved car-configuration history. Carz PRO only — the
  * same gate the Builds page applies in the UI, enforced here too so the data
  * isn't readable by simply calling the endpoint.
  */
@@ -28,7 +28,7 @@ async function requireMember(): Promise<Gate> {
   // hand out a members-only history.
   const member = profilesConfigured() && isActiveMember(await getProfile(email));
   if (!member) {
-    return { error: NextResponse.json({ ok: false, error: "Carz+ members only.", needMember: true }, { status: 403 }) };
+    return { error: NextResponse.json({ ok: false, error: "Carz PRO members only.", needMember: true }, { status: 403 }) };
   }
   return { email };
 }

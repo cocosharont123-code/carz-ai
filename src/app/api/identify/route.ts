@@ -53,7 +53,7 @@ export async function POST(req: Request) {
   const effectivePlan = isPlanId(cookiePlan) ? cookiePlan : user.plan;
   const plan = PLANS[effectivePlan] ?? PLANS.free;
 
-  // Three ceilings, one per tier: free three a day, Carz+ eight, MAX none.
+  // Three ceilings, one per tier: free three a day, Carz PRO eight, MAX none.
   const session = await auth();
   const profile = session?.user?.email ? await getProfile(session.user.email) : null;
   const tier = memberTier(profile);
@@ -69,7 +69,7 @@ export async function POST(req: Request) {
         message:
           tier === "plus"
             ? `You've used all ${cap} scans today. Carz MAX has no daily cap.`
-            : `You've used all ${cap} free scans today. Carz+ gives you ${DAILY_SCANS.plus} a day.`,
+            : `You've used all ${cap} free scans today. Carz PRO gives you ${DAILY_SCANS.plus} a day.`,
         tier,
         status: planStatusFor(effectivePlan, user),
       },

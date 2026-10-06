@@ -26,7 +26,7 @@ export type Profile = {
   member?: boolean; // any paid membership
   /**
    * Which one. Absent on records written before MAX existed, and those are
-   * Carz+ — the tier they were actually sold.
+   * Carz PRO — the tier they were actually sold.
    */
   tier?: MemberTier;
   memberSince?: number;
@@ -37,7 +37,7 @@ export type Profile = {
   streakDay?: string; // YYYY-MM-DD of last streak increment
 };
 
-// Length of the Carz+ free trial.
+// Length of the Carz PRO free trial.
 export const TRIAL_DAYS = 7;
 const TRIAL_MS = TRIAL_DAYS * 86_400_000;
 
@@ -48,7 +48,7 @@ export type MemberTier = "plus" | "max";
 /**
  * Which membership is active, or null.
  *
- * A record from before MAX existed has no tier and is Carz+: that is what those
+ * A record from before MAX existed has no tier and is Carz PRO: that is what those
  * people paid for, and defaulting them upward would hand out the higher tier to
  * everyone who ever subscribed.
  */
@@ -361,7 +361,7 @@ export async function deleteProfile(email: string): Promise<boolean> {
   return true;
 }
 
-// --- Carz+ membership + streaks ---
+// --- Carz PRO membership + streaks ---
 
 export async function setMembership(
   email: string,
@@ -384,7 +384,7 @@ export async function setMembership(
   return p;
 }
 
-// Usernames (lowercased) of everyone currently holding active Carz+ membership.
+// Usernames (lowercased) of everyone currently holding active Carz PRO membership.
 // Used to badge spotters on the shared leaderboard.
 /**
  * A profile by its public username, case-insensitively.
@@ -463,7 +463,7 @@ export async function startTrial(
   const all = await readAll();
   const key = keyFor(email);
   const p = recordIn(all, email); // starting a trial never waits on manual setup
-  if (isActiveMember(p)) return { ok: false, error: "You're already a Carz+ member." };
+  if (isActiveMember(p)) return { ok: false, error: "You're already a Carz PRO member." };
   if (p.trialUsed) return { ok: false, error: "You've already used your free trial." };
   p.member = true;
   p.trialUsed = true;

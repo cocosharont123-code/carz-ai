@@ -162,7 +162,7 @@ export const TERMS_SECTIONS: TermsSection[] = [
     blocks: [
       {
         kind: "p",
-        text: "Some features require a paid membership (“Carz+”). Membership pricing, free-trial terms, and billing periods are shown at purchase. Subscriptions renew automatically until cancelled. If you subscribed through the Apple App Store or Google Play, billing, cancellation, and refunds are handled by that store under its terms. Except where required by law or by the app store’s policies, payments are non-refundable. We may change membership pricing or features with notice; changes apply at your next renewal.",
+        text: "Some features require a paid membership (“Carz PRO”). Membership pricing, free-trial terms, and billing periods are shown at purchase. Subscriptions renew automatically until cancelled. If you subscribed through the Apple App Store or Google Play, billing, cancellation, and refunds are handled by that store under its terms. Except where required by law or by the app store’s policies, payments are non-refundable. We may change membership pricing or features with notice; changes apply at your next renewal.",
       },
     ],
   },

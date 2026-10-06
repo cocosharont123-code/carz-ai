@@ -50,7 +50,7 @@ export const PRIVACY_SECTIONS: PrivacySection[] = [
           "Account information: name, email address, and profile data collected via Google OAuth sign-in.",
           "Photos and vehicle data: images you upload for car spotting, identification, and customization features.",
           "Location data: approximate or precise location used for the car hotspot map and local car events, where you enable it.",
-          "Payment information: processed by Stripe for Carz+ membership subscriptions and seller listing fees; we do not store full payment card details ourselves.",
+          "Payment information: processed by Stripe for Carz PRO membership subscriptions and seller listing fees; we do not store full payment card details ourselves.",
           "Usage data: app activity such as scans, saved listings, bids, leaderboard activity, and garage history.",
           "Device and technical data: IP address, device type, and log data collected automatically.",
         ],
@@ -64,7 +64,7 @@ export const PRIVACY_SECTIONS: PrivacySection[] = [
         kind: "ul",
         items: [
           "To provide core features: car identification, market pricing, auctions, and bidding.",
-          "To process payments and manage Carz+ memberships and seller fees.",
+          "To process payments and manage Carz PRO memberships and seller fees.",
           "To operate the leaderboard, hotspot map, and Miami Car Hunt features.",
           "To communicate with you about your account, transactions, and updates.",
           "To detect fraud, stolen-vehicle listings, and abuse of the platform.",
@@ -105,7 +105,7 @@ export const PRIVACY_SECTIONS: PrivacySection[] = [
         items: [
           "You may access, update, or delete your account information by contacting us.",
           "You may disable location permissions in your device settings; some features may not work without it.",
-          "You may cancel your Carz+ membership at any time; cancellation takes effect at the end of the current billing period.",
+          "You may cancel your Carz PRO membership at any time; cancellation takes effect at the end of the current billing period.",
         ],
       },
     ],

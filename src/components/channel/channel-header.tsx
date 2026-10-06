@@ -97,7 +97,7 @@ export function ChannelHeader({
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <h1 className="display text-[20px] leading-none">{channel.displayName}</h1>
           {channel.member && (
-            <span role="img" aria-label="Carz+ member" title="Carz+ member">
+            <span role="img" aria-label="Carz PRO member" title="Carz PRO member">
               <Crown
                 className="h-4 w-4 text-rank-1 drop-shadow-[0_0_6px_rgba(255,255,255,0.45)]"
                 strokeWidth={2}

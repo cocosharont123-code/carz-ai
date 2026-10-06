@@ -16,9 +16,9 @@ import {
  * asked for; everyone else gets an explanation of the locked feature and the
  * upsell for that tier.
  *
- * It only knew about Carz+ before, which left no way to lock a MAX feature on the
+ * It only knew about Carz PRO before, which left no way to lock a MAX feature on the
  * client: the MAX routes answered 402 and the screen in front of them opened for
- * any member, so a Carz+ member reached a page that then refused to load.
+ * any member, so a Carz PRO member reached a page that then refused to load.
  */
 export function MemberGate({
   children,
@@ -39,7 +39,7 @@ export function MemberGate({
   tabs?: ReactNode;
   /**
    * Which membership opens this. "max" requires Carz MAX specifically, so a
-   * Carz+ member is shown the upsell rather than content their API will refuse.
+   * Carz PRO member is shown the upsell rather than content their API will refuse.
    */
   tier?: "plus" | "max";
 }) {
@@ -50,14 +50,14 @@ export function MemberGate({
       .then((r) => r.json())
       .then((d) => {
         // tier is the one that matters for a MAX feature; `member` is true for
-        // both tiers and would let Carz+ straight through.
+        // both tiers and would let Carz PRO straight through.
         setMember(tier === "max" ? d.tier === "max" : !!d.member);
       })
       .catch(() => setMember(false));
   }, [tier]);
 
   const isMax = tier === "max";
-  const planName = isMax ? "Carz MAX" : "Carz+";
+  const planName = isMax ? "Carz MAX" : "Carz PRO";
   const monthly = isMax ? carzMaxMonthly() : carzPlusMonthly();
   const annual = isMax ? carzMaxAnnual() : carzPlusAnnual();
   const saving = isMax ? carzMaxAnnualSaving() : carzPlusAnnualSaving();

@@ -27,7 +27,7 @@ export default function BuildsPage() {
       blurb="Every car configuration you've generated, saved to your account."
       points={[
         "Logs the body colour, rims and mods behind every render you generate.",
-        "Saved to your Carz+ account, so the list follows you across devices.",
+        "Saved to your Carz PRO account, so the list follows you across devices.",
         "Keeps the render itself on whichever device made it.",
       ]}
     >
@@ -111,7 +111,7 @@ function BuildsInner() {
     <>
       <main className="mx-auto w-full max-w-4xl px-5 py-10">
         <PageMasthead
-          eyebrow="Your configs · Carz+"
+          eyebrow="Your configs · Carz PRO"
           title="Builds"
           count={loading ? "—" : `${builds.length} saved`}
           action={
@@ -215,7 +215,7 @@ function BuildsInner() {
               ))}
             </div>
             <p className="mt-6 util-label text-center ">
-              Configs sync with your Carz+ account · renders stay on the device that made them.
+              Configs sync with your Carz PRO account · renders stay on the device that made them.
             </p>
           </>
         )}

@@ -19,7 +19,7 @@ import { HomeGarage } from "@/components/home/home-garage";
  * Not repeated as a row, because the tab bar's own icon is already the way in.
  *
  * Hunt is not on this list even though it is a tab. CarzBot, Events, Hunt and
- * Carz+ were four tiles across the top; all four are rows now, and Hunt was one
+ * Carz PRO were four tiles across the top; all four are rows now, and Hunt was one
  * of them, so it stays in the list rather than being the one of the four that
  * quietly disappeared.
  */

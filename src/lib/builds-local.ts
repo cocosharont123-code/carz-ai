@@ -2,7 +2,7 @@
 // stored in localStorage, no database and no sign-in required.
 // See garage-local.ts — this is the customized-render sibling of that store.
 //
-// The *config* of each build also lives server-side per Carz+ account (see
+// The *config* of each build also lives server-side per Carz PRO account (see
 // config-history.ts), and entries share an `id` so the builds page can pair a
 // synced config with the render still cached on this device. Renders are kept
 // here rather than in the blob: base64 photos have no business in a shared JSON

@@ -19,7 +19,7 @@ type RareCar = {
   image?: string;
   spotter: string;
   spotterImage?: string;
-  spotterMember?: boolean; // spotter is a current Carz+ member
+  spotterMember?: boolean; // spotter is a current Carz PRO member
   ts: number;
   /** The scan that also dropped this car's map pin, when the spotter shared one. */
   scanId?: string;
@@ -153,7 +153,7 @@ function LeaderboardInner() {
                     <p className="mt-0.5 flex items-center gap-1.5 truncate text-[12px]">
                       <Avatar src={c.spotterImage} size={15} />
                       <span className="truncate">{c.spotter}</span>
-                      {/* A crown rather than a "Carz+" pill. The label still has
+                      {/* A crown rather than a "Carz PRO" pill. The label still has
                           to reach a screen reader and a hover, so it moves to the
                           wrapper — an icon on its own says nothing to either.
                           text-rank-1 is the gold this board already uses for
@@ -161,8 +161,8 @@ function LeaderboardInner() {
                       {c.spotterMember && (
                         <span
                           role="img"
-                          aria-label="Carz+ member"
-                          title="Carz+ member"
+                          aria-label="Carz PRO member"
+                          title="Carz PRO member"
                           className="inline-flex shrink-0 items-center"
                         >
                           <Crown

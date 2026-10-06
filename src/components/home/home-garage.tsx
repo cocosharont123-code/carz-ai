@@ -17,7 +17,7 @@ const SHOWN = 6;
  * component and renders nothing at all on the server, which also keeps the
  * markup identical on both sides of hydration.
  *
- * Carz+ only, exactly as /garage is. The saved cars sit in this browser either
+ * Carz PRO only, exactly as /garage is. The saved cars sit in this browser either
  * way, but being able to look at them is the paid part — and if the homepage
  * showed them to everyone it would simply be the way around the gate.
  *

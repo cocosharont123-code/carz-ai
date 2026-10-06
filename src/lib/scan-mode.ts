@@ -4,7 +4,7 @@
 // sees both when they disagree.
 //
 // That chain is what makes a contested car come out right, and it costs up to
-// four model calls instead of one. So it's the Carz+ perk: free spotters get
+// four model calls instead of one. So it's the Carz PRO perk: free spotters get
 // the quick single look, members choose.
 
 export type ScanMode = "fast" | "precise";

@@ -53,7 +53,7 @@ export function DeleteAccount() {
       {!confirming ? (
         <>
           <p className="mt-2 max-w-prose text-[15px] leading-relaxed opacity-70">
-            Permanently erase your account — username, picture, Carz+ membership, day streak,
+            Permanently erase your account — username, picture, Carz PRO membership, day streak,
             spotting history and scan counts.
           </p>
           <button
@@ -69,7 +69,7 @@ export function DeleteAccount() {
           <p className="text-[14px] font-bold">Are you sure you want to delete your account?</p>
           <p className="mt-1.5 max-w-prose text-[15px] leading-relaxed opacity-75">
             This cannot be undone. Your username is released for anyone else to take, and any
-            Carz+ membership is lost immediately without a refund.
+            Carz PRO membership is lost immediately without a refund.
           </p>
 
           {error && (

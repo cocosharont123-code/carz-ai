@@ -63,7 +63,7 @@ function ScanModeCard({
             <span className="text-[15px] font-bold">{mode.name}</span>
             {mode.premium && (
               <span className="rounded-full bg-carz/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-carz">
-                Carz+
+                Carz PRO
               </span>
             )}
             {locked && <Lock className="h-3.5 w-3.5 opacity-60" aria-hidden />}
@@ -171,7 +171,7 @@ export default function SettingsPage() {
                       href="/pricing"
                       className="mt-2 flex items-center justify-between rounded-thumb border border-carz/30 bg-carz/[0.06] px-4 py-2.5 text-[15px] font-semibold transition hover:border-carz/60 hover:bg-carz/[0.1]"
                     >
-                      <span>Get Carz+ to unlock {SCAN_MODE_META.precise.name} scanning</span>
+                      <span>Get Carz PRO to unlock {SCAN_MODE_META.precise.name} scanning</span>
                       <span className="text-carz">{carzPlusMonthly()}/mo →</span>
                     </Link>
                   </div>

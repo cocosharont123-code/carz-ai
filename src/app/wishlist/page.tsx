@@ -42,7 +42,7 @@ function WishlistInner() {
           <div className="mt-8 rounded-card glass-card p-10 text-center">
             <h3 className="display text-[34px]">Nothing saved yet</h3>
             <p className="mx-auto mt-2 max-w-sm text-[15px] opacity-70">
-              Tap the heart on any auction to save it here. Carz+ members get alerted when a wishlisted car is
+              Tap the heart on any auction to save it here. Carz PRO members get alerted when a wishlisted car is
               listed or sold.
             </p>
             <Button href="/auctions" className="mt-6">Browse auctions</Button>

@@ -9,7 +9,7 @@ export const runtime = "nodejs";
  * Buy one extra customization once the daily three are spent.
  *
  * ⚠️ NO PAYMENT IS TAKEN. There is no payment provider wired into this app —
- * the same is true of Carz+ membership and the $0.99 streak restore, which are
+ * the same is true of Carz PRO membership and the $0.99 streak restore, which are
  * both stubbed the same way. This endpoint grants the credit and reports
  * `charged: false` so the UI can say so plainly rather than implying a card was
  * billed. Wire Stripe (or the App Store IAP) in here before treating this as

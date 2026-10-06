@@ -26,7 +26,7 @@ function checkMember(): Promise<boolean> {
   return memberPromise;
 }
 
-// Heart toggle — wishlisting is a Carz+ perk. Non-members are sent to /pricing.
+// Heart toggle — wishlisting is a Carz PRO perk. Non-members are sent to /pricing.
 export function WishlistButton({ item, className }: { item: WishItem; className?: string }) {
   const router = useRouter();
   const [on, setOn] = useState(false);
@@ -49,7 +49,7 @@ export function WishlistButton({ item, className }: { item: WishItem; className?
         toggleWish(item);
         setOn((v) => !v);
       }}
-      title={member === false ? "Wishlist is a Carz+ perk" : on ? "Remove from wishlist" : "Add to wishlist"}
+      title={member === false ? "Wishlist is a Carz PRO perk" : on ? "Remove from wishlist" : "Add to wishlist"}
       className={cn(
         "press flex h-8 w-8 items-center justify-center rounded-full border border-[var(--line-button)] bg-background/50 text-[14px]",
         on ? "text-nred" : "text-foreground/80 hover:text-foreground",

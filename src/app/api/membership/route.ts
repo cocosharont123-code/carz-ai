@@ -29,7 +29,7 @@ export async function GET() {
     signedIn: true,
     hasUsername: !!p?.username,
     member: active,
-    // Never sent before, so the pricing page could not tell a Carz+ member
+    // Never sent before, so the pricing page could not tell a Carz PRO member
     // from a MAX one — and with the tier unknown it offered neither the
     // upgrade nor anything else, leaving a member on a page of dead cards.
     tier: memberTier(p),
@@ -108,7 +108,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // 100%-off redeem unlocks Carz+ outright.
+    // 100%-off redeem unlocks Carz PRO outright.
     if (body.action === "redeem") {
       const tier = body.tier === "max" ? "max" : "plus";
       const p = await setMembership(email, true, undefined, tier);
@@ -116,7 +116,7 @@ export async function POST(req: Request) {
     }
 
     // Join, on the chosen tier and billing interval. Anything that is not the
-    // literal "max" is Carz+ — an unrecognised tier must not become the more
+    // literal "max" is Carz PRO — an unrecognised tier must not become the more
     // expensive one by accident.
     const interval = body.interval === "annual" ? "annual" : "monthly";
     const tier = body.tier === "max" ? "max" : "plus";

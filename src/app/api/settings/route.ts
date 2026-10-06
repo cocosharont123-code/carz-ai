@@ -53,7 +53,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       // Named from the shared meta: this string is shown to the spotter by
       // the picker on /spot, so it has to match what the button says.
-      { ok: false, error: `${SCAN_MODE_META.precise.name} scanning is a Carz+ feature.`, member: false },
+      { ok: false, error: `${SCAN_MODE_META.precise.name} scanning is a Carz PRO feature.`, member: false },
       { status: 402 },
     );
   }

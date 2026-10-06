@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Sign in to use CarzBot." }, { status: 401 });
   }
   if (!memberTier(await getProfile(email))) {
-    return NextResponse.json({ error: "CarzBot is a Carz+ feature." }, { status: 402 });
+    return NextResponse.json({ error: "CarzBot is a Carz PRO feature." }, { status: 402 });
   }
 
   let body: { messages?: Turn[] };
