@@ -210,24 +210,24 @@ function NewAuctionInner() {
     <>
       <main className="mx-auto w-full max-w-lg px-5 py-10">
         <div className="util-label ">Sell — powered by AI</div>
-        <h1 className="display mt-3 text-6xl">List your car</h1>
-        <p className="mt-3 text-sm ">
+        <h1 className="display mt-3 text-[50px]">List your car</h1>
+        <p className="mt-3 text-[14px] ">
           Start a bidding war. When the timer ends, the highest bidder gets your contact to close the deal.
         </p>
 
         {status === "unauthenticated" ? (
           <div className="mt-8 rounded-card glass-card p-8 text-center">
             <KeyRound className="mx-auto h-9 w-9 opacity-50" strokeWidth={1.5} aria-hidden />
-            <h3 className="mt-3 text-lg font-bold">Sign in to list a car</h3>
+            <h3 className="mt-3 text-[17px] font-bold">Sign in to list a car</h3>
             <GoogleSignInButton callbackUrl="/auctions/new" />
           </div>
         ) : (
           <div className="mt-8 space-y-5">
             {/* photo */}
             <div>
-              <label className="text-sm font-semibold">Photo</label>
+              <label className="text-[14px] font-semibold">Photo</label>
               <div className="mt-1 flex items-center gap-4">
-                <div className="h-24 w-32 shrink-0 overflow-hidden rounded-xl bg-foreground/[0.04]">
+                <div className="h-24 w-32 shrink-0 overflow-hidden rounded-thumb bg-foreground/[0.04]">
                   {image ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={image} alt="car" className="h-full w-full object-cover" />
@@ -239,7 +239,7 @@ function NewAuctionInner() {
                 </div>
                 <button
                   onClick={() => fileRef.current?.click()}
-                  className="rounded-xl border border-foreground/15 bg-foreground/[0.06] px-4 py-2 text-sm font-semibold hover:bg-foreground/[0.12]"
+                  className="rounded-thumb border border-foreground/15 bg-foreground/[0.06] px-4 py-2 text-[14px] font-semibold hover:bg-foreground/[0.12]"
                 >
                   {image ? "Change photo" : "Upload photo"}
                 </button>
@@ -254,11 +254,11 @@ function NewAuctionInner() {
               >
                 {aiLoading ? "AI is reading your photo…" : "Auto-fill listing with AI"}
               </button>
-              <p className="mt-1.5 text-xs ">
+              <p className="mt-1.5 text-[12px] ">
                 Upload a photo and let Carz AI identify the car and write the title, make, model &
                 description for you.
               </p>
-              {aiMsg && <p className="mt-2 text-sm text-neon-green">{aiMsg}</p>}
+              {aiMsg && <p className="mt-2 text-[14px] text-neon-green">{aiMsg}</p>}
             </div>
 
             <Field label="Title">
@@ -288,7 +288,7 @@ function NewAuctionInner() {
                 />
               </Field>
             </div>
-            <p className="-mt-3 text-xs ">
+            <p className="-mt-3 text-[12px] ">
               Enter the car&apos;s exact year yourself — the AI won&apos;t guess this for a real sale.
             </p>
 
@@ -307,7 +307,7 @@ function NewAuctionInner() {
                 className="input font-mono tracking-wider"
               />
             </Field>
-            <p className="-mt-3 text-xs ">
+            <p className="-mt-3 text-[12px] ">
               17 characters on anything built since 1981 — it&apos;s on the windscreen base, the
               driver&apos;s door jamb, or your registration. Buyers use it to run the car&apos;s history.
             </p>
@@ -367,7 +367,7 @@ function NewAuctionInner() {
                     <option value="days">days</option>
                   </select>
                 </div>
-                <p className="mt-1 text-xs ">
+                <p className="mt-1 text-[12px] ">
                   Anywhere from 1 hour to 30 days.
                 </p>
               </Field>
@@ -381,13 +381,13 @@ function NewAuctionInner() {
                 maxLength={300}
                 className="input"
               />
-              <p className="mt-1 text-xs ">
+              <p className="mt-1 text-[12px] ">
                 Encrypted and hidden. Only the winning bidder sees this after the auction ends.
               </p>
             </Field>
 
             {error && (
-              <div className="rounded-xl border border-neon-red/40 bg-neon-red/10 p-3 text-sm text-neon-red">{error}</div>
+              <div className="rounded-thumb border border-neon-red/40 bg-neon-red/10 p-3 text-[14px] text-neon-red">{error}</div>
             )}
 
             <button
@@ -424,7 +424,7 @@ function NewAuctionInner() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="text-sm font-semibold">{label}</label>
+      <label className="text-[14px] font-semibold">{label}</label>
       <div className="mt-1">{children}</div>
     </div>
   );

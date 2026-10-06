@@ -97,12 +97,12 @@ function LeaderboardInner() {
         ) : !configured ? (
           <div className="mt-8 rounded-card glass-card p-8 text-center">
             <Eyebrow yellow className="justify-center">Warming up</Eyebrow>
-            <p className="mt-2 text-sm ">The board is connecting its database. Check back in a moment.</p>
+            <p className="mt-2 text-[14px] ">The board is connecting its database. Check back in a moment.</p>
           </div>
         ) : cars.length === 0 ? (
           <div className="mt-8 rounded-card glass-card p-10 text-center">
-            <h3 className="display text-3xl">No cars yet</h3>
-            <p className="mx-auto mt-2 max-w-sm text-sm ">
+            <h3 className="display text-[34px]">No cars yet</h3>
+            <p className="mx-auto mt-2 max-w-sm text-[14px] ">
               The board is empty. Spot a rare car and claim the top slot.
             </p>
             <Button href="/spot" className="mt-6">Spot a car</Button>
@@ -131,7 +131,7 @@ function LeaderboardInner() {
                     top ? "py-4" : "py-3",
                   )}
                 >
-                  <span className={cn("display", top ? "text-3xl" : "text-2xl")}>
+                  <span className={cn("display", top ? "text-[34px]" : "text-[20px]")}>
                     {i + 1}
                   </span>
                   <button
@@ -146,11 +146,11 @@ function LeaderboardInner() {
                     <CarPhoto src={c.image} alt={`${c.make} ${c.model}`} className="h-full w-full" color />
                   </button>
                   <div className="min-w-0">
-                    <p className={cn("truncate font-semibold", top && "text-lg")}>
+                    <p className={cn("truncate font-semibold", top && "text-[17px]")}>
                       {c.make} {c.model}
                       {c.yearRange ? <span className="font-normal"> · {c.yearRange}</span> : null}
                     </p>
-                    <p className="mt-0.5 flex items-center gap-1.5 truncate text-xs">
+                    <p className="mt-0.5 flex items-center gap-1.5 truncate text-[12px]">
                       <Avatar src={c.spotterImage} size={15} />
                       <span className="truncate">{c.spotter}</span>
                       {/* A crown rather than a "Carz+" pill. The label still has
@@ -176,7 +176,7 @@ function LeaderboardInner() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <div className={cn("display", top ? "text-3xl" : "text-2xl")}>{Math.round(c.rarityScore)}</div>
+                    <div className={cn("display", top ? "text-[34px]" : "text-[20px]")}>{Math.round(c.rarityScore)}</div>
                     <div className="util-label">{rarityLabel(c.rarityScore)}</div>
                   </div>
                 </div>
@@ -302,7 +302,7 @@ function CarViewer({
             )}
           </div>
 
-          <p className="mt-4 truncate text-center text-lg font-bold">
+          <p className="mt-4 truncate text-center text-[17px] font-bold">
             {car.make} {car.model}
           </p>
           {car.yearRange && (
@@ -320,7 +320,7 @@ function CarViewer({
           >
             <div className="flex items-baseline justify-between">
               <span className="util-label opacity-70">Rarity</span>
-              <span className="text-sm font-bold">
+              <span className="text-[14px] font-bold">
                 {raw}/100 · <span className="text-neon-red">{rarityLabel(raw)}</span>
               </span>
             </div>
@@ -348,7 +348,7 @@ function CarViewer({
           {spotId && (
             <Link
               href={`/map?spot=${encodeURIComponent(spotId)}`}
-              className="press glass-card mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-full text-sm font-bold"
+              className="press glass-card mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-full text-[14px] font-bold"
             >
               <MapPin className="h-4 w-4 text-carz" strokeWidth={2.5} aria-hidden />
               See where it was spotted
@@ -358,7 +358,7 @@ function CarViewer({
           <button
             type="button"
             onClick={onClose}
-            className="press mt-2 min-h-11 w-full rounded-full bg-carz text-sm font-bold text-carz-ink"
+            className="press mt-2 min-h-11 w-full rounded-full bg-carz text-[14px] font-bold text-carz-ink"
           >
             Close
           </button>

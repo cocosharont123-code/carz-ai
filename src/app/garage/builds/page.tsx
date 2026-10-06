@@ -125,7 +125,7 @@ function BuildsInner() {
         />
 
         {error && !loading && (
-          <p className="mt-4 rounded-xl border border-carz/40 bg-carz/10 p-3 text-sm">{error}</p>
+          <p className="mt-4 rounded-thumb border border-carz/40 bg-carz/10 p-3 text-[14px]">{error}</p>
         )}
 
         {loading ? (
@@ -138,8 +138,8 @@ function BuildsInner() {
           </div>
         ) : builds.length === 0 ? (
           <div className="mt-8 rounded-card glass-card p-10 text-center">
-            <h3 className="display text-3xl">No builds yet</h3>
-            <p className="mx-auto mt-2 max-w-sm text-sm ">
+            <h3 className="display text-[34px]">No builds yet</h3>
+            <p className="mx-auto mt-2 max-w-sm text-[14px] ">
               Spot a car and customize the look — every config you generate is saved here automatically.
             </p>
             <Button href="/spot" className="mt-6">Customize a car</Button>
@@ -159,7 +159,7 @@ function BuildsInner() {
                     onClick={() => remove(b.id)}
                     disabled={pendingId === b.id}
                     title="Delete config"
-                    className="absolute rounded-lg right-2 top-2 z-10 hidden h-6 w-6 items-center justify-center bg-background/70 text-foreground text-xs  group-hover:flex hover:bg-carz "
+                    className="absolute rounded-lg right-2 top-2 z-10 hidden h-6 w-6 items-center justify-center bg-background/70 text-foreground text-[12px]  group-hover:flex hover:bg-carz "
                   >
                     {pendingId === b.id ? <Spinner className="h-3 w-3" /> : <X className="h-3.5 w-3.5" aria-hidden />}
                   </button>
@@ -179,7 +179,7 @@ function BuildsInner() {
                     )}
                   </div>
                   <div className="p-3">
-                    <p className="truncate text-sm font-semibold ">{b.make} {b.model}</p>
+                    <p className="truncate text-[14px] font-semibold ">{b.make} {b.model}</p>
                     <p className="util-label mt-1 truncate ">{b.yearRange}</p>
 
                     {(b.bodyColor || b.rimColor) && (

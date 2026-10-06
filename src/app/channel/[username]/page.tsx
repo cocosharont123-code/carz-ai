@@ -67,13 +67,13 @@ export default function ChannelPage({
   if (missing || !channel) {
     return (
       <main className="mx-auto w-full max-w-2xl px-5 py-20 text-center">
-        <h1 className="display text-3xl">No such channel</h1>
+        <h1 className="display text-[34px]">No such channel</h1>
         <p className="mx-auto mt-2 max-w-sm text-[15px] opacity-60">
           Nobody here goes by @{handle}.
         </p>
         <Link
           href="/search"
-          className="press mt-6 inline-flex min-h-11 items-center rounded-full bg-carz px-6 text-sm font-bold text-neutral-900"
+          className="press mt-6 inline-flex min-h-11 items-center rounded-full bg-carz px-6 text-[14px] font-bold text-neutral-900"
         >
           Search for someone
         </Link>

@@ -135,7 +135,7 @@ export function PageMasthead({
     <header className="pb-5">
       {eyebrow && <Eyebrow className="mb-2">{eyebrow}</Eyebrow>}
       <div className="flex flex-wrap items-end justify-between gap-4">
-        {/* 34px bold, the spec's page title. It was .display at text-4xl, which
+        {/* 34px bold, the spec's page title. It was .display at text-[34px], which
             is the condensed face the hero uses -- at page-title size that read
             as a second hero on every screen. */}
         <h1 className="text-[34px] font-bold leading-tight tracking-tight text-foreground">{title}</h1>
@@ -179,7 +179,7 @@ export function StatRow({
         className,
       )}
     >
-      <div className="display text-5xl sm:text-6xl">{value}</div>
+      <div className="display text-[50px] sm:text-[50px]">{value}</div>
       <div className={cn("util-label mt-2", yellow ? "" : "")}>{label}</div>
     </div>
   );
@@ -225,7 +225,7 @@ export function DataTable({
                 className={cn(
                   "px-3 py-3 align-middle first:pl-3 last:pr-3 last:text-right",
                   r.highlight && "first:pl-3",
-                  r.big && "py-4 text-lg font-semibold",
+                  r.big && "py-4 text-[17px] font-semibold",
                 )}
               >
                 {c}
@@ -273,7 +273,7 @@ export function CarPhoto({
 
 /* --- Skeleton --------------------------------------------------------------- */
 export function Skeleton({ className }: { className?: string }) {
-  return <div className={cn("animate-pulse rounded-xl bg-foreground/[0.06]", className)} />;
+  return <div className={cn("animate-pulse rounded-thumb bg-foreground/[0.06]", className)} />;
 }
 
 /* --- LiveDot: the single yellow live indicator ------------------------------ */

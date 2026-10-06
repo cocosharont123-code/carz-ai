@@ -60,7 +60,7 @@ function ScanModeCard({
         />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-base font-bold">{mode.name}</span>
+            <span className="text-[15px] font-bold">{mode.name}</span>
             {mode.premium && (
               <span className="rounded-full bg-carz/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-carz">
                 Carz+
@@ -136,7 +136,7 @@ export default function SettingsPage() {
         {/* First, because it is the one setting that changes the whole app and
             the one most people come here looking for. */}
         <section className="mt-8">
-          <h2 className="text-xl font-bold">Appearance</h2>
+          <h2 className="text-[20px] font-bold">Appearance</h2>
           <p className="mt-1 text-[15px] text-[var(--color-secondary-text)]">
             Follow your phone, or pick one and keep it.
           </p>
@@ -144,7 +144,7 @@ export default function SettingsPage() {
         </section>
 
         <section className="mt-10">
-          <h2 className="text-xl font-bold">Identification</h2>
+          <h2 className="text-[20px] font-bold">Identification</h2>
           <p className="mt-1 text-[15px] opacity-60">
             How hard a scan works before it answers.
           </p>
@@ -169,7 +169,7 @@ export default function SettingsPage() {
                     />
                     <Link
                       href="/pricing"
-                      className="mt-2 flex items-center justify-between rounded-xl border border-carz/30 bg-carz/[0.06] px-4 py-2.5 text-[15px] font-semibold transition hover:border-carz/60 hover:bg-carz/[0.1]"
+                      className="mt-2 flex items-center justify-between rounded-thumb border border-carz/30 bg-carz/[0.06] px-4 py-2.5 text-[15px] font-semibold transition hover:border-carz/60 hover:bg-carz/[0.1]"
                     >
                       <span>Get Carz+ to unlock {SCAN_MODE_META.precise.name} scanning</span>
                       <span className="text-carz">{carzPlusMonthly()}/mo →</span>
@@ -192,7 +192,7 @@ export default function SettingsPage() {
           {error && (
             <div
               role="alert"
-              className="mt-3 rounded-xl border border-neon-red/50 bg-neon-red/10 p-3 text-sm text-neon-red"
+              className="mt-3 rounded-thumb border border-neon-red/50 bg-neon-red/10 p-3 text-[14px] text-neon-red"
             >
               {error}
             </div>
@@ -201,12 +201,12 @@ export default function SettingsPage() {
 
         {/* --- Account --- */}
         <section className="mt-10">
-          <h2 className="text-xl font-bold">Account</h2>
+          <h2 className="text-[20px] font-bold">Account</h2>
           {signedIn ? (
             <div className="mt-3 space-y-2">
               <Link
                 href="/profile"
-                className="flex items-center justify-between rounded-xl border border-[var(--line-card)] bg-foreground/[0.02] px-4 py-3 text-sm font-semibold transition hover:border-[var(--line-button)] hover:bg-foreground/[0.05]"
+                className="flex items-center justify-between rounded-thumb border border-[var(--line-card)] bg-foreground/[0.02] px-4 py-3 text-[14px] font-semibold transition hover:border-[var(--line-button)] hover:bg-foreground/[0.05]"
               >
                 <span>Edit profile</span>
                 <span className="opacity-50">Username, display name, picture →</span>
@@ -214,7 +214,7 @@ export default function SettingsPage() {
               <button
                 type="button"
                 onClick={() => signOut({ callbackUrl: "/" })}
-                className="press flex w-full items-center justify-between rounded-xl border border-[var(--line-card)] bg-foreground/[0.02] px-4 py-3 text-left text-sm font-semibold transition hover:border-[var(--line-button)] hover:bg-foreground/[0.05]"
+                className="press flex w-full items-center justify-between rounded-thumb border border-[var(--line-card)] bg-foreground/[0.02] px-4 py-3 text-left text-[14px] font-semibold transition hover:border-[var(--line-button)] hover:bg-foreground/[0.05]"
               >
                 <span>Sign out</span>
                 <span className="opacity-50">→</span>
@@ -222,7 +222,7 @@ export default function SettingsPage() {
             </div>
           ) : (
             <div className="mt-3 rounded-card border border-[var(--line-card)] bg-foreground/[0.02] p-5">
-              <p className="text-sm opacity-75">
+              <p className="text-[14px] opacity-75">
                 Sign in to manage your profile, membership and account.
               </p>
               <Button onClick={() => signIn("google", { callbackUrl: "/settings" })} className="mt-4">
@@ -234,11 +234,11 @@ export default function SettingsPage() {
 
         {/* --- Legal --- */}
         <section className="mt-10">
-          <h2 className="text-xl font-bold">Legal</h2>
+          <h2 className="text-[20px] font-bold">Legal</h2>
           <div className="mt-3">
             <Link
               href="/terms"
-              className="flex items-center justify-between rounded-xl border border-[var(--line-card)] bg-foreground/[0.02] px-4 py-3 text-sm font-semibold transition hover:border-[var(--line-button)] hover:bg-foreground/[0.05]"
+              className="flex items-center justify-between rounded-thumb border border-[var(--line-card)] bg-foreground/[0.02] px-4 py-3 text-[14px] font-semibold transition hover:border-[var(--line-button)] hover:bg-foreground/[0.05]"
             >
               <span>Terms of Service</span>
               <span className="opacity-50">Read and accept →</span>

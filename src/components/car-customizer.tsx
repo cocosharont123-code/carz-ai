@@ -189,16 +189,16 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
   if (access && access.signedIn && !access.member) {
     return (
       <div className="mt-6 border-t border-[var(--line-card)] pt-5">
-        <h3 className="text-xs font-bold uppercase tracking-wide text-carz">Customize this car</h3>
+        <h3 className="text-[12px] font-bold uppercase tracking-wide text-carz">Customize this car</h3>
         <div className="mt-3 rounded-card border border-[var(--line-card)] bg-foreground/[0.04] p-5 text-center">
-          <p className="text-sm font-bold">The customizer is a Carz MAX feature</p>
+          <p className="text-[14px] font-bold">The customizer is a Carz MAX feature</p>
           <p className="mx-auto mt-1.5 max-w-sm text-[15px] opacity-70">
             Carz MAX gets {access.cap} AI repaints a day. Extras are $
             {access.extraPriceUsd.toFixed(2)} each.
           </p>
           <Link
             href="/pricing"
-            className="press mt-4 inline-flex rounded-full bg-background px-6 py-2.5 text-sm font-bold text-foreground transition hover:opacity-90"
+            className="press mt-4 inline-flex rounded-full bg-background px-6 py-2.5 text-[14px] font-bold text-foreground transition hover:opacity-90"
           >
             Get Carz MAX
           </Link>
@@ -213,8 +213,8 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
 
   return (
     <div className="mt-6 border-t border-[var(--line-card)] pt-5">
-      <h3 className="text-xs font-bold uppercase tracking-wide text-carz">Customize this car</h3>
-      <p className="mb-3 mt-1 text-sm opacity-70">
+      <h3 className="text-[12px] font-bold uppercase tracking-wide text-carz">Customize this car</h3>
+      <p className="mb-3 mt-1 text-[14px] opacity-70">
         Pick a look and the AI repaints your photo — same car, same shot, new style.
       </p>
 
@@ -226,17 +226,17 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
           <div className="mt-3 flex min-h-11 items-center gap-3">
             {body ? (
               <>
-                <span className="text-sm font-semibold">{body.label}</span>
+                <span className="text-[14px] font-semibold">{body.label}</span>
                 <button
                   type="button"
                   onClick={() => setBodyHex("")}
-                  className="press rounded-full border border-black/20 px-3 py-2 text-xs transition hover:border-black/40"
+                  className="press rounded-full border border-black/20 px-3 py-2 text-[12px] transition hover:border-black/40"
                 >
                   Clear
                 </button>
               </>
             ) : (
-              <span className="text-sm opacity-50">Tap the wheel to choose a colour</span>
+              <span className="text-[14px] opacity-50">Tap the wheel to choose a colour</span>
             )}
           </div>
         </div>
@@ -251,7 +251,7 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
               key={c.value}
               onClick={() => setRimColor((v) => (v === c.value ? "" : c.value))}
               className={cn(
-                "flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-xs transition",
+                "flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[12px] transition",
                 rimColor === c.value ? "border-carz bg-carz/10" : "border-black/20 hover:border-black/40",
               )}
             >
@@ -273,9 +273,9 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
           onChange={(e) => setMods(e.target.value)}
           rows={3}
           placeholder="Lowered, wide body, carbon hood…"
-          className="mt-2 w-full resize-none rounded-xl border border-black/20 bg-transparent px-3 py-2.5 text-sm outline-none transition placeholder:opacity-40 focus:border-carz focus-visible:ring-2 focus-visible:ring-carz/40"
+          className="mt-2 w-full resize-none rounded-thumb border border-black/20 bg-transparent px-3 py-2.5 text-[14px] outline-none transition placeholder:opacity-40 focus:border-carz focus-visible:ring-2 focus-visible:ring-carz/40"
         />
-        <p className="mt-1.5 text-xs opacity-50">
+        <p className="mt-1.5 text-[12px] opacity-50">
           {features.length >= 8
             ? "Only the first 8 are used."
             : "One per line, or separated by commas."}
@@ -286,23 +286,23 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
         onClick={generate}
         disabled={!anyChange || busy}
         aria-busy={busy || undefined}
-        className="press mt-5 flex w-full items-center justify-center gap-2 rounded-card bg-carz py-3 text-sm font-bold text-carz-ink transition hover:brightness-110 disabled:opacity-40"
+        className="press mt-5 flex w-full items-center justify-center gap-2 rounded-card bg-carz py-3 text-[14px] font-bold text-carz-ink transition hover:brightness-110 disabled:opacity-40"
       >
         {busy && <Spinner className="h-4 w-4" />}
         {busy ? "Rendering your build…" : "Generate customized photo"}
       </button>
-      {error && <p className="mt-2 text-sm text-nred">{error}</p>}
+      {error && <p className="mt-2 text-[14px] text-nred">{error}</p>}
       {needSignIn && (
         <button
           onClick={() => signIn("google")}
-          className="press mt-2 w-full rounded-xl border border-black/25 py-2.5 text-sm font-semibold transition hover:border-black/45"
+          className="press mt-2 w-full rounded-thumb border border-black/25 py-2.5 text-[14px] font-semibold transition hover:border-black/45"
         >
           Sign in with Google
         </button>
       )}
       {quota && (
         <div className="mt-2 text-center">
-          <p className="text-xs opacity-60">
+          <p className="text-[12px] opacity-60">
             {quota.freeRemaining} of {cap} left today
             {quota.credits > 0 && ` · ${quota.credits} extra`}
           </p>
@@ -341,14 +341,14 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
             <a
               href={result}
               download={`carz-${car.make}-${car.model}.jpg`.toLowerCase().replace(/\s+/g, "-")}
-              className="press flex-1 rounded-xl border border-black/20 py-2.5 text-center text-sm font-semibold transition hover:border-black/40"
+              className="press flex-1 rounded-thumb border border-black/20 py-2.5 text-center text-[14px] font-semibold transition hover:border-black/40"
             >
               Download
             </a>
             <button
               onClick={generate}
               disabled={busy}
-              className="press flex-1 rounded-xl border border-black/20 py-2.5 text-sm font-semibold transition hover:border-black/40 disabled:opacity-40"
+              className="press flex-1 rounded-thumb border border-black/20 py-2.5 text-[14px] font-semibold transition hover:border-black/40 disabled:opacity-40"
             >
               Regenerate
             </button>

@@ -118,12 +118,12 @@ function ScanningButton({
             value={progress}
             phases={phases}
             className="max-w-none gap-4"
-            textClassName="text-xl font-bold text-foreground sm:text-2xl"
+            textClassName="text-[20px] font-bold text-foreground sm:text-[20px]"
             barClassName="h-3 bg-foreground/10"
           />
         </div>
       </div>
-      <p className="mt-4 text-center text-xs opacity-60">{hint}</p>
+      <p className="mt-4 text-center text-[12px] opacity-60">{hint}</p>
     </div>
   );
 }
@@ -251,7 +251,7 @@ async function objectUrlToDataUrl(url: string): Promise<string> {
 function Spec({ k, v }: { k: string; v?: string }) {
   if (!v) return null;
   return (
-    <div className="rounded-xl bg-foreground/[0.04] p-3">
+    <div className="rounded-thumb bg-foreground/[0.04] p-3">
       <div className="text-[12px] uppercase tracking-wide ">{k}</div>
       <div className="mt-0.5 font-semibold">{v}</div>
     </div>
@@ -288,8 +288,8 @@ function RarityMeter({ score, reason }: { score: number; reason?: string }) {
       }`}
     >
       <div className="flex items-baseline justify-between">
-        <span className="text-xs font-bold uppercase tracking-wide ">Rarity</span>
-        <span className="text-sm font-bold">
+        <span className="text-[12px] font-bold uppercase tracking-wide ">Rarity</span>
+        <span className="text-[14px] font-bold">
           {raw}/100 · <span className={ultra ? "text-neon-red" : "text-neon-red"}>{label}</span>
         </span>
       </div>
@@ -305,7 +305,7 @@ function RarityMeter({ score, reason }: { score: number; reason?: string }) {
           style={{ width: `${bar}%` }}
         />
       </div>
-      {reason && <p className="mt-2 text-sm ">{reason}</p>}
+      {reason && <p className="mt-2 text-[14px] ">{reason}</p>}
     </div>
   );
 }
@@ -329,10 +329,10 @@ function ValueChart({ points }: { points: { year: string; usd: number }[] }) {
   return (
     <div className="mt-4 rounded-card bg-foreground/[0.04] p-4">
       <div className="flex items-baseline justify-between">
-        <span className="text-xs font-bold uppercase tracking-wide ">
+        <span className="text-[12px] font-bold uppercase tracking-wide ">
           Market value over time
         </span>
-        <span className="text-sm font-semibold">
+        <span className="text-[14px] font-semibold">
           {fmtUsd(pts[0].usd)} to {fmtUsd(pts[pts.length - 1].usd)}
         </span>
       </div>
@@ -732,7 +732,7 @@ export default function SpotPage() {
             you just tapped was taking a third of the screen to add nothing.
             The line under it stays, because it does say something the buttons
             do not. */}
-        <p className="mt-3 text-sm ">
+        <p className="mt-3 text-[14px] ">
           Drop in a photo, then hit identify.
         </p>
 
@@ -753,7 +753,7 @@ export default function SpotPage() {
         )}
 
         {status && status.apiConfigured === false && (
-          <div className="mt-4 rounded-xl border border-neon-red/50 bg-neon-red/10 p-3 text-sm text-neon-red">
+          <div className="mt-4 rounded-thumb border border-neon-red/50 bg-neon-red/10 p-3 text-[14px] text-neon-red">
             Server has no <code>ANTHROPIC_API_KEY</code> set — identification will fail until it&apos;s
             configured in <code>.env.local</code>. See the README.
           </div>
@@ -835,7 +835,7 @@ export default function SpotPage() {
             </div>
           ) : (
             <div className="relative">
-              <div className="group relative h-64 overflow-hidden rounded-xl border border-border">
+              <div className="group relative h-64 overflow-hidden rounded-thumb border border-border">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={previewUrl}
@@ -853,7 +853,7 @@ export default function SpotPage() {
                 </div>
               </div>
               {fileName && (
-                <div className="mt-2 flex items-center gap-2 text-sm ">
+                <div className="mt-2 flex items-center gap-2 text-[14px] ">
                   <span className="truncate">{fileName}</span>
                   <button onClick={handleRemove} className="ml-auto rounded-full p-1 hover:bg-muted">
                     <X className="h-4 w-4" />
@@ -929,7 +929,7 @@ export default function SpotPage() {
         </div>
 
         {error && (
-          <div className="mt-4 rounded-xl border border-neon-red/50 bg-neon-red/10 p-3 text-sm text-neon-red">
+          <div className="mt-4 rounded-thumb border border-neon-red/50 bg-neon-red/10 p-3 text-[14px] text-neon-red">
             {error}
           </div>
         )}
@@ -937,12 +937,12 @@ export default function SpotPage() {
         {limitHit && (
           <div className="mt-4 rounded-card glass-card p-6 text-center">
             <TrafficCone className="mx-auto h-8 w-8 opacity-50" strokeWidth={1.5} aria-hidden />
-            <h3 className="display mt-2 text-2xl">Out of free scans</h3>
+            <h3 className="display mt-2 text-[20px]">Out of free scans</h3>
             <p className="mx-auto mt-1 max-w-sm text-[15px] opacity-70">
               You&apos;ve used all 3 of today&apos;s free scans. Get Carz+ for unlimited scanning.
             </p>
             <GlassButton href="/pricing" className="mt-4">Get Carz+ · {carzPlusMonthly()}/mo</GlassButton>
-            <p className="mt-3 text-xs opacity-60">
+            <p className="mt-3 text-[12px] opacity-60">
               or {carzPlusAnnual()}/year — save {carzPlusAnnualSaving()}%
             </p>
           </div>
@@ -1103,7 +1103,7 @@ export default function SpotPage() {
               {status.history.map((h, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between rounded-xl bg-foreground/[0.04] px-3 py-2 text-sm"
+                  className="flex items-center justify-between rounded-thumb bg-foreground/[0.04] px-3 py-2 text-[14px]"
                 >
                   <span className="font-semibold">
                     {h.make} {h.model}{" "}

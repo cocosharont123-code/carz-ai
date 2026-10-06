@@ -51,7 +51,7 @@ export function WishlistButton({ item, className }: { item: WishItem; className?
       }}
       title={member === false ? "Wishlist is a Carz+ perk" : on ? "Remove from wishlist" : "Add to wishlist"}
       className={cn(
-        "press flex h-8 w-8 items-center justify-center rounded-full border border-[var(--line-button)] bg-background/50 text-sm",
+        "press flex h-8 w-8 items-center justify-center rounded-full border border-[var(--line-button)] bg-background/50 text-[14px]",
         on ? "text-nred" : "text-foreground/80 hover:text-foreground",
         className,
       )}

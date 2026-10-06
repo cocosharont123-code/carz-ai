@@ -66,7 +66,7 @@ export const PricingSwitch = ({
       aria-pressed={selected === key}
       className={cn(
         // h-12, not the original's h-10: 40px is under the 44pt tap minimum.
-        "press relative z-10 h-12 w-full rounded-full px-4 text-sm font-semibold transition-colors sm:h-14 sm:px-6",
+        "press relative z-10 h-12 w-full rounded-full px-4 text-[14px] font-semibold transition-colors sm:h-14 sm:px-6",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carz/60",
         selected === key ? "text-carz-ink" : "opacity-70 hover:opacity-100",
       )}
@@ -150,30 +150,30 @@ function TierCard({
       )}
     >
       <div className="flex items-center justify-between gap-3">
-        <h3 className="display text-xl">{tier.name}</h3>
+        <h3 className="display text-[20px]">{tier.name}</h3>
         {tier.badge && (
           <span className="util-label rounded-full bg-carz/15 px-3 py-1 text-carz">
             {tier.badge}
           </span>
         )}
       </div>
-      <p className="mt-1.5 text-sm opacity-70">{tier.blurb}</p>
+      <p className="mt-1.5 text-[14px] opacity-70">{tier.blurb}</p>
 
       <div className="mt-5 flex items-baseline gap-2">
-        <span className="display text-4xl">
+        <span className="display text-[34px]">
           $
           <NumberFlow value={tier.price} format={{ minimumFractionDigits: 2 }} />
         </span>
-        <span className="text-sm opacity-60">/{tier.interval}</span>
+        <span className="text-[14px] opacity-60">/{tier.interval}</span>
         {tier.wasPrice !== undefined && tier.wasPrice > tier.price && (
-          <span className="text-sm line-through opacity-40">
+          <span className="text-[14px] line-through opacity-40">
             ${tier.wasPrice.toFixed(2)}
           </span>
         )}
       </div>
 
       {tier.perksLead && (
-        <p className="mt-5 text-sm font-semibold opacity-80">{tier.perksLead}</p>
+        <p className="mt-5 text-[14px] font-semibold opacity-80">{tier.perksLead}</p>
       )}
       <ul className={cn("space-y-3", tier.perksLead ? "mt-3" : "mt-5")}>
         {tier.perks.map((perk) => (
@@ -181,7 +181,7 @@ function TierCard({
             <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-carz/15">
               <CheckCheck className="h-3 w-3 text-carz" strokeWidth={2.5} aria-hidden />
             </span>
-            <span className="text-sm leading-snug">
+            <span className="text-[14px] leading-snug">
               <span className="font-semibold">{perk.title}</span>
               {perk.desc && <span className="opacity-60"> — {perk.desc}</span>}
             </span>
@@ -199,7 +199,7 @@ function TierCard({
           onClick={tier.onSelect}
           disabled={busy}
           className={cn(
-            "press mt-6 flex min-h-11 w-full items-center justify-center rounded-full px-6 py-3 text-sm font-bold transition",
+            "press mt-6 flex min-h-11 w-full items-center justify-center rounded-full px-6 py-3 text-[14px] font-bold transition",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carz/60",
             "disabled:cursor-not-allowed disabled:opacity-50",
             tier.featured
@@ -211,7 +211,7 @@ function TierCard({
         </button>
       )}
       {tier.note && (
-        <p className="mt-2.5 text-center text-xs opacity-50">{tier.note}</p>
+        <p className="mt-2.5 text-center text-[12px] opacity-50">{tier.note}</p>
       )}
     </TimelineContent>
   );
@@ -286,7 +286,7 @@ export default function PricingSection({
           <span className="util-label text-carz">{eyebrow}</span>
         </TimelineContent>
 
-        <h1 className="display mt-4 text-4xl sm:text-5xl">
+        <h1 className="display mt-4 text-[34px] sm:text-[50px]">
           <VerticalCutReveal
             splitBy="words"
             staggerDuration={0.12}
@@ -304,7 +304,7 @@ export default function PricingSection({
           animationNum={1}
           timelineRef={sectionRef}
           customVariants={revealVariants}
-          className="mx-auto mt-3 max-w-md text-sm leading-relaxed opacity-70"
+          className="mx-auto mt-3 max-w-md text-[14px] leading-relaxed opacity-70"
         >
           {subtitle}
         </TimelineContent>

@@ -112,7 +112,8 @@ export function BottomNav() {
                 />
                 <span
                   className={cn(
-                    "text-[12px] leading-none",
+                    // 11px, per the spec. A blanket captions sweep had taken this to 12.
+                    "text-[11px] leading-none",
                     active ? "font-semibold text-foreground" : "text-[var(--color-muted-text)]",
                   )}
                 >

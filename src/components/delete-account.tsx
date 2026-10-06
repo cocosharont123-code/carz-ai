@@ -47,7 +47,7 @@ export function DeleteAccount() {
     <section className="mt-10 rounded-card border border-neon-red/30 bg-neon-red/[0.04] p-5">
       <div className="flex items-center gap-2">
         <TriangleAlert className="h-4 w-4 text-neon-red" strokeWidth={2} aria-hidden />
-        <h2 className="text-sm font-bold uppercase tracking-wide text-neon-red">Danger zone</h2>
+        <h2 className="text-[14px] font-bold uppercase tracking-wide text-neon-red">Danger zone</h2>
       </div>
 
       {!confirming ? (
@@ -59,14 +59,14 @@ export function DeleteAccount() {
           <button
             type="button"
             onClick={() => setConfirming(true)}
-            className="press mt-4 rounded-full bg-neon-red px-6 py-2.5 text-sm font-bold text-foreground transition hover:brightness-110"
+            className="press mt-4 rounded-full bg-neon-red px-6 py-2.5 text-[14px] font-bold text-foreground transition hover:brightness-110"
           >
             Delete account
           </button>
         </>
       ) : (
-        <div className="mt-3 rounded-xl border border-neon-red/50 bg-background/40 p-4">
-          <p className="text-sm font-bold">Are you sure you want to delete your account?</p>
+        <div className="mt-3 rounded-thumb border border-neon-red/50 bg-background/40 p-4">
+          <p className="text-[14px] font-bold">Are you sure you want to delete your account?</p>
           <p className="mt-1.5 max-w-prose text-[15px] leading-relaxed opacity-75">
             This cannot be undone. Your username is released for anyone else to take, and any
             Carz+ membership is lost immediately without a refund.
@@ -87,7 +87,7 @@ export function DeleteAccount() {
               onClick={reallyDelete}
               disabled={deleting}
               aria-busy={deleting || undefined}
-              className="press inline-flex items-center gap-2 rounded-full bg-neon-red px-6 py-2.5 text-sm font-bold text-foreground transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+              className="press inline-flex items-center gap-2 rounded-full bg-neon-red px-6 py-2.5 text-[14px] font-bold text-foreground transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {deleting && <Spinner className="h-3.5 w-3.5" />}
               {deleting ? "Deleting…" : "Yes, delete my account"}
@@ -99,7 +99,7 @@ export function DeleteAccount() {
                 setError("");
               }}
               disabled={deleting}
-              className="press rounded-full border border-[var(--line-button)] px-6 py-2.5 text-sm font-semibold transition hover:border-foreground/40 disabled:opacity-40"
+              className="press rounded-full border border-[var(--line-button)] px-6 py-2.5 text-[14px] font-semibold transition hover:border-foreground/40 disabled:opacity-40"
             >
               Cancel
             </button>

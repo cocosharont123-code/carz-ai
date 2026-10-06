@@ -123,7 +123,7 @@ function EventsInner() {
           </div>
         ) : error ? (
           <div className="mt-8 rounded-card glass-card p-8 text-center">
-            <h3 className="display text-2xl">Couldn&apos;t load events</h3>
+            <h3 className="display text-[20px]">Couldn&apos;t load events</h3>
             <p className="mt-2 text-[15px] opacity-70">{error}</p>
           </div>
         ) : events && events.length > 0 ? (
@@ -162,7 +162,7 @@ function EventsInner() {
           </div>
         ) : (
           <div className="mt-8 rounded-card glass-card p-8 text-center">
-            <h3 className="display text-2xl">No events found</h3>
+            <h3 className="display text-[20px]">No events found</h3>
             <p className="mt-2 text-[15px] opacity-70">Try a bigger nearby city.</p>
           </div>
         )}

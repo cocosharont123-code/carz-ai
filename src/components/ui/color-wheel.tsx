@@ -130,7 +130,7 @@ export function ColorWheel({
 
       <div className="mt-1 flex w-full max-w-[268px] items-center gap-3">
         <label
-          className="press relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-black/20"
+          className="press relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-thumb border border-black/20"
           style={{ background: hex }}
         >
           <span className="sr-only">Exact {label.toLowerCase()}</span>
@@ -141,7 +141,7 @@ export function ColorWheel({
             className="absolute inset-0 cursor-pointer opacity-0"
           />
         </label>
-        <span className="font-mono text-sm uppercase opacity-70">{hex}</span>
+        <span className="font-mono text-[14px] uppercase opacity-70">{hex}</span>
       </div>
     </div>
   );

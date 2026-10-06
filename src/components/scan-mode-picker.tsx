@@ -104,7 +104,7 @@ export function ScanModePicker({ onModeChange }: { onModeChange?: (mode: ScanMod
                   strokeWidth={2}
                   aria-hidden
                 />
-                <span className="text-sm font-bold">{meta.name}</span>
+                <span className="text-[14px] font-bold">{meta.name}</span>
                 {locked && <Lock className="h-3 w-3 shrink-0 opacity-60" aria-hidden />}
               </div>
               <p className={cn("mt-1 text-[12px] leading-snug", selected ? "opacity-70" : "opacity-60")}>

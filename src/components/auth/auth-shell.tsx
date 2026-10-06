@@ -34,7 +34,7 @@ export function AuthShell({
       <div className="w-full max-w-sm">
         <StepDots step={step} />
 
-        <h1 className="display mt-6 text-center text-5xl leading-[0.95] sm:text-6xl">
+        <h1 className="display mt-6 text-center text-[50px] leading-[0.95] sm:text-[50px]">
           {title}
         </h1>
         <p className="mx-auto mt-4 max-w-[17rem] text-center text-[15px] leading-relaxed opacity-60">

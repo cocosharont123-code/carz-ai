@@ -99,8 +99,8 @@ const LeaderboardCard = React.forwardRef<HTMLDivElement, LeaderboardCardProps>(
       >
         <div className="mb-6 flex items-start justify-between gap-4">
           <div className="space-y-1">
-            <h3 className="text-xl font-semibold">{title}</h3>
-            <p className="text-muted-foreground text-sm">
+            <h3 className="text-[20px] font-semibold">{title}</h3>
+            <p className="text-muted-foreground text-[14px]">
               {fromLabel} - {toLabel}
             </p>
           </div>
@@ -116,7 +116,7 @@ const LeaderboardCard = React.forwardRef<HTMLDivElement, LeaderboardCardProps>(
                 }
                 setLocalRunId(e.target.value)
               }}
-              className="bg-background text-foreground rounded-md border px-3 py-1.5 text-sm"
+              className="bg-background text-foreground rounded-md border px-3 py-1.5 text-[14px]"
             >
               {runOptions.map((option) => (
                 <option key={option.id} value={option.id}>

@@ -292,7 +292,7 @@ function Blocked({
     <div className="absolute inset-0 flex items-center justify-center px-6">
       <div className="glass-card w-full max-w-sm rounded-card p-6 text-center">
         <CameraOff className="mx-auto h-7 w-7 opacity-50" strokeWidth={1.5} aria-hidden />
-        <h2 className="display mt-3 text-2xl">
+        <h2 className="display mt-3 text-[20px]">
           {denied ? "Camera is blocked" : "No camera here"}
         </h2>
         <p className="mx-auto mt-2 max-w-xs text-[15px] leading-relaxed opacity-70">
@@ -306,7 +306,7 @@ function Blocked({
             <button
               type="button"
               onClick={onRetry}
-              className="press min-h-11 rounded-full bg-carz text-sm font-bold text-carz-ink"
+              className="press min-h-11 rounded-full bg-carz text-[14px] font-bold text-carz-ink"
             >
               Try again
             </button>
@@ -314,7 +314,7 @@ function Blocked({
           <button
             type="button"
             onClick={onPickFile}
-            className="press glass-card flex min-h-11 items-center justify-center gap-2 rounded-full text-sm font-bold"
+            className="press glass-card flex min-h-11 items-center justify-center gap-2 rounded-full text-[14px] font-bold"
           >
             <ImagePlus className="h-4 w-4" strokeWidth={2} aria-hidden />
             Upload a photo
