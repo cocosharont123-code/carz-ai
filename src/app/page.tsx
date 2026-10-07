@@ -47,8 +47,13 @@ export default function Home() {
     <main className="mx-auto w-full max-w-[480px] px-5 pb-6">
       {/* Wordmark only. The mockup puts a bell beside it for car alerts and
           there is no alerts feature to open, so there is no bell. */}
-      <header className="flex h-14 items-center">
-        <span className="text-[20px] font-bold lowercase tracking-tight text-foreground">carz</span>
+      <header className="flex items-center pt-4">
+        {/* Hero scale, in the hero's second-line grey, so the wordmark reads as
+            the first line of the headline rather than as a small label above
+            it. */}
+        <span className="text-[50px] font-black lowercase leading-none tracking-[-0.02em] text-[var(--color-hero-2)]">
+          carz
+        </span>
       </header>
 
       <Hero />

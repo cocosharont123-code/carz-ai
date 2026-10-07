@@ -288,7 +288,10 @@ function HuntInner() {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="glass-card max-h-[80dvh] w-full max-w-[480px] overflow-y-auto rounded-sheet px-5 pb-6 pt-3"
+            // No max-height and no scroll: the content is a heading, three steps
+            // and one rule line. A sheet you have to scroll to read three
+            // sentences is the thing being complained about.
+            className="glass-card w-full max-w-[480px] rounded-sheet px-5 pb-5 pt-3"
           >
             {/* Grabber, then the rules. The text is the app's own HUNT_RULE
                 plus the three steps the feature actually implements -- nothing
@@ -311,6 +314,16 @@ function HuntInner() {
               <li>3. If it matches, claim its bounty and get paid.</li>
             </ol>
             <p className="mt-4 text-[14px] text-[var(--color-secondary-text)]">{HUNT_RULE}</p>
+
+            {/* One obvious way out, under the text, rather than only the X in the
+                corner and a tap on the backdrop. */}
+            <button
+              type="button"
+              onClick={() => setRulesOpen(false)}
+              className="press mt-5 h-[52px] w-full rounded-full bg-carz text-[15px] font-semibold text-carz-ink"
+            >
+              OK
+            </button>
           </div>
         </div>
       )}

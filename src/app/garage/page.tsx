@@ -77,7 +77,11 @@ function Lightbox({
       role="dialog"
       aria-modal="true"
       aria-label={`${car.make} ${car.model}`}
-      className="fixed inset-0 z-[70] flex flex-col bg-background/95"
+      // Opaque, not bg-background/95. A translucent full-screen layer over a
+      // page made of glass recomposites the whole document every frame, which
+      // is the lag -- and it covers everything anyway, so there is nothing to
+      // see through it.
+      className="fixed inset-0 z-[70] flex flex-col bg-background"
       onClick={onClose}
     >
       <div className="flex items-center justify-between p-4">
@@ -95,16 +99,33 @@ function Lightbox({
       </div>
 
       {/* Stop the backdrop's close handler firing on the photo itself. */}
+      {/* min-h-0 is the fix, not decoration.
+      
+          A flex item defaults to min-height:auto, so this box could grow past
+          the dialog to fit a tall photo -- which pushed the photo and the
+          controls under it off the bottom of the screen. With min-h-0 the box
+          is bounded by the dialog and the photo by the box.
+      
+          A squircle in the middle: a square frame, so the radius reads as one
+          shape rather than following whatever aspect the photo happens to be,
+          sized from the viewport so it is the same object on a phone and a
+          desktop. object-cover, because a square frame around a 4:3 photo
+          would otherwise be mostly empty. */}
       <div
-        className="flex flex-1 items-center justify-center px-4"
+        className="flex min-h-0 flex-1 items-center justify-center px-5"
         onClick={(e) => e.stopPropagation()}
       >
-        <CarPhoto
-          src={car.image}
-          alt={`${car.make} ${car.model}`}
-          color
-          className="max-h-full max-w-full rounded-card object-contain"
-        />
+        <div
+          className="aspect-square w-full overflow-hidden rounded-[28%]"
+          style={{ maxWidth: "min(78vw, 58dvh)" }}
+        >
+          <CarPhoto
+            src={car.image}
+            alt={`${car.make} ${car.model}`}
+            color
+            className="h-full w-full object-cover"
+          />
+        </div>
       </div>
 
       <div className="p-4" onClick={(e) => e.stopPropagation()}>

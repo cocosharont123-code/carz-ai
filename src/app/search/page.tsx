@@ -2,9 +2,11 @@
 
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search as SearchIcon, Crown, X } from "lucide-react";
+import Link from "next/link";
+import { Search as SearchIcon, Crown, X, ChevronRight } from "lucide-react";
 import { Avatar } from "@/components/default-avatar";
 import { Input } from "@/components/ui/input";
+import { EXPLORE_BUBBLES, matchesExploreQuery } from "@/config/explore";
 
 type Account = {
   username: string;
@@ -26,6 +28,12 @@ function SearchInner() {
   const router = useRouter();
   const initial = useSearchParams().get("q") ?? "";
   const [q, setQ] = useState(initial);
+
+  // Only once something is typed: an empty query matches every feature, and a
+  // wall of them under an empty box is not a search result.
+  const features = q.trim()
+    ? EXPLORE_BUBBLES.filter((item) => matchesExploreQuery(item, q))
+    : [];
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
@@ -66,8 +74,8 @@ function SearchInner() {
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search accounts…"
-          aria-label="Search accounts"
+          placeholder="Search cars, features or people…"
+          aria-label="Search cars, features or people"
           className="h-12 pl-9 pr-10"
         />
         {q && (
@@ -84,8 +92,46 @@ function SearchInner() {
 
       {q.startsWith("#") && (
         <p className="mt-3 text-[15px] opacity-60">
-          Hashtag search isn&apos;t indexed yet — this searches accounts.
+          Hashtag search isn&apos;t indexed yet — this searches features and accounts.
         </p>
+      )}
+
+      {/* Features first, matched locally.
+
+          Search only looked at accounts, so typing "garage" or "bid" found
+          nothing even though both are things this app does. The list is the same
+          config Home renders from and the match is the same function, so there is
+          one answer to "what does this app have" rather than two that drift. No
+          request, so it appears as you type. */}
+      {features.length > 0 && (
+        <section className="mt-5">
+          <h2 className="util-label opacity-50">Features</h2>
+          <div className="mt-1">
+            {features.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="press flex min-h-14 items-center gap-3 border-b border-[var(--line-divider)] px-1 py-3"
+                >
+                  <Icon className="h-[22px] w-[22px] shrink-0" strokeWidth={1.75} aria-hidden />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[15px] font-medium">{item.label}</span>
+                    <span className="block truncate text-[14px] text-[var(--color-secondary-text)]">
+                      {item.description}
+                    </span>
+                  </span>
+                  <ChevronRight
+                    className="h-[18px] w-[18px] shrink-0 text-[var(--color-muted-text)]"
+                    strokeWidth={1.75}
+                    aria-hidden
+                  />
+                </Link>
+              );
+            })}
+          </div>
+        </section>
       )}
 
       <div className="mt-5 space-y-1">
