@@ -96,7 +96,11 @@ export async function POST(req: Request) {
       spotterImage,
       scanId: typeof body.scanId === "string" ? body.scanId.slice(0, 40) : undefined,
     });
-    return NextResponse.json({ ok: true });
+    // photo says whether the image actually stored. The upload is best effort --
+    // a car that earns a place should not lose it because its photo failed --
+    // but "best effort" was indistinguishable from success here, so a board full
+    // of missing pictures looked like a rendering bug rather than a storage one.
+    return NextResponse.json({ ok: true, photo: !!image });
   } catch {
     return NextResponse.json({ ok: false, error: "record_failed" }, { status: 502 });
   }
