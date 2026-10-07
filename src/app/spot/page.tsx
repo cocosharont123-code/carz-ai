@@ -1022,10 +1022,10 @@ export default function SpotPage() {
                 {/* Full-bleed and fading to black, the one gradient allowed. */}
                 {spottedImage && (
                   <div className="relative mt-4">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     {/* Rounded, and no longer full-bleed: a photo running edge to edge
                         cannot have corners, and square corners are the one thing
                         left on this screen that looked unfinished. */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={spottedImage}
                       alt={`${car.make} ${car.model}`}
