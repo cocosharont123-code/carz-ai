@@ -121,10 +121,29 @@ export async function recordRareSpot(car: Omit<RareCar, "id" | "ts">): Promise<v
     ts: Date.now(),
   };
 
+  /**
+   * One entry per model, the highest score winning -- and the photo carried
+   * across when the winner does not have one.
+   *
+   * The dedupe used to drop every later entry for a model outright. That is why
+   * the board showed no pictures: entries recorded before photos were stored as
+   * Blob files have image "", they still hold the top score for their model, and
+   * every new scan of that car was discarded along with the photo it arrived
+   * with. The board could never acquire an image for anything already on it.
+   *
+   * Carrying the photo rather than promoting the lower-scoring entry keeps the
+   * ranking honest: the score, the reason and the spotter stay with whoever
+   * actually earned the place, and only the photograph is inherited.
+   */
   const byModel = new Map<string, RareCar>();
   for (const c of [entry, ...board].sort((a, b) => b.rarityScore - a.rarityScore)) {
     const key = `${c.make} ${c.model}`.toLowerCase().trim();
-    if (!byModel.has(key)) byModel.set(key, c);
+    const held = byModel.get(key);
+    if (!held) {
+      byModel.set(key, c);
+      continue;
+    }
+    if (!held.image && c.image) byModel.set(key, { ...held, image: c.image });
   }
   const top = [...byModel.values()].sort((a, b) => b.rarityScore - a.rarityScore).slice(0, MAX);
   await writeBoard(top);
