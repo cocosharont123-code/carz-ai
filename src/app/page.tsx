@@ -45,16 +45,6 @@ export default function Home() {
 
   return (
     <main className="mx-auto w-full max-w-[480px] px-5 pb-6">
-      {/* Wordmark only. The mockup puts a bell beside it for car alerts and
-          there is no alerts feature to open, so there is no bell. */}
-      <header className="flex items-center pt-4">
-        {/* Hero scale, in the hero's second-line grey, so the wordmark reads as
-            the first line of the headline rather than as a small label above
-            it. */}
-        <span className="text-[50px] font-black lowercase leading-none tracking-[-0.02em] text-[var(--color-hero-2)]">
-          carz
-        </span>
-      </header>
 
       <Hero />
 
@@ -103,7 +93,7 @@ export default function Home() {
  */
 function Hero() {
   return (
-    <section className="relative -mx-5 mt-2 overflow-hidden">
+    <section className="relative -mx-5 overflow-hidden">
       <div
         aria-hidden
         className="absolute inset-0 bg-background bg-cover bg-center"
@@ -115,7 +105,20 @@ function Hero() {
         // gradient would be a dark band under the headline.
         className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/70 to-background"
       />
-      <h1 className="relative px-5 pb-10 pt-16 text-left text-[50px] font-black leading-[0.95] tracking-[-0.02em]">
+      {/* The wordmark is the hero's first line, in the same block and on the
+          same baseline grid, so it sits directly above SNAP instead of being a
+          separate header with the hero's top padding between them.
+          
+          Outside the h1 on purpose: it is a brand mark, not part of the
+          sentence, and inside the heading a screen reader would read "carz snap
+          any car know everything" as one phrase. */}
+      <p
+        aria-label="Carz"
+        className="relative px-5 pt-10 text-left text-[50px] font-black lowercase leading-[0.95] tracking-[-0.02em] text-[var(--color-hero-2)]"
+      >
+        carz
+      </p>
+      <h1 className="relative px-5 pb-10 text-left text-[50px] font-black leading-[0.95] tracking-[-0.02em]">
         <span className="block text-foreground">SNAP</span>
         <span className="block text-foreground">ANY CAR.</span>
         <span className="block text-[var(--color-hero-2)]">KNOW</span>
