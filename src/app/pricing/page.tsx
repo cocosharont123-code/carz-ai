@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
 import { X } from "lucide-react";
 import PricingSection, { type PricingTier } from "@/components/ui/pricing-section-1";
+import { TRIAL_DAYS_BY_TIER } from "@/lib/profile-blob";
 import { CARZ_PLUS, CARZ_MAX, annualSaving } from "@/lib/plans";
 import { applyDiscount, lookupPromo, type Promo } from "@/lib/promos";
 
@@ -106,15 +107,18 @@ export default function PricingPage() {
         d = await post({ action: "redeem", code: promo!.code, tier: id });
       } else if (annual) {
         d = await post({ action: "join", interval: "annual", code: promo?.code, tier: id });
-      } else if (id === "plus") {
-        // The trial is a Carz PRO monthly path only: startTrial grants no tier, so
-        // routing MAX through it would sell the cheaper membership.
-        d = await post({ action: "trial" });
+      } else {
+        // Both tiers go through the trial now. It was Carz PRO only because
+        // startTrial granted membership with no tier, and an absent tier reads
+        // as Carz PRO -- routing MAX through it would have sold the cheaper
+        // membership. The tier is recorded now, so that is fixed.
+        //
+        // Falling through to a paid join when the trial is refused is what lets
+        // one button work for somebody who has already used theirs.
+        d = await post({ action: "trial", tier: id });
         if (!d?.ok && !d?.needUsername) {
           d = await post({ action: "join", interval: "monthly", code: promo?.code, tier: id });
         }
-      } else {
-        d = await post({ action: "join", interval: "monthly", code: promo?.code, tier: id });
       }
 
       if (d?.needUsername) {
@@ -163,7 +167,9 @@ export default function PricingPage() {
     if (member) return undefined;
     const name = id === "max" ? CARZ_MAX.name : CARZ_PLUS.name;
     if (isFree) return `Redeem ${name} free`;
-    if (id === "plus" && !annual && !promo) return "Start free trial";
+    // Says how many days, and offered on both tiers. It was Carz PRO only and
+    // silent about the length, which is the one number somebody deciding wants.
+    if (!annual && !promo) return `Start ${TRIAL_DAYS_BY_TIER[id]}-day free trial`;
     return `Get ${name}`;
   }
 
@@ -177,8 +183,12 @@ export default function PricingPage() {
       return undefined;
     }
     if (isFree) return undefined;
-    if (id === "plus" && !annual && !promo) {
-      return `7 days free, then $${CARZ_PLUS.monthly.toFixed(2)}/mo`;
+    if (!annual && !promo) {
+      // Both the days and the price come from the tier being offered. This
+      // said "7 days" and Carz PRO's price regardless, which on the MAX card
+      // was wrong twice over once MAX had its own trial length.
+      const trialPlan = id === "max" ? CARZ_MAX : CARZ_PLUS;
+      return `${TRIAL_DAYS_BY_TIER[id]} days free, then $${trialPlan.monthly.toFixed(2)}/mo`;
     }
     if (annual) {
       const plan = id === "max" ? CARZ_MAX : CARZ_PLUS;

@@ -37,9 +37,24 @@ export type Profile = {
   streakDay?: string; // YYYY-MM-DD of last streak increment
 };
 
-// Length of the Carz PRO free trial.
-export const TRIAL_DAYS = 7;
-const TRIAL_MS = TRIAL_DAYS * 86_400_000;
+/**
+ * Free trial length, per tier.
+ *
+ * MAX gets twice the days because it is the tier whose value takes longer to
+ * show: the configurator, events and drops are things somebody tries once a
+ * week, not once an hour, and a week is not long enough to meet them.
+ *
+ * TRIAL_DAYS is kept as the Carz PRO number so the pricing copy that already
+ * reads from it keeps saying the right thing for that tier.
+ */
+export const TRIAL_DAYS_BY_TIER: Record<MemberTier, number> = {
+  plus: 7,
+  max: 14,
+};
+
+export const TRIAL_DAYS = TRIAL_DAYS_BY_TIER.plus;
+
+const trialMs = (tier: MemberTier) => TRIAL_DAYS_BY_TIER[tier] * 86_400_000;
 
 // A profile counts as an active member if the flag is on and, when on a trial,
 // the trial hasn't lapsed. Paid membership has no trialEndsAt, so never expires.
@@ -456,18 +471,31 @@ export async function memberUsernames(): Promise<Set<string>> {
   return set;
 }
 
-// Start the one-time 7-day free trial. Grants membership until trialEndsAt.
+/**
+ * Start the one-time free trial on a tier. Grants membership until trialEndsAt.
+ *
+ * The tier is now recorded rather than left unset. It used to grant membership
+ * with no tier at all, and memberTier reads an absent tier as Carz PRO -- so a
+ * MAX trial would have quietly sold the cheaper membership, which is why the
+ * pricing page routed only Carz PRO through this path. With the tier stored,
+ * both can use it.
+ *
+ * Still one trial per account, not one per tier: trialUsed is a single flag, so
+ * taking the Carz PRO week does not also leave the MAX fortnight on the table.
+ */
 export async function startTrial(
   email: string,
+  tier: MemberTier = "plus",
 ): Promise<{ ok: boolean; error?: string; profile?: Profile }> {
   const all = await readAll();
   const key = keyFor(email);
   const p = recordIn(all, email); // starting a trial never waits on manual setup
-  if (isActiveMember(p)) return { ok: false, error: "You're already a Carz PRO member." };
+  if (isActiveMember(p)) return { ok: false, error: "You're already a member." };
   if (p.trialUsed) return { ok: false, error: "You've already used your free trial." };
   p.member = true;
+  p.tier = tier;
   p.trialUsed = true;
-  p.trialEndsAt = Date.now() + TRIAL_MS;
+  p.trialEndsAt = Date.now() + trialMs(tier);
   if (!p.memberSince) p.memberSince = Date.now();
   all[key] = p;
   await writeAll(all);

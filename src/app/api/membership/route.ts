@@ -95,7 +95,11 @@ export async function POST(req: Request) {
     }
 
     if (body.action === "trial") {
-      const r = await startTrial(email);
+      // The tier comes from the body and is validated, not trusted: it decides
+      // both what is granted and for how long, so an unrecognised value must
+      // fall to the cheaper one rather than the more generous one.
+      const wanted = body.tier === "max" ? "max" : "plus";
+      const r = await startTrial(email, wanted);
       if (!r.ok) {
         return NextResponse.json({ ok: false, error: r.error }, { status: 400 });
       }
