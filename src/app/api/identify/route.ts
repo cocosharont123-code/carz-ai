@@ -91,7 +91,14 @@ export async function POST(req: Request) {
             ? "That's a lot of scans at once — give it a few seconds."
             : tier === "plus"
               ? `You've used all ${cap} scans today. Carz MAX has no daily cap.`
-              : `You've used all ${cap} free scans today. Carz PRO gives you ${DAILY_SCANS.plus} a day.`,
+              // Points at Carz PRO only while Carz PRO is actually more scans.
+              // With the PRO cap at 2 and free at 3, the old line read "you've
+              // used all 3 free scans, Carz PRO gives you 2 a day", which is an
+              // argument against buying it. MAX is the honest upsell when PRO
+              // is not an upgrade on this axis.
+              : DAILY_SCANS.plus > DAILY_SCANS.free
+                ? `You've used all ${cap} free scans today. Carz PRO gives you ${DAILY_SCANS.plus} a day.`
+                : `You've used all ${cap} free scans today. Carz MAX has no daily cap.`,
         tier,
         status: planStatusFor(effectivePlan, user),
       },

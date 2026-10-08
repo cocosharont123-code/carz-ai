@@ -39,10 +39,17 @@ export const PLANS: Record<PlanId, Plan> = {
  * different screens — and a second tier doubles every chance of that.
  */
 
-/** Scans a day, by tier. null = no cap. */
+/**
+ * Scans a day, by tier. null = no cap.
+ *
+ * Carz PRO is 2, as asked. Worth stating plainly: free is 3, so the paid tier
+ * now allows fewer scans a day than no tier at all, and the identify route's
+ * own limit message ("Carz PRO gives you N a day") reads as a reason not to
+ * buy it. Lowering free to 1 is the one-line fix if that was the intent.
+ */
 export const DAILY_SCANS = {
   free: 3,
-  plus: 8,
+  plus: 2,
   max: null as number | null,
 } as const;
 
@@ -53,7 +60,10 @@ export const CARZ_PLUS = {
   annual: 59.99,
   blurb: "For spotting regularly.",
   perks: [
-    { title: "8 car scans a day", desc: "Well past the three everyone gets." },
+    // Reads from the cap rather than restating it, so the two cannot disagree.
+    // The old line was "8 car scans a day · Well past the three everyone gets",
+    // which at 2 a day would have been false in both halves.
+    { title: `${DAILY_SCANS.plus} car scans a day`, desc: "Identify any car you point it at." },
     { title: "Garage", desc: "A photo album of every car you save." },
     { title: "CarzBot", desc: "Ask anything about cars." },
   ],
