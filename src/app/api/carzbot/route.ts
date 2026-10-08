@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { auth } from "@/auth";
 import { getProfile, memberTier } from "@/lib/profile-blob";
+import { takeAiCall } from "@/lib/ai-rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -40,6 +41,26 @@ export async function POST(req: Request) {
   }
   if (!memberTier(await getProfile(email))) {
     return NextResponse.json({ error: "CarzBot is a Carz PRO feature." }, { status: 402 });
+  }
+
+  /**
+   * A burst limit, which CarzBot had none of.
+   *
+   * Its only 429 was Anthropic's own rate-limit error relayed back, which fires
+   * when the account's limit is hit -- so the first thing that noticed one person
+   * hammering it was every other person's conversation breaking. Being a paid
+   * feature caps who can call it, not how fast.
+   *
+   * No daily cap: membership is sold as asking anything about cars, and a
+   * conversation that stops at message forty is not that. The window stops a
+   * loop, not a long chat.
+   */
+  const gate = await takeAiCall("carzbot", email, null);
+  if (!gate.ok) {
+    return NextResponse.json(
+      { error: "Too many messages at once — give it a few seconds." },
+      { status: 429, headers: { "Retry-After": String(gate.retryAfter) } },
+    );
   }
 
   let body: { messages?: Turn[] };

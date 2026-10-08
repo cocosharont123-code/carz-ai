@@ -215,10 +215,6 @@ function CarViewer({
   spotId?: string;
   onClose: () => void;
 }) {
-  // The photo's own pixel width, read off the element once it decodes, so it
-  // is never displayed larger than it actually is.
-  const [natural, setNatural] = useState<number | null>(null);
-
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -260,46 +256,29 @@ function CarViewer({
             and everything under it is a fixed few lines, so the card is always
             shorter than the screen and has nothing to scroll. */}
         <div className="nav-sheet-in glass-bubble w-full max-w-[22rem] overflow-hidden rounded-[32px] p-4">
-          {/* The whole car, never enlarged past its own resolution.
-              
-              The image sizes the box rather than the other way round: given
-              max-width and height:auto it lays out at its own aspect ratio the
-              moment it decodes, so there is no square placeholder snapping to
-              the real shape a frame later. The cap is the file's own pixel
-              width — the board stores a thumbnail, and blowing one up is
-              exactly what made it look pixelated. Small photos render small and
-              sharp rather than large and soft. */}
-          <div className="flex items-center justify-center overflow-hidden rounded-[26%] bg-background/30">
-            {car.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={car.image}
-                alt={`${car.make} ${car.model}`}
-                onLoad={(e) => setNatural(e.currentTarget.naturalWidth)}
-                // Two caps, both absolute rather than relative to a parent.
-                // maxWidth is the file's own pixel width, so it is never
-                // enlarged past its resolution; maxHeight is half the viewport,
-                // which is what keeps the whole card inside the screen without
-                // anything needing to scroll.
-                //
-                // Not flex-1 with max-h-full, which is what made the photo
-                // disappear: flex-1 sets flex-basis to 0, and in a column with
-                // no definite height of its own that resolves to zero height.
-                style={{
-                  ...(natural ? { maxWidth: `${natural}px` } : null),
-                  maxHeight: "50dvh",
-                }}
-                className="mx-auto block h-auto w-auto max-w-full object-contain"
-                draggable={false}
-              />
-            ) : (
-              <CarPhoto
-                src={undefined}
-                alt={`${car.make} ${car.model}`}
-                className="aspect-square w-full"
-                color
-              />
-            )}
+          {/* A squircle that always occupies its space.
+          
+              It was an <img> sized by its own pixel width inside a container with
+              no height of its own. That is fine while the file loads, and nothing
+              at all when it does not: an entry with no stored photo, or a URL that
+              404s, collapsed the box to zero and the viewer opened on a title with
+              a gap above it. A fixed square means the frame is there either way,
+              and a missing photo reads as a missing photo rather than as a broken
+              screen.
+          
+              Sized from the viewport so it is the same object on a phone and a
+              desktop, and bounded in dvh so the card plus the meter under it still
+              fits without scrolling. */}
+          <div
+            className="mx-auto overflow-hidden rounded-[26%] bg-foreground/[0.06]"
+            style={{ width: "min(74vw, 44dvh)", height: "min(74vw, 44dvh)" }}
+          >
+            <CarPhoto
+              src={car.image || undefined}
+              alt={`${car.make} ${car.model}`}
+              color
+              className="h-full w-full object-cover"
+            />
           </div>
 
           <p className="mt-4 truncate text-center text-[17px] font-bold">

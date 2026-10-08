@@ -4,7 +4,6 @@ import {
   getUserId,
   getUser,
   planStatusFor,
-  usageToday,
   recordIdentification,
   UID_COOKIE,
   PLAN_COOKIE,
@@ -14,6 +13,7 @@ import { PLANS, DAILY_SCANS } from "@/lib/plans";
 import { identifyCar, IdentifyError } from "@/lib/identify";
 import { auth } from "@/auth";
 import { getProfile, memberTier } from "@/lib/profile-blob";
+import { takeAiCall } from "@/lib/ai-rate-limit";
 import { SCAN_MODE_COOKIE, effectiveScanMode } from "@/lib/scan-mode";
 
 export const runtime = "nodejs";
@@ -60,20 +60,47 @@ export async function POST(req: Request) {
   const isMember = tier !== null;
 
   const cap = tier === "max" ? DAILY_SCANS.max : tier === "plus" ? DAILY_SCANS.plus : DAILY_SCANS.free;
-  const usedToday = usageToday(user);
 
-  if (cap !== null && usedToday >= cap) {
+  /**
+   * The cap, counted somewhere that survives a cold start.
+   *
+   * It used to be usageToday(user) out of lib/store.ts -- an in-memory object
+   * backed by a file in /tmp, which on Vercel is per serverless instance. A new
+   * container was a fresh counter, so the cap was not leaky, it was absent. The
+   * id it counted against was UID_COOKIE as well, which anyone can clear.
+   *
+   * takeAiCall counts against the signed-in email in Blob, and checks a burst
+   * window as well as the day: eight a day still allows eight vision calls in
+   * the same second, and what runs a bill up is not a person pressing a button.
+   */
+  const email = session?.user?.email;
+  if (!email) {
+    // Every route is behind the sign-in wall, so this is a belt-and-braces
+    // check rather than a path anyone reaches -- but the limit is keyed on the
+    // account, and an unkeyed expensive call is the hole being closed.
+    return NextResponse.json({ error: "Sign in to scan." }, { status: 401 });
+  }
+
+  const gate = await takeAiCall("identify", email, cap);
+  if (!gate.ok) {
     return NextResponse.json(
       {
-        error: "limit_reached",
+        error: gate.reason === "burst" ? "too_fast" : "limit_reached",
         message:
-          tier === "plus"
-            ? `You've used all ${cap} scans today. Carz MAX has no daily cap.`
-            : `You've used all ${cap} free scans today. Carz PRO gives you ${DAILY_SCANS.plus} a day.`,
+          gate.reason === "burst"
+            ? "That's a lot of scans at once — give it a few seconds."
+            : tier === "plus"
+              ? `You've used all ${cap} scans today. Carz MAX has no daily cap.`
+              : `You've used all ${cap} free scans today. Carz PRO gives you ${DAILY_SCANS.plus} a day.`,
         tier,
         status: planStatusFor(effectivePlan, user),
       },
-      { status: 402 },
+      {
+        // 429 for a burst, 402 for the day: one says wait, the other says pay,
+        // and a client that cannot tell them apart shows the wrong screen.
+        status: gate.reason === "burst" ? 429 : 402,
+        headers: { "Retry-After": String(gate.retryAfter) },
+      },
     );
   }
 
