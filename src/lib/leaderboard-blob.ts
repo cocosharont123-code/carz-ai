@@ -1,5 +1,27 @@
 import { put, list } from "@vercel/blob";
 import { blobToken, blobConfigured } from "./blob-token";
+import type { CarReport } from "./identify";
+
+/** The fields the stat sheet draws. A report minus the photo-derived parts. */
+export type CarSpecs = Pick<
+  CarReport,
+  | "engine"
+  | "drivetrain"
+  | "bodyStyle"
+  | "generation"
+  | "trimGuess"
+  | "color"
+  | "countryOfOrigin"
+  | "parentCompany"
+  | "horsepower"
+  | "zeroToSixty"
+  | "topSpeed"
+  | "priceRangeUsed"
+  | "valuation"
+  | "reliability"
+  | "collectibility"
+  | "valueTimeline"
+>;
 
 // Global "rarest cars spotted" leaderboard, shared across ALL accounts.
 // Backed by a single JSON file in a Vercel Blob store (auto-provisioned).
@@ -19,6 +41,18 @@ export type RareCar = {
    * to migrate — the renderer cannot tell them apart.
    */
   image?: string;
+  /**
+   * The report behind the entry, so opening one costs nothing.
+   *
+   * These values are already computed when the entry is written -- the scan has
+   * just finished and the client has them in hand. Storing them here is a few
+   * hundred bytes; the alternative is asking the model to describe the car again
+   * every time somebody taps a row on a public leaderboard, which is a bill that
+   * scales with curiosity rather than with scanning.
+   *
+   * Optional, and stays optional: every entry recorded before this has none.
+   */
+  specs?: CarSpecs;
   spotter: string; // @username, or "Anonymous"
   spotterImage?: string; // profile picture thumbnail, or "" for the animated default
   ts: number;

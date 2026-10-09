@@ -6,9 +6,45 @@ import {
   uploadLeaderboardPhoto,
   leaderboardConfigured,
 } from "@/lib/leaderboard-blob";
+import type { CarSpecs } from "@/lib/leaderboard-blob";
 import { ensureProfile, memberUsernames } from "@/lib/profile-blob";
 
 export const runtime = "nodejs";
+
+/**
+ * Copy across only the fields the stat sheet draws, each capped.
+ *
+ * This document is served from a public URL and rewritten whole on every spot,
+ * so what goes in is whitelisted rather than spread: an unbounded object from a
+ * client would be both an unbounded document and whatever the client felt like
+ * publishing.
+ */
+const SPEC_TEXT = [
+  "engine", "drivetrain", "bodyStyle", "generation", "trimGuess", "color",
+  "countryOfOrigin", "parentCompany", "horsepower", "zeroToSixty", "topSpeed",
+  "priceRangeUsed", "valuation", "reliability", "collectibility",
+] as const;
+
+function pickSpecs(raw: unknown): CarSpecs | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const src = raw as Record<string, unknown>;
+  const out: Record<string, unknown> = {};
+  for (const k of SPEC_TEXT) {
+    const v = src[k];
+    if (typeof v === "string" && v.trim()) out[k] = v.trim().slice(0, 400);
+  }
+  if (Array.isArray(src.valueTimeline)) {
+    const points = src.valueTimeline
+      .filter((p): p is { year: string; usd: number } =>
+        !!p && typeof p === "object" &&
+        typeof (p as { year?: unknown }).year === "string" &&
+        typeof (p as { usd?: unknown }).usd === "number")
+      .slice(0, 8)
+      .map((p) => ({ year: p.year.slice(0, 12), usd: p.usd }));
+    if (points.length) out.valueTimeline = points;
+  }
+  return Object.keys(out).length ? (out as CarSpecs) : undefined;
+}
 
 export async function GET() {
   if (!leaderboardConfigured()) {
@@ -31,6 +67,7 @@ export async function POST(req: Request) {
 
   let body: {
     image?: string;
+    specs?: Record<string, unknown>;
     make?: string;
     model?: string;
     yearRange?: string;
@@ -94,6 +131,7 @@ export async function POST(req: Request) {
       image,
       spotter,
       spotterImage,
+      specs: pickSpecs(body.specs),
       scanId: typeof body.scanId === "string" ? body.scanId.slice(0, 40) : undefined,
     });
     // photo says whether the image actually stored. The upload is best effort --

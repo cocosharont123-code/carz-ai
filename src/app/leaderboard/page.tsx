@@ -2,6 +2,8 @@
 
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
+import { CarStatSheet } from "@/components/car/car-stats";
+import type { CarSpecs } from "@/lib/leaderboard-blob";
 import { useSearchParams } from "next/navigation";
 import { Crown, MapPin } from "lucide-react";
 import { Avatar } from "@/components/default-avatar";
@@ -23,6 +25,9 @@ type RareCar = {
   ts: number;
   /** The scan that also dropped this car's map pin, when the spotter shared one. */
   scanId?: string;
+  /** The stat sheet, stored with the entry. Absent on anything recorded before
+   *  the board kept it — the viewer says so rather than showing empty rows. */
+  specs?: CarSpecs;
 };
 
 function rarityLabel(s: number): string {
@@ -251,11 +256,14 @@ function CarViewer({
         onTouchMove={(e) => e.preventDefault()}
         className="fixed inset-0 z-[80] flex touch-none items-center justify-center overscroll-none px-5"
       >
-        {/* Centred in the viewport and never scrollable. Nothing here has a
-            height ceiling of its own: the photo is capped at half the viewport
-            and everything under it is a fixed few lines, so the card is always
-            shorter than the screen and has nothing to scroll. */}
-        <div className="nav-sheet-in glass-bubble w-full max-w-[22rem] overflow-hidden rounded-[32px] p-4">
+        {/* It used to be guaranteed shorter than the screen -- photo capped at
+            half the viewport, a fixed few lines under it, nothing to scroll.
+            The full report underneath ends that: a car with a spec sheet, a
+            performance row and a value chart is taller than a phone, so the
+            card scrolls now. Bounded in dvh so it never runs under the status
+            bar, and overscroll-contain so reaching the end of it does not start
+            scrolling the board behind it. */}
+        <div className="nav-sheet-in glass-bubble max-h-[88dvh] w-full max-w-[22rem] overflow-y-auto overscroll-contain rounded-[32px] p-4">
           {/* A squircle that always occupies its space.
           
               It was an <img> sized by its own pixel width inside a container with
@@ -273,11 +281,16 @@ function CarViewer({
             className="mx-auto overflow-hidden rounded-[26%] bg-foreground/[0.06]"
             style={{ width: "min(74vw, 44dvh)", height: "min(74vw, 44dvh)" }}
           >
+            {/* contain, not cover: this is the photo somebody actually took,
+                and cropping it to a square throws away the framing -- the car
+                sitting in its street, which is most of what makes a spot worth
+                looking at. Letterboxed inside the fixed box rather than given a
+                box of its own, so the no-collapse property above survives. */}
             <CarPhoto
               src={car.image || undefined}
               alt={`${car.make} ${car.model}`}
               color
-              className="h-full w-full object-cover"
+              className="h-full w-full object-contain"
             />
           </div>
 
@@ -320,6 +333,18 @@ function CarViewer({
               </p>
             )}
           </div>
+
+          {/* The rest of the report, the same sheet Spot draws. Stored with the
+              entry when it was recorded, so opening this asks the model nothing. */}
+          {car.specs ? (
+            <div className="mt-4">
+              <CarStatSheet car={car.specs} />
+            </div>
+          ) : (
+            <p className="mt-4 text-center text-[12px] leading-relaxed opacity-45">
+              This one was spotted before the board kept full specs.
+            </p>
+          )}
 
           {/* Only when the pin is still up. Spots last a day and entries last
               forever, so most older cars have no map to go to and are not
