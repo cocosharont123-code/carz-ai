@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { Avatar } from "@/components/default-avatar";
 import { DeleteAccount } from "@/components/delete-account";
 import { Button, PageMasthead, Skeleton } from "@/components/ui/editorial";
@@ -277,6 +277,24 @@ function ProfileInner() {
             >
               {saving ? "Saving…" : "Save changes"}
             </Button>
+
+            {/* Sign out lives here as well as in Settings.
+            
+                Profile is a primary tab; Settings is two taps further in, and
+                nothing on this page pointed at it. With every route behind the
+                wall, an account action nobody can find is an app nobody can
+                leave — and leaving is the one thing a person should never have
+                to hunt for.
+            
+                Above Delete, and visually quieter than it: these are the two
+                ways out of an account and only one of them is final. */}
+            <button
+              type="button"
+              onClick={() => signOut({ callbackUrl: "/" })}
+              className="press flex h-12 w-full items-center justify-center rounded-card border border-[var(--line-card)] glass-chip text-[15px] font-semibold transition hover:border-[var(--line-button)] hover:bg-foreground/[0.05]"
+            >
+              Sign out
+            </button>
 
             <DeleteAccount />
           </div>

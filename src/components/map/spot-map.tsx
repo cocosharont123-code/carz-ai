@@ -322,16 +322,42 @@ export function SpotMap() {
     );
   }, []);
 
-  if (!token || failed) {
+  /**
+   * No token yet.
+   *
+   * Kept separate from the failure case below, because they are different
+   * things to be told. A deployment with no Mapbox token has not had the map
+   * switched on yet, which to anyone but whoever sets the variable is a feature
+   * that is not here — so it says that, rather than naming an environment
+   * variable at someone who cannot set it.
+   *
+   * It reads the token rather than a flag, so the map appears the moment
+   * NEXT_PUBLIC_MAPBOX_TOKEN is set. Nothing has to be changed back.
+   */
+  if (!token) {
+    return (
+      <div className="flex h-full w-full items-center justify-center px-6">
+        <div className="glass-card w-full max-w-sm rounded-card p-8 text-center">
+          <MapPinOff className="mx-auto h-8 w-8 opacity-40" strokeWidth={1.5} aria-hidden />
+          <h2 className="display mt-4 text-[28px] leading-none">Coming soon</h2>
+          <p className="mx-auto mt-3 max-w-xs text-[15px] leading-relaxed opacity-70">
+            The live map of what people are spotting around you is nearly ready.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // A token that is set and still did not draw is a fault, not an unbuilt
+  // feature, and says so.
+  if (failed) {
     return (
       <div className="flex h-full w-full items-center justify-center px-6">
         <div className="glass-card w-full max-w-sm rounded-card p-6 text-center">
           <MapPinOff className="mx-auto h-7 w-7 opacity-50" strokeWidth={1.5} aria-hidden />
           <h2 className="display mt-3 text-[20px]">Map is off</h2>
           <p className="mx-auto mt-2 max-w-xs text-[15px] leading-relaxed opacity-70">
-            {!token
-              ? "NEXT_PUBLIC_MAPBOX_TOKEN isn't set on this deployment, so there is no map to draw."
-              : "The map couldn't start on this device."}
+            The map couldn&apos;t start on this device.
           </p>
         </div>
       </div>

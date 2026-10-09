@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { Gauge, Crosshair, Lock } from "lucide-react";
 import { Button, PageMasthead, Skeleton } from "@/components/ui/editorial";
 import { ThemePicker } from "@/components/theme-picker";
@@ -225,7 +225,11 @@ export default function SettingsPage() {
               <p className="text-[14px] opacity-75">
                 Sign in to manage your profile, membership and account.
               </p>
-              <Button onClick={() => signIn("google", { callbackUrl: "/settings" })} className="mt-4">
+              {/* The sign-in flow, not one provider's button: step one asks for
+                  the address and step two offers whichever routes are actually
+                  configured. Calling signIn("google") here opened a chooser that
+                  errors on a deployment with no Google credentials. */}
+              <Button href="/signin?callbackUrl=%2Fsettings" className="mt-4">
                 Sign in
               </Button>
             </div>
