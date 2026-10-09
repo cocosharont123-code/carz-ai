@@ -3,6 +3,8 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { GoogleSignInButton } from "@/components/google-sign-in";
+import { EmailLinkButton } from "@/components/auth/email-link-button";
+import { emailSignInAvailable } from "@/lib/mailer";
 
 /**
  * Step two: finish it.
@@ -11,7 +13,11 @@ import { GoogleSignInButton } from "@/components/google-sign-in";
  * on that account rather than on whichever one the browser was last used with.
  * That is the whole reason step one exists.
  *
- * Google is still the authority. If someone types one address here and picks a
+ * Google is no longer the only way through. The second option mails a signed,
+ * single-use link to the address from step one, which needs no Google account —
+ * possession of the inbox is the proof. See lib/email-link.ts.
+ *
+ * Where Google is used, Google is still the authority. If someone types one address here and picks a
  * different account over there, the account they picked is the account they get —
  * login_hint is a suggestion to the chooser, not a constraint on it, and treating
  * it as a claim about anybody would be trusting a query parameter.
@@ -49,7 +55,7 @@ export default async function ContinuePage({
     <AuthShell
       step={2}
       title="Almost in"
-      subtitle="One tap with Google and your garage is waiting."
+      subtitle="One tap, or a link in your inbox. Your garage is waiting."
       footer={
         // Its own back, since the app's floating one is not drawn on these
         // screens. It carries the email, so going back lands on a filled field
@@ -71,8 +77,26 @@ export default async function ContinuePage({
         {email}
       </p>
 
-      <div className="mt-5">
+      <div className="mt-5 space-y-3">
         <GoogleSignInButton full callbackUrl={callbackUrl} loginHint={email} />
+
+        {emailSignInAvailable() && (
+          <>
+            {/* A labelled rule rather than a bare line: the two options are
+                alternatives, and a divider with nothing on it reads as a
+                section break instead of a choice. */}
+            <div className="flex items-center gap-3 py-1" aria-hidden>
+              <span className="h-px flex-1 bg-foreground/15" />
+              <span className="util-label opacity-45">or</span>
+              <span className="h-px flex-1 bg-foreground/15" />
+            </div>
+
+            <EmailLinkButton email={email} callbackUrl={callbackUrl} />
+            <p className="text-center text-[12px] leading-relaxed opacity-45">
+              No Google account needed.
+            </p>
+          </>
+        )}
       </div>
     </AuthShell>
   );
