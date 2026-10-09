@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { anySignInAvailable } from "@/lib/sign-in-available";
 
 /**
  * The sign-in wall.
@@ -41,15 +42,16 @@ export default auth((request) => {
   const { pathname, search } = request.nextUrl;
 
   /**
-   * Fail open when there is nothing to sign in with.
+   * Fail open only when there is genuinely no way in.
    *
-   * If the Google credentials are missing then NextAuth registers no providers,
-   * the sign-in page has no button, and gating the site would make every single
-   * URL redirect to a screen that cannot let anyone through. A missing
-   * environment variable would take the whole site down with no way back in,
-   * which is a worse failure than an ungated one.
+   * Gating a site whose sign-in screen cannot let anyone through would send
+   * every URL, including the one that would fix it, to a dead end. But this
+   * used to test for Google specifically, and a link mailed to an address signs
+   * somebody in with no Google account involved — so on any deployment with
+   * email sign-in and no Google, the wall concluded nobody could get in and
+   * let everybody through instead. It asks about every provider now.
    */
-  if (!process.env.AUTH_GOOGLE_ID || !process.env.AUTH_GOOGLE_SECRET) {
+  if (!anySignInAvailable()) {
     return NextResponse.next();
   }
 

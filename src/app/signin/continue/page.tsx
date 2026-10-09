@@ -4,7 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { GoogleSignInButton } from "@/components/google-sign-in";
 import { EmailLinkButton } from "@/components/auth/email-link-button";
-import { emailSignInAvailable } from "@/lib/mailer";
+import { emailSignInAvailable, googleSignInAvailable } from "@/lib/sign-in-available";
 
 /**
  * Step two: finish it.
@@ -78,23 +78,32 @@ export default async function ContinuePage({
       </p>
 
       <div className="mt-5 space-y-3">
-        <GoogleSignInButton full callbackUrl={callbackUrl} loginHint={email} />
+        {/* Only what actually works. A Google button on a deployment with no
+            Google credentials opens a chooser that errors, which reads as the
+            app being broken rather than as that route not being set up. */}
+        {googleSignInAvailable() && (
+          <GoogleSignInButton full callbackUrl={callbackUrl} loginHint={email} />
+        )}
+
+        {googleSignInAvailable() && emailSignInAvailable() && (
+          // A labelled rule rather than a bare line: these are alternatives,
+          // and a divider with nothing on it reads as a section break instead
+          // of a choice. Only drawn when there are in fact two things to divide.
+          <div className="flex items-center gap-3 py-1" aria-hidden>
+            <span className="h-px flex-1 bg-foreground/15" />
+            <span className="util-label opacity-45">or</span>
+            <span className="h-px flex-1 bg-foreground/15" />
+          </div>
+        )}
 
         {emailSignInAvailable() && (
           <>
-            {/* A labelled rule rather than a bare line: the two options are
-                alternatives, and a divider with nothing on it reads as a
-                section break instead of a choice. */}
-            <div className="flex items-center gap-3 py-1" aria-hidden>
-              <span className="h-px flex-1 bg-foreground/15" />
-              <span className="util-label opacity-45">or</span>
-              <span className="h-px flex-1 bg-foreground/15" />
-            </div>
-
             <EmailLinkButton email={email} callbackUrl={callbackUrl} />
-            <p className="text-center text-[12px] leading-relaxed opacity-45">
-              No Google account needed.
-            </p>
+            {googleSignInAvailable() && (
+              <p className="text-center text-[12px] leading-relaxed opacity-45">
+                No Google account needed.
+              </p>
+            )}
           </>
         )}
       </div>

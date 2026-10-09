@@ -1,5 +1,6 @@
 import { AuthShell } from "@/components/auth/auth-shell";
 import { EmailStep } from "@/components/auth/email-step";
+import { anySignInAvailable } from "@/lib/sign-in-available";
 
 /**
  * Step one: who you are.
@@ -47,7 +48,10 @@ export default async function SignInPage({
         initialEmail={first(params.email)}
         // Read here rather than asked for over the network. The only API that
         // knew the answer is now behind the wall this page is the door to.
-        authEnabled={!!process.env.AUTH_GOOGLE_ID && !!process.env.AUTH_GOOGLE_SECRET}
+        // Any provider counts: step two offers Google and an emailed link, and
+        // testing for Google alone disabled Continue on a deployment where the
+        // email route worked.
+        authEnabled={anySignInAvailable()}
       />
     </AuthShell>
   );
