@@ -212,7 +212,7 @@ function HuntSpotInner() {
                 </p>
                 <button
                   onClick={startCam}
-                  className="rounded-thumb bg-carz px-6 py-2.5 font-bold text-[#1f1f1f]"
+                  className="rounded-thumb bg-carz px-6 py-2.5 font-bold text-carz-ink"
                 >
                   {camError ? "Try again" : "Turn on camera"}
                 </button>
@@ -353,7 +353,7 @@ function ClaimPrize({ carId, bounty, shot }: { carId: string; bounty: number; sh
     return (
       <button
         onClick={() => setOpen(true)}
-        className="mt-4 w-full rounded-thumb bg-carz py-2.5 font-black text-[#1f1f1f] transition hover:opacity-90"
+        className="mt-4 w-full rounded-thumb bg-carz py-2.5 font-black text-carz-ink transition hover:opacity-90"
       >
         Claim prize
       </button>

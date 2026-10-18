@@ -120,7 +120,7 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
     return (
       <>
         <main className="mx-auto w-full max-w-3xl px-5 py-10">
-          <div className="h-96 w-full animate-pulse bg-foreground/[0.06]" />
+          <div className="h-96 w-full animate-pulse rounded-card bg-foreground/[0.06]" />
         </main>
       </>
     );
@@ -201,7 +201,7 @@ export default function AuctionDetailPage({ params }: { params: Promise<{ id: st
             ) : (
               <div className="mt-6">
                 <div className="flex gap-px rounded-thumb border border-[var(--line-card)] bg-foreground/10">
-                  <div className="flex flex-1 items-center bg-background text-foreground px-3">
+                  <div className="flex flex-1 items-center rounded-l-card bg-background text-foreground px-3">
                     <span className="">$</span>
                     <input
                       value={amount}
@@ -254,11 +254,11 @@ function ResultBox({ a }: { a: Auction }) {
   // Winner sees the seller's contact. Seller sees who won.
   if (a.youAreWinner && a.contact) {
     return (
-      <div className="bg-carz p-5 ">
+      <div className="rounded-card bg-carz p-5 ">
         <div className="util-label">You won</div>
         <h3 className="display mt-1 text-[34px]">Won for {money(a.currentBid)}</h3>
         <p className="mt-2 text-[14px] font-medium">Contact the seller to arrange the sale:</p>
-        <p className="mt-2 select-all bg-carz-ink px-3 py-2 font-mono text-[14px] ">{a.contact}</p>
+        <p className="mt-2 select-all rounded-thumb bg-carz-ink px-3 py-2 font-mono text-[14px] ">{a.contact}</p>
       </div>
     );
   }
@@ -271,7 +271,7 @@ function ResultBox({ a }: { a: Auction }) {
           Winner: <span className="font-semibold ">{a.topBidderName}</span> — they&apos;ve been shown your contact to reach out.
         </p>
         {a.contact && (
-          <p className="mt-2 select-all border border-[var(--line-card)] bg-background text-foreground px-3 py-2 font-mono text-[14px] ">
+          <p className="mt-2 select-all rounded-thumb border border-[var(--line-card)] bg-background text-foreground px-3 py-2 font-mono text-[14px] ">
             Your contact: {a.contact}
           </p>
         )}

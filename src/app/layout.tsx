@@ -70,25 +70,20 @@ export default function RootLayout({
         />
         {/* The cyan gradient bars that used to sit behind every page are gone.
             The background is #000, flat. */}
-        {/* min-height one pixel past the viewport, on purpose.
-            
-            Safari slides its bottom toolbar in the moment a page becomes tall
-            enough to scroll, and that shrinks the visual viewport — which a
-            position:fixed bottom element correctly follows by moving up. So a
-            page that loads short and then grows makes the nav jump, which is
-            what opening Garage did: the member check renders one line of text,
-            then the gallery arrives and the page is suddenly scrollable.
-            
-            Being scrollable from the first paint means the toolbar is already
-            where it is going to be, so nothing moves when the content lands.
-            One pixel is not reachable by a drag — body already sets
-            overscroll-behavior-y: none — it only settles the toolbar. */}
+        {/* Exactly the viewport, not a pixel more.
+
+            It used to be 100dvh+1px so that Safari's bottom toolbar was already
+            slid in at first paint and could not shift the docked nav when a
+            short page later grew. The cost was that every page in the app
+            scrolled by one pixel, which is the stray scroll on screens that
+            should not move at all. The jump it prevented is the lesser of the
+            two, and only on Safari, and only on pages that start short. */}
         {/* The app is a 480px column, centred, with black either side of it.
             Applied once here rather than screen by screen: a page that sets its
             own max-w-2xl inside this is simply capped at 480, so the pages not
             yet rebuilt get the desktop frame too. */}
         <div
-          className="relative z-10 mx-auto flex w-full max-w-[480px] min-h-[calc(100dvh+1px)] flex-1 flex-col"
+          className="relative z-10 mx-auto flex w-full max-w-[480px] min-h-[100dvh] flex-1 flex-col"
           style={{ paddingTop: "var(--safe-top)" }}
         >
           {/* Inside Providers on purpose: the nav reads the session, and being

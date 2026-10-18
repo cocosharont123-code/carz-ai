@@ -266,7 +266,7 @@ function ProfileInner() {
               </p>
             </div>
 
-            {error && <div className="border border-carz/40 bg-carz/10 p-3 text-[14px] ">{error}</div>}
+            {error && <div className="rounded-card border border-carz/40 bg-carz/10 p-3 text-[14px] ">{error}</div>}
 
             <Button
               onClick={save}

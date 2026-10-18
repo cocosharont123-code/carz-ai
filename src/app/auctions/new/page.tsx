@@ -250,7 +250,7 @@ function NewAuctionInner() {
               <button
                 onClick={generateWithAI}
                 disabled={aiLoading || !image}
-                className="util-label mt-3 flex w-full items-center justify-center gap-2 border border-carz/50 bg-carz/10 py-3  transition hover:bg-carz  disabled:cursor-not-allowed disabled:opacity-40"
+                className="util-label mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-carz/50 bg-carz/10 py-3  transition hover:bg-carz  disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {aiLoading ? "AI is reading your photo…" : "Auto-fill listing with AI"}
               </button>
@@ -390,7 +390,7 @@ function NewAuctionInner() {
               onClick={submit}
               disabled={saving}
               aria-busy={saving || undefined}
-              className="util-label flex w-full items-center justify-center gap-2 bg-carz py-4  transition hover:brightness-95 disabled:opacity-40"
+              className="util-label flex w-full items-center justify-center gap-2 rounded-full bg-carz py-4  transition hover:brightness-95 disabled:opacity-40"
             >
               {saving && <Spinner className="h-3.5 w-3.5" />}
               {saving ? "Publishing…" : "Publish listing"}
