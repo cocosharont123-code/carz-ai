@@ -21,6 +21,9 @@ export type CarSpecs = Pick<
   | "reliability"
   | "collectibility"
   | "valueTimeline"
+  | "unitsProduced"
+  | "unitsInCountry"
+  | "unitsCountryName"
 >;
 
 // Global "rarest cars spotted" leaderboard, shared across ALL accounts.

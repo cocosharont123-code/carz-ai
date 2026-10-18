@@ -25,7 +25,21 @@ export function fmtUsd(n: number): string {
   return "$" + Math.round(n).toLocaleString("en-US");
 }
 
-export function RarityMeter({ score, reason }: { score: number; reason?: string }) {
+export function RarityMeter({
+  score,
+  reason,
+  produced,
+  inCountry,
+  countryName,
+}: {
+  score: number;
+  reason?: string;
+  /** Built worldwide, as a phrase. "" when there is no published figure. */
+  produced?: string;
+  /** Roughly how many are in the viewer's country. "" when not defensible. */
+  inCountry?: string;
+  countryName?: string;
+}) {
   if (!score || score <= 0) return null;
   const raw = Math.max(0, Math.round(score));
   const ultra = raw >= 100;
@@ -68,6 +82,32 @@ export function RarityMeter({ score, reason }: { score: number; reason?: string 
         />
       </div>
       {reason && <p className="mt-2 text-[14px] ">{reason}</p>}
+
+      {/* The two counts behind the score.
+      
+          Each is drawn only when the model actually returned one. Production
+          totals are often published and the per-country figure almost never is,
+          so these fill in independently rather than as a pair — and the second
+          is labelled an estimate, because a number presented flatly reads as a
+          record when it is a judgement. */}
+      {(produced || inCountry) && (
+        <dl className="mt-3 grid grid-cols-2 gap-2">
+          {produced && (
+            <div className="glass-chip rounded-thumb p-3">
+              <dt className="text-[12px] uppercase tracking-wide opacity-60">Built</dt>
+              <dd className="mt-0.5 text-[15px] font-semibold">{produced}</dd>
+            </div>
+          )}
+          {inCountry && (
+            <div className="glass-chip rounded-thumb p-3">
+              <dt className="text-[12px] uppercase tracking-wide opacity-60">
+                {countryName ? `In ${countryName}` : "Near you"} · est.
+              </dt>
+              <dd className="mt-0.5 text-[15px] font-semibold">{inCountry}</dd>
+            </div>
+          )}
+        </dl>
+      )}
     </div>
   );
 }
@@ -213,7 +253,13 @@ export function CarStatSheet({ car }: { car: Partial<CarReport> }) {
       </DetailRow>
 
       <DetailRow label="Rarity" has={!!car.rarityScore}>
-        <RarityMeter score={car.rarityScore ?? 0} reason={car.rarityReason} />
+        <RarityMeter
+          score={car.rarityScore ?? 0}
+          reason={car.rarityReason}
+          produced={car.unitsProduced}
+          inCountry={car.unitsInCountry}
+          countryName={car.unitsCountryName}
+        />
       </DetailRow>
     </>
   );

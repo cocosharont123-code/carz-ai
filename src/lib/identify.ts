@@ -43,6 +43,12 @@ export type CarReport = {
   parentCompany: string;
   rarityScore: number; // 0-100
   rarityReason: string;
+  /** How many were built worldwide, as a phrase: "about 1,270". "" if unknown. */
+  unitsProduced: string;
+  /** Roughly how many are in the viewer's country, and which country that is. */
+  unitsInCountry: string;
+  /** The country the above was estimated for, so the label can name it. */
+  unitsCountryName: string;
   valueTimeline: { year: string; usd: number }[];
   goodDealUsd: number;
   // Max-tier
@@ -225,6 +231,20 @@ const SPECS_SCHEMA = objSchema({
       "How rare this car is: 0 (extremely common) to 100 (extremely rare). Reserve scores of 100 or above (up to 120) ONLY for the very rarest cars — genuine one-offs, prototypes, and sub-100-production hypercars/coachbuilt specials. These are 'ultra rare'.",
   },
   rarityReason: { type: "string", description: "One short sentence explaining the rarity score." },
+  unitsProduced: {
+    type: "string",
+    description:
+      "Total built worldwide, as a short phrase like 'about 1,270' or '36,000+'. Use '' if you do not genuinely know a published figure — do not estimate this one.",
+  },
+  unitsInCountry: {
+    type: "string",
+    description:
+      "Roughly how many are in the viewer's country TODAY, as a short phrase like 'a few hundred' or 'under 50'. This is almost never published, so answer only when the figure or a well-known registry makes it reasonable, and use '' otherwise. Never invent a precise-looking number.",
+  },
+  unitsCountryName: {
+    type: "string",
+    description: "The country unitsInCountry refers to, exactly as given in the prompt. '' if none was given.",
+  },
   valueTimeline: {
     type: "array",
     description:
@@ -780,10 +800,20 @@ export async function identifyCar(
 export async function describeCar(
   identity: Identity,
   premium: boolean,
+  /**
+   * Where the person asking is, so "how many are near me" has a country to mean.
+   * Omitted when the request carries no location — the model is told to leave
+   * the per-country figure empty rather than pick a country for itself.
+   */
+  country?: string,
 ): Promise<Partial<CarReport>> {
   const specs = await ask<Partial<CarReport>>({
     images: [],
-    prompt: `${SPECS_PROMPT}${premium ? PROMPT_PREMIUM : PROMPT_BASIC}\n\nThe car is: ${describe(identity)}.`,
+    prompt: `${SPECS_PROMPT}${premium ? PROMPT_PREMIUM : PROMPT_BASIC}\n\nThe car is: ${describe(identity)}.${
+      country
+        ? `\n\nThe person asking is in ${country}. Fill unitsCountryName with exactly that, and unitsInCountry only if a per-country figure is genuinely defensible.`
+        : `\n\nThe person's country is unknown. Leave unitsInCountry and unitsCountryName empty.`
+    }`,
     schema: SPECS_SCHEMA,
     model: SPECS_MODEL,
     maxTokens: 6000,
@@ -802,6 +832,9 @@ export async function describeCar(
     parentCompany: specs.parentCompany ?? "",
     rarityScore: typeof specs.rarityScore === "number" ? specs.rarityScore : 0,
     rarityReason: specs.rarityReason ?? "",
+    unitsProduced: specs.unitsProduced ?? "",
+    unitsInCountry: specs.unitsInCountry ?? "",
+    unitsCountryName: specs.unitsCountryName ?? "",
     valueTimeline: Array.isArray(specs.valueTimeline) ? specs.valueTimeline : [],
     goodDealUsd: typeof specs.goodDealUsd === "number" ? specs.goodDealUsd : 0,
     valuation: specs.valuation ?? "",
@@ -846,6 +879,9 @@ function normalize(input: Partial<CarReport>): CarReport {
     parentCompany: input.parentCompany ?? "",
     rarityScore: typeof input.rarityScore === "number" ? input.rarityScore : 0,
     rarityReason: input.rarityReason ?? "",
+    unitsProduced: input.unitsProduced ?? "",
+    unitsInCountry: input.unitsInCountry ?? "",
+    unitsCountryName: input.unitsCountryName ?? "",
     valueTimeline: Array.isArray(input.valueTimeline) ? input.valueTimeline : [],
     goodDealUsd: typeof input.goodDealUsd === "number" ? input.goodDealUsd : 0,
     valuation: input.valuation ?? "",

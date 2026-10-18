@@ -7,6 +7,25 @@ import { auth } from "@/auth";
 import { getProfile, isMaxMember } from "@/lib/profile-blob";
 
 export const runtime = "nodejs";
+
+/**
+ * The country the request came from, for the "how many are in your country"
+ * figure.
+ *
+ * Vercel puts the geo-IP country on every request; locally and anywhere else
+ * the header is absent and the figure is simply skipped. No extra service, no
+ * permission prompt, and nothing stored — it is read off the request and used
+ * for the length of it.
+ */
+function viewerCountry(req: Request): string | undefined {
+  const code = req.headers.get("x-vercel-ip-country")?.trim();
+  if (!code || code.length !== 2) return undefined;
+  try {
+    return new Intl.DisplayNames(["en"], { type: "region" }).of(code.toUpperCase()) ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
 export const maxDuration = 120;
 
 // The half of a car report that doesn't need the photo. /api/identify returns
@@ -61,6 +80,7 @@ export async function POST(req: Request) {
         trimGuess: (b.trimGuess || "").trim(),
       },
       plan.premiumReport && isMax,
+      viewerCountry(req),
     );
 
     const status = planStatusFor(effectivePlan, user);

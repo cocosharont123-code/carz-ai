@@ -461,6 +461,9 @@ export default function SpotPage() {
                 valuation: full.valuation,
                 reliability: full.reliability,
                 collectibility: full.collectibility,
+                unitsProduced: full.unitsProduced,
+                unitsInCountry: full.unitsInCountry,
+                unitsCountryName: full.unitsCountryName,
                 valueTimeline: full.valueTimeline,
               },
               scanId,
@@ -945,7 +948,13 @@ export default function SpotPage() {
 
                   <DetailRow label="Rarity"
                     open has={car.rarityScore > 0}>
-                    <RarityMeter score={car.rarityScore} reason={car.rarityReason} />
+                    <RarityMeter
+                      score={car.rarityScore}
+                      reason={car.rarityReason}
+                      produced={car.unitsProduced}
+                      inCountry={car.unitsInCountry}
+                      countryName={car.unitsCountryName}
+                    />
                   </DetailRow>
 
                   <DetailRow label="Similar models" has={!!car.alsoConsidered}>

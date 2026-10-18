@@ -23,6 +23,7 @@ const SPEC_TEXT = [
   "engine", "drivetrain", "bodyStyle", "generation", "trimGuess", "color",
   "countryOfOrigin", "parentCompany", "horsepower", "zeroToSixty", "topSpeed",
   "priceRangeUsed", "valuation", "reliability", "collectibility",
+  "unitsProduced", "unitsInCountry", "unitsCountryName",
 ] as const;
 
 function pickSpecs(raw: unknown): CarSpecs | undefined {

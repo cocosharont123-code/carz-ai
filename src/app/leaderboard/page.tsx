@@ -332,6 +332,31 @@ function CarViewer({
                 {car.rarityReason}
               </p>
             )}
+
+            {/* The counts behind the score, under the meter they explain.
+            
+                Here rather than in the stat sheet below: the sheet's Rarity row
+                keys off a rarityScore, which on a board entry lives at the top
+                level rather than inside the stored specs — so that row never
+                draws here, and the viewer has its own meter anyway. */}
+            {(car.specs?.unitsProduced || car.specs?.unitsInCountry) && (
+              <dl className="mt-3 grid grid-cols-2 gap-2">
+                {car.specs?.unitsProduced && (
+                  <div className="glass-chip rounded-thumb p-2.5">
+                    <dt className="text-[11px] uppercase tracking-wide opacity-60">Built</dt>
+                    <dd className="mt-0.5 text-[14px] font-semibold">{car.specs.unitsProduced}</dd>
+                  </div>
+                )}
+                {car.specs?.unitsInCountry && (
+                  <div className="glass-chip rounded-thumb p-2.5">
+                    <dt className="text-[11px] uppercase tracking-wide opacity-60">
+                      {car.specs.unitsCountryName ? `In ${car.specs.unitsCountryName}` : "Near you"} · est.
+                    </dt>
+                    <dd className="mt-0.5 text-[14px] font-semibold">{car.specs.unitsInCountry}</dd>
+                  </div>
+                )}
+              </dl>
+            )}
           </div>
 
           {/* The rest of the report, the same sheet Spot draws. Stored with the
