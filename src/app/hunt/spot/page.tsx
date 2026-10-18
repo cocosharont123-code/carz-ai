@@ -239,11 +239,7 @@ function HuntSpotInner() {
                 {busy && <Spinner className="h-4 w-4" />}
                 {busy ? "Identifying…" : "Snap & identify"}
               </button>
-            ) : (
-              <p className="text-center text-[12px] ">
-                Point at a wanted car and snap it live to claim the bounty.
-              </p>
-            )}
+            ) : null}
           </div>
         </div>
 

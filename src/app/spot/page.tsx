@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Button as GlassButton, StatBox } from "@/components/ui/editorial";
 import { Spec, RarityMeter, ValueChart, DetailRow } from "@/components/car/car-stats";
 import { ProgressiveFluxLoader } from "@/components/ui/progressive-flux-loader";
-import { ThinkingOrb, type OrbState } from "thinking-orbs";
 import { Input } from "@/components/ui/input";
 import { useImageUpload } from "@/components/hooks/use-image-upload";
 import { CarCustomizer } from "@/components/car-customizer";
@@ -77,14 +76,12 @@ function ScanningButton({
   progress,
   phases = SCAN_PHASES,
   hint = "Reading badges, lights and body lines — this takes a few seconds",
-  orbState = "shaping",
 }: {
   progress: number;
   phases?: { at: number; label: string }[];
   hint?: string;
   /** Which kind of work is running, so the orb says something rather than
    *  only spinning. */
-  orbState?: OrbState;
 }) {
   return (
     <div
@@ -106,16 +103,6 @@ function ScanningButton({
       }
     >
       <div className="flex items-center gap-4">
-        {/* aria-label is blanked on purpose: the panel around it is already a
-            live region announcing the phase, and the orb would otherwise be a
-            second thing for a screen reader to read out. */}
-        <ThinkingOrb
-          state={orbState}
-          size={64}
-          theme="dark"
-          aria-label=""
-          className="shrink-0"
-        />
         <div className="min-w-0 flex-1">
           <ProgressiveFluxLoader
             value={progress}
@@ -641,14 +628,9 @@ export default function SpotPage() {
             carz
           </span>
         </header>
-        {/* No "Spot a car" headline. The nav says which page this is, and the
-            two buttons under it say what to do — a 7xl restatement of the tab
-            you just tapped was taking a third of the screen to add nothing.
-            The line under it stays, because it does say something the buttons
-            do not. */}
-        <p className="mt-3 text-[14px] ">
-          Drop in a photo, then hit identify.
-        </p>
+        {/* No headline and no instruction line. The nav says which page this
+            is and the two buttons say what to do; both restatements were
+            spending the top of the screen to add nothing. */}
 
         {status && (
           <p className="util-label mt-3 ">
@@ -743,9 +725,6 @@ export default function SpotPage() {
               {CORNERS.map((c) => (
                 <span key={c.key} aria-hidden className={cn("pointer-events-none absolute h-8 w-8", c.cls)} />
               ))}
-              <p className="absolute inset-x-0 bottom-5 text-center text-[14px] text-[var(--color-secondary-text)]">
-                Point your camera at any car
-              </p>
             </div>
           ) : (
             <div className="relative">
@@ -817,7 +796,6 @@ export default function SpotPage() {
               // Each pipeline is doing a different kind of work, and the orb
               // has a state for each: Precise takes
               // a second look and adjudicates, Lightning reads the silhouette.
-              orbState={scanMode === "precise" ? "solving" : "shaping"}
               hint={
                 scanMode === "precise"
                   ? `${SCAN_MODE_META.precise.name} scan — a second look, a magnified detail, and a tiebreak`

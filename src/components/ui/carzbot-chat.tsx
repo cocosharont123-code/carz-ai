@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Spinner } from "@/components/ui/editorial";
 import {
   ArrowUp as ArrowUpIcon,
   ScanLine,
@@ -11,7 +12,6 @@ import {
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { SiriWave } from "@/components/ui/siri-wave";
-import { ThinkingOrb } from "thinking-orbs";
 import { cn } from "@/lib/utils";
 
 type Turn = {
@@ -173,7 +173,6 @@ export function CarzBotChat() {
             />
             <div>
               <h1 className="display text-[34px]">CarzBot</h1>
-              <p className="mt-1.5 text-[15px] opacity-60">Ask anything about cars.</p>
             </div>
           </div>
         ) : (
@@ -198,12 +197,7 @@ export function CarzBotChat() {
                 aria-live="polite"
                 className="glass-card flex max-w-[85%] items-center gap-3 rounded-card px-4 py-3"
               >
-                {/* "searching" rather than the default: what it is waiting on
-                    is a lookup about a car, and the orb says which kind of
-                    work is happening instead of only that work is happening.
-                    64 and 20 are separate tuned designs, not a scale, so this
-                    takes the chat-avatar one as shipped. */}
-                <ThinkingOrb state="searching" size={64} theme="dark" aria-label="" />
+                <Spinner className="h-5 w-5" />
                 <span className="text-[14px] opacity-60">Thinking…</span>
               </div>
             )}

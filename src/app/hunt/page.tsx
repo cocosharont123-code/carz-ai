@@ -3,10 +3,9 @@
 import { useEffect, useState } from "react";
 import { WANTED, HUNT_RULE, getHunt, joinHunt, totalEarned, type HuntState } from "@/lib/hunt";
 import { Trophy, Crosshair, X } from "lucide-react";
-import { Button } from "@/components/ui/editorial";
+import { Button, Spinner } from "@/components/ui/editorial";
 import { MemberGate } from "@/components/member-gate";
 import { cn } from "@/lib/utils";
-import { ThinkingOrb } from "thinking-orbs";
 
 const money = (n: number) => "$" + n.toLocaleString("en-US");
 const count = (n: number) => n.toLocaleString("en-US");
@@ -117,7 +116,7 @@ function HuntInner() {
         aria-busy="true"
         className="fixed inset-0 z-[80] flex flex-col items-center justify-center gap-6 bg-background/85 backdrop-blur-xl"
       >
-        <ThinkingOrb state="connecting" size={64} theme="dark" aria-label="" />
+        <Spinner className="h-8 w-8" />
         <div className="text-center">
           <p className="display text-[20px]">Entering the hunt</p>
           <p className="mt-2 text-[15px] opacity-60">Putting your name on the board…</p>

@@ -173,11 +173,6 @@ function SearchInner() {
           </p>
         )}
 
-        {!searched && !loading && (
-          <p className="py-10 text-center text-[15px] opacity-50">
-            Search for someone by name or @handle.
-          </p>
-        )}
       </div>
 
     </main>

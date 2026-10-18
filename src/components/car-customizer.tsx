@@ -214,9 +214,6 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
   return (
     <div className="mt-6 border-t border-[var(--line-card)] pt-5">
       <h3 className="text-[12px] font-bold uppercase tracking-wide text-carz">Customize this car</h3>
-      <p className="mb-3 mt-1 text-[14px] opacity-70">
-        Pick a look and the AI repaints your photo — same car, same shot, new style.
-      </p>
 
       {/* Body colour */}
       <div className="mt-4">
@@ -236,7 +233,7 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
                 </button>
               </>
             ) : (
-              <span className="text-[14px] opacity-50">Tap the wheel to choose a colour</span>
+              <span aria-hidden />
             )}
           </div>
         </div>

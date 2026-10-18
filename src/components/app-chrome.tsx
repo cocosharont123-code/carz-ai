@@ -1,7 +1,6 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { LegalNotice } from "@/components/legal-notice";
 import { BottomNav } from "@/components/bottom-nav";
 
 /**
@@ -25,19 +24,15 @@ export function AppChrome() {
   if (pathname.startsWith("/signin")) return null;
 
   /**
-   * Full-bleed pages get the nav but not the standing legal line.
+   * The standing "by using Carz AI you agree" line is gone from every page.
    *
-   * The line is a paragraph in the flow, so on a page already sized to the
-   * whole viewport it is pure extra height -- which is the stray scroll on the
-   * map. The notice still appears under every page that scrolls anyway, which is
-   * every other one, so nothing stops binding by use.
+   * It was browsewrap: nobody was stopped, and the terms bound by use. That was
+   * the only thing binding anyone while the app could be browsed signed out.
+   * The wall changed it — nothing is reachable without a session now, so every
+   * single person passes the sign-in screen, which states acceptance above the
+   * button they press. Acceptance is captured there, once, instead of restated
+   * under every screen. Both documents stay linked from Settings and both URLs
+   * stay public.
    */
-  const fullBleed = pathname.startsWith("/map");
-
-  return (
-    <>
-      {!fullBleed && <LegalNotice />}
-      <BottomNav />
-    </>
-  );
+  return <BottomNav />;
 }

@@ -254,10 +254,6 @@ function NewAuctionInner() {
               >
                 {aiLoading ? "AI is reading your photo…" : "Auto-fill listing with AI"}
               </button>
-              <p className="mt-1.5 text-[12px] ">
-                Upload a photo and let Carz AI identify the car and write the title, make, model &
-                description for you.
-              </p>
               {aiMsg && <p className="mt-2 text-[14px] text-neon-green">{aiMsg}</p>}
             </div>
 
