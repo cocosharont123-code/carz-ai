@@ -22,6 +22,16 @@ export type Profile = {
   bio?: string;
   /** Channel cover image: a base64 thumbnail, or "" for the gradient. */
   cover?: string;
+  /**
+   * The photo behind the home page hero, chosen from the viewer's garage.
+   *
+   * Stored as a data URL rather than a reference, which is forced by where the
+   * garage lives: localStorage, per browser, as base64 thumbnails the server has
+   * never seen. There is no id to point at and no blob URL to copy. Keeping the
+   * bytes on the profile is also what lets the page render the right photo on
+   * the server, so the default never flashes first.
+   */
+  homeHeroPhoto?: string;
   ts: number;
   member?: boolean; // any paid membership
   /**
@@ -497,6 +507,47 @@ export async function startTrial(
   p.trialUsed = true;
   p.trialEndsAt = Date.now() + trialMs(tier);
   if (!p.memberSince) p.memberSince = Date.now();
+  all[key] = p;
+  await writeAll(all);
+  return { ok: true, profile: p };
+}
+
+/**
+ * Set or clear the home hero photo.
+ *
+ * Separate from setProfile because that one requires a username and runs it
+ * through validation -- correct when someone is editing their profile, wrong
+ * when they are picking a background, where a username that happens to be
+ * invalid would block an unrelated change.
+ *
+ * What this cannot do is verify the photo is from the caller's garage. The spec
+ * asked for that, and it is not possible as the garage is built: it is
+ * localStorage on one device and the server has never seen a single entry, so
+ * there is no list here to check a photo against. What is enforced is the part
+ * that actually protects anything -- the session decides whose profile is
+ * written, and safeImageDataUrl rejects anything that is not a small image data
+ * URL, so the field cannot be used to stash arbitrary content.
+ */
+export async function setHomeHeroPhoto(
+  email: string,
+  photo: string | null,
+): Promise<{ ok: boolean; error?: string; profile?: Profile }> {
+  const all = await readAll();
+  const key = keyFor(email);
+  const p = recordIn(all, email);
+
+  if (photo === null) {
+    delete p.homeHeroPhoto;
+  } else {
+    // 120k matches the channel cover's cap. A garage thumbnail is 360px at
+    // quality 0.55, so it lands far under this; the cap is what stops the
+    // profile document growing without bound, since it is read and rewritten
+    // whole on every profile change.
+    const safe = safeImageDataUrl(photo, 120_000);
+    if (!safe) return { ok: false, error: "That photo can't be used as a background." };
+    p.homeHeroPhoto = safe;
+  }
+
   all[key] = p;
   await writeAll(all);
   return { ok: true, profile: p };

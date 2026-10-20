@@ -52,7 +52,19 @@ function useAutoResizeTextarea({ minHeight, maxHeight }: { minHeight: number; ma
 }
 
 export function CarzBotChat() {
-  const [value, setValue] = useState("");
+  /**
+   * Seeded from ?q= so a link can arrive with the question already typed --
+   * which is how the home page's Featured Cars reach this screen.
+   *
+   * Filled, not sent. Auto-sending would fire a paid model call from a link,
+   * on every visit and every refresh, without anyone pressing anything -- and
+   * it would spend a slot of the per-minute limit each time. One tap to send
+   * is the difference between a shortcut and a bill.
+   */
+  const [value, setValue] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return new URLSearchParams(window.location.search).get("q") ?? "";
+  });
   const [turns, setTurns] = useState<Turn[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
