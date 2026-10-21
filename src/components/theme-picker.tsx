@@ -47,7 +47,10 @@ export function ThemePicker() {
     Promise.resolve().then(() => {
       if (cancelled) return;
       const saved = localStorage.getItem("theme");
-      setTheme(saved === "light" || saved === "dark" ? saved : "system");
+      // Dark unless something else was explicitly saved -- the same default
+      // the boot script uses, or the control would show System selected while
+      // the app rendered dark.
+      setTheme(saved === "light" || saved === "system" ? saved : "dark");
     });
     return () => {
       cancelled = true;

@@ -65,7 +65,7 @@ export default function RootLayout({
                every app with a dark mode gets wrong. "system" follows the OS
                and is the default, so a phone in dark mode opens dark without
                anyone choosing anything. */
-            __html: `try{var t=localStorage.getItem('theme')||'system';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);document.documentElement.classList.toggle('light',!d);}catch(e){document.documentElement.classList.add('dark');}`,
+            __html: `try{var t=localStorage.getItem('theme')||'dark';var d=t!=='light'&&(t!=='system'||window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);document.documentElement.classList.toggle('light',!d);}catch(e){document.documentElement.classList.add('dark');}`,
           }}
         />
         <script

@@ -105,9 +105,14 @@
   --radius-sheet: 24px;
 }
 
-:root {
-  /* Light. Same system, inverted: the page is white, the ink is black, and
-     every grey is still R=G=B. */
+/* Light is opt-in. :root is dark.
+   
+   It was the other way round, with the default following the system -- so a
+   phone set to light opened a white app, and if the theme script ever failed
+   to run the app fell back to white as well. Dark is the product; white is a
+   choice someone makes in Settings. Now the fallback for "no class, no JS,
+   script threw" is black. */
+:root.light {
   color-scheme: light;
 
   --surface: #f5f5f5;
@@ -143,7 +148,8 @@
   --glow: 0 2px 14px rgba(0, 0, 0, 0.18);
 }
 
-.dark {
+:root,
+:root.dark {
   color-scheme: dark;
 
   --surface: #121212;
@@ -221,15 +227,9 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* The light theme.
-   
-   These were the dark values under :root while the app was dark-only. Light is
-   a real theme again, chosen in Settings, so :root is light and .dark below
-   carries the dark set.
-   
-   Still the same system: no hue anywhere, every grey R=G=B, one accent that is
-   simply the ink colour. On white that accent is black. */
-:root {
+/* The light theme, opt-in only. See the note above: :root is dark so that
+   the no-JS, script-failed and first-paint cases are all black. */
+:root.light {
   --background: #ffffff;
   --foreground: #000000;
   --card: #f5f5f5;
@@ -264,7 +264,8 @@
   --sidebar-ring: #000000;
 }
 
-.dark {
+:root,
+:root.dark {
   --background: #000000;
   --foreground: #ffffff;
   /* A surface, not a pane of frosted glass with near-black text on it. The old
