@@ -1,10 +1,13 @@
 import Link from "next/link";
-import { Bot, Image as ImageIcon, Trophy, Ticket, ChevronRight, Calendar } from "lucide-react";
+import {
+  Bot, Image as ImageIcon, Trophy, Ticket, ChevronRight, Calendar,
+  Crown, Gavel, Heart, Sparkles, Settings,
+} from "lucide-react";
 import { auth } from "@/auth";
 import { getProfile } from "@/lib/profile-blob";
 import { HomeHero } from "@/components/home/home-hero";
 import { HomeSearch } from "@/components/home/home-search";
-import { FEATURED_CARS, featuredHref } from "@/config/featured-cars";
+import { FeaturedCars } from "@/components/home/featured-cars";
 
 /**
  * Home.
@@ -19,12 +22,27 @@ import { FEATURED_CARS, featuredHref } from "@/config/featured-cars";
  * circle -- the same bar this screen was specified with.
  */
 
-/** Four equal cards. Each goes somewhere that exists. */
+/**
+ * The options row, side-scrolling.
+ *
+ * Four were specified and four fit on screen; the rest scroll in behind them.
+ * That is also what fixes a real hole: replacing the old home's full feature
+ * list with four cards left /settings, /wishlist and /drops with no inbound
+ * link anywhere in the app -- reachable only by typing the URL, and /settings
+ * is where sign-out, scan mode, the theme and account deletion live.
+ *
+ * The first four are the ones asked for, in the order asked for.
+ */
 const QUICK = [
   { href: "/carzbot", Icon: Bot, title: "CarzBot", sub: "Ask anything" },
   { href: "/garage", Icon: ImageIcon, title: "Garage", sub: "Your collection" },
   { href: "/leaderboard", Icon: Trophy, title: "Leaderboard", sub: "Rarest cars" },
   { href: "/events", Icon: Ticket, title: "Events & Drops", sub: "Car meets & launches" },
+  { href: "/pricing", Icon: Crown, title: "Carz PRO", sub: "Membership" },
+  { href: "/auctions", Icon: Gavel, title: "Auctions", sub: "Bid on cars" },
+  { href: "/wishlist", Icon: Heart, title: "Wishlist", sub: "Cars you watch" },
+  { href: "/drops", Icon: Sparkles, title: "Drops", sub: "New launches" },
+  { href: "/settings", Icon: Settings, title: "Settings", sub: "Account & app" },
 ] as const;
 
 export default async function Home() {
@@ -37,19 +55,24 @@ export default async function Home() {
     <main className="w-full px-5 pb-6">
       <HomeHero initialPhoto={profile?.homeHeroPhoto ?? ""} signedIn={!!email} />
 
-      {/* Pulled up onto the hero's fade. The fade ends at solid #000 and the
-          page is #000, so the seam is invisible and the pill reads as sitting
-          on the photo rather than under a box. */}
-      <div className="-mt-3">
+      {/* Fully below the hero. It was pulled up onto the fade by -mt-3, which
+          put the top of the pill over the photo. */}
+      <div className="mt-4">
         <HomeSearch />
       </div>
 
-      <nav aria-label="Quick actions" className="mt-5 grid grid-cols-4 gap-3">
+      {/* Four across at a time, the rest a swipe away. Width is measured from
+          the column rather than the window, because the app is capped at 480px
+          on a desktop and 100vw alone would size these for a monitor. */}
+      <nav
+        aria-label="Quick actions"
+        className="-mx-5 mt-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
         {QUICK.map(({ href, Icon, title, sub }) => (
           <Link
             key={href}
             href={href}
-            className="press glass-card flex min-h-20 flex-col gap-1 rounded-tile p-2.5"
+            className="press glass-card flex min-h-20 w-[calc((min(100vw,480px)-76px)/4)] shrink-0 snap-start flex-col gap-1 rounded-tile p-2.5"
           >
             <Icon className="h-[26px] w-[26px] shrink-0 text-foreground" strokeWidth={1.75} aria-hidden />
             <span className="mt-auto text-[14px] font-bold leading-tight text-foreground">{title}</span>
@@ -58,47 +81,11 @@ export default async function Home() {
         ))}
       </nav>
 
-      <Section title="Featured Cars" href="/search">
-        {/* Exactly three across, measured from the column rather than the
-            window: the app is capped at 480px on a desktop, so 100vw alone
-            would size these for a monitor and show one and a half. */}
-        <div className="-mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {FEATURED_CARS.map((c) => (
-            <Link
-              key={c.id}
-              href={featuredHref(c)}
-              className="press glass-card w-[calc((min(100vw,480px)-64px)/3)] shrink-0 snap-start overflow-hidden rounded-thumb"
-            >
-              <span className="block h-[68px] w-full bg-foreground/[0.06]">
-                {c.photo && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={c.photo}
-                    alt=""
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                    draggable={false}
-                  />
-                )}
-              </span>
-              <span className="flex items-center gap-1 px-2 py-1.5">
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[13px] leading-tight text-foreground">
-                    {c.make}
-                  </span>
-                  <span className="block truncate text-[13px] font-bold leading-tight text-foreground">
-                    {c.model}
-                  </span>
-                </span>
-                <ChevronRight
-                  className="h-4 w-4 shrink-0 text-[var(--color-muted-text)]"
-                  strokeWidth={1.75}
-                  aria-hidden
-                />
-              </span>
-            </Link>
-          ))}
-        </div>
+      {/* Their own spots, with the photo from the scan. It was a hardcoded
+          list pointing at stock files that are not in this repo, which is why
+          no picture ever loaded -- there was nothing to load. */}
+      <Section title="Your Spots" href="/garage">
+        <FeaturedCars />
       </Section>
 
       <Section title="Upcoming Events" href="/events">

@@ -77,10 +77,9 @@ export function HomeHero({
       <div aria-hidden className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/60 to-transparent" />
       <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-transparent via-black/55 to-black" />
 
-      <header className="absolute inset-x-0 top-0 flex items-start justify-between px-5 pt-4">
-        <span className="text-[40px] font-black lowercase leading-none tracking-[-0.03em] text-white">
-          carz
-        </span>
+      {/* No wordmark. It sat directly over the headline and the headline is the
+          thing to read. justify-end keeps the profile button where it was. */}
+      <header className="absolute inset-x-0 top-0 flex items-start justify-end px-5 pt-4">
         <Link
           href="/profile"
           aria-label="Your profile"
@@ -97,9 +96,6 @@ export function HomeHero({
           <span className="block text-white/60">Know</span>
           <span className="block text-white/60">Everything.</span>
         </h1>
-        <p className="mt-3 text-[11px] uppercase tracking-[0.2em] text-white/60">
-          Specs · Prices · Performance
-        </p>
       </div>
 
       {/* Signed-out viewers have no garage on the server and nothing to pick

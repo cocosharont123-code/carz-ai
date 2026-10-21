@@ -240,7 +240,11 @@ function CarViewer({
 
   return (
     <>
-      <div onClick={onClose} aria-hidden className="fixed inset-0 z-[75] bg-background/70 backdrop-blur-sm" />
+      {/* No backdrop-blur here. The card on top is already a backdrop-filtered
+          surface, and a second one covering the entire viewport behind it means
+          the compositor blurs the whole screen twice every frame -- which is the
+          lag. A plain scrim costs nothing and hides the same amount. */}
+      <div onClick={onClose} aria-hidden className="fixed inset-0 z-[75] bg-background/80" />
       <div
         role="dialog"
         aria-modal="true"
@@ -270,8 +274,12 @@ function CarViewer({
               desktop, and bounded in dvh so the card plus the meter under it still
               fits without scrolling. */}
           <div
-            className="mx-auto overflow-hidden rounded-[26%] bg-foreground/[0.06]"
-            style={{ width: "min(74vw, 44dvh)", height: "min(74vw, 44dvh)" }}
+            className="mx-auto aspect-square w-full overflow-hidden rounded-[26%] bg-foreground/[0.06]"
+            // Sized from the card, not the viewport. It was min(74vw, 44dvh),
+          // and the card is 22rem wide less 1rem of padding either side -- so
+          // on a wide phone 74vw exceeded the space and the photo pushed out
+          // through the edges. A square that is 100% of its container cannot.
+          style={{ maxHeight: "44dvh" }}
           >
             <CarPhoto
               src={car.image || undefined}
@@ -297,9 +305,11 @@ function CarViewer({
                 : "bg-foreground/[0.06]",
             )}
           >
-            <div className="flex items-baseline justify-between">
-              <span className="util-label opacity-70">Rarity</span>
-              <span className="text-[14px] font-bold">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="util-label shrink-0 opacity-70">Rarity</span>
+              {/* min-w-0 and truncate, or "Extremely rare" beside the score runs
+                  past the edge of the card on a narrow phone. */}
+              <span className="min-w-0 truncate text-[14px] font-bold">
                 {raw}/100 · <span className="text-neon-red">{rarityLabel(raw)}</span>
               </span>
             </div>
