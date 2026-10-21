@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import Link from "next/link";
 import { User, Sparkles, X, Check } from "lucide-react";
@@ -31,12 +32,10 @@ export function HomeHero({
   signedIn: boolean;
 }) {
   const [saved, setSaved] = useState(initialPhoto);
-  const [preview, setPreview] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [failed, setFailed] = useState(false);
 
-  // What is on screen: the preview while picking, otherwise what is saved.
-  const photo = preview ?? saved;
+  const photo = saved;
   const usingCustom = !!photo && !failed;
 
   return (
@@ -114,14 +113,9 @@ export function HomeHero({
       {open && (
         <HeroPicker
           current={saved}
-          onPreview={setPreview}
-          onClose={() => {
-            setPreview(null);
-            setOpen(false);
-          }}
+          onClose={() => setOpen(false)}
           onSaved={(next) => {
             setSaved(next);
-            setPreview(null);
             setFailed(false);
             setOpen(false);
           }}
@@ -132,20 +126,30 @@ export function HomeHero({
 }
 
 /**
- * The picker sheet: the garage as a grid, plus a Default tile.
+ * The picker: centred in front of you, with its own preview.
  *
- * Fixed to the viewport rather than inside the hero, so it is a sheet over the
- * page rather than a panel clipped by a 45vh box -- and the hero stays visible
- * above it, which is the point of previewing.
+ * It was a bottom sheet whose scrim deliberately stopped partway up so the hero
+ * showed through and could be previewed live. Three things came out of that.
+ * The panel sat at the bottom of the screen instead of in front of you. The
+ * uncovered strip left the page behind scrollable and tappable, which is the
+ * stray scrolling. And relying on seeing behind the sheet meant the panel had
+ * to stay short, so a garage of any size became a cramped scrolling grid.
+ *
+ * Centred, with a full scrim, and the preview moved inside: the strip at the
+ * top shows exactly what the hero will look like, at the hero's own aspect, so
+ * nothing needs to be visible behind the dialog at all.
+ *
+ * Rendered through a portal to <body>. A fixed element is positioned against
+ * the viewport only while no ancestor has a transform, filter or containment on
+ * it; the portal puts it where none of that can reach, rather than depending on
+ * the ancestors staying that way.
  */
 function HeroPicker({
   current,
-  onPreview,
   onClose,
   onSaved,
 }: {
   current: string;
-  onPreview: (photo: string | null) => void;
   onClose: () => void;
   onSaved: (photo: string) => void;
 }) {
@@ -153,7 +157,6 @@ function HeroPicker({
   const [picked, setPicked] = useState<string>(current);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-
   useEffect(() => {
     let cancelled = false;
     // Deferred a microtask: localStorage is the external system being read, and
@@ -161,7 +164,7 @@ function HeroPicker({
     Promise.resolve()
       .then(() => getGarage())
       .then((g) => {
-        if (!cancelled) setCars(g.filter((c) => !!c.image));
+        if (!cancelled) setCars(g.filter((c) => !!c.image).sort((a, b) => b.ts - a.ts));
       })
       .catch(() => {
         if (!cancelled) setCars([]);
@@ -171,11 +174,22 @@ function HeroPicker({
     };
   }, []);
 
-  function choose(photo: string) {
-    setPicked(photo);
-    // "" is the default tile, which previews as no custom photo at all.
-    onPreview(photo === "" ? "" : photo);
-  }
+  // Nothing behind this scrolls while it is open.
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   async function save() {
     setBusy(true);
@@ -199,26 +213,22 @@ function HeroPicker({
     }
   }
 
-  return (
+  // No mounted guard: this only renders after the Customize button is pressed,
+  // so it cannot run during the server render and document always exists here.
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       aria-label="Choose a home background"
-      className="fixed inset-0 z-[70] flex items-end justify-center"
+      className="fixed inset-0 z-[90] flex items-center justify-center p-5"
+      // iOS keeps scrolling the page under a modal even with body overflow
+      // hidden, so the drag is refused here as well.
+      onTouchMove={(e) => e.preventDefault()}
     >
-      {/* The scrim stops short of the top so the hero stays visible while you
-          pick, which is what makes the live preview worth having. */}
-      <button
-        type="button"
-        aria-label="Close"
-        onClick={onClose}
-        className="absolute inset-0 top-[42vh] bg-black/60"
-      />
+      <button type="button" aria-label="Close" onClick={onClose} className="absolute inset-0 bg-black/80" />
 
-      <div className="glass-card relative w-full max-w-[480px] rounded-t-sheet rounded-b-none border-x-0 border-b-0 px-5 pb-6 pt-3">
-        <div aria-hidden className="mx-auto h-1 w-10 rounded-full bg-foreground/25" />
-
-        <div className="mt-3 flex items-center justify-between">
+      <div className="glass-card relative flex max-h-[86dvh] w-full max-w-[22rem] flex-col rounded-sheet p-4">
+        <div className="flex items-center justify-between">
           <h2 className="text-[17px] font-semibold text-foreground">Home background</h2>
           <button
             type="button"
@@ -230,31 +240,43 @@ function HeroPicker({
           </button>
         </div>
 
+        {/* The preview, at the hero's own shape. This is what the sheet used to
+            rely on seeing behind itself for. */}
+        <div className="mt-3 aspect-[16/9] w-full overflow-hidden rounded-thumb bg-[#0a0a0a]">
+          {picked ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={picked} alt="" className="h-full w-full object-cover" draggable={false} />
+          ) : (
+            <span className="flex h-full w-full items-center justify-center text-[13px] text-[var(--color-secondary-text)]">
+              Default background
+            </span>
+          )}
+        </div>
+
         {cars === null ? (
           <p className="mt-4 text-[14px] text-[var(--color-secondary-text)]">Loading your garage…</p>
-        ) : (
-          <div className="mt-4 grid max-h-[32vh] grid-cols-3 gap-2 overflow-y-auto">
-            <Tile
-              label="Default"
-              selected={picked === ""}
-              onClick={() => choose("")}
-            />
-            {cars.map((c) => (
-              <Tile
-                key={c.id}
-                photo={c.image}
-                label={`${c.make} ${c.model}`}
-                selected={picked === c.image}
-                onClick={() => choose(c.image)}
-              />
-            ))}
-          </div>
-        )}
-
-        {cars?.length === 0 && (
-          <p className="mt-3 text-[14px] text-[var(--color-secondary-text)]">
+        ) : cars.length === 0 ? (
+          <p className="mt-4 text-[14px] text-[var(--color-secondary-text)]">
             Your garage is empty. Save a car from a scan and it can go here.
           </p>
+        ) : (
+          // min-h-0 so this scrolls inside the dialog instead of growing it: a
+          // flex child defaults to min-height:auto and would push the buttons
+          // off the bottom once the garage had more than a row or two.
+          <div className="mt-3 min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            <div className="grid grid-cols-3 gap-2">
+              <Tile label="Default" selected={picked === ""} onClick={() => setPicked("")} />
+              {cars.map((c) => (
+                <Tile
+                  key={c.id}
+                  photo={c.image}
+                  label={`${c.make} ${c.model}`}
+                  selected={picked === c.image}
+                  onClick={() => setPicked(c.image)}
+                />
+              ))}
+            </div>
+          </div>
         )}
 
         {error && (
@@ -263,13 +285,13 @@ function HeroPicker({
           </p>
         )}
 
-        <div className="mt-4 flex gap-3">
+        <div className="mt-4 flex shrink-0 gap-3">
           <button
             type="button"
-            onClick={() => choose("")}
+            onClick={() => setPicked("")}
             className="press glass-card h-[52px] flex-1 rounded-full border-[var(--line-button)] text-[15px] font-semibold"
           >
-            Reset to default
+            Reset
           </button>
           <button
             type="button"
@@ -281,7 +303,8 @@ function HeroPicker({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

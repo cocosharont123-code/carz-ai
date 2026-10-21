@@ -34,15 +34,15 @@ import { FeaturedCars } from "@/components/home/featured-cars";
  * The first four are the ones asked for, in the order asked for.
  */
 const QUICK = [
-  { href: "/carzbot", Icon: Bot, title: "CarzBot", sub: "Ask anything" },
-  { href: "/garage", Icon: ImageIcon, title: "Garage", sub: "Your collection" },
-  { href: "/leaderboard", Icon: Trophy, title: "Leaderboard", sub: "Rarest cars" },
-  { href: "/events", Icon: Ticket, title: "Events & Drops", sub: "Car meets & launches" },
-  { href: "/pricing", Icon: Crown, title: "Carz PRO", sub: "Membership" },
-  { href: "/auctions", Icon: Gavel, title: "Auctions", sub: "Bid on cars" },
-  { href: "/wishlist", Icon: Heart, title: "Wishlist", sub: "Cars you watch" },
-  { href: "/drops", Icon: Sparkles, title: "Drops", sub: "New launches" },
-  { href: "/settings", Icon: Settings, title: "Settings", sub: "Account & app" },
+  { href: "/carzbot", Icon: Bot, title: "CarzBot" },
+  { href: "/garage", Icon: ImageIcon, title: "Garage" },
+  { href: "/leaderboard", Icon: Trophy, title: "Leaderboard" },
+  { href: "/events", Icon: Ticket, title: "Events & Drops" },
+  { href: "/pricing", Icon: Crown, title: "Carz PRO" },
+  { href: "/auctions", Icon: Gavel, title: "Auctions" },
+  { href: "/wishlist", Icon: Heart, title: "Wishlist" },
+  { href: "/drops", Icon: Sparkles, title: "Drops" },
+  { href: "/settings", Icon: Settings, title: "Settings" },
 ] as const;
 
 export default async function Home() {
@@ -68,15 +68,19 @@ export default async function Home() {
         aria-label="Quick actions"
         className="-mx-5 mt-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
-        {QUICK.map(({ href, Icon, title, sub }) => (
+        {QUICK.map(({ href, Icon, title }) => (
           <Link
             key={href}
             href={href}
-            className="press glass-card flex min-h-20 w-[calc((min(100vw,480px)-76px)/4)] shrink-0 snap-start flex-col gap-1 rounded-tile p-2.5"
+            className="press glass-card flex min-h-20 w-[calc((min(100vw,480px)-76px)/4)] shrink-0 snap-start flex-col items-center justify-center gap-2 rounded-tile p-2.5"
           >
             <Icon className="h-[26px] w-[26px] shrink-0 text-foreground" strokeWidth={1.75} aria-hidden />
-            <span className="mt-auto text-[14px] font-bold leading-tight text-foreground">{title}</span>
-            <span className="text-[11px] leading-tight text-[var(--color-secondary-text)]">{sub}</span>
+            {/* truncate, because the card is a quarter of the screen and
+                "Leaderboard" at 14px bold is wider than that -- it was running
+                out through the side of its own tile. */}
+            <span className="w-full truncate text-center text-[13px] font-semibold leading-tight text-foreground">
+              {title}
+            </span>
           </Link>
         ))}
       </nav>
