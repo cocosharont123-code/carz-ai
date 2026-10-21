@@ -57,7 +57,11 @@ export function BottomNav() {
 
       <nav
         aria-label="Main"
-        className="fixed inset-x-0 bottom-0 z-[60] flex justify-center px-3"
+        // §4: absolute inside #app rather than fixed to the window, so it
+        // belongs to the shell and cannot drift when the visual viewport
+        // changes. main's padding-bottom keeps content clear of it -- there is
+        // no spacer element any more.
+        className="absolute inset-x-0 bottom-0 z-[60] flex justify-center px-3"
         // The home-indicator strip plus the gap the dock floats above it. The
         // layout keeps every page one pixel taller than the viewport, which
         // settles Safari's bottom toolbar before first paint -- without that
@@ -132,14 +136,6 @@ export function BottomNav() {
         </GlassPane>
       </nav>
 
-      {/* Holds the page clear of the bar by exactly its height plus the strip
-          under it. shrink-0 because this is a flex item in the layout's column
-          and a spacer that can be squashed is not a spacer. */}
-      <div
-        aria-hidden
-        className="shrink-0"
-        style={{ height: `calc(${BAR_H} + env(safe-area-inset-bottom, 0px) + 20px)` }}
-      />
     </>
   );
 }

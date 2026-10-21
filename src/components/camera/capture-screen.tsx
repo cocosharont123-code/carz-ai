@@ -269,7 +269,7 @@ function Shutter({
       {/* The inner mark: a disc for a photo, a square while recording. */}
       <span
         className={cn(
-          "bg-carz transition-all duration-200",
+          "bg-carz transition-[opacity,transform] duration-200",
           recording ? "h-6 w-6 rounded-[6px]" : "h-[58px] w-[58px] rounded-full",
         )}
       />

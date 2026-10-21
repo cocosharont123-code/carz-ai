@@ -14,13 +14,12 @@ export default function MapPage() {
     <div
       className="relative w-full overflow-hidden"
       style={{
-        // Fills what is left between the notch and the tab bar. It used to be
-        // a full 100dvh with the nav's spacer cancelled by a negative margin,
-        // which was right while the nav was a floating bubble the map could
-        // run under. The bar is solid and docked now, and Map is one of its
-        // tabs, so the map stops above it instead of hiding behind it.
-        height: "calc(100dvh - var(--safe-top) - var(--nav-h))",
-        marginTop: "calc(-1 * var(--back-h))",
+        // §4: the shell owns the height. This fills it rather than computing
+        // its own from 100dvh and then subtracting the furniture -- that sum
+        // was only ever an approximation of what the shell already knows, and
+        // it was off by whatever the visual viewport was doing at the time.
+        position: "absolute",
+        inset: 0,
       }}
     >
       <SpotMap />

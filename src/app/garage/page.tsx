@@ -322,7 +322,9 @@ function GarageInner() {
                     // The glass is the frame, not a film over the photo. p-px
                     // insets the image by the width of the rim, so the material
                     // shows as an edge and the car underneath stays untouched.
-                    className="press glass-card group relative aspect-square overflow-hidden rounded-[28%] p-px"
+                    // §2: a grid of these, so lite -- a blurred layer per tile is the
+                    // most expensive thing a photo grid can do.
+                    className="press glass-lite group relative aspect-square overflow-hidden rounded-[28%] p-px"
                 >
                   <CarPhoto
                     src={c.image}

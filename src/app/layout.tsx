@@ -55,7 +55,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className="h-full antialiased">
-      <body className="min-h-full flex flex-col bg-background ">
+      <body className="bg-background">
         <script
           dangerouslySetInnerHTML={{
             /* Applies the saved theme before first paint.
@@ -68,34 +68,39 @@ export default function RootLayout({
             __html: `try{var t=localStorage.getItem('theme')||'system';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);document.documentElement.classList.toggle('light',!d);}catch(e){document.documentElement.classList.add('dark');}`,
           }}
         />
+        <script
+          dangerouslySetInnerHTML={{
+            /* §4. The shell is sized from the visual viewport, so opening the
+               keyboard shrinks it rather than scrolling the document under a
+               fixed bar. Runs once and then only on resize; no scroll
+               listener, nothing that touches React state. */
+            __html: `(function(){var v=window.visualViewport;function s(){document.documentElement.style.setProperty('--vvh',(v?v.height:window.innerHeight)+'px');}if(v){v.addEventListener('resize',s,{passive:true});}s();})();`,
+          }}
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            /* §2. Glass kill switch for devices that will not keep 120fps with
+               live backdrop filters. Set before paint, so nothing blurs and
+               then un-blurs. */
+            __html: `try{var n=navigator;if((n.hardwareConcurrency&&n.hardwareConcurrency<4)||(n.deviceMemory&&n.deviceMemory<4)){document.documentElement.setAttribute('data-glass','lite');}}catch(e){}`,
+          }}
+        />
         {/* The cyan gradient bars that used to sit behind every page are gone.
             The background is #000, flat. */}
-        {/* min-height one pixel past the viewport, on purpose.
-            
-            Safari slides its bottom toolbar in the moment a page becomes tall
-            enough to scroll, and that shrinks the visual viewport — which a
-            position:fixed bottom element correctly follows by moving up. So a
-            page that loads short and then grows makes the nav jump, which is
-            what opening Garage did: the member check renders one line of text,
-            then the gallery arrives and the page is suddenly scrollable.
-            
-            Being scrollable from the first paint means the toolbar is already
-            where it is going to be, so nothing moves when the content lands.
-            One pixel is not reachable by a drag — body already sets
-            overscroll-behavior-y: none — it only settles the toolbar. */}
-        {/* The app is a 480px column, centred, with black either side of it.
-            Applied once here rather than screen by screen: a page that sets its
-            own max-w-2xl inside this is simply capped at 480, so the pages not
-            yet rebuilt get the desktop frame too. */}
+        {/* §4. The shell: fixed height, no scroll of its own. The page's own
+            <main> is the single scroller, positioned absolutely inside this by
+            a global rule.
+
+            The old shell made the body the scroller and kept the column one
+            pixel taller than the viewport on purpose, to settle Safari's
+            toolbar before first paint. That worked, and it also meant every
+            screen had a pixel of scroll it did not need, with spacers and
+            rounding on top of it. A fixed shell with an inner scroller settles
+            the toolbar the same way and cannot accumulate stray height. */}
         <div
-          className="relative z-10 mx-auto flex w-full max-w-[480px] min-h-[calc(100dvh+1px)] flex-1 flex-col"
-          style={{ paddingTop: "var(--safe-top)" }}
+          id="app"
+          className="relative mx-auto w-full max-w-[480px]"
         >
-          {/* Inside Providers on purpose: the nav reads the session, and being
-              a child of the legal gate means it stays hidden behind the blocking
-              terms screen rather than floating over it. After the children, not
-              before: the bar is fixed to the bottom and the spacer it renders
-              has to come last in the flow to hold the page clear of it. */}
           <Providers>
             <BackButton />
             {children}

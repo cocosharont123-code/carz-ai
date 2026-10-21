@@ -81,7 +81,8 @@ export function FeaturedCars() {
           // Three across, measured from the column rather than the window: the
           // app is capped at 480px on a desktop, so 100vw alone would size
           // these for a monitor and show one and a half.
-          className="press glass-card w-[calc((min(100vw,480px)-64px)/3)] shrink-0 snap-start overflow-hidden rounded-thumb"
+          // §2: a repeated item in a scroller, so lite.
+          className="press glass-lite w-[calc((min(100vw,480px)-64px)/3)] shrink-0 snap-start overflow-hidden rounded-thumb"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

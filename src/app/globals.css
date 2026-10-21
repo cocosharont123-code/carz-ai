@@ -90,6 +90,14 @@
   --color-success-600: var(--foreground);
 
   /* Radii, per the spec */
+  /* §3 radius scale. Squircle reads tighter than round at the same number,
+     which is why these are larger than the round-corner equivalents. */
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 26px;
+  --radius-xl: 38px;
+
   --radius-card: 20px;
   --radius-tile: 18px;
   --radius-stat: 18px;
@@ -295,15 +303,69 @@
 }
 
 @layer base {
+  /* §3. Every corner is continuous. Chromium 139+ renders this; Safari and
+     Firefox ignore it and show round corners until they ship it, which is a
+     graceful fall-back rather than a break. Capsules and circles are round by
+     definition -- a squircled capsule is just a lumpy capsule. */
+  *,
+  ::before,
+  ::after {
+    corner-shape: squircle;
+  }
+
+  .rounded-full,
+  .capsule,
+  [data-shape="capsule"] {
+    border-radius: 9999px;
+    corner-shape: round;
+  }
+
   * {
     @apply border-border outline-ring/50;
   }
+  /* §4. The document never scrolls and never bounces; main is the one
+     scroller. This is what removes the stray scroll the old shell had: the
+     body was the scroller, so every spacer, every rounding error and the
+     deliberate +1px all became page height nobody asked for. */
   html,
   body {
-    /* Lock the page to the viewport width — no sideways scrolling on mobile.
-       `clip` (not `hidden`) keeps the sticky header working. */
-    overflow-x: clip;
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
     max-width: 100%;
+  }
+
+  /* The app shell. Height tracks the visual viewport, so the keyboard
+     shrinks it instead of pushing the page up. */
+  #app {
+    position: relative;
+    height: var(--vvh, 100dvh);
+    overflow: hidden;
+  }
+
+  /* The single scroll container. Pages render their own <main>, so the rule
+     is written against the element rather than a class -- that way a page
+     cannot opt out of the shell by forgetting one.
+
+     Content scrolls under the bars: the top inset and the tab bar's height
+     are padding here, not margin on the page and not a spacer element. */
+  #app main {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    overflow-x: clip;
+    overscroll-behavior-y: contain;
+    padding-top: var(--safe-top);
+    /* 12px by default. A screen without a tab bar must not reserve room for
+       one -- that was 88px of padding on the sign-in screen, which is scroll
+       invented out of nothing on a screen that otherwise fits. */
+    padding-bottom: 12px;
+  }
+
+  /* Reserve the bar's height only where the bar actually renders. Pure CSS
+     via :has(), so nothing has to tell the stylesheet which routes hide it. */
+  #app:has(nav[aria-label="Main"]) main {
+    padding-bottom: calc(var(--nav-h) + 12px);
   }
   body {
     @apply bg-background text-foreground;
@@ -321,7 +383,7 @@
 .lab-bg::before {
   overflow: hidden;
   max-width: 100vw;
-  max-height: 100vh;
+  max-height: 100dvh;   /* §4: never vh */
   box-sizing: border-box;
 }
 /* --- Default profile avatar. Was green, blue and red radials cycling; now a
@@ -537,7 +599,7 @@ body {
 *::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
 
 @media (prefers-reduced-motion: no-preference) {
-  html { scroll-behavior: smooth; }
+  /* No smooth-scroll: §9 forbids it, and it fights the native scroller. */
   /* Everything interactive eases on the single curve — nothing snaps. */
   a, button, [role="button"], input, select, textarea, summary, label, .press {
     transition:
@@ -740,6 +802,57 @@ body {
 @media (prefers-reduced-transparency: reduce) {
   .glass-chip { background: var(--surface); }
   .glass-chip::before { backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
+
+/* §2. The same material without the blur.
+   
+   For anything that repeats: grid tiles, list cards, a row of chips. Six live
+   backdrop filters is the budget for a whole screen, and a nine-card row spends
+   it twice over on its own -- each one is a separate composited layer the
+   compositor re-renders on every scroll frame.
+   
+   It keeps the fill, the rim and the shape, so a lite surface and a real glass
+   surface sit together without looking like two different materials. What it
+   loses is the one thing you cannot see on a 100px tile anyway. */
+.glass-lite {
+  position: relative;
+  isolation: isolate;
+  background: var(--glass-fill);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-lite::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    var(--glass-rim-hi),
+    var(--glass-rim-lo) 38%,
+    transparent 62%,
+    var(--glass-rim-hi)
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* §2. The kill switch, set before first paint on a device that will not hold
+   120fps with live blur. Everything renders as lite; nothing blurs and then
+   un-blurs a frame later. */
+:root[data-glass="lite"] .glass-card::before,
+:root[data-glass="lite"] .glass-bubble::before,
+:root[data-glass="lite"] .glass-chip::before,
+:root[data-glass="lite"] .blur-behind::before {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 /* Glass inside glass does not blur again.

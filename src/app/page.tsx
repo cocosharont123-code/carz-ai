@@ -72,7 +72,10 @@ export default async function Home() {
           <Link
             key={href}
             href={href}
-            className="press glass-card flex min-h-20 w-[calc((min(100vw,480px)-76px)/4)] shrink-0 snap-start flex-col items-center justify-center gap-2 rounded-tile p-2.5"
+            // §2: glass-lite, not glass. Nine of these in one scrolling row is
+            // nine live backdrop filters against a budget of six for the whole
+            // screen.
+            className="press glass-lite flex min-h-20 w-[calc((min(100vw,480px)-76px)/4)] shrink-0 snap-start flex-col items-center justify-center gap-2 rounded-tile p-2.5"
           >
             <Icon className="h-[26px] w-[26px] shrink-0 text-foreground" strokeWidth={1.75} aria-hidden />
             {/* truncate, because the card is a quarter of the screen and

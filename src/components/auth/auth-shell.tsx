@@ -13,7 +13,10 @@ import { cn } from "@/lib/utils";
  * viewport plus the notch and would scroll by exactly that much. The nav and the
  * back button are not subtracted because neither is drawn on these screens.
  */
-const FRAME_H = "min-h-[calc(100dvh-var(--safe-top))]";
+// §4: the shell is the height. A screen that fits must not scroll, and a
+// min-height measured from the viewport plus the shell's own padding is
+// exactly how a fitting screen acquires a few pixels of scroll.
+const FRAME_H = "min-h-full";
 
 export function AuthShell({
   step,
@@ -81,7 +84,8 @@ function StepDots({ step }: { step: 1 | 2 }) {
           key={n}
           aria-hidden
           className={cn(
-            "h-1.5 rounded-full transition-all duration-300",
+            // §1: transform and opacity only. This animated width, which is layout.
+            "h-1.5 rounded-full transition-[opacity,transform] duration-300",
             n === step ? "w-6 bg-carz" : "w-1.5 bg-foreground/25",
           )}
         />
