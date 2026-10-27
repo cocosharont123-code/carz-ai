@@ -344,6 +344,20 @@
     overflow: hidden;
   }
 
+  /* app/template.tsx sits between #app and the page's <main>, and it animates
+     a transform. A transform makes an element the containing block for every
+     absolutely positioned descendant -- so a plain static wrapper here is a
+     zero-height containing block, and the `inset: 0` below then resolves
+     against nothing: main collapses to its own padding and the entire app
+     renders as a blank screen. It has to be a full-size layer, always, not
+     only while the animation is running.
+
+     Any wrapper added between the shell and a page must do the same. */
+  #app > .page-in {
+    position: absolute;
+    inset: 0;
+  }
+
   /* The single scroll container. Pages render their own <main>, so the rule
      is written against the element rather than a class -- that way a page
      cannot opt out of the shell by forgetting one.
@@ -361,6 +375,11 @@
        one -- that was 88px of padding on the sign-in screen, which is scroll
        invented out of nothing on a screen that otherwise fits. */
     padding-bottom: 12px;
+    /* Belt and braces, and the same value #app already uses, so in the normal
+       case this is exactly the height main has anyway and changes nothing.
+       It only matters if some ancestor ever becomes a zero-height containing
+       block again: the screen is then merely scrolled oddly rather than gone. */
+    min-height: var(--vvh, 100dvh);
   }
 
   /* Reserve the bar's height only where the bar actually renders. Pure CSS
