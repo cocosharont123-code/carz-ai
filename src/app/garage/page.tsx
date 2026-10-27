@@ -1,59 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { X, Trash2, ChevronLeft, ChevronRight, Images, Image as ImageIcon } from "lucide-react";
+import { X, Trash2, ChevronLeft, ChevronRight, Images } from "lucide-react";
 import { MemberGate } from "@/components/member-gate";
 import { getGarage, removeFromGarage, clearGarage, type GarageCar } from "@/lib/garage-local";
 import { Button, PageMasthead, CarPhoto, Skeleton } from "@/components/ui/editorial";
 
 function fmtDate(ts: number): string {
   return new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
-
-/**
- * Set this photo as the home page hero.
- *
- * Posts the thumbnail itself rather than an id: the garage is localStorage and
- * the server has never seen these photos, so there is no identifier that would
- * mean anything to it. The endpoint checks it is a small image and stores it on
- * the signed-in profile.
- */
-function SetAsHomeBackground({ photo }: { photo: string }) {
-  const [state, setState] = useState<"idle" | "busy" | "done" | "failed">("idle");
-
-  async function set() {
-    if (state === "busy" || !photo) return;
-    setState("busy");
-    try {
-      const res = await fetch("/api/home-hero", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ photo }),
-      });
-      const d = await res.json().catch(() => null);
-      setState(res.ok && d?.ok ? "done" : "failed");
-    } catch {
-      setState("failed");
-    }
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={set}
-      disabled={state === "busy" || state === "done"}
-      className="press inline-flex items-center gap-1.5 glass-chip rounded-full px-4 py-2 text-[15px] font-semibold text-foreground transition hover:bg-foreground/20 disabled:opacity-60"
-    >
-      <ImageIcon className="h-3.5 w-3.5" aria-hidden />
-      {state === "done"
-        ? "Set as background"
-        : state === "failed"
-          ? "Couldn't set it"
-          : state === "busy"
-            ? "Setting…"
-            : "Set as home background"}
-    </button>
-  );
 }
 
 export default function GaragePage() {
@@ -208,9 +162,6 @@ function Lightbox({
         </div>
 
         <div className="mt-3 flex justify-center gap-2">
-          {/* Sets this photo as the home page background. The only addition to
-              this screen -- nothing else here is restyled. */}
-          <SetAsHomeBackground photo={car.image} />
           <button
             type="button"
             onClick={() => onRemove(car.id)}

@@ -3,8 +3,6 @@ import {
   Bot, Image as ImageIcon, Trophy, Ticket, ChevronRight, Calendar,
   Crown, Gavel, Heart, Sparkles, Settings,
 } from "lucide-react";
-import { auth } from "@/auth";
-import { getProfile } from "@/lib/profile-blob";
 import { HomeHero } from "@/components/home/home-hero";
 import { HomeSearch } from "@/components/home/home-search";
 import { FeaturedCars } from "@/components/home/featured-cars";
@@ -12,10 +10,10 @@ import { FeaturedCars } from "@/components/home/featured-cars";
 /**
  * Home.
  *
- * A server component, which is what makes the hero photo correct on the first
- * paint: the saved background is read here and handed down, so a viewer who
- * has set one never sees the default appear and swap. The only client islands
- * are the search field and the hero's picker.
+ * A server component, and now a fully static one: it reads no session and no
+ * profile. It did both only to seed the customizable hero background, which
+ * has been removed. The only client islands are the search field and the
+ * featured strip.
  *
  * The tab bar is not rendered here. It is the shared one in the layout, and it
  * already carries Home, Map, Scan, Hunt and Profile with the raised 64px Scan
@@ -45,15 +43,10 @@ const QUICK = [
   { href: "/settings", Icon: Settings, title: "Settings" },
 ] as const;
 
-export default async function Home() {
-  const session = await auth();
-  const email = session?.user?.email ?? null;
-  // A failed profile read is a default hero, not a broken page.
-  const profile = email ? await getProfile(email).catch(() => null) : null;
-
+export default function Home() {
   return (
     <main className="w-full px-5 pb-6">
-      <HomeHero initialPhoto={profile?.homeHeroPhoto ?? ""} signedIn={!!email} />
+      <HomeHero />
 
       {/* Fully below the hero. It was pulled up onto the fade by -mt-3, which
           put the top of the pill over the photo. */}
