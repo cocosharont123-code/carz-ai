@@ -612,12 +612,6 @@ body {
   box-shadow: 0 0 0 2px #000, 0 0 0 4px rgba(255, 255, 255, 0.9);
 }
 
-/* Slim, intentional scrollbar (not default chrome). */
-* { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.22) transparent; }
-*::-webkit-scrollbar { width: 8px; height: 8px; }
-*::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.16); border-radius: 999px; }
-*::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
-
 @media (prefers-reduced-motion: no-preference) {
   /* No smooth-scroll: §9 forbids it, and it fights the native scroller. */
   /* Everything interactive eases on the single curve — nothing snaps. */
@@ -1070,21 +1064,9 @@ progress::-moz-progress-bar {
   color: var(--foreground);
 }
 
-/* Scrollbars, where they are drawn at all. */
-* {
-  scrollbar-color: var(--line-button) transparent;
-}
-
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--line-button);
-  border-radius: 9999px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
+/* No scrollbar styling. §9 forbids custom scrollbars, and these were doing
+   real damage rather than just breaking a rule: they were unlayered, so they
+   beat the [scrollbar-width:none] and [&::-webkit-scrollbar]:hidden utilities
+   on the horizontal rows, which is why those rows carried a visible bar
+   underneath them. Giving ::-webkit-scrollbar a height and a thumb also turns
+   iOS's overlay scrollbar, which fades out by itself, into a permanent one. */
