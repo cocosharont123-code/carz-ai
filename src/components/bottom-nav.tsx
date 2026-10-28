@@ -73,16 +73,18 @@ export function BottomNav() {
             stop above it. That is how the native tab bar does it, and it is
             the only way to be on the bottom edge and still tappable.
 
-            The height carries the inset for the same reason: with border-box
-            sizing, padding inside a fixed height would eat the row rather than
-            extend the material. Top corners only -- a radius on the bottom two
-            would show the page through the corners of a bar that is flush. */}
+            Asked for three times, so the tabs go on the edge too, not just
+            the glass behind them: there is no safe-area reservation left here
+            at all. The trade is real and deliberate -- on a phone with a home
+            indicator the system draws that bar across the bottom of the
+            labels. Taps still register there; it is only the edge swipe that
+            iOS keeps for itself.
+
+            Top corners only -- a radius on the bottom two would show the page
+            through the corners of a bar that is flush. */}
         <GlassPane
           className="flex w-full items-stretch rounded-t-[28px] rounded-b-none"
-          style={{
-            height: `calc(${BAR_H} + env(safe-area-inset-bottom, 0px))`,
-            paddingBottom: "env(safe-area-inset-bottom, 0px)",
-          }}
+          style={{ height: BAR_H }}
         >
           {TABS.map(({ href, label, Icon, match, ...rest }) => {
             const active = match(pathname);

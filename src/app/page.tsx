@@ -36,7 +36,7 @@ const QUICK = [
   { href: "/garage", Icon: ImageIcon, title: "Garage" },
   { href: "/leaderboard", Icon: Trophy, title: "Leaderboard" },
   { href: "/events", Icon: Ticket, title: "Events & Drops" },
-  { href: "/pricing", Icon: Crown, title: "Carz PRO" },
+  { href: "/pricing", Icon: Crown, title: "Memberships" },
   { href: "/auctions", Icon: Gavel, title: "Auctions" },
   { href: "/wishlist", Icon: Heart, title: "Wishlist" },
   { href: "/drops", Icon: Sparkles, title: "Drops" },

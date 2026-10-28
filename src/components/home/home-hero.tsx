@@ -1,9 +1,7 @@
-import Link from "next/link";
-import { User } from "lucide-react";
 import { RarityStreak } from "@/components/home/rarity-streak";
 
 /**
- * The home hero: photo, headline, and the way into your profile.
+ * The home hero: photo, headline, and the rarity streak.
  *
  * A server component with no state. It used to be a client island because the
  * background was customizable -- you picked a garage photo, it saved to your
@@ -26,34 +24,23 @@ export function HomeHero() {
       className="relative -mx-5 h-[45vh] min-h-[320px] overflow-hidden bg-[#0a0a0a] bg-cover bg-center"
       style={{ backgroundImage: `url(${HERO_PHOTO})` }}
     >
-      {/* Two overlays, not one. The top is a short scrim so the profile button
+      {/* Two overlays, not one. The top is a short scrim so the streak badge
           reads against a bright photo; the bottom runs all the way to solid
           #000 so the headline sits on black and the section joins the page
           with no seam. */}
       <div aria-hidden className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/60 to-transparent" />
       <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-transparent via-black/55 to-black" />
 
-      {/* No wordmark. It sat directly over the headline and the headline is the
-          thing to read. justify-end keeps the profile button where it was. */}
-      <header className="absolute inset-x-0 top-0 flex items-start justify-end px-5 pt-4">
-        <Link
-          href="/profile"
-          aria-label="Your profile"
-          className="press flex h-9 w-9 items-center justify-center rounded-full border border-white/25 bg-white/[0.06] backdrop-blur-md"
-        >
-          <User className="h-[18px] w-[18px] text-white" strokeWidth={1.75} aria-hidden />
-        </Link>
-      </header>
+      {/* Top right, where the profile button used to be.
+
+          It was beside the headline, and it did not fit: "Everything." is
+          195px at 36px extrabold and a 360px phone leaves 196px next to a
+          112px badge. One pixel is not clearance, it is a collision waiting
+          for a slightly wider font, so the badge is out of the headline's
+          column entirely. */}
+      <RarityStreak className="glass-card on-media absolute right-5 top-4 z-10" />
 
       <div className="absolute inset-x-0 bottom-0 px-5 pb-5">
-        {/* Beside the headline, not above it, and positioned rather than a
-            flex sibling on purpose. A flex row would cap every one of the four
-            lines at the width left over by the badge, and "Everything." at
-            36px extrabold does not fit in what remains on a 360px phone. Out
-            of flow, the badge only has to clear the two short lines it
-            actually sits next to, and the headline keeps the full column. */}
-        <RarityStreak className="glass-card on-media absolute right-5 top-0" />
-
         <h1 className="text-[36px] font-extrabold uppercase leading-[0.95] tracking-[-0.02em]">
           <span className="block text-white">Snap</span>
           <span className="block text-white">Any car.</span>

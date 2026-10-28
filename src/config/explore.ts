@@ -112,11 +112,10 @@ export const EXPLORE_BUBBLES: ExploreItem[] = [
     tier: "max",
   },
   // Last, because it is the one tile that sells something rather than doing
-  // something. Named for both tiers under the rule above: they are one page
-  // with a choice on it, not two features, and a menu that only says "Carz PRO"
-  // is a menu MAX cannot be found from.
+  // something. The page is Memberships; PRO and MAX are the two tiers on it,
+  // so naming it after either one is a page the other cannot be found from.
   {
-    label: "Carz PRO & Carz MAX",
+    label: "Memberships",
     description: "Everything membership unlocks",
     href: "/pricing",
     icon: Crown,

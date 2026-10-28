@@ -39,7 +39,7 @@
   /* The dock floats now rather than sitting on the edge, so what a page has
      to keep clear is the bar, the home-indicator strip, and the 20px of gap
      above and below it. */
-  --nav-h: calc(var(--nav-bubble-h) + env(safe-area-inset-bottom, 0px) + 20px);
+  --nav-h: calc(var(--nav-bubble-h) + 20px);
 }
 
 /* ==========================================================================

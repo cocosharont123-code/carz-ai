@@ -232,102 +232,108 @@ export default function PricingPage() {
   const activeName = heldTier === "max" ? CARZ_MAX.name : CARZ_PLUS.name;
 
   return (
-    <PricingSection
-      eyebrow={member === true ? "Membership" : "Carz membership"}
-      title={member === true ? "You're in" : "Choose your plan"}
-      subtitle={
-        member
-          ? canUpgrade
-            ? `${activeName} is active, billed ${billing === "annual" ? "yearly" : "monthly"}. Carz MAX is one tap up.`
-            : `${activeName} is active on your account, billed ${billing === "annual" ? "yearly" : "monthly"}.`
-          : "Spot more cars, keep a garage, and ask CarzBot anything. Cancel whenever."
-      }
-      tiers={tiers}
-      // A member's interval is already settled, so there is nothing to switch.
-      billing={member ? undefined : { value: annual ? "1" : "0", monthlyLabel: "Monthly", annualLabel: "Yearly" }}
-      onBillingSwitch={(v) => setAnnual(v === "1")}
-      busy={busy !== null}
-    >
-      {member === true && (
-        <div className="mx-auto mt-7 max-w-sm text-center">
-          <button
-            type="button"
-            onClick={() => void cancel()}
-            disabled={busy !== null}
-            className="press min-h-11 rounded-full px-5 text-[14px] opacity-60 transition hover:opacity-100 disabled:opacity-30"
-          >
-            {busy ? "Cancelling…" : "Cancel membership"}
-          </button>
-          {joinError && (
-            <p role="alert" className="mt-2 text-[14px] text-neon-red">
-              {joinError}
-            </p>
-          )}
-        </div>
-      )}
-
-      {!member && (
-        <div className="mx-auto mt-7 max-w-sm">
-          {promo ? (
-            <div className="glass-card flex min-h-11 items-center justify-between gap-3 rounded-full px-4 py-2">
-              <p className="text-[14px]">
-                <span className="font-bold">{promo.code.toUpperCase()}</span>
-                <span className="opacity-70">
-                  {" "}
-                  applied — {promo.percentOff}% off
-                </span>
+    // §4: without a <main> the shell has no scroller to attach to -- #app is
+    // overflow:hidden and .page-in just fills it, so this page could not be
+    // scrolled at all. The padding is the shell's; PricingSection keeps its
+    // own inner rhythm.
+    <main>
+      <PricingSection
+        eyebrow="Memberships"
+        title={member === true ? "You're in" : "Choose your plan"}
+        subtitle={
+          member
+            ? canUpgrade
+              ? `${activeName} is active, billed ${billing === "annual" ? "yearly" : "monthly"}. Carz MAX is one tap up.`
+              : `${activeName} is active on your account, billed ${billing === "annual" ? "yearly" : "monthly"}.`
+            : "Spot more cars, keep a garage, and ask CarzBot anything. Cancel whenever."
+        }
+        tiers={tiers}
+        // A member's interval is already settled, so there is nothing to switch.
+        billing={member ? undefined : { value: annual ? "1" : "0", monthlyLabel: "Monthly", annualLabel: "Yearly" }}
+        onBillingSwitch={(v) => setAnnual(v === "1")}
+        busy={busy !== null}
+      >
+        {member === true && (
+          <div className="mx-auto mt-7 max-w-sm text-center">
+            <button
+              type="button"
+              onClick={() => void cancel()}
+              disabled={busy !== null}
+              className="press min-h-11 rounded-full px-5 text-[14px] opacity-60 transition hover:opacity-100 disabled:opacity-30"
+            >
+              {busy ? "Cancelling…" : "Cancel membership"}
+            </button>
+            {joinError && (
+              <p role="alert" className="mt-2 text-[14px] text-neon-red">
+                {joinError}
               </p>
-              <button
-                type="button"
-                onClick={removePromo}
-                aria-label={`Remove promo code ${promo.code.toUpperCase()}`}
-                className="press flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition hover:bg-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carz/60"
-              >
-                <X className="h-4 w-4" strokeWidth={2} aria-hidden />
-              </button>
-            </div>
-          ) : (
-            <div className="flex gap-2">
-              <label htmlFor="promo" className="sr-only">
-                Promo code
-              </label>
-              <input
-                id="promo"
-                value={promoInput}
-                onChange={(e) => {
-                  setPromoInput(e.target.value);
-                  setPromoError("");
-                }}
-                onKeyDown={(e) => e.key === "Enter" && applyPromo()}
-                placeholder="Promo code"
-                autoComplete="off"
-                autoCapitalize="none"
-                spellCheck={false}
-                className="glass-card min-h-11 flex-1 rounded-full bg-transparent px-4 text-[14px] outline-none placeholder:opacity-40 focus-visible:ring-2 focus-visible:ring-carz/60"
-              />
-              <button
-                type="button"
-                onClick={applyPromo}
-                className="press glass-card min-h-11 shrink-0 rounded-full px-5 text-[14px] font-semibold transition hover:glass-chip focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carz/60"
-              >
-                Apply
-              </button>
-            </div>
-          )}
+            )}
+          </div>
+        )}
 
-          {/* Errors are text, not a red border alone. */}
-          {promoError && (
-            <p role="alert" className="mt-2 text-center text-[14px] text-neon-red">
-              {promoError}
-            </p>
-          )}
-          {joinError && (
-            <p role="alert" className="mt-2 text-center text-[14px] text-neon-red">
-              {joinError}
-            </p>
-          )}
-        </div>
-      )}
-    </PricingSection>
+        {!member && (
+          <div className="mx-auto mt-7 max-w-sm">
+            {promo ? (
+              <div className="glass-card flex min-h-11 items-center justify-between gap-3 rounded-full px-4 py-2">
+                <p className="text-[14px]">
+                  <span className="font-bold">{promo.code.toUpperCase()}</span>
+                  <span className="opacity-70">
+                    {" "}
+                    applied — {promo.percentOff}% off
+                  </span>
+                </p>
+                <button
+                  type="button"
+                  onClick={removePromo}
+                  aria-label={`Remove promo code ${promo.code.toUpperCase()}`}
+                  className="press flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition hover:bg-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carz/60"
+                >
+                  <X className="h-4 w-4" strokeWidth={2} aria-hidden />
+                </button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <label htmlFor="promo" className="sr-only">
+                  Promo code
+                </label>
+                <input
+                  id="promo"
+                  value={promoInput}
+                  onChange={(e) => {
+                    setPromoInput(e.target.value);
+                    setPromoError("");
+                  }}
+                  onKeyDown={(e) => e.key === "Enter" && applyPromo()}
+                  placeholder="Promo code"
+                  autoComplete="off"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  className="glass-card min-h-11 flex-1 rounded-full bg-transparent px-4 text-[14px] outline-none placeholder:opacity-40 focus-visible:ring-2 focus-visible:ring-carz/60"
+                />
+                <button
+                  type="button"
+                  onClick={applyPromo}
+                  className="press glass-card min-h-11 shrink-0 rounded-full px-5 text-[14px] font-semibold transition hover:glass-chip focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carz/60"
+                >
+                  Apply
+                </button>
+              </div>
+            )}
+
+            {/* Errors are text, not a red border alone. */}
+            {promoError && (
+              <p role="alert" className="mt-2 text-center text-[14px] text-neon-red">
+                {promoError}
+              </p>
+            )}
+            {joinError && (
+              <p role="alert" className="mt-2 text-center text-[14px] text-neon-red">
+                {joinError}
+              </p>
+            )}
+          </div>
+        )}
+      </PricingSection>
+    </main>
   );
 }
