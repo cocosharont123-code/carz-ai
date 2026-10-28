@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { X, Trash2, ChevronLeft, ChevronRight, Images } from "lucide-react";
 import { MemberGate } from "@/components/member-gate";
 import { getGarage, removeFromGarage, clearGarage, type GarageCar } from "@/lib/garage-local";
+import { getFullPhoto, deleteFullPhoto, clearFullPhotos } from "@/lib/garage-photos";
 import { Button, PageMasthead, CarPhoto, Skeleton } from "@/components/ui/editorial";
 
 function fmtDate(ts: number): string {
@@ -44,6 +45,35 @@ function Lightbox({
   onRemove: (id: string) => void;
 }) {
   const car = cars[index];
+
+  /**
+   * The full-resolution copy, once it has been read.
+   *
+   * The grid can only ever hold the 360px thumbnail -- localStorage is 5MB and
+   * sixty full-size photos are three times that -- so the big one lives in
+   * IndexedDB and is fetched when a car is actually opened. Until it lands,
+   * and for any car saved before this existed, the thumbnail is shown: the
+   * photo is never missing, it just sharpens.
+   */
+  const [full, setFull] = useState<{ id: string; url: string } | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    if (!car) return;
+    getFullPhoto(car.id)
+      .then((url) => {
+        if (!cancelled && url) setFull({ id: car.id, url });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [car?.id]);
+
+  // Tagged with the id it belongs to rather than cleared when the car
+  // changes: clearing means a setState in the effect body, which cascades a
+  // render, and swiping an album is exactly when that is felt. Comparing here
+  // costs nothing and the previous car's photo can never leak onto this one.
+  const fullUrl = full && car && full.id === car.id ? full.url : null;
 
   // Keyboard is the natural way through an album on a desktop, and Escape is
   // the expected way out of anything full-screen.
@@ -120,7 +150,7 @@ function Lightbox({
           style={{ maxWidth: "min(78vw, 58dvh)" }}
         >
           <CarPhoto
-            src={car.image}
+            src={fullUrl ?? car.image}
             alt={`${car.make} ${car.model}`}
             color
             className="h-full w-full object-cover"
@@ -190,6 +220,7 @@ function GarageInner() {
   }, []);
 
   function remove(id: string) {
+    void deleteFullPhoto(id);
     const next = removeFromGarage(id);
     setCars(next);
     // Removing from inside the viewer: stay on the same slot, or step back if
@@ -200,6 +231,7 @@ function GarageInner() {
   function clearAll() {
     if (window.confirm("Clear your entire garage? This can't be undone.")) {
       clearGarage();
+      void clearFullPhotos();
       setCars([]);
       setOpen(null);
     }

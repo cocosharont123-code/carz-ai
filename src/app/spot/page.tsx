@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { useImageUpload } from "@/components/hooks/use-image-upload";
 import { CarCustomizer } from "@/components/car-customizer";
 import { addToGarage } from "@/lib/garage-local";
+import { putFullPhoto } from "@/lib/garage-photos";
 import { carzPlusMonthly, carzPlusAnnual, carzPlusAnnualSaving } from "@/lib/plans";
 import { SCAN_MODE_META, type ScanMode } from "@/lib/scan-mode";
 import { cn } from "@/lib/utils";
@@ -156,7 +157,7 @@ function SaveToGarage({ car, image }: { car: CarReport; image: string }) {
       // the scan: localStorage holds roughly 5MB, and a full-size frame per car
       // would fill it inside a dozen saves.
       const thumb = image ? await downscale(image, 360, 0.55) : "";
-      addToGarage({
+      const entry = addToGarage({
         image: thumb,
         make: car.make,
         model: car.model,
@@ -165,6 +166,15 @@ function SaveToGarage({ car, image }: { car: CarReport; image: string }) {
         rarityScore: car.rarityScore,
         priceRange: car.priceRangeUsed,
       });
+      // The thumbnail is what the grid needs and all localStorage can hold.
+      // The full-size copy goes to IndexedDB under the same id, and is what
+      // opening a car in the garage shows. Best effort: if it cannot be
+      // stored the viewer falls back to the thumbnail.
+      if (entry && image) {
+        void downscale(image, 1080, 0.82)
+          .then((full) => putFullPhoto(entry.id, full))
+          .catch(() => false);
+      }
       setSaved(true);
     } catch {
       setError("Couldn't save that — your garage storage may be full.");
@@ -631,7 +641,7 @@ export default function SpotPage() {
           // could be opened. The board stores photos as files now rather than
           // inside its own JSON, so the size costs a fetch rather than being
           // added to a document rewritten on every spot.
-          const lbThumb = await downscale(rawImage, 1000, 0.78);
+          const lbThumb = await downscale(rawImage, 1080, 0.82);
           void fetch("/api/leaderboard", {
             method: "POST",
             headers: { "Content-Type": "application/json" },

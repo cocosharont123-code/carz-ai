@@ -44,8 +44,8 @@ function write(cars: GarageCar[]): boolean {
 
 // Save a car to the front of the album.
 // Trims oldest entries (and, if storage is full, drops more) so it always fits.
-export function addToGarage(car: Omit<GarageCar, "id" | "ts">): GarageCar[] {
-  if (typeof window === "undefined") return [];
+export function addToGarage(car: Omit<GarageCar, "id" | "ts">): GarageCar | null {
+  if (typeof window === "undefined") return null;
   const entry: GarageCar = {
     ...car,
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -57,7 +57,9 @@ export function addToGarage(car: Omit<GarageCar, "id" | "ts">): GarageCar[] {
     cars = cars.slice(0, cars.length - 1);
   }
   if (cars.length === 1) write(cars);
-  return cars;
+  // The entry, not the album: the caller needs its id to file the
+  // full-resolution copy in IndexedDB under the same key.
+  return entry;
 }
 
 export function removeFromGarage(id: string): GarageCar[] {
