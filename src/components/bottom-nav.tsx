@@ -62,12 +62,12 @@ export function BottomNav() {
         // changes. main's padding-bottom keeps content clear of it -- there is
         // no spacer element any more.
         className="absolute inset-x-0 bottom-0 z-[60] flex justify-center px-3"
-        // The home-indicator strip plus the gap the dock floats above it. The
-        // layout keeps every page one pixel taller than the viewport, which
-        // settles Safari's bottom toolbar before first paint -- without that
-        // this inset flips from 0 to ~34px the moment a page becomes
-        // scrollable, and a bar measured from it jumps.
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 10px)" }}
+        // The home-indicator strip and nothing else. There used to be another
+        // 10px on top of it so the dock "floated", which is what left it
+        // sitting up off the bottom of the phone instead of on it. The inset
+        // itself stays: the strip is where the system draws the home
+        // indicator, and a tab bar underneath it cannot be tapped.
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
         {/* A floating dock rather than a bar welded to the edge. The pane is
             the layered material: displaced backdrop, contrast fill, bevel. */}

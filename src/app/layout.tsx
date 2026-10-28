@@ -65,16 +65,25 @@ export default function RootLayout({
                every app with a dark mode gets wrong. "system" follows the OS
                and is the default, so a phone in dark mode opens dark without
                anyone choosing anything. */
-            __html: `try{var t=localStorage.getItem('theme')||'dark';var d=t!=='light'&&(t!=='system'||window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);document.documentElement.classList.toggle('light',!d);}catch(e){document.documentElement.classList.add('dark');}`,
+            __html: `try{var d=localStorage.getItem('theme')!=='light';document.documentElement.classList.toggle('dark',d);document.documentElement.classList.toggle('light',!d);}catch(e){document.documentElement.classList.add('dark');}`,
           }}
         />
         <script
           dangerouslySetInnerHTML={{
-            /* §4. The shell is sized from the visual viewport, so opening the
-               keyboard shrinks it rather than scrolling the document under a
-               fixed bar. Runs once and then only on resize; no scroll
-               listener, nothing that touches React state. */
-            __html: `(function(){var v=window.visualViewport;function s(){document.documentElement.style.setProperty('--vvh',(v?v.height:window.innerHeight)+'px');}if(v){v.addEventListener('resize',s,{passive:true});}s();})();`,
+            /* §4. The keyboard, and only the keyboard, shrinks the shell.
+               This used to pin --vvh to visualViewport.height at all times,
+               which is wrong twice over: browser chrome is already what
+               100dvh tracks, and Safari does not reliably fire resize when it
+               collapses its bottom toolbar -- so --vvh stayed at the smaller
+               measurement, #app stayed short, and the tab bar sat in a band of
+               dead space above the bottom of the screen. Pinch-zoom shrinks
+               the visual viewport too, and resized the whole app with it.
+
+               So: leave --vvh unset and let the CSS fallback of 100dvh do the
+               work, and only override it when the gap is big enough to be a
+               keyboard rather than a toolbar. Runs once and then only on
+               resize; no scroll listener, nothing that touches React state. */
+            __html: `(function(){var v=window.visualViewport;if(!v)return;var d=document.documentElement;function s(){if(window.innerHeight-v.height>150){d.style.setProperty('--vvh',v.height+'px');}else{d.style.removeProperty('--vvh');}}v.addEventListener('resize',s,{passive:true});s();})();`,
           }}
         />
         <script

@@ -26,28 +26,24 @@ export function BackButton() {
   if (pathname === "/" || pathname.startsWith("/signin") || pathname === "/spot") return null;
 
   return (
-    <>
-      <button
-        type="button"
-        onClick={() => {
-          // history.back() when there is somewhere to go back to, and home
-          // otherwise — a deep link opened in a new tab has no history, and a
-          // back button that does nothing is worse than no back button.
-          if (window.history.length > 1) router.back();
-          else router.push("/");
-        }}
-        aria-label="Back"
-        style={{ top: "calc(var(--safe-top) + 0.75rem)" }}
-        className="press glass-bubble fixed left-3 z-[62] flex h-10 w-10 items-center justify-center rounded-full"
-      >
-        <ChevronLeft className="h-5 w-5 text-foreground" strokeWidth={2.5} aria-hidden />
-      </button>
-
-      {/* Holds the page down by the arrow's own height, the way the nav's
-          spacer does at the other end. The button is fixed, so without this it
-          floats over whatever the page happens to start with — which on most
-          screens here is the heading. */}
-      <div style={{ height: "var(--back-h)" }} className="shrink-0" aria-hidden />
-    </>
+    <button
+      type="button"
+      onClick={() => {
+        // history.back() when there is somewhere to go back to, and home
+        // otherwise — a deep link opened in a new tab has no history, and a
+        // back button that does nothing is worse than no back button.
+        if (window.history.length > 1) router.back();
+        else router.push("/");
+      }}
+      // The selector globals.css keys the heading clearance off. The spacer
+      // that used to do that job sat beside <main> in #app's flow, which §4
+      // emptied when it made main absolute; the clearance is main's top
+      // padding now.
+      aria-label="Back"
+      style={{ top: "calc(var(--safe-top) + 0.75rem)" }}
+      className="press glass-bubble fixed left-3 z-[62] flex h-10 w-10 items-center justify-center rounded-full"
+    >
+      <ChevronLeft className="h-5 w-5 text-foreground" strokeWidth={2.5} aria-hidden />
+    </button>
   );
 }

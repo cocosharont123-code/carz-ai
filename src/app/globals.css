@@ -370,22 +370,11 @@
     overflow-y: auto;
     overflow-x: clip;
     overscroll-behavior-y: contain;
-    padding-top: var(--safe-top);
-    /* 12px by default. A screen without a tab bar must not reserve room for
-       one -- that was 88px of padding on the sign-in screen, which is scroll
-       invented out of nothing on a screen that otherwise fits. */
-    padding-bottom: 12px;
     /* Belt and braces, and the same value #app already uses, so in the normal
        case this is exactly the height main has anyway and changes nothing.
        It only matters if some ancestor ever becomes a zero-height containing
        block again: the screen is then merely scrolled oddly rather than gone. */
     min-height: var(--vvh, 100dvh);
-  }
-
-  /* Reserve the bar's height only where the bar actually renders. Pure CSS
-     via :has(), so nothing has to tell the stylesheet which routes hide it. */
-  #app:has(nav[aria-label="Main"]) main {
-    padding-bottom: calc(var(--nav-h) + 12px);
   }
   body {
     @apply bg-background text-foreground;
@@ -610,6 +599,49 @@ body {
 :where(a, button, input, select, textarea, [tabindex]):focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px #000, 0 0 0 4px rgba(255, 255, 255, 0.9);
+}
+
+/* ==========================================================================
+   §4 — the scroller's insets, and why these are not in @layer base.
+
+   An unlayered rule beats every @layer, including Tailwind's utilities. That
+   is the whole point here: about thirty pages set py-10 / py-14 / py-2 on
+   their own <main>, and from inside @layer base these insets lost to every
+   one of them. What that cost was not cosmetic.
+
+   At the top, a page's py-* replaced the safe-area inset. py-10 is 40px and
+   the inset on a notched iPhone is ~59px, so the masthead sat under the
+   status bar -- and since it is padding rather than content, no amount of
+   scrolling brought it down. That is the "can't scroll all the way up".
+
+   At the bottom, the same utility replaced the tab bar's clearance, so the
+   last rows of every page were underneath the dock.
+
+   The page's own vertical rhythm is deliberately not preserved. These values
+   are the rhythm now, they are the same on every screen, and they are the
+   smallest ones that clear the hardware -- which is what keeps a screen that
+   fits from scrolling.
+   ========================================================================== */
+#app main {
+  padding-top: var(--safe-top);
+  /* A screen without a tab bar must not reserve room for one -- that was 88px
+     of padding on the sign-in screen, which is scroll invented from nothing on
+     a screen that otherwise fits. */
+  padding-bottom: 12px;
+}
+
+/* Reserve each piece of furniture only where it actually renders. Pure CSS via
+   :has(), so nothing has to tell the stylesheet which routes draw what. */
+#app:has(nav[aria-label="Main"]) main {
+  padding-bottom: calc(var(--nav-h) + 12px);
+}
+
+/* The back arrow is position:fixed and its spacer used to sit beside <main> in
+   #app's flow. §4 made main absolute, which took it out of that flow and left
+   the spacer holding nothing down -- so the arrow floated over the heading of
+   every page that has one. The clearance belongs here, inside the scroller. */
+#app:has(button[aria-label="Back"]) main {
+  padding-top: calc(var(--safe-top) + var(--back-h));
 }
 
 @media (prefers-reduced-motion: no-preference) {

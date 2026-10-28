@@ -1,43 +1,36 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { LegalNotice } from "@/components/legal-notice";
 import { BottomNav } from "@/components/bottom-nav";
 
 /**
- * The furniture under every page: the standing legal line, then the nav.
+ * The furniture under every page: the nav.
  *
- * Both are hidden on the sign-in flow, which is the reason this component
- * exists. A tab bar on a sign-in screen is five taps that all go nowhere, and
- * the nav also renders the spacer that holds pages clear of it — so leaving it
- * mounted would cost a full-height screen exactly one nav's worth of height and
- * make it scroll.
+ * Hidden on the sign-in flow, which is the reason this component exists. A tab
+ * bar on a sign-in screen is five taps that all go nowhere.
  *
- * Gated here rather than inside each one. BottomNav reaches its first return
- * past a dozen hooks, and a bail-out added above them is the kind of edit that
- * works until someone adds a hook underneath it.
+ * Gated here rather than inside BottomNav. That component reaches its first
+ * return past a dozen hooks, and a bail-out added above them is the kind of
+ * edit that works until someone adds a hook underneath it.
  *
- * Order is load-bearing: the nav is fixed to the bottom and the spacer it
- * renders has to come last in the flow.
+ * The standing legal line used to render here too, above the nav. §4 made
+ * <main> absolutely positioned, which took it out of #app's flow -- and that
+ * left the notice as the first in-flow child, so it painted at the TOP of
+ * every screen, across the page's own title. There is no longer a "after the
+ * page content" slot out here to put it back into: main is the only scroller
+ * and the chrome sits outside it.
+ *
+ * It is dropped rather than pinned above the nav, because pinning it costs
+ * every screen ~30px of permanent furniture and pushes fitting screens into
+ * scrolling. Acceptance is not lost with it: signing in is mandatory for the
+ * whole app now, and the sign-in screen carries an explicit consent line above
+ * the button with both documents linked -- so every user agrees on the way in,
+ * which is a stronger record than browsewrap was. Both documents stay linked
+ * from Settings.
  */
 export function AppChrome() {
   const pathname = usePathname();
   if (pathname.startsWith("/signin")) return null;
 
-  /**
-   * Full-bleed pages get the nav but not the standing legal line.
-   *
-   * The line is a paragraph in the flow, so on a page already sized to the
-   * whole viewport it is pure extra height -- which is the stray scroll on the
-   * map. The notice still appears under every page that scrolls anyway, which is
-   * every other one, so nothing stops binding by use.
-   */
-  const fullBleed = pathname.startsWith("/map");
-
-  return (
-    <>
-      {!fullBleed && <LegalNotice />}
-      <BottomNav />
-    </>
-  );
+  return <BottomNav />;
 }

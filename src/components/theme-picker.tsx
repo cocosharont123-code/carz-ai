@@ -1,35 +1,33 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Sun, Moon, Smartphone } from "lucide-react";
+import { Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
- * Light, Dark, or follow the phone.
+ * Light or Dark.
  *
  * The choice is kept in localStorage and applied by an inline script in the
  * layout before first paint, so there is no flash of the wrong theme on load.
  * This component only writes the preference and flips the class for the current
  * page; it is not what applies the theme on a cold start.
  *
- * System is the default and is a real option, not a fallback. A phone that
- * switches to dark at sunset should take the app with it unless someone has
- * said otherwise.
+ * There is no System option. Anyone who had selected it keeps the stored
+ * value, and both this and the boot script read anything that is not "light"
+ * as dark -- so an old "system" preference settles on dark rather than needing
+ * a migration.
  */
 
-type Theme = "light" | "dark" | "system";
+type Theme = "light" | "dark";
 
 const OPTIONS: { id: Theme; label: string; Icon: typeof Sun }[] = [
   { id: "light", label: "Light", Icon: Sun },
   { id: "dark", label: "Dark", Icon: Moon },
-  { id: "system", label: "System", Icon: Smartphone },
 ];
 
-/** The one place the class is decided, shared by the picker and the listener. */
+/** The one place the class is decided. */
 function apply(theme: Theme) {
-  const dark =
-    theme === "dark" ||
-    (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const dark = theme !== "light";
   document.documentElement.classList.toggle("dark", dark);
   document.documentElement.classList.toggle("light", !dark);
 }
@@ -46,26 +44,14 @@ export function ThemePicker() {
     // a synchronous state write in an effect body cascades renders.
     Promise.resolve().then(() => {
       if (cancelled) return;
-      const saved = localStorage.getItem("theme");
-      // Dark unless something else was explicitly saved -- the same default
-      // the boot script uses, or the control would show System selected while
-      // the app rendered dark.
-      setTheme(saved === "light" || saved === "system" ? saved : "dark");
+      // Dark unless Light was explicitly saved -- the same rule the boot
+      // script uses, so the selected option always matches what is on screen.
+      setTheme(localStorage.getItem("theme") === "light" ? "light" : "dark");
     });
     return () => {
       cancelled = true;
     };
   }, []);
-
-  // Only while following the system. Someone who has picked Light does not want
-  // their phone overriding them at sunset.
-  useEffect(() => {
-    if (theme !== "system") return;
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const onChange = () => apply("system");
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, [theme]);
 
   function pick(next: Theme) {
     setTheme(next);
@@ -82,7 +68,7 @@ export function ThemePicker() {
     <div
       role="radiogroup"
       aria-label="Appearance"
-      className="mt-3 grid grid-cols-3 gap-2"
+      className="mt-3 grid grid-cols-2 gap-2"
     >
       {OPTIONS.map(({ id, label, Icon }) => {
         const active = theme === id;
