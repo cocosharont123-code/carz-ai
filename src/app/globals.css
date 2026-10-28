@@ -752,6 +752,22 @@ body {
   --secondary-text: #525252;
 }
 
+/* §2 .glass--clear: glass sitting on a photo rather than on the page.
+
+   The material is unchanged -- same fill, blur, rim and shadow. Only the type
+   colour is, and it has to be: .glass-card sets color from --foreground, which
+   is correct on the page and wrong here, because what is behind this is a
+   photo under a gradient that runs to solid black. In light mode that resolved
+   to black type on a black hero. White in both themes instead.
+
+   Unlayered, like the rest of the glass, so it beats the utilities a caller
+   might reach for and there is one place that decides this. */
+.glass-card.on-media,
+.glass-bubble.on-media {
+  color: #fff;
+  --secondary-text: #e5e5e5;
+}
+
 .glass-card::before,
 .glass-bubble::before,
 .blur-behind::before {

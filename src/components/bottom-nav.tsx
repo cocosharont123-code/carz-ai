@@ -61,19 +61,28 @@ export function BottomNav() {
         // belongs to the shell and cannot drift when the visual viewport
         // changes. main's padding-bottom keeps content clear of it -- there is
         // no spacer element any more.
-        className="absolute inset-x-0 bottom-0 z-[60] flex justify-center px-3"
-        // The home-indicator strip and nothing else. There used to be another
-        // 10px on top of it so the dock "floated", which is what left it
-        // sitting up off the bottom of the phone instead of on it. The inset
-        // itself stays: the strip is where the system draws the home
-        // indicator, and a tab bar underneath it cannot be tapped.
-        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+        className="absolute inset-x-0 bottom-0 z-[60] flex justify-center"
       >
-        {/* A floating dock rather than a bar welded to the edge. The pane is
-            the layered material: displaced backdrop, contrast fill, bevel. */}
+        {/* Welded to the bottom edge, not floating above it.
+
+            It floated before: side margins, and the home-indicator strip as
+            padding underneath. That is what kept leaving it sitting up off the
+            bottom of the phone. The strip still cannot be built on -- it is
+            where the system draws the indicator and a tab stacked under it
+            cannot be tapped -- so the glass extends through it while the tabs
+            stop above it. That is how the native tab bar does it, and it is
+            the only way to be on the bottom edge and still tappable.
+
+            The height carries the inset for the same reason: with border-box
+            sizing, padding inside a fixed height would eat the row rather than
+            extend the material. Top corners only -- a radius on the bottom two
+            would show the page through the corners of a bar that is flush. */}
         <GlassPane
-          className="flex w-full max-w-[480px] items-stretch rounded-[28px]"
-          style={{ height: BAR_H }}
+          className="flex w-full items-stretch rounded-t-[28px] rounded-b-none"
+          style={{
+            height: `calc(${BAR_H} + env(safe-area-inset-bottom, 0px))`,
+            paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          }}
         >
           {TABS.map(({ href, label, Icon, match, ...rest }) => {
             const active = match(pathname);

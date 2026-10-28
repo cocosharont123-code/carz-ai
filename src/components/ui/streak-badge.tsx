@@ -29,7 +29,10 @@ interface StreakResponse {
 
 // Variants
 const streakBadgeVariants = cva(
-  "inline-flex flex-col items-center justify-center rounded-3xl border border-border/60 bg-card text-center text-card-foreground transition-colors",
+  // rounded-card is the app's own radius token, so this is a squircle via the
+  // global corner-shape rule and matches every other card. rounded-3xl was a
+  // raw Tailwind value, which §9 calls a library default showing through.
+  "inline-flex flex-col items-center justify-center rounded-card border border-border/60 bg-card text-center text-card-foreground transition-colors",
   {
     variants: {
       size: {

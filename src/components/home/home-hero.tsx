@@ -45,11 +45,14 @@ export function HomeHero() {
         </Link>
       </header>
 
-      {/* The block is anchored to the bottom, so it grows upward: the streak
-          appears above the headline once the garage has been read and the
-          headline itself does not move. */}
       <div className="absolute inset-x-0 bottom-0 px-5 pb-5">
-        <RarityStreak className="mb-4 border-white/20 bg-white/[0.08] text-white backdrop-blur-md" />
+        {/* Beside the headline, not above it, and positioned rather than a
+            flex sibling on purpose. A flex row would cap every one of the four
+            lines at the width left over by the badge, and "Everything." at
+            36px extrabold does not fit in what remains on a 360px phone. Out
+            of flow, the badge only has to clear the two short lines it
+            actually sits next to, and the headline keeps the full column. */}
+        <RarityStreak className="glass-card on-media absolute right-5 top-0" />
 
         <h1 className="text-[36px] font-extrabold uppercase leading-[0.95] tracking-[-0.02em]">
           <span className="block text-white">Snap</span>
