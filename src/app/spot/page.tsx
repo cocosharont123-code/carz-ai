@@ -519,6 +519,36 @@ export default function SpotPage() {
     refresh().catch(() => {});
   }, []);
 
+  /**
+   * Open the camera on arrival, rather than waiting for a tap on the frame.
+   *
+   * This can only ever be an attempt. Opening the camera means clicking a file
+   * input, and a browser will only honour that while it holds a user
+   * activation -- it is the one thing a page cannot do to you unprompted.
+   *
+   * Arriving from the Scan button is a tap, and a client-side route change
+   * keeps the same document, so the activation from that tap is usually still
+   * live when this runs and the camera opens by itself. A cold load has no
+   * activation and nothing happens: no error, no dialog, just the scanner
+   * frame waiting to be tapped, which is the screen as it was. So this is
+   * strictly an improvement on the common path and a no-op on the other.
+   *
+   * Guarded by a ref rather than state so it cannot fire twice, and skipped
+   * outright if a photo is already in hand -- coming back to a scan in
+   * progress should not reopen the camera over it.
+   */
+  const autoOpened = useRef(false);
+  useEffect(() => {
+    if (autoOpened.current) return;
+    autoOpened.current = true;
+    if (previewUrl || car) return;
+    liveCapture.current = true;
+    cameraInputRef.current?.click();
+    // Mount only: a dependency on previewUrl would reopen the camera every
+    // time a photo is cleared.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Advance the scan bar while a scan is in flight. The write happens in the
   // interval callback — an external event — not in the effect body. `identify`
   // resets the value back to 0 before it sets `loading`, so a re-scan starts

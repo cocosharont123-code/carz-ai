@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { User } from "lucide-react";
+import { RarityStreak } from "@/components/home/rarity-streak";
 
 /**
  * The home hero: photo, headline, and the way into your profile.
@@ -44,7 +45,12 @@ export function HomeHero() {
         </Link>
       </header>
 
+      {/* The block is anchored to the bottom, so it grows upward: the streak
+          appears above the headline once the garage has been read and the
+          headline itself does not move. */}
       <div className="absolute inset-x-0 bottom-0 px-5 pb-5">
+        <RarityStreak className="mb-4 border-white/20 bg-white/[0.08] text-white backdrop-blur-md" />
+
         <h1 className="text-[36px] font-extrabold uppercase leading-[0.95] tracking-[-0.02em]">
           <span className="block text-white">Snap</span>
           <span className="block text-white">Any car.</span>
