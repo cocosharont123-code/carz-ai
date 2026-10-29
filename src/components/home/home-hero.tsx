@@ -21,7 +21,7 @@ const HERO_PHOTO = "/home-hero-default.jpg";
 export function HomeHero() {
   return (
     <section
-      className="relative -mx-5 h-[45vh] min-h-[320px] overflow-hidden bg-[#0a0a0a] bg-cover bg-center"
+      className="relative -mx-5 h-[45%] min-h-[220px] overflow-hidden bg-[#0a0a0a] bg-cover bg-center"
       style={{ backgroundImage: `url(${HERO_PHOTO})` }}
     >
       {/* Two overlays, not one. The top is a short scrim so the streak badge
