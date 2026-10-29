@@ -1,6 +1,6 @@
 import Link from "next/link";
 import {
-  Bot, Image as ImageIcon, Trophy, Ticket,
+  Bot, Image as ImageIcon, Trophy, Ticket, ChevronRight, Calendar,
   Crown, Gavel, Heart, Sparkles, Settings,
 } from "lucide-react";
 import { HomeHero } from "@/components/home/home-hero";
@@ -88,6 +88,35 @@ export default function Home() {
         <FeaturedCars />
       </Section>
 
+      <Section title="Upcoming Events" href="/events">
+        {/* A placeholder, which the spec allows, and the honest option here.
+            Events are generated on demand by an AI call that needs a location,
+            so there is no stored list to read -- and running that on every home
+            page load would be a bill and a wait for a card nobody asked for. It
+            opens /events, which asks for a place and then has real ones. */}
+        <Link
+          href="/events"
+          className="press glass-card relative flex min-h-24 items-end overflow-hidden rounded-tile p-4"
+        >
+          <span aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+          <span className="relative flex w-full items-center gap-3">
+            <Calendar className="h-5 w-5 shrink-0 text-foreground" strokeWidth={1.75} aria-hidden />
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[17px] font-bold text-foreground">
+                Find car meets near you
+              </span>
+              <span className="block truncate text-[12px] text-[var(--color-secondary-text)]">
+                Meets, concours and track days
+              </span>
+            </span>
+            <ChevronRight
+              className="h-[18px] w-[18px] shrink-0 text-[var(--color-muted-text)]"
+              strokeWidth={1.75}
+              aria-hidden
+            />
+          </span>
+        </Link>
+      </Section>
     </main>
   );
 }
