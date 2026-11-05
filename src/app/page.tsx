@@ -50,7 +50,7 @@ export default function Home() {
 
       {/* Fully below the hero. It was pulled up onto the fade by -mt-3, which
           put the top of the pill over the photo. */}
-      <div className="mt-4">
+      <div className="mt-3">
         <HomeSearch />
       </div>
 
@@ -59,7 +59,7 @@ export default function Home() {
           on a desktop and 100vw alone would size these for a monitor. */}
       <nav
         aria-label="Quick actions"
-        className="-mx-5 mt-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="-mx-5 mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {QUICK.map(({ href, Icon, title }) => (
           <Link
@@ -131,7 +131,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="mt-6">
+    <section className="mt-5">
       <div className="flex items-baseline justify-between">
         <h2 className="text-[21px] font-bold text-foreground">{title}</h2>
         <Link href={href} className="press text-[15px] text-[var(--color-secondary-text)]">
