@@ -1124,6 +1124,26 @@ function createRuntime(env: Env): Runtime {
 }
 
 /* ───────────────────────────── component ───────────────────────────── */
+
+/**
+ * One label's contents. Outside the component because it closes over nothing
+ * local, and react-hooks/static-components would rather a function that returns
+ * JSX were not declared during a render.
+ */
+function labelInner(name: string) {
+  if (name === COPY.done) return <span className="mo-lab-done">{name}</span>;
+  return (
+    <>
+      <span className="mo-lab-t">{name}</span>
+      <span className="mo-dots" aria-hidden="true">
+        <i />
+        <i />
+        <i />
+      </span>
+    </>
+  );
+}
+
 const useIsoLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 export default function MorphOrb(props: MorphOrbProps) {
@@ -1135,10 +1155,6 @@ export default function MorphOrb(props: MorphOrbProps) {
     n: 0,
   });
   const [answer, setAnswer] = useState("");
-  const [dbgSpeed, setDbgSpeed] = useState(1);
-  const [debug] = useState(
-    () => typeof window !== "undefined" && /[?&]debug(?:[=&]|$)/.test(window.location.search),
-  );
 
   const rootRef = useRef<HTMLDivElement>(null);
   const moverRef = useRef<HTMLDivElement>(null);
@@ -1153,10 +1169,21 @@ export default function MorphOrb(props: MorphOrbProps) {
   const liveRef = useRef<HTMLDivElement>(null);
   const ghostRefs = useRef<(HTMLSpanElement | null)[]>([]);
 
+  /**
+   * The live props, for the runtime to read from inside a frame.
+   *
+   * Seeded in the useRef initialiser and updated in an effect, not assigned
+   * during render: react-hooks/refs makes writing a ref while rendering an
+   * error, and it is right to -- a render that mutates something outside itself
+   * cannot be replayed. The initialiser covers the first render, and the effect
+   * every one after it, which between them is every value the runtime can see.
+   */
   const propsRef = useRef(props);
-  propsRef.current = props;
-  const speedRef = useRef(1);
-  speedRef.current = Math.max(0.05, (props.speed ?? 1) * dbgSpeed);
+  const speedRef = useRef(Math.max(0.05, props.speed ?? 1));
+  useEffect(() => {
+    propsRef.current = props;
+    speedRef.current = Math.max(0.05, props.speed ?? 1);
+  });
   const phaseRef = useRef<Phase>("idle");
   const reducedRef = useRef(false);
   const rtRef = useRef<Runtime | null>(null);
@@ -1307,34 +1334,8 @@ export default function MorphOrb(props: MorphOrbProps) {
     if (phaseRef.current === "answered") rtRef.current?.reset();
   };
 
-  const replay = () => {
-    const rt = rtRef.current;
-    if (!rt) return;
-    const text = lastTextRef.current || "hello";
-    lastTextRef.current = text;
-    rt.hard();
-    setValue(text);
-    window.requestAnimationFrame(() => {
-      rt.start(text, makeCfg());
-    });
-  };
-
   const ready = value.trim().length > 0;
   const words = answer.split(/\s+/).filter(Boolean);
-
-  const labelInner = (name: string) =>
-    name === COPY.done ? (
-      <span className="mo-lab-done">{name}</span>
-    ) : (
-      <>
-        <span className="mo-lab-t">{name}</span>
-        <span className="mo-dots" aria-hidden="true">
-          <i />
-          <i />
-          <i />
-        </span>
-      </>
-    );
 
   return (
     <div className="mo-root" data-phase={phase} ref={rootRef}>
@@ -1466,26 +1467,6 @@ export default function MorphOrb(props: MorphOrbProps) {
 
       <div className="mo-live" ref={liveRef} role="status" aria-live="polite" />
 
-      {debug && (
-        <div className="mo-debug">
-          <span className="mo-chip">{phase}</span>
-          <label>
-            <span>{dbgSpeed.toFixed(2)}×</span>
-            <input
-              type="range"
-              min={0.25}
-              max={2}
-              step={0.05}
-              value={dbgSpeed}
-              aria-label="Speed"
-              onChange={(e) => setDbgSpeed(parseFloat(e.target.value))}
-            />
-          </label>
-          <button type="button" onClick={replay}>
-            Replay
-          </button>
-        </div>
-      )}
     </div>
   );
 }
