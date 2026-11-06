@@ -38,12 +38,19 @@ type ButtonProps = {
  * hover. No glass, and no scale: a 3% grow on press fights the 97% shrink
  * .press already applies.
  */
-const PRIMARY = "bg-carz text-carz-ink hover:bg-foreground/90";
+// The glass capsule, as the brief for buttons asked. Its anatomy -- the conic
+// rim, the specular band, the shadow -- is `.gbtn` in globals.css, layered onto
+// the app's own glass material rather than a second one.
+//
+// Both variants keep the capsule and differ only in fill, so the hierarchy §5
+// asks for survives: tint is the key colour and stays one per view, plain is
+// the material on its own.
+const PRIMARY = "gbtn gbtn--tint";
 const SECONDARY =
   // The hover was bg-[var(--color-raised)] -- an opaque fill, so touching a
   // glass button turned it into a solid box. It brightens the material
   // instead, which is what glass does when it catches more light.
-  "glass-card border-[var(--line-button)] text-foreground hover:border-foreground/35";
+  "gbtn glass-card border-[var(--line-button)] text-foreground hover:border-foreground/35";
 
 export function Button({
   href,
@@ -57,7 +64,7 @@ export function Button({
   ...rest
 }: ButtonProps) {
   const base =
-    "press inline-flex items-center justify-center gap-2 rounded-full font-semibold tracking-tight transition-colors duration-300 disabled:cursor-not-allowed disabled:opacity-40";
+    "press relative inline-flex items-center justify-center gap-2 rounded-full font-semibold tracking-tight transition-colors duration-300 disabled:cursor-not-allowed disabled:opacity-40";
   const variants = {
     solid: PRIMARY,
     outline: SECONDARY,
@@ -71,17 +78,23 @@ export function Button({
     lg: "h-[52px] px-8 text-[15px]",
   };
   const cls = cn(base, variants[variant], sizes[size], className);
+  // ghost is text on the page with no capsule behind it, so it gets no band.
+  const sheen = variant === "ghost" ? null : <span aria-hidden className="gbtn-sheen" />;
   if (href) {
     return (
       <Link href={href} className={cls} target={target}>
-        {children}
+        {sheen}
+        <span className="gbtn-label">{children}</span>
       </Link>
     );
   }
   return (
     <button className={cls} disabled={disabled || loading} aria-busy={loading || undefined} {...rest}>
-      {loading && <Spinner className="h-3.5 w-3.5" />}
-      {children}
+      {sheen}
+      <span className="gbtn-label">
+        {loading && <Spinner className="h-3.5 w-3.5" />}
+        {children}
+      </span>
     </button>
   );
 }
