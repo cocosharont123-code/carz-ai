@@ -84,7 +84,40 @@ async function currentUrl(): Promise<string | null> {
   }
 }
 
-export async function readBoard(): Promise<RareCar[]> {
+/**
+ * A photo baked into the board's own JSON, rather than stored as a file.
+ *
+ * Those are the 200px thumbnails the first version of this kept inline, and
+ * 200px is all that was ever saved of them -- there is no larger copy anywhere
+ * to go back to. Everything stored since is a Blob file URL at 1080px, so the
+ * format is a reliable marker for that generation.
+ */
+const isLegacyPhoto = (image: string | undefined): boolean => !!image?.startsWith("data:");
+
+/**
+ * Entries whose photo cannot be anything but pixelated, dropped.
+ *
+ * A car that gets spotted again trades its old thumbnail for the 1080px upload
+ * (see the dedupe in `recordRareSpot`), so anything still holding a data URL is
+ * a car nobody has photographed since -- and it never will be sharper. Asked
+ * for directly: the ones that can be 1080p become 1080p, the ones that cannot
+ * come off the board.
+ *
+ * Entries with no photo at all are left alone. They draw the car outline rather
+ * than a blurred photograph, so they are not what this is about, and removing
+ * them would delete a legitimate top score for an unrelated reason.
+ */
+const usable = (cars: RareCar[]): RareCar[] => cars.filter((c) => !isLegacyPhoto(c.image));
+
+/**
+ * The stored board, exactly as written.
+ *
+ * Only the write path wants this. It has to see the legacy entries, because
+ * inheriting their photo is how a re-spotted car gets upgraded -- filter them
+ * out before the dedupe and there is nothing left to upgrade, and every one of
+ * them would be deleted rather than only the ones that cannot be saved.
+ */
+async function readBoardRaw(): Promise<RareCar[]> {
   const url = await currentUrl();
   if (!url) return [];
   try {
@@ -95,6 +128,17 @@ export async function readBoard(): Promise<RareCar[]> {
   } catch {
     return [];
   }
+}
+
+/**
+ * The board as it should be shown.
+ *
+ * Filtered here as well as on write, so a blurred entry is gone from the next
+ * page load rather than from the next spot of that car -- the write is what
+ * makes it permanent.
+ */
+export async function readBoard(): Promise<RareCar[]> {
+  return usable(await readBoardRaw());
 }
 
 async function writeBoard(cars: RareCar[]): Promise<void> {
@@ -114,7 +158,7 @@ export async function recordRareSpot(car: Omit<RareCar, "id" | "ts">): Promise<v
   if (!leaderboardConfigured()) return;
   if (!car.make || !car.model || !(car.rarityScore > 0)) return;
 
-  const board = await readBoard();
+  const board = await readBoardRaw();
   const entry: RareCar = {
     ...car,
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -143,18 +187,21 @@ export async function recordRareSpot(car: Omit<RareCar, "id" | "ts">): Promise<v
       byModel.set(key, c);
       continue;
     }
-    // Inherit a photo the holder lacks -- and also replace one it holds as a
-    // base64 data URL. Those are the 200px thumbnails the first version of this
-    // stored inline, and at the size the board can now be opened to they are
-    // visibly pixelated. A data URL is a reliable marker for that generation,
-    // because everything stored since is a Blob file URL, so a car that is
-    // spotted again quietly trades its old thumbnail for the 1080px upload.
-    const holderPhotoIsLegacy = held.image?.startsWith("data:") ?? false;
-    const incomingIsFile = !!c.image && !c.image.startsWith("data:");
-    if ((!held.image && c.image) || (holderPhotoIsLegacy && incomingIsFile)) {
+    // Inherit a photo the holder lacks, and replace one it holds as a legacy
+    // inline thumbnail: a car that is spotted again quietly trades its 200px
+    // copy for the 1080px upload. That is the "make the ones that can be 1080p
+    // 1080p" half -- the holder keeps its score, its reason and its spotter,
+    // and only the photograph is swapped.
+    const incomingIsFile = !!c.image && !isLegacyPhoto(c.image);
+    if ((!held.image && c.image) || (isLegacyPhoto(held.image) && incomingIsFile)) {
       byModel.set(key, { ...held, image: c.image });
     }
   }
-  const top = [...byModel.values()].sort((a, b) => b.rarityScore - a.rarityScore).slice(0, MAX);
+  // And the other half: anything still holding an inline thumbnail after the
+  // swap above is a car nobody has re-photographed, so it leaves the board for
+  // good rather than sitting there blurred.
+  const top = usable([...byModel.values()])
+    .sort((a, b) => b.rarityScore - a.rarityScore)
+    .slice(0, MAX);
   await writeBoard(top);
 }
