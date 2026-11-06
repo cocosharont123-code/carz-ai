@@ -68,24 +68,30 @@ export default function RootLayout({
             __html: `try{var d=localStorage.getItem('theme')!=='light';document.documentElement.classList.toggle('dark',d);document.documentElement.classList.toggle('light',!d);}catch(e){document.documentElement.classList.add('dark');}`,
           }}
         />
-        <script
-          dangerouslySetInnerHTML={{
-            /* §4. The keyboard, and only the keyboard, shrinks the shell.
-               This used to pin --vvh to visualViewport.height at all times,
-               which is wrong twice over: browser chrome is already what
-               100dvh tracks, and Safari does not reliably fire resize when it
-               collapses its bottom toolbar -- so --vvh stayed at the smaller
-               measurement, #app stayed short, and the tab bar sat in a band of
-               dead space above the bottom of the screen. Pinch-zoom shrinks
-               the visual viewport too, and resized the whole app with it.
+        {/* §4 asks for a keyboard-aware shell driven by visualViewport, and
+            there is no script here any more, on purpose.
 
-               So: leave --vvh unset and let the CSS fallback of 100dvh do the
-               work, and only override it when the gap is big enough to be a
-               keyboard rather than a toolbar. Runs once and then only on
-               resize; no scroll listener, nothing that touches React state. */
-            __html: `(function(){var v=window.visualViewport;if(!v)return;var d=document.documentElement;function s(){if(window.innerHeight-v.height>150){d.style.setProperty('--vvh',v.height+'px');}else{d.style.removeProperty('--vvh');}}v.addEventListener('resize',s,{passive:true});s();})();`,
-          }}
-        />
+            There was one: it set --vvh to visualViewport.height whenever the
+            gap looked like a keyboard, and #app took its height from that. The
+            height was right and the position was not. iOS does not move the
+            document when the keyboard opens -- it scrolls the *visual*
+            viewport down by offsetTop to bring the focused field into view,
+            while html and body keep the full layout-viewport height. So #app
+            still started at document row 0 and now ended at row v.height,
+            the window showed rows [offsetTop, offsetTop + v.height], and the
+            last offsetTop pixels of it were bare body: a black band directly
+            above the keyboard, as tall as whatever iOS had scrolled. On a form
+            with fields low down -- sign-up -- that was most of the screen.
+
+            Nothing replaces it, because nothing needs to. The viewport meta
+            leaves interactive-widget at its default of resizes-visual, which
+            means the keyboard changes the visual viewport and leaves the
+            layout viewport and 100dvh alone. The shell stays exactly the size
+            of the screen, the keyboard sits over the bottom of it the way it
+            does in every native app, and the browser scrolls main to reveal
+            the field -- main being the one scroller, that is all it can do.
+            Being inside the layout viewport, every pixel the window can show
+            is a pixel of #app, so there is no band left to go black. */}
         <script
           dangerouslySetInnerHTML={{
             /* §2. Glass kill switch for devices that will not keep 120fps with
