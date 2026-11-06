@@ -1,9 +1,17 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { FinishStep } from "@/components/auth/finish-step";
-import { ensureProfile, needsSetup, MIN_AGE } from "@/lib/profile-blob";
+import {
+  ensureProfile,
+  needsSetup,
+  freshest,
+  readSnapshot,
+  PROFILE_COOKIE,
+  MIN_AGE,
+} from "@/lib/profile-blob";
 
 /**
  * Step two: the account itself.
@@ -47,7 +55,18 @@ export default async function FinishPage({
 
   // The record is created on first sight whatever happens here, so the form
   // starts from a real username rather than an empty field.
-  const { profile } = await ensureProfile(email);
+  const { profile: fromBlob } = await ensureProfile(email);
+
+  /**
+   * The snapshot cookie counts as an answer here too.
+   *
+   * Blob overwrites are eventually consistent, so finishing this form and then
+   * arriving back at it -- a reload, a second sign-in, the Google round trip --
+   * could read the copy from before the save and ask for everything again.
+   * The cookie carries setupAt, so once it is done it stays done.
+   */
+  const jar = await cookies();
+  const profile = freshest(fromBlob, readSnapshot(email, jar.get(PROFILE_COOKIE)?.value));
   if (!needsSetup(profile, email)) redirect(callbackUrl);
 
   return (

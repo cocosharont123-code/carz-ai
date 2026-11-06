@@ -8,6 +8,10 @@ import {
   validateDob,
   ProfileStorageError,
   UNAME_COOKIE,
+  PROFILE_COOKIE,
+  encodeSnapshot,
+  readSnapshot,
+  freshest,
 } from "@/lib/profile-blob";
 
 export const runtime = "nodejs";
@@ -25,7 +29,18 @@ export async function GET() {
   // Everyone gets a profile on first sight — no setup form, no gate. Falls back
   // to a generated identity when storage is missing or down, so signing in
   // still works and the app always has a name to show.
-  const { profile, stored } = await ensureProfile(email);
+  const { profile: fromBlob, stored } = await ensureProfile(email);
+
+  /**
+   * The blob, or the snapshot cookie, whichever was written last.
+   *
+   * Blob overwrites are eventually consistent, so the read above can answer
+   * with the version from before this account's own last save -- which is how
+   * a just-completed sign-up came back looking like it had never happened.
+   * The cookie is written by POST below and is strongly consistent for the
+   * browser that made the change.
+   */
+  const profile = freshest(fromBlob, readSnapshot(email, jar.get(PROFILE_COOKIE)?.value));
 
   // A name the user chose themselves beats the generated one. If storage is
   // unreachable, `ensureProfile` can only offer the generated name, so prefer
@@ -141,6 +156,16 @@ export async function POST(req: Request) {
   const jar = await cookies();
   jar.set(UNAME_COOKIE, res.profile!.username, {
     path: "/",
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 365,
+  });
+
+  // The whole small half, so a read that lands on a pre-write copy of the blob
+  // still answers with what was just saved. It stops mattering the moment the
+  // blob catches up: equal timestamps, and `freshest` prefers storage.
+  jar.set(PROFILE_COOKIE, encodeSnapshot(email, res.profile!), {
+    path: "/",
+    httpOnly: true,
     sameSite: "lax",
     maxAge: 60 * 60 * 24 * 365,
   });

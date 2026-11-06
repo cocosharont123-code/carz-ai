@@ -6,6 +6,7 @@ import {
   profilesConfigured,
   ProfileStorageError,
   UNAME_COOKIE,
+  PROFILE_COOKIE,
 } from "@/lib/profile-blob";
 import { getUserId, deleteUser, UID_COOKIE, PLAN_COOKIE } from "@/lib/store";
 import { SCAN_MODE_COOKIE } from "@/lib/scan-mode";
@@ -14,7 +15,13 @@ export const runtime = "nodejs";
 
 // Every cookie that identifies this spotter. Cleared together so deletion
 // doesn't leave a signed-out browser still pointing at a freed record.
-const IDENTITY_COOKIES = [UID_COOKIE, PLAN_COOKIE, UNAME_COOKIE, SCAN_MODE_COOKIE];
+const IDENTITY_COOKIES = [
+  UID_COOKIE,
+  PLAN_COOKIE,
+  UNAME_COOKIE,
+  PROFILE_COOKIE,
+  SCAN_MODE_COOKIE,
+];
 
 /**
  * DELETE -> erase the account.

@@ -107,6 +107,78 @@ const PATH = "profiles.json";
 // the same cookie the profile route sets, rather than leaving a stale name behind.
 export const UNAME_COOKIE = "cs_uname";
 
+/**
+ * A profile's small half, mirrored into a cookie on every save.
+ *
+ * Vercel Blob is eventually consistent on overwrite. A read a second after a
+ * write can still answer with the version before it -- which is why
+ * UNAME_COOKIE already existed, and why it was not enough: it mirrored the
+ * username and nothing else, so a sign-up that saved a display name, a
+ * birthday and setupAt could come back from the very next read with all three
+ * missing. The account then looked unsaved and sign-up asked for it all again.
+ *
+ * So the whole of the small half travels in the cookie, and a read prefers
+ * whichever copy is newer. The pictures do not: they are base64 and would not
+ * fit a cookie, and they are also the one part nobody re-enters.
+ *
+ * The account's own key is stored inside it and checked on the way out. Two
+ * people signing into the same browser otherwise means the second one is shown
+ * the first one's name.
+ */
+export const PROFILE_COOKIE = "cs_prof";
+
+export type ProfileSnapshot = Pick<
+  Profile,
+  "username" | "displayName" | "birthday" | "birthYear" | "bio" | "setupAt" | "ts"
+>;
+
+export function encodeSnapshot(email: string, p: Profile): string {
+  const body = {
+    k: keyFor(email),
+    username: p.username,
+    displayName: p.displayName,
+    birthday: p.birthday,
+    birthYear: p.birthYear,
+    bio: p.bio,
+    setupAt: p.setupAt,
+    ts: p.ts,
+  };
+  return Buffer.from(JSON.stringify(body), "utf8").toString("base64url");
+}
+
+/** null for absent, corrupt, or belonging to a different account. */
+export function readSnapshot(email: string, raw: string | undefined | null): ProfileSnapshot | null {
+  if (!raw) return null;
+  try {
+    const o = JSON.parse(Buffer.from(raw, "base64url").toString("utf8"));
+    if (!o || typeof o !== "object") return null;
+    if (o.k !== keyFor(email)) return null;
+    if (typeof o.username !== "string" || typeof o.ts !== "number") return null;
+    delete o.k;
+    return o as ProfileSnapshot;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The newer of the two.
+ *
+ * Whole-record rather than field-by-field: both copies were written by this
+ * same account, so the later write is simply the later state. Once the blob
+ * catches up the two timestamps are equal and the blob wins, which is what
+ * makes this converge rather than pin an old cookie over fresh storage
+ * forever -- and an edit from another device carries a newer ts, so that wins
+ * here too.
+ *
+ * JSON drops undefined, so a field the snapshot does not carry is left alone
+ * rather than cleared.
+ */
+export function freshest(stored: Profile, snap: ProfileSnapshot | null): Profile {
+  if (!snap || !(snap.ts > (stored.ts ?? 0))) return stored;
+  return { ...stored, ...snap };
+}
+
 // Storage is down/unreachable (suspended store, network, bad token). Distinct
 // from "no profiles yet" so writes can refuse to run on top of a failed read.
 export class ProfileStorageError extends Error {

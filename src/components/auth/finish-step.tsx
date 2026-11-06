@@ -75,7 +75,19 @@ export function FinishStep({
   // select is left showing a day that is no longer one of its options.
   const safeDay = Number(day) > dayCount ? "" : day;
 
-  const complete = USERNAME_SHAPE.test(username) && !!month && !!safeDay && !!year;
+  /**
+   * What is still missing, named.
+   *
+   * The button used to carry `disabled` until all of this was filled in, which
+   * is the wrong half of that pattern: a date of birth is three separate
+   * selects, and missing one -- the year being the easy one to miss, since a
+   * month and a day read as a complete answer -- left Finish grey and silent.
+   * The button looked broken, and the only thing on the screen that did
+   * anything was "Do this later", which saves nothing.
+   *
+   * So the button always presses, and pressing it says what is wrong.
+   */
+  const missingDob = !month || !safeDay || !year;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,8 +97,11 @@ export function FinishStep({
       setError("Usernames are 3–20 characters: letters, numbers and underscores.");
       return;
     }
-    if (!month || !safeDay || !year) {
-      setError("Pick your date of birth.");
+    if (missingDob) {
+      // Named one by one: "pick your date of birth", over three selects two of
+      // which are filled, reads as though the answer has been ignored.
+      const parts = [!month && "month", !safeDay && "day", !year && "year"].filter(Boolean);
+      setError(`Your date of birth still needs a ${parts.join(" and a ")}.`);
       return;
     }
 
@@ -255,7 +270,8 @@ export function FinishStep({
 
       <button
         type="submit"
-        disabled={!complete || saving}
+        // Always pressable. See missingDob above.
+        disabled={saving}
         className="press mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-card bg-carz text-[15px] font-semibold text-carz-ink transition disabled:opacity-40"
       >
         {saving ? (
