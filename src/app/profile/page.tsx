@@ -4,27 +4,10 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Avatar } from "@/components/default-avatar";
+import { AvatarCropper } from "@/components/avatar-cropper";
 import { DeleteAccount } from "@/components/delete-account";
 import { Button, PageMasthead, Skeleton } from "@/components/ui/editorial";
 import { GoogleSignInButton } from "@/components/google-sign-in";
-
-function downscale(dataUrl: string, max = 256, quality = 0.7): Promise<string> {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => {
-      const scale = Math.min(1, max / Math.max(img.width, img.height));
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.round(img.width * scale);
-      canvas.height = Math.round(img.height * scale);
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return resolve(dataUrl);
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      resolve(canvas.toDataURL("image/jpeg", quality));
-    };
-    img.onerror = () => resolve(dataUrl);
-    img.src = dataUrl;
-  });
-}
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -54,6 +37,10 @@ function ProfileInner() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [blocked, setBlocked] = useState(false);
+  /** The photo as picked, full size, while the cropper is open. */
+  const [picked, setPicked] = useState<string | null>(null);
+  /** The same thing, kept after the cropper closes, so it can be reopened. */
+  const [pickedOriginal, setPickedOriginal] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -83,6 +70,15 @@ function ProfileInner() {
       .finally(() => setLoading(false));
   }, [authStatus]);
 
+  /**
+   * Read the file and hand it to the cropper.
+   *
+   * It used to centre-crop on the spot, which was the whole of the choice: a
+   * photo whose subject is anywhere but the middle became a photo of the
+   * middle. The full-size data URL is kept in state so the cropper has every
+   * pixel to frame from, and so "Adjust" can reopen it on the original rather
+   * than on the square that came out last time.
+   */
   async function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -91,8 +87,10 @@ function ProfileInner() {
       fr.onload = () => resolve(fr.result as string);
       fr.readAsDataURL(file);
     });
-    const thumb = await downscale(raw);
-    setImage(thumb);
+    setPicked(raw);
+    setPickedOriginal(raw);
+    // Cleared, so picking the same file twice still fires a change event.
+    e.target.value = "";
   }
 
   async function save() {
@@ -157,10 +155,26 @@ function ProfileInner() {
                 >
                   {image ? "Change photo" : "Add photo"}
                 </button>
+                {/* Reframe without finding the file again. Only while the
+                    original is still in hand: after a reload all that is left
+                    is the square that was saved, and re-cropping a crop only
+                    throws away more of the photo. */}
+                {pickedOriginal && (
+                  <button
+                    type="button"
+                    onClick={() => setPicked(pickedOriginal)}
+                    className="util-label opacity-70 transition-opacity hover:opacity-100"
+                  >
+                    Adjust
+                  </button>
+                )}
                 {image && (
                   <button
                     type="button"
-                    onClick={() => setImage("")}
+                    onClick={() => {
+                      setImage("");
+                      setPickedOriginal(null);
+                    }}
                     className="util-label opacity-70 transition-opacity hover:opacity-100"
                   >
                     Remove
@@ -282,6 +296,17 @@ function ProfileInner() {
           </div>
         )}
       </main>
+
+      {picked && (
+        <AvatarCropper
+          src={picked}
+          onCancel={() => setPicked(null)}
+          onDone={(cropped) => {
+            setImage(cropped);
+            setPicked(null);
+          }}
+        />
+      )}
     </>
   );
 }

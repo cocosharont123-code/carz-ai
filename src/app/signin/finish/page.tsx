@@ -54,7 +54,9 @@ export default async function FinishPage({
     <AuthShell
       step={2}
       title="Your account"
-      subtitle="Pick how you show up. You can change all of it later."
+      // One line at 390px. §4: every line here is a line the form has to
+      // find room for under the fold.
+      subtitle="Pick how you show up — all of it is editable later."
       footer={
         // An escape hatch, because none of this is load-bearing: the username
         // and the name already exist, and the app works with the ones it

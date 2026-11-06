@@ -153,10 +153,10 @@ export function FinishStep({
         />
       </div>
       <p className="mt-1.5 text-[12px] opacity-55">
-        We picked one for you — keep it or change it.
+        We picked one — keep it or change it.
       </p>
 
-      <label htmlFor="displayName" className="util-label mt-5 block opacity-60">
+      <label htmlFor="displayName" className="util-label mt-4 block opacity-60">
         Display name
       </label>
       <input
@@ -174,7 +174,7 @@ export function FinishStep({
         className={`${FIELD} mt-2 placeholder:opacity-35`}
       />
 
-      <p className="util-label mt-5 opacity-60" id="dob-label">
+      <p className="util-label mt-4 opacity-60" id="dob-label">
         Date of birth
       </p>
       {/* Month widest, because its labels are words. */}
@@ -240,7 +240,7 @@ export function FinishStep({
         </select>
       </div>
       <p className="mt-1.5 text-[12px] opacity-55">
-        Only your month and day are kept. The year confirms your age and is never shown.
+        Your year confirms your age and is never shown.
       </p>
 
       {/* Held open whether or not it is filled, so the button does not jump out
