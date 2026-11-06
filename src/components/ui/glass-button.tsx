@@ -51,9 +51,14 @@ const shell = cva(
   },
 );
 
-export interface GlassButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof shell> {}
+/**
+ * An intersection rather than an interface with an empty body: the shadcn shape
+ * this came from is `interface ... extends A, B {}`, and
+ * @typescript-eslint/no-empty-object-type is an error in
+ * eslint-config-next/typescript, which `next build` runs.
+ */
+export type GlassButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> &
+  VariantProps<typeof shell>;
 
 export const GlassButton = React.forwardRef<HTMLButtonElement, GlassButtonProps>(
   function GlassButton({ className, children, size, tone, ...rest }, ref) {
