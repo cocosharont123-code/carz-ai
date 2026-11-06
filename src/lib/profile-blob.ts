@@ -18,6 +18,23 @@ export type Profile = {
    * is no field to put one in, so none can be collected by accident.
    */
   birthday?: string;
+  /**
+   * Birth year, four digits.
+   *
+   * There was deliberately no year in here: the year is the half of a birthday
+   * that turns it into an identifier, and nothing in the app needed one. It
+   * exists now because sign-up asks for a full date of birth, and the year is
+   * the only part of that date which answers the one question an app on the App
+   * Store has to be able to answer -- whether the person is old enough to be
+   * here. Written once at sign-up, never echoed back on /profile, never
+   * returned to another account.
+   */
+  birthYear?: number;
+  /**
+   * When step two of sign-up was completed. Absent means it never was, which is
+   * what `needsSetup` reads to decide whether to ask.
+   */
+  setupAt?: number;
   /** Channel bio — a couple of lines under the name. */
   bio?: string;
   /** Channel cover image: a base64 thumbnail, or "" for the gradient. */
@@ -295,6 +312,70 @@ export function validateBirthday(raw: string): { ok: boolean; value?: string } {
   return { ok: true, value: `${m[1]}-${m[2]}` };
 }
 
+/**
+ * The youngest anyone may be.
+ *
+ * Thirteen, which is the floor COPPA sets for collecting anything about a
+ * person without a parent in the loop, and the age App Store review expects a
+ * social app with user-generated content to enforce.
+ */
+export const MIN_AGE = 13;
+
+/**
+ * A full date of birth, as "YYYY-MM-DD" from the sign-up form.
+ *
+ * Checked here rather than only in the browser: the three selects are a
+ * convenience, and a POST straight to the endpoint is not obliged to use them.
+ * Returns the two halves separately -- "MM-DD" for `birthday`, which is what
+ * the rest of the app reads, and the year on its own.
+ */
+export function validateDob(
+  raw: string,
+): { ok: boolean; error?: string; birthday?: string; year?: number } {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec((raw || "").trim());
+  if (!m) return { ok: false, error: "Pick your date of birth." };
+
+  const year = Number(m[1]);
+  const month = Number(m[2]);
+  const day = Number(m[3]);
+
+  // Round-tripped through Date, so 31 February is rejected rather than quietly
+  // becoming 3 March the way the Date constructor would have it.
+  const d = new Date(Date.UTC(year, month - 1, day));
+  if (d.getUTCFullYear() !== year || d.getUTCMonth() !== month - 1 || d.getUTCDate() !== day) {
+    return { ok: false, error: "That isn't a real date." };
+  }
+
+  const now = new Date();
+  let age = now.getUTCFullYear() - year;
+  const monthNow = now.getUTCMonth() + 1;
+  if (monthNow < month || (monthNow === month && now.getUTCDate() < day)) age -= 1;
+
+  if (age < 0) return { ok: false, error: "That date is in the future." };
+  if (age > 120) return { ok: false, error: "Check the year." };
+  if (age < MIN_AGE) {
+    return { ok: false, error: `You need to be ${MIN_AGE} or older to use Carz.` };
+  }
+
+  return { ok: true, birthday: `${m[2]}-${m[3]}`, year };
+}
+
+/**
+ * Whether this account still owes us step two of sign-up.
+ *
+ * `setupAt` is the plain answer. Records written before step two existed do not
+ * have it, so the fallback asks whether the username is still the one generated
+ * for this address: if it is, nobody has ever been given the chance to pick
+ * one, and the screen is worth showing once. If they renamed themselves they
+ * have already done the only part of step two the app cannot invent for them,
+ * and re-asking would be a form in the way of their own garage.
+ */
+export function needsSetup(profile: Profile | null | undefined, email: string): boolean {
+  if (!profile?.username) return true;
+  if (profile.setupAt) return false;
+  return profile.username === generatedNameFor(email).username;
+}
+
 export async function setProfile(
   email: string,
   data: {
@@ -302,8 +383,12 @@ export async function setProfile(
     displayName?: string;
     image?: string;
     birthday?: string;
+    /** Four digits, or 0 to clear. Undefined leaves what is stored. */
+    birthYear?: number;
     bio?: string;
     cover?: string;
+    /** Mark step two of sign-up as done, so it is never asked again. */
+    setup?: boolean;
   },
 ): Promise<{ ok: boolean; error?: string; profile?: Profile }> {
   const v = validateUsername(data.username);
@@ -336,6 +421,12 @@ export async function setProfile(
     birthday = b.value ?? "";
   }
 
+  // Same convention as birthday: undefined is "not being edited", 0 clears it.
+  let birthYear = all[myKey]?.birthYear;
+  if (data.birthYear !== undefined) {
+    birthYear = data.birthYear > 0 ? Math.round(data.birthYear) : undefined;
+  }
+
   // Undefined leaves what is stored; an empty string is an explicit clear.
   const bio =
     data.bio === undefined ? (all[myKey]?.bio ?? "") : data.bio.trim().slice(0, 200);
@@ -352,6 +443,10 @@ export async function setProfile(
     displayName: (data.displayName || "").trim().slice(0, 40) || v.value,
     image,
     birthday,
+    birthYear,
+    // Once set it stays set: a later rename from /profile must not look like
+    // sign-up happening again.
+    setupAt: data.setup ? (all[myKey]?.setupAt ?? Date.now()) : all[myKey]?.setupAt,
     ts: Date.now(),
   };
   all[myKey] = profile;

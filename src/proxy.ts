@@ -56,11 +56,18 @@ export default auth((request) => {
   // Decrypted and validated by the auth() wrapper, not read off a cookie name.
   const signedIn = !!request.auth;
 
-  // Signed in and still on the sign-in flow: there is nothing here to do. Sent
-  // to Settings rather than home, because wanting to change the account is the
-  // only reason to open sign-in while already signed in, and Settings is where
-  // that now lives.
-  if (signedIn && pathname.startsWith("/signin")) {
+  /**
+   * Signed in and still on the sign-in flow: there is nothing here to do. Sent
+   * to Settings rather than home, because wanting to change the account is the
+   * only reason to open sign-in while already signed in, and Settings is where
+   * that now lives.
+   *
+   * Except step two. It asks for a username, which has to be checked against
+   * the ones already taken, so it runs after Google rather than before it -- it
+   * is the one path under /signin that a signed-in person is supposed to be on.
+   * The page itself sends anyone who has already finished it straight on.
+   */
+  if (signedIn && pathname.startsWith("/signin") && pathname !== "/signin/finish") {
     return NextResponse.redirect(new URL("/settings", request.url));
   }
 

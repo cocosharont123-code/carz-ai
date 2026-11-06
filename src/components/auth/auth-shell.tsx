@@ -24,6 +24,7 @@ export function AuthShell({
   subtitle,
   children,
   footer,
+  bare = false,
 }: {
   /** Which of the two, for the indicator. */
   step: 1 | 2;
@@ -31,6 +32,14 @@ export function AuthShell({
   subtitle: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
+  /**
+   * Drop the glass card and hand the children the bare column.
+   *
+   * §2: step one's only child is the Google button, which is already glass, and
+   * the card would be glass wrapped around glass. Step two is a form, which is
+   * exactly what the card is for.
+   */
+  bare?: boolean;
 }) {
   return (
     <main className={cn(FRAME_H, "flex w-full flex-col items-center justify-center px-5 py-8")}>
@@ -45,7 +54,11 @@ export function AuthShell({
         </p>
 
         {/* The glass the rest of the app uses, at the size a form needs. */}
-        <div className="glass-card mt-8 rounded-card p-5">{children}</div>
+        {bare ? (
+          <div className="mt-8">{children}</div>
+        ) : (
+          <div className="glass-card mt-8 rounded-card p-5">{children}</div>
+        )}
 
         {footer && <div className="mt-5">{footer}</div>}
 

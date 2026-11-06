@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { auth } from "@/auth";
-import { ensureProfile, setProfile, profilesConfigured, ProfileStorageError, UNAME_COOKIE } from "@/lib/profile-blob";
+import {
+  ensureProfile,
+  setProfile,
+  profilesConfigured,
+  validateDob,
+  ProfileStorageError,
+  UNAME_COOKIE,
+} from "@/lib/profile-blob";
 
 export const runtime = "nodejs";
 
@@ -64,13 +71,34 @@ export async function POST(req: Request) {
     displayName?: string;
     image?: string;
     birthday?: string;
+    /** Sign-up only: a full "YYYY-MM-DD". /profile keeps sending `birthday`. */
+    dob?: string;
     bio?: string;
     cover?: string;
+    setup?: boolean;
   };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ ok: false, error: "invalid JSON" }, { status: 400 });
+  }
+
+  /**
+   * Sign-up sends a whole date; /profile sends month and day.
+   *
+   * The age check lives on this side of the wire. The three selects on the
+   * sign-up screen cannot offer a year that is too recent, but a POST to this
+   * endpoint is under no obligation to have come from them.
+   */
+  let birthday = body.birthday;
+  let birthYear: number | undefined;
+  if (body.dob !== undefined) {
+    const d = validateDob(body.dob);
+    if (!d.ok) {
+      return NextResponse.json({ ok: false, error: d.error }, { status: 400 });
+    }
+    birthday = d.birthday;
+    birthYear = d.year;
   }
 
   let res;
@@ -79,9 +107,11 @@ export async function POST(req: Request) {
       username: body.username || "",
       displayName: body.displayName,
       image: body.image,
-      birthday: body.birthday,
+      birthday,
+      birthYear,
       bio: body.bio,
       cover: body.cover,
+      setup: body.setup === true,
     });
   } catch (e) {
     // Surface the real storage reason (e.g. missing/expired BLOB_READ_WRITE_TOKEN
