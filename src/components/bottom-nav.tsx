@@ -44,10 +44,59 @@ const TABS = [
   { href: "/profile", label: "Profile", Icon: User, match: (p: string) => p.startsWith("/profile") },
 ] as const;
 
+/**
+ * The lamp over the current tab.
+ *
+ * The brief for this was a "tubelight" bar that slides between items with
+ * framer-motion's `layoutId`. The look is here; the mechanism is not, for a
+ * reason: a layout animation interpolates left and width, and §1 allows
+ * transform and opacity only. One strip the width of a tab, translated by whole
+ * multiples of itself, lands in the same places and composites on the GPU.
+ *
+ * It also sits inside the top edge rather than above it. The bar is welded to
+ * the bottom of the screen with its top corners rounded, so a glow drawn above
+ * that edge would be clipped by the pane it is meant to be shining out of.
+ */
+function Tubelight({ index, hidden }: { index: number; hidden: boolean }) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "pointer-events-none absolute inset-y-0 left-0 w-1/5",
+        "transition-[transform,opacity] duration-[350ms] ease-[cubic-bezier(.32,.72,0,1)]",
+      )}
+      style={{
+        transform: `translate3d(${index * 100}%, 0, 0)`,
+        opacity: hidden ? 0 : 1,
+      }}
+    >
+      {/* The tube: a hard 3px line on the edge itself. */}
+      <span className="absolute left-1/2 top-0 h-[3px] w-8 -translate-x-1/2 rounded-b-full bg-carz" />
+      {/* And what it throws off, as three static layers rather than an animated
+          blur -- §1: blur is never animated, and these only ever move. */}
+      <span className="absolute left-1/2 top-0 h-6 w-12 -translate-x-1/2 rounded-full bg-carz/25 blur-md" />
+      <span className="absolute left-1/2 top-0 h-5 w-8 -translate-x-1/2 rounded-full bg-carz/25 blur-md" />
+      <span className="absolute left-1/2 top-0 h-4 w-4 -translate-x-1/2 rounded-full bg-carz/20 blur-sm" />
+    </span>
+  );
+}
+
 export function BottomNav() {
   const pathname = usePathname();
 
   if (FULL_SCREEN.some((p) => pathname === p || pathname.startsWith(`${p}/`))) return null;
+
+  /**
+   * Which tab is lit, and whether to light one at all.
+   *
+   * -1 on a route that is not a tab -- /settings, /garage, /leaderboard -- and
+   * the lamp fades out rather than parking on Home, which would claim you are
+   * somewhere you are not. Scan is skipped too: its raised circle is already
+   * its own indicator, and a second one under it reads as two selections.
+   */
+  const activeIndex = TABS.findIndex((t) => t.match(pathname));
+  const lampIndex = activeIndex < 0 ? 0 : activeIndex;
+  const lampHidden = activeIndex < 0 || !!(TABS[activeIndex] as { center?: boolean }).center;
 
   return (
     <>
@@ -83,9 +132,11 @@ export function BottomNav() {
             Top corners only -- a radius on the bottom two would show the page
             through the corners of a bar that is flush. */}
         <GlassPane
-          className="flex w-full items-stretch rounded-t-[28px] rounded-b-none"
+          className="relative flex w-full items-stretch rounded-t-[28px] rounded-b-none"
           style={{ height: BAR_H }}
         >
+          <Tubelight index={lampIndex} hidden={lampHidden} />
+
           {TABS.map(({ href, label, Icon, match, ...rest }) => {
             const active = match(pathname);
             const center = "center" in rest && rest.center;

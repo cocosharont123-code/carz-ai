@@ -11,6 +11,12 @@ function fmtDate(ts: number): string {
   return new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
+/** No year: the stat tiles have one line to spend and the year is the part of
+ *  a recent date nobody is reading. */
+function fmtShortDate(ts: number): string {
+  return new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
 export default function GaragePage() {
   return (
     <MemberGate
@@ -237,6 +243,20 @@ function GarageInner() {
     }
   }
 
+  /**
+   * The two cars the stat tiles describe.
+   *
+   * Computed on every render rather than memoised: it is one pass over at most
+   * sixty entries, which is cheaper than the dependency array that would keep
+   * it honest. Both are only read inside the `cars.length > 0` branch, so the
+   * `cars[0]` fallbacks are there to keep the types simple, not because an
+   * empty garage ever reaches them.
+   */
+  const newest = cars.reduce((a, c) => (c.ts > a.ts ? c : a), cars[0]);
+  // Ties keep the earlier entry, which after the sort above is the more
+  // recently saved of the two.
+  const rarest = cars.reduce((a, c) => (c.rarityScore > a.rarityScore ? c : a), cars[0]);
+
   return (
     <>
       <main className="mx-auto w-full max-w-5xl px-5 py-10">
@@ -273,15 +293,46 @@ function GarageInner() {
           </div>
         ) : (
           <>
-            {/* One number, big. Three tiles competed with each other and with
-                the album underneath; the count is the one anybody was reading. */}
-            <div className="mt-6 flex justify-center">
-              <div className="glass-card flex aspect-square w-full max-w-[260px] flex-col items-center justify-center rounded-[2.75rem] p-6 text-center">
-                <div className="display text-[50px] leading-none sm:text-[50px]">{cars.length}</div>
-                <div className="util-label mt-3 opacity-70">
+            {/* Two tiles, side by side and no taller than they need to be.
+            
+                This was one square 260px bubble holding a single number, which
+                at that size was mostly empty glass above the album -- and the
+                album is what the page is for. Half the width and a third of the
+                height each leaves the grid starting near the top of the screen,
+                and the space that bought goes to the rarest find, which is the
+                other number anybody opening a garage wants.
+            
+                Both tiles carry the same three rows and align from the top, so
+                the two big numbers sit on one line. Neither third row is
+                filler: one is when the last car was saved, the other is which
+                car the score belongs to. */}
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <div className="glass-card flex flex-col rounded-[2rem] p-5">
+                <div className="display text-[40px] leading-none tabular-nums">{cars.length}</div>
+                <div className="util-label mt-2 opacity-70">
                   {cars.length === 1 ? "Car found" : "Cars found"}
                 </div>
+                <p className="mt-1 truncate text-[13px] opacity-60">
+                  Latest {fmtShortDate(newest.ts)}
+                </p>
               </div>
+
+              {/* Tappable, because the answer to "which one" is the photo, and
+                  the album is already a lightbox away. */}
+              <button
+                type="button"
+                onClick={() => setOpen(cars.indexOf(rarest))}
+                aria-label={`Open ${rarest.make} ${rarest.model}, your rarest find`}
+                className="press glass-card flex flex-col rounded-[2rem] p-5 text-left"
+              >
+                <div className="display text-[40px] leading-none tabular-nums">
+                  {rarest.rarityScore > 0 ? Math.round(rarest.rarityScore) : "\u2014"}
+                </div>
+                <div className="util-label mt-2 opacity-70">Rarest find</div>
+                <p className="mt-1 w-full truncate text-[13px] opacity-60">
+                  {rarest.make} {rarest.model}
+                </p>
+              </button>
             </div>
 
             {/* The album: photos edge to edge, captions on the tile rather than

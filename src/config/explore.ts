@@ -4,9 +4,7 @@
 // whole app's front door can be reviewed in one file without reading JSX.
 //
 // Rules the labels follow, deliberately:
-//   - Short enough to sit inside a bubble. Where two features share a page,
-//     the bubble is named for both ("Auctions & Wishlist") and opens the page
-//     they share — the second one is a tab once you arrive.
+//   - Short enough to sit inside a bubble.
 //   - One line underneath saying what it does, eight words at most.
 //   - Every href is a route that exists. Features that live inside another
 //     page — the customizer, the value chart, the hotspots map — are not
@@ -18,8 +16,6 @@ import {
   Bot,
   Crosshair,
   Crown,
-  Gavel,
-  Heart,
   Settings,
   Sparkles,
   Trophy,
@@ -47,9 +43,9 @@ export const EXPLORE_COPY = {
   /** One line under the wordmark. An eyebrow, a title and a subtitle all said
    *  the same thing and pushed the first tappable thing off the screen. */
   tagline: "Everything in Carz — tap anything to jump in.",
-  searchPlaceholder: "Search: spot, auctions, garage…",
+  searchPlaceholder: "Search: spot, garage, leaderboard…",
   searchLabel: "Search features",
-  empty: "Nothing matches. Try “spot” or “auctions”.",
+  empty: "Nothing matches. Try “spot” or “garage”.",
   /** Read from the plans themselves, so a renamed tier cannot leave a stale
    *  badge behind on the menu. */
   tierBadge: { plus: CARZ_PLUS.name, max: CARZ_MAX.name } as Record<MemberTier, string>,
@@ -121,22 +117,10 @@ export const EXPLORE_BUBBLES: ExploreItem[] = [
     icon: Crown,
   },
   // Added when the nav's menu was removed and Home took over as the list of
-  // everything the app does. These four routes exist and had no link into them
-  // from anywhere except that menu -- /settings, /wishlist and /drops had no
-  // other inbound link at all, so they were one commit away from being pages
-  // only a typed URL could reach.
-  {
-    label: "Auctions",
-    description: "Bid on cars people are selling",
-    href: "/auctions",
-    icon: Gavel,
-  },
-  {
-    label: "Wishlist",
-    description: "Cars you are watching",
-    href: "/wishlist",
-    icon: Heart,
-  },
+  // everything the app does. These routes exist and had no link into them from
+  // anywhere except that menu -- /settings and /drops had no other inbound link
+  // at all, so they were one commit away from being pages only a typed URL
+  // could reach.
   {
     label: "Drops",
     description: "New supercar launches",
@@ -154,8 +138,9 @@ export const EXPLORE_BUBBLES: ExploreItem[] = [
 
 /**
  * Matches a bubble against a typed query — label first, then description, so
- * someone typing "bid" finds Auctions by what it does rather than only by what
- * it is called. Case- and whitespace-insensitive; an empty query matches
+ * someone typing "rarest" finds the Leaderboard by what it does rather than
+ * only by what it is called. Case- and whitespace-insensitive; an empty query
+ * matches
  * everything, which is what makes the unfiltered grid and the filtered grid the
  * same render path.
  */

@@ -143,7 +143,17 @@ export async function recordRareSpot(car: Omit<RareCar, "id" | "ts">): Promise<v
       byModel.set(key, c);
       continue;
     }
-    if (!held.image && c.image) byModel.set(key, { ...held, image: c.image });
+    // Inherit a photo the holder lacks -- and also replace one it holds as a
+    // base64 data URL. Those are the 200px thumbnails the first version of this
+    // stored inline, and at the size the board can now be opened to they are
+    // visibly pixelated. A data URL is a reliable marker for that generation,
+    // because everything stored since is a Blob file URL, so a car that is
+    // spotted again quietly trades its old thumbnail for the 1080px upload.
+    const holderPhotoIsLegacy = held.image?.startsWith("data:") ?? false;
+    const incomingIsFile = !!c.image && !c.image.startsWith("data:");
+    if ((!held.image && c.image) || (holderPhotoIsLegacy && incomingIsFile)) {
+      byModel.set(key, { ...held, image: c.image });
+    }
   }
   const top = [...byModel.values()].sort((a, b) => b.rarityScore - a.rarityScore).slice(0, MAX);
   await writeBoard(top);

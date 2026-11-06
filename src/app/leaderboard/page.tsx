@@ -139,7 +139,12 @@ function LeaderboardInner() {
                     onClick={() => setOpen(c)}
                     aria-label={`See ${c.make} ${c.model} and its rarity`}
                     className={cn(
-                      "press overflow-hidden rounded-lg transition-transform hover:scale-105",
+                      // rounded-[28%], not rounded-lg. An 8px radius on a 56px
+                      // tile is a corner you read as a point -- and the global
+                      // squircle makes a small radius look sharper still, not
+                      // softer. A percentage scales with the tile, which is the
+                      // same radius the detail view and the garage grid use.
+                      "press overflow-hidden rounded-[28%] transition-transform hover:scale-105",
                       top ? "h-14 w-16" : "h-12 w-14",
                     )}
                   >
@@ -259,7 +264,7 @@ function CarViewer({
             height ceiling of its own: the photo is capped at half the viewport
             and everything under it is a fixed few lines, so the card is always
             shorter than the screen and has nothing to scroll. */}
-        <div className="nav-sheet-in glass-bubble w-full max-w-[22rem] overflow-hidden rounded-[32px] p-4">
+        <div className="nav-sheet-in glass-bubble w-full max-w-[24rem] overflow-hidden rounded-[32px] p-4">
           {/* A squircle that always occupies its space.
           
               It was an <img> sized by its own pixel width inside a container with
@@ -279,7 +284,11 @@ function CarViewer({
           // and the card is 22rem wide less 1rem of padding either side -- so
           // on a wide phone 74vw exceeded the space and the photo pushed out
           // through the edges. A square that is 100% of its container cannot.
-          style={{ maxHeight: "44dvh" }}
+          // 52dvh, up from 44. The photo is the thing being tapped, and the
+          // card had room: everything under it is a fixed few lines, so the
+          // card still comes in shorter than the screen and still has nothing
+          // to scroll.
+          style={{ maxHeight: "52dvh" }}
           >
             <CarPhoto
               src={car.image || undefined}

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
   Bot, Image as ImageIcon, Trophy, Ticket, ChevronRight, Calendar,
-  Crown, Gavel, Heart, Sparkles, Settings,
+  Crown, Sparkles, Settings,
 } from "lucide-react";
 import { HomeHero } from "@/components/home/home-hero";
 import { HomeSearch } from "@/components/home/home-search";
@@ -25,8 +25,8 @@ import { FeaturedCars } from "@/components/home/featured-cars";
  *
  * Four were specified and four fit on screen; the rest scroll in behind them.
  * That is also what fixes a real hole: replacing the old home's full feature
- * list with four cards left /settings, /wishlist and /drops with no inbound
- * link anywhere in the app -- reachable only by typing the URL, and /settings
+ * list with four cards left /settings and /drops with no inbound link
+ * anywhere in the app -- reachable only by typing the URL, and /settings
  * is where sign-out, scan mode, the theme and account deletion live.
  *
  * The first four are the ones asked for, in the order asked for.
@@ -37,8 +37,6 @@ const QUICK = [
   { href: "/leaderboard", Icon: Trophy, title: "Leaderboard" },
   { href: "/events", Icon: Ticket, title: "Events & Drops" },
   { href: "/pricing", Icon: Crown, title: "Memberships" },
-  { href: "/auctions", Icon: Gavel, title: "Auctions" },
-  { href: "/wishlist", Icon: Heart, title: "Wishlist" },
   { href: "/drops", Icon: Sparkles, title: "Drops" },
   { href: "/settings", Icon: Settings, title: "Settings" },
 ] as const;

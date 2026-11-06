@@ -12,8 +12,8 @@ import { usePathname } from "next/navigation";
  *
  *  1. Content that arrives after the first pass. This ran a single
  *     querySelectorAll 30ms after navigation, which is before any page that
- *     fetches its own data has rendered a row. The leaderboard, auctions,
- *     wishlist, builds and membership all mount their list once a request
+ *     fetches its own data has rendered a row. The leaderboard, builds
+ *     and membership all mount their list once a request
  *     resolves — every one of them was never observed, and stayed at zero
  *     opacity for as long as you looked at it. A MutationObserver picks up
  *     whatever appears later.
