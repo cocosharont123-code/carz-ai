@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { X, Trash2, ChevronLeft, ChevronRight, Images } from "lucide-react";
+import { X, Trash2, ChevronLeft, ChevronRight, Images, Check, ImagePlus } from "lucide-react";
 import { MemberGate } from "@/components/member-gate";
 import { getGarage, removeFromGarage, clearGarage, type GarageCar } from "@/lib/garage-local";
 import { Button, PageMasthead, CarPhoto, Skeleton } from "@/components/ui/editorial";
@@ -30,6 +30,54 @@ export default function GaragePage() {
  * Full-screen viewer for one saved car. The album is the point of the page, so
  * a tap opens the photo big rather than navigating away from the grid.
  */
+/**
+ * Send this photo to the Home hero.
+ *
+ * Lives in the lightbox rather than on the grid tile, because the tile is
+ * itself a button and nesting one inside it is invalid. Nothing else about the
+ * Garage changes.
+ */
+function SetAsHomeBackground({ photo }: { photo: string }) {
+  const [state, setState] = useState<"idle" | "saving" | "done" | "error">("idle");
+
+  async function save() {
+    setState("saving");
+    try {
+      const res = await fetch("/api/profile/hero", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ photo }),
+      });
+      const d = await res.json().catch(() => null);
+      setState(res.ok && d?.ok ? "done" : "error");
+    } catch {
+      setState("error");
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={save}
+      disabled={state === "saving" || state === "done" || !photo}
+      className="press inline-flex items-center gap-1.5 glass-chip rounded-full px-4 py-2 text-[15px] font-semibold text-foreground transition hover:bg-foreground/20 disabled:opacity-60"
+    >
+      {state === "done" ? (
+        <Check className="h-3.5 w-3.5" aria-hidden />
+      ) : (
+        <ImagePlus className="h-3.5 w-3.5" aria-hidden />
+      )}
+      {state === "done"
+        ? "Set as home background"
+        : state === "saving"
+          ? "Setting…"
+          : state === "error"
+            ? "Couldn't set — try again"
+            : "Set as home background"}
+    </button>
+  );
+}
+
 function Lightbox({
   cars,
   index,
@@ -161,7 +209,8 @@ function Lightbox({
           </button>
         </div>
 
-        <div className="mt-3 flex justify-center">
+        <div className="mt-3 flex flex-wrap justify-center gap-2">
+          <SetAsHomeBackground photo={car.image} />
           <button
             type="button"
             onClick={() => onRemove(car.id)}

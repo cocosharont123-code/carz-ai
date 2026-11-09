@@ -22,6 +22,16 @@ export type Profile = {
   bio?: string;
   /** Channel cover image: a base64 thumbnail, or "" for the gradient. */
   cover?: string;
+  /**
+   * The photo behind the Home hero: a base64 thumbnail, or "" for the default.
+   *
+   * Stored as the image rather than as a reference to a garage entry, because
+   * the garage is localStorage — it exists only in the browser that made it,
+   * and the server has never seen a row of it. There is no id here that the
+   * server could resolve, so the chosen photo travels with the choice. Same
+   * shape as `image` and `cover` above, which are base64 for the same reason.
+   */
+  homeHeroPhoto?: string;
   ts: number;
   member?: boolean; // any paid membership
   /**
@@ -304,6 +314,7 @@ export async function setProfile(
     birthday?: string;
     bio?: string;
     cover?: string;
+    homeHeroPhoto?: string;
   },
 ): Promise<{ ok: boolean; error?: string; profile?: Profile }> {
   const v = validateUsername(data.username);
@@ -343,12 +354,17 @@ export async function setProfile(
     data.cover === undefined
       ? (all[myKey]?.cover ?? "")
       : safeImageDataUrl(data.cover, 120_000);
+  const homeHeroPhoto =
+    data.homeHeroPhoto === undefined
+      ? (all[myKey]?.homeHeroPhoto ?? "")
+      : safeImageDataUrl(data.homeHeroPhoto, 400_000);
 
   const profile: Profile = {
     ...all[myKey], // preserve membership + streak
     username: v.value,
     bio,
     cover,
+    homeHeroPhoto,
     displayName: (data.displayName || "").trim().slice(0, 40) || v.value,
     image,
     birthday,
@@ -532,4 +548,34 @@ export async function restoreStreak(email: string, toValue: number): Promise<Pro
   all[key] = p;
   await writeAll(all);
   return p;
+}
+
+/**
+ * Set or clear the Home hero photo, without touching anything else.
+ *
+ * Its own setter rather than a field on setProfile, because setProfile takes a
+ * username and rewrites the record around it — asking the picker to resend a
+ * whole profile to change one image is how a half-filled form overwrites a
+ * display name.
+ *
+ * An empty string clears it. The value is validated as a raster data: URL by
+ * safeImageDataUrl, which refuses SVG; anything else becomes "" and therefore
+ * the default.
+ */
+export async function setHomeHero(email: string, photo: string): Promise<boolean> {
+  if (!profilesConfigured()) return false;
+  const all = await readAll();
+  const myKey = keyFor(email);
+  const existing = all[myKey];
+  // Nothing to attach it to yet. ensureProfile runs on first sight everywhere
+  // else, so this only happens if storage is mid-outage.
+  if (!existing) return false;
+
+  all[myKey] = {
+    ...existing,
+    homeHeroPhoto: photo ? safeImageDataUrl(photo, 400_000) : "",
+    ts: Date.now(),
+  };
+  await writeAll(all);
+  return true;
 }
