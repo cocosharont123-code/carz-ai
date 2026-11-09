@@ -487,6 +487,24 @@ h1, h2, h3, h4 { letter-spacing: -0.02em; line-height: 1.2; }
    ========================================================================== */
 :root { --ease-apple: cubic-bezier(0.22, 1, 0.36, 1); }
 
+/* The per-page transition wrapper, which template.tsx puts around every page.
+   
+   Layout only — the animation itself stays inside the reduced-motion query
+   below, because how a page is sized must not depend on a motion preference.
+   
+   It was display:block, which quietly broke any page that wants to fill the
+   screen: the layout column is a flex column, but this sits between it and the
+   page, so a child asking for flex-1 was asking a block for space it had no way
+   to give. CarzBot's composer ended up with 600px of nothing under it for
+   exactly that reason. A transparent wrapper should pass height through rather
+   than collapse it; a normal page whose child is one <main> lays out as before. */
+.page-in {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   /* One easing curve for every transition. */
   *, ::before, ::after { transition-timing-function: var(--ease-apple); }

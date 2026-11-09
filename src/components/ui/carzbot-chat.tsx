@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Spinner } from "@/components/ui/editorial";
 import {
   ArrowUp as ArrowUpIcon,
+  ChevronRight,
   ScanLine,
   Gauge,
   Wrench,
@@ -11,7 +12,6 @@ import {
   GitCompare,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { SiriWave } from "@/components/ui/siri-wave";
 import { cn } from "@/lib/utils";
 
 type Turn = {
@@ -152,27 +152,49 @@ export function CarzBotChat() {
   const empty = turns.length === 0;
 
   return (
-    // A fixed-height column, not a growing page: the thread scrolls inside its
-    // own pane and the composer stays put. The page itself never scrolls, which
-    // is what stops the input sliding away under your thumb mid-conversation.
-    <div ref={shellRef} className="flex h-[calc(100dvh-var(--nav-h)-var(--safe-top)-var(--back-h))] flex-col">
+    // Fills whatever the layout leaves, rather than measuring the viewport and
+    // subtracting the furniture.
+    //
+    // It used to be 100dvh minus --nav-h, --safe-top and --back-h. That has to
+    // agree with three separate variables and with the spacer the nav already
+    // renders into this same column — and when any of them is wrong, or the
+    // back button is not drawn, the composer is pushed off the bottom. The
+    // column above is a flex column with min-h-100dvh, so flex-1 asks for "what
+    // is left" and min-h-0 lets the thread inside actually scroll instead of
+    // stretching its parent.
+    <div ref={shellRef} className="flex min-h-0 flex-1 flex-col">
       <div
         ref={threadRef}
-        className="flex-1 overflow-y-auto overscroll-contain px-4 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-5 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {empty ? (
-          <div className="flex h-full flex-col items-center justify-center gap-5 text-center">
-            {/* The wave is the bot: the empty state's portrait of it. It no
-                longer appears anywhere else — there is no listening state, and
-                the thinking row has the orb. */}
-            <SiriWave
-              variant="fluid-dots"
-              size={200}
-              renderScale={0.5}
-              className="bg-transparent"
-            />
-            <div>
-              <h1 className="display text-[34px]">CarzBot</h1>
+          /* Was a 200px wave and a title centred in the full height of the
+             pane, which on a phone is a screen of nothing with two faint dots
+             in the middle. The prompts were a horizontal strip above the
+             composer, so the one part worth tapping was the part hardest to
+             see. They are the empty state now: full-width rows, in the space
+             that was blank. */
+          <div className="mt-auto pb-2">
+            {/* No wave here. At the size this header allows it renders as six
+                faint dots, which reads as a glitch rather than as the bot. */}
+            <h1 className="display text-[28px] leading-none">CarzBot</h1>
+            <p className="mt-1.5 text-[13px] text-[var(--color-secondary-text)]">
+              Specs, prices, what a car is worth.
+            </p>
+
+            <div className="mt-5 space-y-2">
+              {PROMPTS.map((pr) => (
+                <button
+                  key={pr.label}
+                  type="button"
+                  onClick={() => void ask(pr.prompt)}
+                  className="press glass-card flex w-full items-center gap-3 rounded-card px-4 py-3 text-left"
+                >
+                  <pr.Icon className="h-4 w-4 shrink-0 opacity-70" aria-hidden />
+                  <span className="min-w-0 flex-1 truncate text-[14px] font-semibold">{pr.label}</span>
+                  <ChevronRight className="h-4 w-4 shrink-0 opacity-35" aria-hidden />
+                </button>
+              ))}
             </div>
           </div>
         ) : (
@@ -205,7 +227,11 @@ export function CarzBotChat() {
         )}
       </div>
 
-      <div className="shrink-0 px-4 pb-4">
+      {/* px-5, matching every other screen's main container. This was px-4,
+          which put the suggestion chips and the composer 16px from the edge
+          while the rest of the app sits at 20 — close enough to read as the
+          chat being cramped rather than as a deliberate difference. */}
+      <div className="shrink-0 px-5 pb-4">
         <div className="mx-auto w-full max-w-2xl">
           {error && (
             <p role="alert" className="mb-2 text-center text-[15px] text-neon-red">
@@ -213,23 +239,10 @@ export function CarzBotChat() {
             </p>
           )}
 
-          {empty && (
-            <div className="mb-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {PROMPTS.map((p) => (
-                <button
-                  key={p.label}
-                  type="button"
-                  onClick={() => void ask(p.prompt)}
-                  className="press glass-card flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-[12px] font-semibold"
-                >
-                  <p.Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                  {p.label}
-                </button>
-              ))}
-            </div>
-          )}
-
-          <div className="glass-card rounded-card p-2">
+          {/* Field and button on one row. Stacked, this was 118px tall — a
+              56px minimum on the textarea and a 40px button under it — for a
+              box that usually holds one line. */}
+          <div className="glass-card flex items-end gap-2 rounded-card p-2">
             <Textarea
               ref={textareaRef}
               value={value}
@@ -245,27 +258,24 @@ export function CarzBotChat() {
               }}
               placeholder="Ask about any car…"
               rows={1}
-              className="min-h-[56px] w-full resize-none border-none bg-transparent px-3 py-3 text-[14px] shadow-none placeholder:text-[14px] focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="max-h-32 min-h-10 w-full resize-none border-none bg-transparent px-2 py-2 text-[15px] shadow-none placeholder:text-[15px] focus-visible:ring-0 focus-visible:ring-offset-0"
               style={{ overflow: "hidden" }}
             />
 
-            <div className="flex items-center justify-end gap-2 px-2 pb-1">
-
-              <button
-                type="button"
-                onClick={() => void ask(value)}
-                disabled={busy || !value.trim()}
-                aria-label="Send"
-                className={cn(
-                  "press flex h-10 w-10 items-center justify-center rounded-full transition-colors disabled:cursor-not-allowed",
-                  value.trim() && !busy
-                    ? "bg-carz text-neutral-900"
-                    : "bg-foreground/[0.06] text-foreground/40",
-                )}
-              >
-                <ArrowUpIcon className="h-4 w-4" aria-hidden />
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => void ask(value)}
+              disabled={busy || !value.trim()}
+              aria-label="Send"
+              className={cn(
+                "press flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors disabled:cursor-not-allowed",
+                value.trim() && !busy
+                  ? "bg-foreground text-background"
+                  : "bg-foreground/[0.06] text-foreground/40",
+              )}
+            >
+              <ArrowUpIcon className="h-4 w-4" aria-hidden />
+            </button>
           </div>
         </div>
       </div>
