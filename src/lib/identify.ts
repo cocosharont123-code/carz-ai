@@ -62,14 +62,14 @@ export type CarReport = {
   crossCheckNote: string;
 };
 
-const DEFAULT_MODEL = "claude-sonnet-5";
+const DEFAULT_MODEL = "claude-fable-5-2";
 
 // This pipeline depends on structured outputs, so an override naming a model
 // without them would 400 on every scan. Honour the env var only when it names a
 // model that can actually run this, and otherwise fall back rather than break
 // spotting for a value nobody remembers setting.
 const STRUCTURED_OUTPUT_CAPABLE =
-  /^claude-(opus-(5|4-8)|sonnet-5|haiku-4-5|(fable|mythos)-5(-1)?)$/;
+  /^claude-(opus-(5|4-8)|sonnet-5|haiku-4-5|(fable|mythos)-5(-[12])?)$/;
 
 function pickModel(): string {
   const override = process.env.CAR_SPOTTER_MODEL?.trim();
@@ -118,14 +118,14 @@ const FAST_CAPABLE = /^claude-opus-(5|4-8)$/;
 // the frontier models, where a safety classifier declining is a real outcome —
 // sending the parameter to a model that doesn't take it is a 400, so it is
 // gated rather than sent to whatever the override names.
-const FALLBACK_CAPABLE = /^claude-(opus-(5|4-8)|(fable|mythos)-5(-1)?)$/;
+const FALLBACK_CAPABLE = /^claude-(opus-(5|4-8)|(fable|mythos)-5(-[12])?)$/;
 
 // Fable and Mythos think on every request and reject being told otherwise:
 // `thinking: {type: "disabled"}` is a 400, not a no-op. So the passes that used
 // to switch thinking off to save the spotter a few seconds simply cannot on
 // these models — they ask for low effort instead, which is the supported way to
 // buy the same thing.
-const THINKING_ALWAYS_ON = /^claude-(fable|mythos)-5(-1)?$/;
+const THINKING_ALWAYS_ON = /^claude-(fable|mythos)-5(-[12])?$/;
 let fastMode = process.env.CAR_SPOTTER_FAST !== "0";
 
 type Effort = "low" | "medium" | "high" | "xhigh" | "max";
@@ -144,7 +144,7 @@ const LOOK_EFFORT = (process.env.CAR_SPOTTER_EFFORT as Effort) || "medium";
 // `effort` is rejected outright by Haiku 4.5 and Sonnet 4.5, so a
 // CAR_SPOTTER_MODEL override pointing at one of those must not send it.
 const EFFORT_CAPABLE =
-  /^claude-(opus-(5|4-8|4-7|4-6|4-5)|sonnet-(5|4-6)|(fable|mythos)-5(-1)?)$/;
+  /^claude-(opus-(5|4-8|4-7|4-6|4-5)|sonnet-(5|4-6)|(fable|mythos)-5(-[12])?)$/;
 
 export class IdentifyError extends Error {}
 

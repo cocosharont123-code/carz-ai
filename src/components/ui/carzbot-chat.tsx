@@ -165,7 +165,7 @@ export function CarzBotChat() {
     <div ref={shellRef} className="flex min-h-0 flex-1 flex-col">
       <div
         ref={threadRef}
-        className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-5 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-6 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {empty ? (
           /* Was a 200px wave and a title centred in the full height of the
@@ -227,11 +227,18 @@ export function CarzBotChat() {
         )}
       </div>
 
-      {/* px-5, matching every other screen's main container. This was px-4,
-          which put the suggestion chips and the composer 16px from the edge
-          while the rest of the app sits at 20 — close enough to read as the
-          chat being cramped rather than as a deliberate difference. */}
-      <div className="shrink-0 px-5 pb-4">
+      {/* 24px, where the rest of the app uses 20.
+      
+          This started at 16 and went to 20 to match every other screen, which
+          was right while the prompts were content-width chips. They are
+          full-width rows now, and a row that runs the whole column reads much
+          tighter at the same gutter than a chip that stops short of it — the
+          edge of the card is the edge of the screen minus the gutter, every
+          time, instead of only when a chip happens to reach that far.
+      
+          The thread above uses the same value so the rows, the bubbles and the
+          composer all line up on one edge. */}
+      <div className="shrink-0 px-6 pb-4">
         <div className="mx-auto w-full max-w-2xl">
           {error && (
             <p role="alert" className="mb-2 text-center text-[15px] text-neon-red">
