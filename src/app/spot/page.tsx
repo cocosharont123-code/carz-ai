@@ -9,11 +9,8 @@ import {
   Trash2,
   X,
   TrafficCone,
-  Check,
-  BookmarkPlus,
   ChevronDown,
   ScanLine,
-  Navigation,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Button as GlassButton, StatBox } from "@/components/ui/editorial";
@@ -24,6 +21,7 @@ import { useImageUpload } from "@/components/hooks/use-image-upload";
 import { CarCustomizer } from "@/components/car-customizer";
 import { addToGarage } from "@/lib/garage-local";
 import { putFullPhoto } from "@/lib/garage-photos";
+import { RarityMeter } from "@/components/car/rarity-meter";
 import { carzPlusMonthly, carzPlusAnnual, carzPlusAnnualSaving } from "@/lib/plans";
 import { SCAN_MODE_META, type ScanMode } from "@/lib/scan-mode";
 import { cn } from "@/lib/utils";
@@ -132,98 +130,6 @@ function ScanningButton({
   );
 }
 
-/**
- * The one way a car gets into the garage.
- *
- * Identification used to file every scan automatically, which made the garage a
- * log rather than a collection. Now nothing is stored until this is pressed —
- * so a blurry shot, a misidentification, or a car someone scanned out of
- * curiosity doesn't end up in their album.
- *
- * Keyed on the car in the result, so the "saved" state resets by itself when a
- * new scan replaces it — no clearing to remember at the call site.
- */
-function SaveToGarage({ car, image }: { car: CarReport; image: string }) {
-  const [saved, setSaved] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-
-  async function save() {
-    if (saved || busy) return;
-    setBusy(true);
-    setError("");
-    try {
-      // The album thumbnail is generated here rather than kept in memory from
-      // the scan: localStorage holds roughly 5MB, and a full-size frame per car
-      // would fill it inside a dozen saves.
-      const thumb = image ? await downscale(image, 360, 0.55) : "";
-      const entry = addToGarage({
-        image: thumb,
-        make: car.make,
-        model: car.model,
-        yearRange: car.yearRange,
-        confidence: car.confidence,
-        rarityScore: car.rarityScore,
-        priceRange: car.priceRangeUsed,
-      });
-      // The thumbnail is what the grid needs and all localStorage can hold.
-      // The full-size copy goes to IndexedDB under the same id, and is what
-      // opening a car in the garage shows. Best effort: if it cannot be
-      // stored the viewer falls back to the thumbnail.
-      if (entry && image) {
-        void downscale(image, 1080, 0.82)
-          .then((full) => putFullPhoto(entry.id, full))
-          .catch(() => false);
-      }
-      setSaved(true);
-    } catch {
-      setError("Couldn't save that — your garage storage may be full.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  // The secondary half of the sticky bar. Same handler, same states; it is a
-  // 52px surface pill beside the primary action now rather than a full-width
-  // black slab in the middle of the page.
-  return (
-    <>
-      <button
-        type="button"
-        onClick={save}
-        disabled={saved || busy}
-        aria-busy={busy || undefined}
-        className={cn(
-          "press flex h-[52px] flex-1 items-center justify-center gap-2 rounded-full border text-[15px] font-semibold transition",
-          saved
-            ? "cursor-default glass-card text-[var(--color-secondary-text)]"
-            : "glass-card border-[var(--line-button)] text-foreground hover:bg-[var(--color-raised)] disabled:opacity-50",
-        )}
-      >
-        {saved ? (
-          <>
-            <Check className="h-[18px] w-[18px]" strokeWidth={2.5} aria-hidden />
-            Saved
-          </>
-        ) : (
-          <>
-            <BookmarkPlus className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden />
-            {busy ? "Saving…" : "Save"}
-          </>
-        )}
-      </button>
-      {/* A full-storage failure has to be said somewhere, and the sticky bar
-          has no room for a line of text. Announced to assistive tech and shown
-          on the button itself, which stays un-saved so the state is honest. */}
-      {error && (
-        <p role="alert" className="sr-only">
-          {error}
-        </p>
-      )}
-    </>
-  );
-}
-
 /** A File as a data URL. */
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -274,53 +180,6 @@ function Spec({ k, v }: { k: string; v?: string }) {
 function fmtUsd(n: number): string {
   if (!n || n <= 0) return "";
   return "$" + Math.round(n).toLocaleString("en-US");
-}
-
-function RarityMeter({ score, reason }: { score: number; reason?: string }) {
-  if (!score || score <= 0) return null;
-  const raw = Math.max(0, Math.round(score));
-  const ultra = raw >= 100;
-  const bar = Math.min(100, raw); // meter fills to 100
-  const label = ultra
-    ? "Ultra rare"
-    : raw >= 85
-      ? "Extremely rare"
-      : raw >= 70
-        ? "Rare"
-        : raw >= 45
-          ? "Uncommon"
-          : raw >= 20
-            ? "Fairly common"
-            : "Common";
-  return (
-    <div
-      className={`mt-4 rounded-card p-4 ${
-        ultra
-          ? "bg-gradient-to-r from-neon-red/15 via-neon-green/10 to-neon-blue/15 shadow-[0_0_25px_-8px_rgba(255,255,255,0.7)]"
-          : "glass-chip"
-      }`}
-    >
-      <div className="flex items-baseline justify-between">
-        <span className="text-[12px] font-bold uppercase tracking-wide ">Rarity</span>
-        <span className="text-[14px] font-bold">
-          {raw}/100 · <span className={ultra ? "text-neon-red" : "text-neon-red"}>{label}</span>
-        </span>
-      </div>
-      {/* A pure-black track punched a hole in the grey card. A tint of black
-          reads as the same unfilled groove without the hard edge. */}
-      <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-background/15">
-        <div
-          className={`h-full rounded-full ${
-            ultra
-              ? "bg-gradient-to-r from-neon-red via-neon-green to-neon-blue"
-              : "bg-gradient-to-r from-neon-green via-neon-red to-neon-red"
-          }`}
-          style={{ width: `${bar}%` }}
-        />
-      </div>
-      {reason && <p className="mt-2 text-[14px] ">{reason}</p>}
-    </div>
-  );
 }
 
 function ValueChart({ points }: { points: { year: string; usd: number }[] }) {
@@ -436,17 +295,6 @@ function DetailRow({
   );
 }
 
-/**
- * The four white brackets round the frame. Borders on four small boxes rather
- * than an SVG, so they stay hairline-crisp at any pixel density.
- */
-const CORNERS = [
-  { key: "tl", cls: "left-4 top-4 border-l-2 border-t-2 rounded-tl-lg border-foreground" },
-  { key: "tr", cls: "right-4 top-4 border-r-2 border-t-2 rounded-tr-lg border-foreground" },
-  { key: "bl", cls: "bottom-4 left-4 border-b-2 border-l-2 rounded-bl-lg border-foreground" },
-  { key: "br", cls: "bottom-4 right-4 border-b-2 border-r-2 rounded-br-lg border-foreground" },
-] as const;
-
 export default function SpotPage() {
   const [status, setStatus] = useState<Status | null>(null);
   const [car, setCar] = useState<CarReport | null>(null);
@@ -464,7 +312,6 @@ export default function SpotPage() {
   // need different behaviour from the same page.
   const router = useRouter();
   /** The map pin this scan created, when it created one. */
-  const [placedSpotId, setPlacedSpotId] = useState<string | null>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   /**
    * Whether the photo being scanned was taken here and now.
@@ -629,8 +476,39 @@ export default function SpotPage() {
         setCar(full);
         if (dd.status) setStatus((prev) => ({ ...(prev as Status), ...dd.status }));
 
-        // Nothing is filed in the garage here — the garage is a collection the
-        // spotter curates, so it only takes what they press Save on.
+        // Anything rare enough files itself.
+        //
+        // The garage took only what you pressed Save on, from a bar that sat
+        // under the tab bar and could not be pressed. Rather than move a
+        // button nobody could reach, the rule is the score: over 50 is
+        // "uncommon" and up on this app's own scale, which is the line where a
+        // car is worth keeping. Below it the garage fills with the same parked
+        // hatchbacks and stops being a collection.
+        //
+        // Both copies, exactly as pressing Save did: the thumbnail in
+        // localStorage for the grid, the 1080px frame in IndexedDB for opening
+        // the car. Best-effort and after the answer is on screen -- a full
+        // quota must never fail a scan.
+        if (full.rarityScore > 50 && rawImage) {
+          try {
+            const entry = addToGarage({
+              image: await downscale(rawImage, 360, 0.55),
+              make: full.make,
+              model: full.model,
+              yearRange: full.yearRange,
+              confidence: full.confidence,
+              rarityScore: full.rarityScore,
+              priceRange: full.priceRangeUsed,
+            });
+            if (entry) {
+              void downscale(rawImage, 1080, 0.82)
+                .then((photo) => putFullPhoto(entry.id, photo))
+                .catch(() => false);
+            }
+          } catch {
+            /* the garage is full; the scan still stands */
+          }
+        }
 
         // Submit to the global rarest-cars leaderboard (best-effort). Only with
         // a photo of the car: a leaderboard
@@ -702,12 +580,10 @@ export default function SpotPage() {
           scanId,
         }),
       });
-      // Kept so the detail screen's "View on Map" can open this car's own pin
-      // rather than the map in general. Silently ignored if the write did not
-      // record one -- coordinates can be unusable, and a dead deep link is
-      // worse than no deep link.
-      const data = await res.json().catch(() => null);
-      if (data?.spot?.id) setPlacedSpotId(data.spot.id as string);
+      // Read and dropped. The response carries the new pin's id, which fed a
+      // "View on Map" deep link on the result screen; that button is gone, and
+      // the pin is on the map either way.
+      await res.json().catch(() => null);
     } catch {
       /* no location, no pin. The scan stands on its own. */
     }
@@ -818,19 +694,20 @@ export default function SpotPage() {
             carz
           </span>
         </header>
-        {/* No "Spot a car" headline. The nav says which page this is, and the
-            two buttons under it say what to do — a 7xl restatement of the tab
-            you just tapped was taking a third of the screen to add nothing.
-            The line under it stays, because it does say something the buttons
-            do not. */}
-        <p className="mt-3 text-[14px] ">
-          Drop in a photo, then hit identify.
-        </p>
+        {/* No headline and no instruction line. §5: the tab says which page
+            this is, the frame says where the photo goes, and the two controls
+            under it say what to do. "Drop in a photo, then hit identify" was
+            naming the obvious, and was asked to go. */}
 
         {status && (
           <p className="util-label mt-3 ">
             {status.member ? (
-              <>Unlimited scans · {status.usedToday} today</>
+              /* The count, without "Unlimited scans" in front of it: a member
+                 has no cap to be reminded of, and what they do not otherwise
+                 know is how many they have run today. */
+              <>
+                {status.usedToday} scan{status.usedToday === 1 ? "" : "s"} today
+              </>
             ) : (
               <>
                 {Math.max(0, (status.dailyLimit ?? 3) - status.usedToday)} of {status.dailyLimit ?? 3} free scans
@@ -914,12 +791,27 @@ export default function SpotPage() {
                 isDragging && "bg-[var(--color-surface)]",
               )}
             >
-              {/* Four corner brackets. Drawn as borders on four absolutely
-                  placed boxes rather than as an SVG, so they stay hairline-
-                  crisp at any density. */}
-              {CORNERS.map((c) => (
-                <span key={c.key} aria-hidden className={cn("pointer-events-none absolute h-8 w-8", c.cls)} />
-              ))}
+              {/* The scan outline: one continuous squircle in glass.
+              
+                  It was four right-angled brackets in solid --foreground, so
+                  it read as a hard white square with its corners cut out --
+                  the one sharp-cornered shape left in an app that is squircles
+                  everywhere else (§3), and the brightest object on the screen.
+                  Now it is a single rounded frame in the glass edge tone with
+                  the pane's own specular rim inside it: grey on both themes,
+                  with the corners of the shape it is actually outlining.
+              
+                  A static border rather than a glass surface. §2 -- there is
+                  nothing moving behind this to refract, and it would spend one
+                  of the screen's six backdrop filters on an outline. */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-4 rounded-card border-2 border-[var(--glass-edge)]"
+                style={{
+                  boxShadow:
+                    "inset 1.5px 1.5px 1px 0 var(--glass-rim-hi), inset -1px -1px 1px 1px var(--glass-rim-lo)",
+                }}
+              />
               <p className="absolute inset-x-0 bottom-5 text-center text-[14px] text-[var(--color-secondary-text)]">
                 Point your camera at any car
               </p>
@@ -1163,28 +1055,15 @@ export default function SpotPage() {
                   </DetailRow>
                 </div>
 
-                {/* Sticky actions. Save keeps its own handler and its own saved
-                    state; View on Map goes to this car's pin when the scan
-                    dropped one and to the map itself otherwise, which is the
-                    difference between a deep link and a dead one. */}
-                <div
-                  className="blur-behind fixed inset-x-0 bottom-0 z-[55] mx-auto flex max-w-[480px] gap-3 border-x-0 border-b-0 px-5 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] pt-3"
-                >
-                  <SaveToGarage
-                    key={`${car.make}|${car.model}|${car.yearRange}`}
-                    car={car}
-                    image={spottedImage}
-                  />
-                  <Link
-                    href={placedSpotId ? `/map?spot=${encodeURIComponent(placedSpotId)}` : "/map"}
-                    className="press flex h-[52px] flex-1 items-center justify-center gap-2 rounded-full bg-carz text-[15px] font-semibold text-carz-ink"
-                  >
-                    <Navigation className="h-[18px] w-[18px]" strokeWidth={2.25} aria-hidden />
-                    View on Map
-                  </Link>
-                </div>
-                {/* Clears the sticky bar so the last row is reachable. */}
-                <div aria-hidden style={{ height: "calc(env(safe-area-inset-bottom,0px) + 76px)" }} />
+                {/* The sticky Save / View on Map bar is gone.
+                
+                    It was fixed to bottom-0 at z-55, and the tab bar sits on
+                    bottom-0 at z-60, so the bar lived underneath it and
+                    neither button could be pressed. Saving is automatic now
+                    (see the rarity rule where the specs land), and the map is
+                    one of the five tabs, so there was nothing here worth
+                    rebuilding above the bar. The spacer that held the last row
+                    clear of it goes with it -- §9, no spacer divs. */}
               </>
             ) : (
               <>

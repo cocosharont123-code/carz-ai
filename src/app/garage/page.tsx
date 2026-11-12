@@ -6,6 +6,7 @@ import { MemberGate } from "@/components/member-gate";
 import { getGarage, removeFromGarage, clearGarage, type GarageCar } from "@/lib/garage-local";
 import { getFullPhoto, deleteFullPhoto, clearFullPhotos } from "@/lib/garage-photos";
 import { Button, PageMasthead, CarPhoto, Skeleton } from "@/components/ui/editorial";
+import { RarityMeter } from "@/components/car/rarity-meter";
 
 function fmtDate(ts: number): string {
   return new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -196,6 +197,19 @@ function Lightbox({
             <ChevronRight className="h-5 w-5" aria-hidden />
           </button>
         </div>
+
+        {/* The score the car was filed on.
+        
+            The same meter the scan showed, not a second implementation of it.
+            A saved car carries its rarityScore and nothing else about rarity,
+            so the meter draws the band and the bar and leaves out the reason
+            and the production counts by itself. -mt-1 absorbs its own mt-4,
+            and max-w-lg keeps it to the width of the row above. */}
+        {car.rarityScore > 0 && (
+          <div className="mx-auto -mt-1 w-full max-w-lg">
+            <RarityMeter score={car.rarityScore} />
+          </div>
+        )}
 
         <div className="mt-3 flex justify-center gap-2">
           <button

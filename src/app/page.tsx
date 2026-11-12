@@ -35,7 +35,7 @@ const QUICK = [
   { href: "/carzbot", Icon: Bot, title: "CarzBot" },
   { href: "/garage", Icon: ImageIcon, title: "Garage" },
   { href: "/leaderboard", Icon: Trophy, title: "Leaderboard" },
-  { href: "/events", Icon: Ticket, title: "Events & Drops" },
+  { href: "/events", Icon: Ticket, title: "Events" },
   { href: "/pricing", Icon: Crown, title: "Memberships" },
   { href: "/drops", Icon: Sparkles, title: "Drops" },
   { href: "/settings", Icon: Settings, title: "Settings" },
@@ -54,10 +54,17 @@ export default function Home() {
 
       {/* Four across at a time, the rest a swipe away. Width is measured from
           the column rather than the window, because the app is capped at 480px
-          on a desktop and 100vw alone would size these for a monitor. */}
+          on a desktop and 100vw alone would size these for a monitor.
+      
+          scroll-px-5 is what keeps the row starting on the same line as the
+          search pill above it and the cards below it. The row bleeds to the
+          screen edge (-mx-5) and pushes its content back in (px-5), but snap
+          points are measured against the scrollport rather than the padding
+          box -- so without it the first tile snapped flush to the edge of the
+          screen after any flick, 20px left of everything else on the page. */}
       <nav
         aria-label="Quick actions"
-        className="-mx-5 mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="-mx-5 mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-5 px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {QUICK.map(({ href, Icon, title }) => (
           <Link
@@ -87,7 +94,12 @@ export default function Home() {
       </Section>
 
       <Section title="Upcoming Events" href="/events">
-        {/* A placeholder, which the spec allows, and the honest option here.
+        {/* No scrim over it. §7 puts a bottom gradient on a card only when
+            text or glass sits on a photo, and there is no photo here -- the
+            black gradient was painting over a glass card, which in light mode
+            left the second line grey-on-grey and unreadable.
+
+            A placeholder, which the spec allows, and the honest option here.
             Events are generated on demand by an AI call that needs a location,
             so there is no stored list to read -- and running that on every home
             page load would be a bill and a wait for a card nobody asked for. It
@@ -96,7 +108,6 @@ export default function Home() {
           href="/events"
           className="press glass-card relative flex min-h-24 items-end overflow-hidden rounded-tile p-4"
         >
-          <span aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
           <span className="relative flex w-full items-center gap-3">
             <Calendar className="h-5 w-5 shrink-0 text-foreground" strokeWidth={1.75} aria-hidden />
             <span className="min-w-0 flex-1">

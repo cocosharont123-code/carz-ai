@@ -72,7 +72,10 @@ export function FeaturedCars() {
   }
 
   return (
-    <div className="-mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    // scroll-px-5: snap points are measured against the scrollport, not the
+    // padding box, so without it the first card came to rest flush against the
+    // screen edge and this row no longer lined up with the rest of the page.
+    <div className="-mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-5 px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {cars.map((c) => (
         <Link
           key={c.id}

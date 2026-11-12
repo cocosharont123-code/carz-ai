@@ -2,7 +2,7 @@
 // number sections, build a progress indicator, and re-render them anywhere
 // without the text being duplicated.
 //
-// The wording is reproduced verbatim from the copy supplied by Carzfinder LLC.
+// The wording is reproduced verbatim from the copy supplied by Carz Labs LLC.
 // Do not paraphrase, tighten, or "fix" anything here — this is a legal
 // instrument, and the cross-references in §15 (Termination) point at the
 // section numbers below by index.
@@ -18,7 +18,7 @@ export type TermsSection = {
 };
 
 /** Bump when the text changes — a stored acceptance of an older version stops counting. */
-export const TERMS_VERSION = "2026-08-27.2";
+export const TERMS_VERSION = "2026-11-12.1";
 
 /**
  * Appended to the end of every section.
@@ -32,11 +32,11 @@ export const TERMS_VERSION = "2026-08-27.2";
 export const TERMS_AI_NOTICE =
   "AI notice: The Service uses artificial intelligence, including for vehicle identification, specs, estimated values, listing generation, image customization, and the car assistant. AI output can be wrong and is provided for informational and entertainment purposes only — see Section 5 (AI Features).";
 
-export const TERMS_ENTITY = "Carzfinder LLC";
+export const TERMS_ENTITY = "Carz Labs LLC";
 export const TERMS_CONTACT_EMAIL = "carz.ai.ceo@carz-ai.com";
 
 export const TERMS_INTRO =
-  "These Terms of Service (“Terms”) are a legal agreement between you and Carzfinder LLC, a Florida limited liability company (“Carz AI,” “we,” “us,” or “our”), governing your use of the Carz AI application, the carz.dev website, and all related features and services (together, the “Service”). By creating an account, downloading the app, or using the Service in any way, you agree to these Terms. If you do not agree, do not use the Service.";
+  "These Terms of Service (“Terms”) are a legal agreement between you and Carz Labs LLC, a Florida limited liability company (“Carz AI,” “we,” “us,” or “our”), governing your use of the Carz AI application, the carz.dev website, and all related features and services (together, the “Service”). By creating an account, downloading the app, or using the Service in any way, you agree to these Terms. If you do not agree, do not use the Service.";
 
 export const TERMS_SECTIONS: TermsSection[] = [
   {
@@ -189,7 +189,7 @@ export const TERMS_SECTIONS: TermsSection[] = [
     blocks: [
       {
         kind: "p",
-        text: "The Service, including its software, design, branding, and content (other than User Content), is owned by Carzfinder LLC or its licensors and is protected by law. We grant you a limited, revocable, non-transferable license to use the app for personal, non-commercial use in accordance with these Terms. Vehicle makes, models, and logos shown in the Service belong to their respective manufacturers; Carz AI is not affiliated with or endorsed by any vehicle manufacturer.",
+        text: "The Service, including its software, design, branding, and content (other than User Content), is owned by Carz Labs LLC or its licensors and is protected by law. We grant you a limited, revocable, non-transferable license to use the app for personal, non-commercial use in accordance with these Terms. Vehicle makes, models, and logos shown in the Service belong to their respective manufacturers; Carz AI is not affiliated with or endorsed by any vehicle manufacturer.",
       },
     ],
   },
@@ -216,7 +216,7 @@ export const TERMS_SECTIONS: TermsSection[] = [
     blocks: [
       {
         kind: "p",
-        text: "TO THE MAXIMUM EXTENT PERMITTED BY LAW, CARZFINDER LLC AND ITS OWNERS, MANAGERS, EMPLOYEES, AND AGENTS WILL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES, OR FOR LOST PROFITS, LOST DATA, PERSONAL INJURY, PROPERTY DAMAGE, OR VEHICLE-TRANSACTION LOSSES, ARISING OUT OF OR RELATING TO THE SERVICE, ANY LISTING OR TRANSACTION, OR THESE TERMS. IN ALL CASES, OUR TOTAL AGGREGATE LIABILITY WILL NOT EXCEED THE GREATER OF (A) THE AMOUNT YOU PAID US IN THE 12 MONTHS BEFORE THE CLAIM AROSE OR (B) USD $100. Some jurisdictions do not allow certain limitations, so parts of this section may not apply to you.",
+        text: "TO THE MAXIMUM EXTENT PERMITTED BY LAW, CARZ LABS LLC AND ITS OWNERS, MANAGERS, EMPLOYEES, AND AGENTS WILL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES, OR FOR LOST PROFITS, LOST DATA, PERSONAL INJURY, PROPERTY DAMAGE, OR VEHICLE-TRANSACTION LOSSES, ARISING OUT OF OR RELATING TO THE SERVICE, ANY LISTING OR TRANSACTION, OR THESE TERMS. IN ALL CASES, OUR TOTAL AGGREGATE LIABILITY WILL NOT EXCEED THE GREATER OF (A) THE AMOUNT YOU PAID US IN THE 12 MONTHS BEFORE THE CLAIM AROSE OR (B) USD $100. Some jurisdictions do not allow certain limitations, so parts of this section may not apply to you.",
       },
     ],
   },
@@ -225,7 +225,7 @@ export const TERMS_SECTIONS: TermsSection[] = [
     blocks: [
       {
         kind: "p",
-        text: "You agree to indemnify, defend, and hold harmless Carzfinder LLC and its owners, managers, employees, and agents from any claims, damages, losses, and expenses (including reasonable attorneys’ fees) arising out of: (a) your use of the Service, including any use while driving; (b) your User Content or listings; (c) any transaction you enter with another user, including claims involving stolen vehicles, title defects, or misrepresentation; or (d) your violation of these Terms or any law.",
+        text: "You agree to indemnify, defend, and hold harmless Carz Labs LLC and its owners, managers, employees, and agents from any claims, damages, losses, and expenses (including reasonable attorneys’ fees) arising out of: (a) your use of the Service, including any use while driving; (b) your User Content or listings; (c) any transaction you enter with another user, including claims involving stolen vehicles, title defects, or misrepresentation; or (d) your violation of these Terms or any law.",
       },
     ],
   },

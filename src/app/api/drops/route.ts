@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { auth } from "@/auth";
 import { getProfile, isMaxMember } from "@/lib/profile-blob";
+import { readDropsCache, writeDropsCache } from "@/lib/drops-blob";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -91,11 +92,21 @@ const PROMPT =
   "Spread the list across several manufacturers rather than filling it with one brand's range. " +
   "Give timing as a year or season — never an invented exact date.";
 
-// One warm-instance cache. This list moves on the scale of weeks, so re-asking
-// the model on every page view would be pure cost for an identical answer.
-// Serverless gives no shared cache, so a cold instance simply refetches.
+// Two layers, because this list moves on the scale of weeks and the model call
+// that produces it takes seconds.
+//
+// The module variable serves repeat views on one warm instance for free. Behind
+// it, Blob storage holds the same list for every instance -- that is the layer
+// that matters, because a serverless host hands most visitors a cold instance,
+// and before it existed each of them sat through a full generation to be shown
+// the list the last visitor had already generated.
+//
+// Past the TTL the stored list is still served immediately and refreshed after
+// the response, so nobody ever waits for a regeneration they did not cause.
 const TTL_MS = 6 * 60 * 60 * 1000;
 let cache: { at: number; drops: Drop[] } | null = null;
+
+const fresh = (at: number) => Date.now() - at < TTL_MS;
 
 function isValid(d: unknown): d is Drop {
   const x = d as Partial<Drop>;
@@ -135,22 +146,14 @@ async function requireMax() {
   return null;
 }
 
-export async function GET() {
-  const denied = await requireMax();
-  if (denied) return denied;
-
-  const key = process.env.ANTHROPIC_API_KEY;
-  if (!key) {
-    return NextResponse.json(
-      { configured: false, drops: [], error: "Server has no ANTHROPIC_API_KEY." },
-      { status: 200 },
-    );
-  }
-
-  if (cache && Date.now() - cache.at < TTL_MS) {
-    return NextResponse.json({ configured: true, drops: cache.drops, cached: true });
-  }
-
+/**
+ * Ask the model for the list. Null on any failure, so the caller decides
+ * whether that is an error or just a refresh that did not land.
+ *
+ * Writes through to both caches on success. An empty or all-invalid answer is
+ * never stored -- that would pin a bad run for six hours.
+ */
+async function generate(key: string): Promise<Drop[] | null> {
   try {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -167,13 +170,7 @@ export async function GET() {
         messages: [{ role: "user", content: PROMPT }],
       }),
     });
-
-    if (!res.ok) {
-      return NextResponse.json(
-        { configured: true, drops: [], error: "Couldn't load new drops." },
-        { status: 502 },
-      );
-    }
+    if (!res.ok) return null;
 
     const data = await res.json();
     const block = (data.content || []).find(
@@ -183,15 +180,52 @@ export async function GET() {
     const drops: Drop[] = (block?.input?.drops ?? [])
       .filter(isValid)
       .sort((a: Drop, b: Drop) => b.startingPriceUsd - a.startingPriceUsd);
+    if (drops.length === 0) return null;
 
-    // Don't cache an empty answer — that would pin a bad run for six hours.
-    if (drops.length > 0) cache = { at: Date.now(), drops };
-
-    return NextResponse.json({ configured: true, drops });
+    cache = { at: Date.now(), drops };
+    await writeDropsCache<Drop>(drops);
+    return drops;
   } catch {
+    return null;
+  }
+}
+
+export async function GET() {
+  const denied = await requireMax();
+  if (denied) return denied;
+
+  const key = process.env.ANTHROPIC_API_KEY;
+
+  // 1. This instance already has it.
+  if (cache && fresh(cache.at)) {
+    return NextResponse.json({ configured: true, drops: cache.drops, cached: true });
+  }
+
+  // 2. Some instance has it. One JSON read, then straight back -- and if what
+  //    is stored has aged out, it still goes out now and the regeneration runs
+  //    after the response rather than in front of it.
+  const stored = await readDropsCache<Drop>();
+  if (stored) {
+    cache = stored;
+    const stale = !fresh(stored.at);
+    if (stale && key) after(() => generate(key));
+    return NextResponse.json({ configured: true, drops: stored.drops, cached: true, stale });
+  }
+
+  // 3. Nobody has it. This is the only path that waits for the model.
+  if (!key) {
     return NextResponse.json(
-      { configured: true, drops: [], error: "Couldn't reach the model." },
+      { configured: false, drops: [], error: "Server has no ANTHROPIC_API_KEY." },
+      { status: 200 },
+    );
+  }
+
+  const drops = await generate(key);
+  if (!drops) {
+    return NextResponse.json(
+      { configured: true, drops: [], error: "Couldn't load new drops." },
       { status: 502 },
     );
   }
+  return NextResponse.json({ configured: true, drops });
 }
