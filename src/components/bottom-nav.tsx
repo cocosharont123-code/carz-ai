@@ -9,8 +9,8 @@ import { cn } from "@/lib/utils";
 /**
  * The tab bar: Home, Map, Scan, Hunt, Profile.
  *
- * Docked to the bottom edge on solid black with no border, rather than the
- * floating glass bubble this was. Five fixed destinations and no menu -- what
+ * Flush with the bottom edge of the screen -- full width of the 480px column,
+ * no air underneath, no side gutters. Five fixed destinations and no menu -- what
  * the menu used to hold now lives on Home as tiles and list rows, which is the
  * one place a list of everything the app does belongs.
  *
@@ -57,19 +57,27 @@ export function BottomNav() {
 
       <nav
         aria-label="Main"
-        className="fixed inset-x-0 bottom-0 z-[60] flex justify-center px-3"
-        // The home-indicator strip plus the gap the dock floats above it. The
-        // layout keeps every page one pixel taller than the viewport, which
-        // settles Safari's bottom toolbar before first paint -- without that
-        // this inset flips from 0 to ~34px the moment a page becomes
-        // scrollable, and a bar measured from it jumps.
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 10px)" }}
+        className="fixed inset-x-0 bottom-0 z-[60] flex justify-center"
       >
-        {/* A floating dock rather than a bar welded to the edge. The pane is
-            the layered material: displaced backdrop, contrast fill, bevel. */}
+        {/* Welded to the bottom edge, not floating above it.
+        
+            It was a dock: 10px of air under it, 12px either side, and a 28px
+            radius all the way round -- so on a phone the glass stopped about
+            44px short of the bottom of the screen and black showed underneath.
+            Now the pane runs to the physical edge and the full width of the
+            column, and the home-indicator strip is padding *inside* it instead
+            of a gap below it, so the icons still clear the indicator while the
+            material reaches the end of the screen.
+        
+            The radius is top-only for the same reason: the bottom corners are
+            off-screen, and rounding them cut two notches out of the material at
+            the one place it is meant to be continuous with the edge. */}
         <GlassPane
-          className="flex w-full max-w-[480px] items-stretch rounded-[28px]"
-          style={{ height: BAR_H }}
+          className="flex w-full max-w-[480px] items-stretch rounded-t-[28px]"
+          style={{
+            height: `calc(${BAR_H} + env(safe-area-inset-bottom, 0px))`,
+            paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          }}
         >
           {TABS.map(({ href, label, Icon, match, ...rest }) => {
             const active = match(pathname);
@@ -132,13 +140,15 @@ export function BottomNav() {
         </GlassPane>
       </nav>
 
-      {/* Holds the page clear of the bar by exactly its height plus the strip
-          under it. shrink-0 because this is a flex item in the layout's column
-          and a spacer that can be squashed is not a spacer. */}
+      {/* Holds the page clear of the bar by exactly its height -- the bar's
+          own height now includes the home-indicator strip, and the 20px that
+          used to be added here was the air under the floating dock. shrink-0
+          because this is a flex item in the layout's column and a spacer that
+          can be squashed is not a spacer. */}
       <div
         aria-hidden
         className="shrink-0"
-        style={{ height: `calc(${BAR_H} + env(safe-area-inset-bottom, 0px) + 20px)` }}
+        style={{ height: `calc(${BAR_H} + env(safe-area-inset-bottom, 0px))` }}
       />
     </>
   );

@@ -78,8 +78,11 @@ export function Avatar({
         alt="Profile"
         width={size}
         height={size}
-        className={`object-cover ${className}`}
-        style={{ width: size, height: size, borderRadius: rounded }}
+        className={className}
+        // objectFit inline rather than as a class: this is the one property
+        // that decides whether a face is stretched, and a className passed by a
+        // call site must not be able to win against it.
+        style={{ width: size, height: size, borderRadius: rounded, objectFit: "cover" }}
       />
     );
   }

@@ -14,6 +14,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { FEATURED_CARS, featuredHref } from "@/config/home";
+import { EXPLORE_BUBBLES, matchesExploreQuery } from "@/config/explore";
 
 /* --- Search ---------------------------------------------------------------- */
 
@@ -21,32 +22,85 @@ export function HomeSearch() {
   const router = useRouter();
   const [q, setQ] = useState("");
 
+  /**
+   * Matches as you type, not after Return.
+   *
+   * The box used to do nothing at all until the form was submitted, so the
+   * fastest way to a page was to type its name, press Return, land on /search
+   * and tap the result -- two screens to reach something the first keystroke
+   * already knew. The same matcher the search page uses runs here on every
+   * keystroke; it is a filter over a dozen static entries, so there is nothing
+   * to debounce and no request to make. Return still goes to /search, where
+   * accounts are searched too.
+   *
+   * Capped at five so the panel cannot bury the page behind it.
+   */
+  const matches = q.trim()
+    ? EXPLORE_BUBBLES.filter((item) => matchesExploreQuery(item, q)).slice(0, 5)
+    : [];
+
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        const v = q.trim();
-        if (v) router.push(`/search?q=${encodeURIComponent(v)}`);
-      }}
-      className="flex h-11 items-center gap-2 rounded-full border border-white/12 bg-white/[0.06] pl-3.5 pr-1 backdrop-blur-md"
-    >
-      <Search className="h-4 w-4 shrink-0 text-white/60" strokeWidth={2} aria-hidden />
-      <input
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder="Search any car..."
-        aria-label="Search any car"
-        enterKeyHint="search"
-        className="min-w-0 flex-1 bg-transparent text-[15px] text-white outline-none placeholder:text-white/40"
-      />
-      <button
-        type="submit"
-        aria-label="Search"
-        className="press flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white"
+    <div className="relative">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const v = q.trim();
+          if (v) router.push(`/search?q=${encodeURIComponent(v)}`);
+        }}
+        className="flex h-11 items-center gap-2 rounded-full border border-white/12 bg-white/[0.06] pl-3.5 pr-1 backdrop-blur-md"
       >
-        <ArrowRight className="h-4 w-4 text-black" strokeWidth={2.5} aria-hidden />
-      </button>
-    </form>
+        <Search className="h-4 w-4 shrink-0 text-white/60" strokeWidth={2} aria-hidden />
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          onKeyDown={(e) => {
+            // Escape clears the box, which is also what dismisses the panel --
+            // one piece of state, so they cannot disagree.
+            if (e.key === "Escape") setQ("");
+          }}
+          placeholder="Search any car..."
+          aria-label="Search any car"
+          enterKeyHint="search"
+          role="combobox"
+          aria-expanded={matches.length > 0}
+          aria-controls="home-search-matches"
+          className="min-w-0 flex-1 bg-transparent text-[15px] text-white outline-none placeholder:text-white/40"
+        />
+        <button
+          type="submit"
+          aria-label="Search"
+          className="press flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white"
+        >
+          <ArrowRight className="h-4 w-4 text-black" strokeWidth={2.5} aria-hidden />
+        </button>
+      </form>
+
+      {/* Over the page, not above it: absolute, so the sections below do not
+          jump down and back up again on every keystroke. */}
+      {matches.length > 0 && (
+        <ul
+          id="home-search-matches"
+          className="absolute inset-x-0 top-[calc(100%+8px)] z-30 overflow-hidden rounded-card border border-white/12 bg-black/70 backdrop-blur-xl"
+        >
+          {matches.map(({ href, label, description, icon: Icon }) => (
+            <li key={href} className="border-b border-white/8 last:border-b-0">
+              <Link
+                href={href}
+                onClick={() => setQ("")}
+                className="press flex min-h-11 items-center gap-3 px-4 py-2.5"
+              >
+                <Icon className="h-4 w-4 shrink-0 text-white/60" strokeWidth={2} aria-hidden />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[15px] font-semibold text-white">{label}</span>
+                  <span className="block truncate text-[13px] text-white/50">{description}</span>
+                </span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-white/40" strokeWidth={2} aria-hidden />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
@@ -56,7 +110,7 @@ const ACTIONS = [
   { href: "/carzbot", Icon: Bot, title: "CarzBot", sub: "Ask anything" },
   { href: "/garage", Icon: ImageIcon, title: "Garage", sub: "Your collection" },
   { href: "/leaderboard", Icon: Trophy, title: "Leaderboard", sub: "Rarest cars" },
-  { href: "/events", Icon: Ticket, title: "Events & Drops", sub: "Car meets & launches" },
+  { href: "/events", Icon: Ticket, title: "Events", sub: "Car meets & launch nights" },
 ] as const;
 
 export function QuickActions() {
@@ -100,8 +154,20 @@ export function FeaturedCars() {
       <SectionHead title="Featured Cars" href="/search" />
       {/* Exactly three across: the row is the column minus its 20px margins and
           the two 10px gaps, split three ways. Snap so a flick lands on a card
-          rather than between two. */}
-      <div className="mt-3 -mx-5 flex snap-x snap-mandatory gap-2.5 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]{display:none}">
+          rather than between two.
+      
+          The row bleeds to the screen edge (-mx-5) and pushes its content back
+          in (px-5), so the first card lines up with the search field and the
+          events card above and below it. scroll-px-5 is what keeps it there:
+          snap points are measured against the scrollport, not the padding box,
+          so without it the first card snapped flush to the edge of the screen
+          after any flick and the row no longer started on the same line as
+          everything else.
+      
+          [&::-webkit-scrollbar]:hidden -- it was written `{display:none}`,
+          which is not a Tailwind variant and compiled to nothing, so Safari and
+          Chrome drew a scrollbar under the row that nothing else had. */}
+      <div className="mt-3 -mx-5 flex snap-x snap-mandatory gap-2.5 overflow-x-auto scroll-px-5 px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {FEATURED_CARS.map((car) => (
           <Link
             key={car.id}

@@ -8,17 +8,45 @@ import { DeleteAccount } from "@/components/delete-account";
 import { Button, PageMasthead, Skeleton } from "@/components/ui/editorial";
 import { GoogleSignInButton } from "@/components/google-sign-in";
 
-function downscale(dataUrl: string, max = 256, quality = 0.7): Promise<string> {
+/**
+ * A square profile photo, cropped rather than squashed.
+ *
+ * This used to keep the picture's own proportions and leave every avatar in the
+ * app to fit a 3:4 phone photo into a circle. That is where the squashing came
+ * from: the frames are square, so anything not square is at the mercy of
+ * whatever object-fit the surface happened to set, and one wrong fit stretches
+ * a face.
+ *
+ * So the crop happens once, here, on the file the person picked: take the
+ * largest centred square of it and draw that into a square canvas. Both
+ * rectangles have the same shape, so nothing is scaled unevenly -- the sides of
+ * a wide photo are trimmed, which is what a round avatar shows anyway. Every
+ * surface then gets a square image and cannot distort it.
+ */
+function squareThumb(dataUrl: string, size = 256, quality = 0.8): Promise<string> {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
-      const scale = Math.min(1, max / Math.max(img.width, img.height));
+      const side = Math.min(img.width, img.height);
+      if (!side) return resolve(dataUrl);
+      // Never upscale a small picture into a big blurry one.
+      const out = Math.min(size, side);
       const canvas = document.createElement("canvas");
-      canvas.width = Math.round(img.width * scale);
-      canvas.height = Math.round(img.height * scale);
+      canvas.width = out;
+      canvas.height = out;
       const ctx = canvas.getContext("2d");
       if (!ctx) return resolve(dataUrl);
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(
+        img,
+        Math.round((img.width - side) / 2),
+        Math.round((img.height - side) / 2),
+        side,
+        side,
+        0,
+        0,
+        out,
+        out,
+      );
       resolve(canvas.toDataURL("image/jpeg", quality));
     };
     img.onerror = () => resolve(dataUrl);
@@ -91,7 +119,7 @@ function ProfileInner() {
       fr.onload = () => resolve(fr.result as string);
       fr.readAsDataURL(file);
     });
-    const thumb = await downscale(raw);
+    const thumb = await squareThumb(raw);
     setImage(thumb);
   }
 

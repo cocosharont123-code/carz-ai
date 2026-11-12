@@ -58,7 +58,10 @@ export const EXPLORE_COPY = {
 /**
  * The whole app, in the order the tiles are laid out.
  *
- * Events & Drops is a pair by theme rather than by page, so it opens Events.
+ * The Events tile opens Events and says Events. It read "Events & Drops" and
+ * went to /events, which named a page it did not open -- Drops has its own
+ * entry in the menu further down.
+ *
  * Anything gated gets its own entry rather than being paired with something
  * public, or the public half ends up behind the gate.
  */
@@ -92,8 +95,8 @@ export const EXPLORE_BUBBLES: ExploreItem[] = [
     icon: Trophy,
   },
   {
-    label: "Events & Drops",
-    description: "Car meets and new supercar launches",
+    label: "Events",
+    description: "Car meets and launch nights near you",
     href: "/events",
     icon: Ticket,
     tier: "max",

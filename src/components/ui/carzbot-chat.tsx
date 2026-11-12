@@ -134,13 +134,26 @@ export function CarzBotChat() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ messages: next }),
         });
-        const d = await res.json();
-        if (!res.ok || !d.reply) {
-          setError(d.error || "CarzBot couldn't answer that.");
+        const d = await res.json().catch(() => null);
+        if (!res.ok || !d?.reply) {
+          // Put the thread back as it was.
+          //
+          // The question was added before the request went out, so a failure
+          // left it on screen under an error with no answer coming — and,
+          // because the thread was no longer empty, the suggested prompts
+          // disappeared with it. On the first message that is the whole screen
+          // gone: a dead question, an error, and nothing left to tap. Rolling
+          // back restores the openers and puts the text back in the box to
+          // send again.
+          setTurns(turns);
+          setValue(question);
+          setError(d?.error || "CarzBot couldn't answer that.");
           return;
         }
         setTurns([...next, { role: "assistant", content: d.reply }]);
       } catch {
+        setTurns(turns);
+        setValue(question);
         setError("Network error — nothing was sent.");
       } finally {
         setBusy(false);

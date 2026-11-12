@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { WANTED, HUNT_RULE, getHunt, joinHunt, totalEarned, type HuntState } from "@/lib/hunt";
-import { Trophy, Crosshair, X } from "lucide-react";
+import { Trophy, Crosshair } from "lucide-react";
 import { Button, Spinner } from "@/components/ui/editorial";
 import { MemberGate } from "@/components/member-gate";
 import { cn } from "@/lib/utils";
@@ -292,20 +292,15 @@ function HuntInner() {
             // sentences is the thing being complained about.
             className="glass-card w-full max-w-[480px] rounded-sheet px-5 pb-5 pt-3"
           >
-            {/* Grabber, then the rules. The text is the app's own HUNT_RULE
-                plus the three steps the feature actually implements -- nothing
-                here describes a rule the code does not enforce. */}
-            <div aria-hidden className="mx-auto h-1 w-10 rounded-full bg-foreground/25" />
-            <div className="mt-4 flex items-center justify-between">
+            {/* Just the rules. The grabber bar and the corner X are gone: the
+                grabber implied a sheet that could be dragged, which this never
+                was, and the X was a second close control directly above an OK
+                button that does the same thing. Tapping outside still closes
+                it, so there are still two ways out. The text is the app's own
+                HUNT_RULE plus the three steps the feature actually implements
+                -- nothing here describes a rule the code does not enforce. */}
+            <div className="mt-2">
               <h2 className="text-[20px] font-bold text-foreground">How it works</h2>
-              <button
-                type="button"
-                onClick={() => setRulesOpen(false)}
-                aria-label="Close"
-                className="press flex h-11 w-11 items-center justify-center rounded-full"
-              >
-                <X className="h-5 w-5 text-foreground" strokeWidth={1.75} aria-hidden />
-              </button>
             </div>
             <ol className="mt-3 space-y-3 text-[15px] leading-relaxed text-foreground">
               <li>1. Pick a car off the wanted board below.</li>
@@ -314,8 +309,7 @@ function HuntInner() {
             </ol>
             <p className="mt-4 text-[14px] text-[var(--color-secondary-text)]">{HUNT_RULE}</p>
 
-            {/* One obvious way out, under the text, rather than only the X in the
-                corner and a tap on the backdrop. */}
+            {/* The one close control, under the text it closes. */}
             <button
               type="button"
               onClick={() => setRulesOpen(false)}

@@ -2,9 +2,11 @@
 // browser via localStorage, so it works with no database and no sign-in, and
 // persists per browser/device.
 //
-// Entries only ever arrive through "Save to garage" on a finished scan. Scans
-// used to be filed here automatically, which made this a log of everything
-// anyone pointed a camera at rather than a collection worth looking back at.
+// Entries arrive on their own: a finished scan files itself if the car scores
+// over 50 rarity. Everything used to be filed, which made this a log of
+// whatever anyone pointed a camera at; then nothing was, behind a Save button
+// that the bottom nav covered and nobody could press. The score is the filter
+// now -- rare enough to be worth looking back at, and nothing to remember.
 
 export type GarageCar = {
   id: string;
