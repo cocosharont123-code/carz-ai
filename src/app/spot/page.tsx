@@ -13,9 +13,8 @@ import {
   ScanLine,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Button as GlassButton, StatBox } from "@/components/ui/editorial";
+import { Button as GlassButton } from "@/components/ui/editorial";
 import { ProgressiveFluxLoader } from "@/components/ui/progressive-flux-loader";
-import { ThinkingOrb, type OrbState } from "thinking-orbs";
 import { Input } from "@/components/ui/input";
 import { useImageUpload } from "@/components/hooks/use-image-upload";
 import { CarCustomizer } from "@/components/car-customizer";
@@ -76,14 +75,10 @@ function ScanningButton({
   progress,
   phases = SCAN_PHASES,
   hint = "Reading badges, lights and body lines — this takes a few seconds",
-  orbState = "shaping",
 }: {
   progress: number;
   phases?: { at: number; label: string }[];
   hint?: string;
-  /** Which kind of work is running, so the orb says something rather than
-   *  only spinning. */
-  orbState?: OrbState;
 }) {
   return (
     <div
@@ -104,27 +99,17 @@ function ScanningButton({
         } as React.CSSProperties
       }
     >
-      <div className="flex items-center gap-4">
-        {/* aria-label is blanked on purpose: the panel around it is already a
-            live region announcing the phase, and the orb would otherwise be a
-            second thing for a screen reader to read out. */}
-        <ThinkingOrb
-          state={orbState}
-          size={64}
-          theme="dark"
-          aria-label=""
-          className="shrink-0"
-        />
-        <div className="min-w-0 flex-1">
-          <ProgressiveFluxLoader
-            value={progress}
-            phases={phases}
-            className="max-w-none gap-4"
-            textClassName="text-[20px] font-bold text-foreground sm:text-[20px]"
-            barClassName="h-3 bg-foreground/10"
-          />
-        </div>
-      </div>
+      {/* No orb. A 64px animated sphere beside the bar was decoration on the
+          one screen where something real is already being reported -- the
+          phase text and the bar say what is happening, and it was asked to
+          go. The bar takes the width it left behind. */}
+      <ProgressiveFluxLoader
+        value={progress}
+        phases={phases}
+        className="max-w-none gap-4"
+        textClassName="text-[20px] font-bold text-foreground sm:text-[20px]"
+        barClassName="h-3 bg-foreground/10"
+      />
       <p className="mt-4 text-center text-[12px] opacity-60">{hint}</p>
     </div>
   );
@@ -271,15 +256,35 @@ function DetailRow({
   label,
   has,
   open,
+  locked,
   children,
 }: {
   label: string;
   has: boolean;
   /** Starts expanded. Still collapsible -- it is the initial state, not a lock. */
   open?: boolean;
+  /**
+   * Always open, with no control to close it.
+   *
+   * For the two rows that are the point of the screen. `open` only sets the
+   * initial state, so a row that was closed once stays closed for the rest of
+   * the scan -- these are not allowed to be closed at all, so they are not a
+   * <details> and carry no chevron to suggest otherwise.
+   */
+  locked?: boolean;
   children: React.ReactNode;
 }) {
   if (!has) return null;
+  if (locked) {
+    return (
+      <div className="border-b border-[var(--line-divider)]">
+        <p className="flex min-h-14 items-center py-3 text-[15px] font-medium text-foreground">
+          {label}
+        </p>
+        <div className="space-y-3 pb-4">{children}</div>
+      </div>
+    );
+  }
   return (
     <details open={open} className="group border-b border-[var(--line-divider)]">
       <summary className="press flex min-h-14 cursor-pointer list-none items-center justify-between py-3 text-[15px] font-medium text-foreground [&::-webkit-details-marker]:hidden">
@@ -883,10 +888,6 @@ export default function SpotPage() {
             <ScanningButton
               progress={scanProgress}
               phases={SCAN_PHASES}
-              // Each pipeline is doing a different kind of work, and the orb
-              // has a state for each: Precise takes
-              // a second look and adjudicates, Lightning reads the silhouette.
-              orbState={scanMode === "precise" ? "solving" : "shaping"}
               hint={
                 scanMode === "precise"
                   ? `${SCAN_MODE_META.precise.name} scan — a second look, a magnified detail, and a tiebreak`
@@ -941,7 +942,34 @@ export default function SpotPage() {
           <section className="mt-2">
             {car.isCar ? (
               <>
-                <h2 className="text-[20px] font-normal leading-tight text-foreground">{car.make}</h2>
+                {/* Rarity first.
+                
+                    It was a collapsed row near the bottom, under specs,
+                    performance and market value -- so the number people open
+                    this screen for was four scrolls and a tap away. It is the
+                    first thing on the screen now, above the car's own name.
+                
+                    The score arrives with the second pass, a few seconds after
+                    the name, so the slot is held open at exactly the meter's
+                    height until it lands. Reserving it is what keeps the whole
+                    screen from jumping when it does (§1, CLS 0) -- and an
+                    empty track that says "Scoring" reads as a number on its
+                    way, which is what it is. */}
+                {car.rarityScore > 0 ? (
+                  <RarityMeter score={car.rarityScore} reason={car.rarityReason} />
+                ) : specsPending ? (
+                  <div className="mt-4 rounded-card glass-chip p-4" role="status" aria-live="polite">
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-[12px] font-bold uppercase tracking-wide">Rarity</span>
+                      <span className="text-[14px] font-bold text-[var(--color-secondary-text)]">
+                        Scoring…
+                      </span>
+                    </div>
+                    <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-background/15" />
+                  </div>
+                ) : null}
+
+                <h2 className="mt-6 text-[20px] font-normal leading-tight text-foreground">{car.make}</h2>
                 <p className="text-[34px] font-bold leading-tight tracking-tight text-foreground">
                   {car.model}
                 </p>
@@ -970,33 +998,44 @@ export default function SpotPage() {
                   </div>
                 )}
 
-                {/* Only the figures we actually have. A stat box reading "—" is
-                    a box that costs a third of the row to say nothing. */}
-                {(car.priceRangeUsed || car.horsepower || car.zeroToSixty) && (
-                  <div className="mt-5 grid grid-cols-3 gap-3">
-                    {car.priceRangeUsed && <StatBox value={car.priceRangeUsed} label="Retail" />}
-                    {car.horsepower && <StatBox value={car.horsepower} label="Horsepower" />}
-                    {car.zeroToSixty && <StatBox value={car.zeroToSixty} label="0–60 mph" />}
-                  </div>
-                )}
-
-                {car.notes && (
-                  <>
-                    <h3 className="mt-6 text-[20px] font-bold text-foreground">Overview</h3>
-                    <p className="mt-2 text-[15px] leading-relaxed text-[var(--color-secondary-text)]">
-                      {car.notes}
-                    </p>
-                  </>
-                )}
+                {/* No stat boxes here any more.
+                
+                    Retail, Horsepower and 0-60 were a 3-up row of figures that
+                    are each repeated in the two rows below, and they sat
+                    between the meter and Performance -- which is the one place
+                    nothing is meant to sit. */}
 
                 {specsPending && (
                   <p className="mt-3 text-[14px] text-[var(--color-secondary-text)]">
-                    Loading specs, rarity and values…
+                    Loading specs and values…
                   </p>
                 )}
 
                 <div className="mt-6">
-                  <DetailRow label="Specs" has={!!(car.engine || car.drivetrain || car.bodyStyle)}>
+                  {/* Performance, then Specs, and neither of them closes.
+                  
+                      The order is the order they are read in: the meter at the
+                      top of the screen, then how fast it is, then what it is
+                      made of. Specs used to come first and both were a tap
+                      away -- `open` on Performance only set its initial state,
+                      so closing it once kept it closed for every car after
+                      that. These two are the screen, so they are locked open
+                      (see DetailRow) and the rows below them stay collapsible. */}
+                  <DetailRow
+                    label="Performance"
+                    locked
+                    has={!!(car.horsepower || car.zeroToSixty || car.topSpeed)}
+                  >
+                    <Spec k="Horsepower" v={car.horsepower} />
+                    <Spec k="0–60 mph" v={car.zeroToSixty} />
+                    <Spec k="Top speed" v={car.topSpeed} />
+                  </DetailRow>
+
+                  <DetailRow
+                    label="Specs"
+                    locked
+                    has={!!(car.engine || car.drivetrain || car.bodyStyle)}
+                  >
                     <Spec k="Engine" v={car.engine} />
                     <Spec k="Drivetrain" v={car.drivetrain} />
                     <Spec k="Body style" v={car.bodyStyle} />
@@ -1007,18 +1046,14 @@ export default function SpotPage() {
                     <Spec k="Parent company" v={car.parentCompany} />
                   </DetailRow>
 
+                  {/* Market value insights, and this one does close.
+                  
+                      Directly under Specs, collapsible by request: it is a
+                      valuation, a reliability note, a collectibility note and
+                      a four-point chart, which is a page of reading under two
+                      rows that are meant to be read at a glance. */}
                   <DetailRow
-                    label="Performance"
-                    open
-                    has={!!(car.horsepower || car.zeroToSixty || car.topSpeed)}
-                  >
-                    <Spec k="Horsepower" v={car.horsepower} />
-                    <Spec k="0–60 mph" v={car.zeroToSixty} />
-                    <Spec k="Top speed" v={car.topSpeed} />
-                  </DetailRow>
-
-                  <DetailRow
-                    label="Market value"
+                    label="Market value insights"
                     has={!!(car.priceRangeUsed || car.valuation || car.valueTimeline?.length)}
                   >
                     <Spec k="Retail" v={car.priceRangeUsed} />
@@ -1034,14 +1069,28 @@ export default function SpotPage() {
                     <ValueChart points={car.valueTimeline} />
                   </DetailRow>
 
-                  <DetailRow label="Rarity"
-                    open has={car.rarityScore > 0}>
-                    <RarityMeter score={car.rarityScore} reason={car.rarityReason} />
-                  </DetailRow>
+                  {/* No Rarity row: the meter is at the top of the screen
+                      now, and a second copy down here would be the same
+                      component drawn twice. */}
 
-                  <DetailRow label="Similar models" has={!!car.alsoConsidered}>
-                    <p className="text-[15px] leading-relaxed text-foreground">{car.alsoConsidered}</p>
-                  </DetailRow>
+                  {/* No "Similar models" row. It named the car the model
+                      rejected and why, which is working-out rather than an
+                      answer, and it was asked to go. The field is still
+                      returned and still steers the identification. */}
+
+                  {/* Overview last of the reading, under the three rows the
+                      screen is ordered around. It was above them, between the
+                      photo and Performance. */}
+                  {car.notes && (
+                    <div className="border-b border-[var(--line-divider)] pb-4">
+                      <p className="flex min-h-14 items-center py-3 text-[15px] font-medium text-foreground">
+                        Overview
+                      </p>
+                      <p className="text-[15px] leading-relaxed text-[var(--color-secondary-text)]">
+                        {car.notes}
+                      </p>
+                    </div>
+                  )}
 
                   {/* No "Photos & Videos" row. One photo exists -- the one you
                       just took, and it is already at the top of this screen. */}
