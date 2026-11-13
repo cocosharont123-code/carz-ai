@@ -1,8 +1,16 @@
 import { AuthShell } from "@/components/auth/auth-shell";
 import { GoogleSignInButton } from "@/components/google-sign-in";
+import { EmailPasswordForm } from "@/components/auth/email-password-form";
+import { passwordAuthConfigured } from "@/lib/password-blob";
 
 /**
- * Step one: sign in with Google.
+ * Step one: sign in.
+ *
+ * Two ways in, not one. Google is a small pill at the top; under it is an
+ * address and a password, for anyone who does not want a Google account
+ * involved. The Google button used to be the whole screen -- a 5:4 tile with
+ * the mark stacked over the label -- which made a Google account look like the
+ * only way to use the app, because it was.
  *
  * This screen used to ask for an email address, and then Google asked for the
  * same address again one screen later -- so everybody typed their email twice
@@ -42,7 +50,9 @@ export default async function SignInPage({
 
   // Read here rather than asked for over the network. The only API that knew
   // the answer is now behind the wall this page is the door to.
-  const authEnabled = !!process.env.AUTH_GOOGLE_ID && !!process.env.AUTH_GOOGLE_SECRET;
+  const googleEnabled = !!process.env.AUTH_GOOGLE_ID && !!process.env.AUTH_GOOGLE_SECRET;
+  // Email accounts live in Blob, so that is what makes the form real.
+  const emailEnabled = passwordAuthConfigured();
 
   /**
    * Google hands control back to step two, not to wherever they were going.
@@ -56,16 +66,35 @@ export default async function SignInPage({
 
   return (
     <AuthShell
-      // §2: the button is already glass, and the shell's card would be glass
-      // around glass. The shell steps out of the way on this screen.
+      // §2: the controls are already glass, and the shell's card would be
+      // glass around glass. The shell steps out of the way on this screen.
       bare
       step={1}
       title="Sign in"
       subtitle="Your garage and your place on the leaderboard follow your account."
     >
-      <GoogleSignInButton variant="squircle" callbackUrl={afterGoogle} disabled={!authEnabled} />
+      {/* Google first, small. `full` so it is the width of the fields under it
+          -- a pill that hugged its label would be a different shape from
+          everything else on the screen. */}
+      <GoogleSignInButton full callbackUrl={afterGoogle} disabled={!googleEnabled} />
 
-      {!authEnabled && (
+      {googleEnabled && emailEnabled && (
+        <div className="my-5 flex items-center gap-3" aria-hidden>
+          <span className="h-px flex-1 bg-[var(--line-divider)]" />
+          <span className="text-[12px] uppercase tracking-wide opacity-50">or</span>
+          <span className="h-px flex-1 bg-[var(--line-divider)]" />
+        </div>
+      )}
+
+      {/* mt-4 when there is no divider above it -- with Google unconfigured the
+          pill and the first field were 2px apart. */}
+      {emailEnabled && (
+        <div className={googleEnabled ? undefined : "mt-4"}>
+          <EmailPasswordForm callbackUrl={afterGoogle} />
+        </div>
+      )}
+
+      {!googleEnabled && !emailEnabled && (
         <p role="status" className="mt-4 text-center text-[15px] leading-snug opacity-70">
           Sign-in is being set up and isn&apos;t available just yet.
         </p>

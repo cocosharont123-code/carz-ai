@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { blobConfigured } from "@/lib/blob-token";
 
 /**
  * The sign-in wall.
@@ -41,15 +42,25 @@ export default auth((request) => {
   const { pathname, search } = request.nextUrl;
 
   /**
-   * Fail open when there is nothing to sign in with.
+   * Fail open only when there is nothing to sign in with at all.
    *
-   * If the Google credentials are missing then NextAuth registers no providers,
-   * the sign-in page has no button, and gating the site would make every single
-   * URL redirect to a screen that cannot let anyone through. A missing
-   * environment variable would take the whole site down with no way back in,
-   * which is a worse failure than an ungated one.
+   * If no provider is registered then the sign-in page has no working control,
+   * and gating the site would make every URL redirect to a screen that cannot
+   * let anyone through -- a missing environment variable would take the whole
+   * site down with no way back in, which is a worse failure than an ungated
+   * one.
+   *
+   * There are two providers now, so this asks about both. It used to ask only
+   * about Google, which meant a deployment with email accounts configured and
+   * no Google credentials served the entire app unwalled.
+   *
+   * Read from the environment rather than imported from @/auth: the condition
+   * there is the same, but reading it here keeps the wall from depending on
+   * module-init order in the proxy bundle.
    */
-  if (!process.env.AUTH_GOOGLE_ID || !process.env.AUTH_GOOGLE_SECRET) {
+  const googleReady = !!process.env.AUTH_GOOGLE_ID && !!process.env.AUTH_GOOGLE_SECRET;
+  const passwordReady = blobConfigured();
+  if (!googleReady && !passwordReady) {
     return NextResponse.next();
   }
 
