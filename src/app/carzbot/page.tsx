@@ -1,19 +1,19 @@
-import { CarzBotOrb } from "@/components/carzbot-orb";
+import { CarzBotChat } from "@/components/carzbot/carzbot-chat";
 
 export const metadata = { title: "CarzBot — Carz AI" };
 
 /**
- * No padding and no max-width: the orb owns the whole stage.
+ * CarzBot.
  *
- * It positions the pill from the viewport and flies to 46% of it, so a wrapper
- * that added page padding would move the stage out from under the arithmetic.
- * §4: the shell's one scroller is this main, and the orb fills it exactly, so
- * there is nothing here to scroll.
+ * A chat, not the morph orb that used to live here: the orb answered one
+ * question and had nowhere to put a second, while the route behind it has
+ * always taken a transcript. §4 -- this main is the shell's one scroller, and
+ * the thread grows inside it with the composer stuck to its bottom.
  */
 export default function CarzBotPage() {
   return (
     <main className="h-full w-full">
-      <CarzBotOrb />
+      <CarzBotChat />
     </main>
   );
 }
