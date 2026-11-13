@@ -9,8 +9,8 @@ import { cn } from "@/lib/utils";
 /**
  * The tab bar: Home, Map, Scan, Hunt, Profile.
  *
- * A floating capsule at the bottom of the screen: inset 16px either side, 10px
- * off the bottom edge, rounded all the way round. Five fixed destinations and
+ * A capsule on the bottom edge of the screen: inset 16px either side, rounded
+ * all the way round, with its bottom curve against the edge. Five fixed destinations and
  * no menu -- what the menu used to hold now lives on Home as tiles and list
  * rows, which is the one place a list of everything the app does belongs.
  *
@@ -113,27 +113,25 @@ export function BottomNav() {
         className="absolute inset-x-0 bottom-0 z-[60] flex justify-center px-4"
         style={{ paddingBottom: "var(--nav-gap)" }}
       >
-        {/* A capsule, floating -- the shape asked for, with a drawing
-            attached.
+        {/* A capsule, on the edge. Both halves of a request made twice.
 
-            The history is worth keeping, because the two requests pull against
-            each other. This was a floating dock; it read as sitting up off the
+            The history explains the shape, because the two asks pull against
+            each other. It was a floating dock; that read as sitting up off the
             bottom of the phone, so it became a full-width bar welded to the
-            edge with its bottom corners squared off. Now the shape is the
-            complaint: a flat-bottomed slab across the screen is not what a tab
-            bar looks like.
+            edge with its bottom corners squared off; then the shape was the
+            complaint, because a flat-bottomed slab across the screen is not
+            what a tab bar looks like. So: the pill, on the bottom edge.
 
-            So, both. A pill -- rounded the whole way round (§3 gives
-            .rounded-full `corner-shape: round`, because a capsule is not a
-            squircle) and inset 16px either side -- but 10px off the bottom
-            rather than the strip's worth of air that caused the first
-            complaint. It overlaps the home-indicator strip deliberately,
-            exactly as the flush bar did: taps register there, and only the
-            edge swipe belongs to iOS.
+            Rounded the whole way round -- §3 gives .rounded-full
+            `corner-shape: round`, because a capsule is not a squircle -- inset
+            16px either side, and no gap underneath, so the bottom curve meets
+            the edge of the screen. It overlaps the home-indicator strip
+            deliberately, exactly as the flush bar did: taps register there,
+            and only the edge swipe belongs to iOS.
 
-            The shadow is what makes it float instead of sitting in a hole. §2
-            lists it as part of the material; it came off while the bar was
-            welded to the edge, where there was nothing to cast onto. */}
+            The shadow stays. Against the edge there is less for it to fall on,
+            but it is still what separates the pill's lower curve from whatever
+            scrolls past behind it. */}
         <GlassPane
           className="relative flex w-full items-stretch rounded-full shadow-[var(--glass-shadow)]"
           style={{ height: BAR_H }}

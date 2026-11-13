@@ -30,16 +30,18 @@
      A constant gap instead. 1.5rem clears the home-indicator bar on the phones
      that have one, and on everything else it is simply the gap the bubble
      floats above the edge. The nav never moves again. */
-  /* The bar is a floating capsule (§8), so there is a gap under it again --
-     but 10px, not the 1.5rem it once was. That is enough for the pill to read
-     as floating and little enough that it is still on the bottom of the
-     screen, which is the thing that kept being asked for. The strip where a
-     home indicator is drawn is not reserved: the pill overlaps it, taps still
-     register, and only the edge swipe belongs to iOS.
+  /* The bar is a capsule (§8) and it sits on the bottom edge: no gap at all.
+     It had 10px, which was meant to read as floating and read instead as not
+     being on the bottom of the screen -- the one thing that has been asked for
+     over and over. The shape stays a pill, inset at the sides; only the air
+     underneath is gone, so its bottom curve meets the edge.
+     
+     The strip where a home indicator is drawn is not reserved either: the pill
+     overlaps it, taps still register, and only the edge swipe belongs to iOS.
      
      Every full-bleed page measures from --nav-h, so it is the pill plus the
-     gap -- what a page actually has to keep clear. */
-  --nav-gap: 10px;
+     gap -- 0 now, kept in the arithmetic so changing it moves both. */
+  --nav-gap: 0px;
   --nav-bubble-h: 56px;
   --nav-h: calc(var(--nav-bubble-h) + var(--nav-gap));
 }

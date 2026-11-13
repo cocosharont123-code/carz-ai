@@ -942,34 +942,7 @@ export default function SpotPage() {
           <section className="mt-2">
             {car.isCar ? (
               <>
-                {/* Rarity first.
-                
-                    It was a collapsed row near the bottom, under specs,
-                    performance and market value -- so the number people open
-                    this screen for was four scrolls and a tap away. It is the
-                    first thing on the screen now, above the car's own name.
-                
-                    The score arrives with the second pass, a few seconds after
-                    the name, so the slot is held open at exactly the meter's
-                    height until it lands. Reserving it is what keeps the whole
-                    screen from jumping when it does (§1, CLS 0) -- and an
-                    empty track that says "Scoring" reads as a number on its
-                    way, which is what it is. */}
-                {car.rarityScore > 0 ? (
-                  <RarityMeter score={car.rarityScore} reason={car.rarityReason} />
-                ) : specsPending ? (
-                  <div className="mt-4 rounded-card glass-chip p-4" role="status" aria-live="polite">
-                    <div className="flex items-baseline justify-between">
-                      <span className="text-[12px] font-bold uppercase tracking-wide">Rarity</span>
-                      <span className="text-[14px] font-bold text-[var(--color-secondary-text)]">
-                        Scoring…
-                      </span>
-                    </div>
-                    <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-background/15" />
-                  </div>
-                ) : null}
-
-                <h2 className="mt-6 text-[20px] font-normal leading-tight text-foreground">{car.make}</h2>
+                <h2 className="text-[20px] font-normal leading-tight text-foreground">{car.make}</h2>
                 <p className="text-[34px] font-bold leading-tight tracking-tight text-foreground">
                   {car.model}
                 </p>
@@ -997,6 +970,33 @@ export default function SpotPage() {
                     />
                   </div>
                 )}
+
+                {/* The rarity meter, directly under the photo.
+                
+                    It was a collapsed row near the bottom, under specs,
+                    performance and market value -- the number people open this
+                    screen for, four scrolls and a tap away. It went to the very
+                    top first, above the car's own name; this is where it was
+                    actually wanted, under the photograph of the car it scores.
+                
+                    The score arrives with the second pass, a few seconds behind
+                    the name, so the slot is held open at exactly the meter's
+                    height until it lands. Reserving it is what stops the rows
+                    below jumping when it fills (§1, CLS 0), and an empty track
+                    reading "Scoring" is what a number on its way looks like. */}
+                {car.rarityScore > 0 ? (
+                  <RarityMeter score={car.rarityScore} reason={car.rarityReason} />
+                ) : specsPending ? (
+                  <div className="mt-4 rounded-card glass-chip p-4" role="status" aria-live="polite">
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-[12px] font-bold uppercase tracking-wide">Rarity</span>
+                      <span className="text-[14px] font-bold text-[var(--color-secondary-text)]">
+                        Scoring…
+                      </span>
+                    </div>
+                    <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-background/15" />
+                  </div>
+                ) : null}
 
                 {/* No stat boxes here any more.
                 
