@@ -5,7 +5,7 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { MapPinOff, Search } from "lucide-react";
 import { claimGpu } from "@/components/camera/camera-in-use";
-import { applyMidnight } from "@/components/map/night-style";
+import { applyRealism } from "@/components/map/realistic";
 import { MapHud } from "@/components/map/map-hud";
 import { timeAgo } from "@/lib/time-ago";
 
@@ -24,11 +24,17 @@ type Spot = {
 };
 
 /**
- * A midnight flight over the city.
+ * A flight over the real city.
  *
- * Satellite imagery dimmed to cosmic navy, roads lit like sodium lamps,
- * elevation under it and stars behind it, on a globe tilted far enough to feel
- * like altitude rather than a plan view.
+ * Satellite photography in its own colours, 3D buildings standing on it, real
+ * elevation under it and the light of whatever time of day it is where the
+ * viewer is, on a globe tilted far enough to feel like altitude rather than a
+ * plan view.
+ *
+ * It was a midnight flight until now -- the imagery desaturated to grey, a
+ * black sheet over the ground, roads redrawn as white lamps. Handsome, and a
+ * monochrome photograph of a city, which is not what a map of real cars in
+ * real places should look like.
  *
  * Two things about it are defensive rather than decorative.
  *
@@ -136,10 +142,15 @@ export function SpotMap() {
       mapboxgl.accessToken = token;
       const m = new mapboxgl.Map({
         container: holder.current,
+        // Standard Satellite rather than satellite-streets: the photography
+        // with 3D buildings, landmarks and labels standing on it rather than
+        // flat beside it, and a lighting model that applyRealism sets to the
+        // viewer's own time of day. The flat fallback is Standard -- vector,
+        // no raster tiles, far cheaper on a weak device, and still in colour.
         style:
           wanted === "cinematic"
-            ? "mapbox://styles/mapbox/satellite-streets-v12"
-            : "mapbox://styles/mapbox/dark-v11",
+            ? "mapbox://styles/mapbox/standard-satellite"
+            : "mapbox://styles/mapbox/standard",
         center: [START.lng, START.lat],
         ...(wanted === "cinematic" ? CINEMATIC_VIEW : FLAT_VIEW),
         projection: { name: "globe" },
@@ -153,7 +164,7 @@ export function SpotMap() {
       });
 
       m.on("style.load", () => {
-        if (wanted === "cinematic") applyMidnight(m);
+        if (wanted === "cinematic") applyRealism(m);
       });
       m.on("error", (e) => console.error("map error:", e?.error ?? e));
 
@@ -396,7 +407,7 @@ export function SpotMap() {
       >
         <div className="relative mr-14">
           <Search
-            className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[var(--color-muted-text)]"
+            className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-white/70"
             strokeWidth={1.75}
             aria-hidden
           />
@@ -406,7 +417,10 @@ export function SpotMap() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search cars, events, or places"
             aria-label="Search the map"
-            className="h-[52px] w-full rounded-full glass-card pl-11 pr-4 text-[15px] text-foreground outline-none placeholder:text-[var(--color-muted-text)] [&::-webkit-search-cancel-button]:appearance-none"
+            // map-glass, not glass-card: this floats over daylight imagery
+            // now, where theme-coloured glass and theme-coloured text wash
+            // out. White on a dim layer, in both themes.
+            className="map-glass h-[52px] w-full rounded-full pl-11 pr-4 text-[15px] text-white outline-none [&::-webkit-search-cancel-button]:appearance-none"
           />
         </div>
       </div>

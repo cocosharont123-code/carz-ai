@@ -72,9 +72,11 @@ function Toggle({
       className={cn(
         // 44px: small, but a control on a map is dragged past constantly and
         // anything under the minimum becomes a control you fight for.
-        "press glass-bubble flex h-11 w-11 items-center justify-center rounded-full",
+        // map-glass rather than the app's glass-bubble: these sit on
+        // photography, which is bright in both themes.
+        "press map-glass flex h-11 w-11 items-center justify-center rounded-full",
         "transition-colors disabled:opacity-50",
-        active && "text-carz",
+        active && "text-white",
       )}
     >
       <Icon className={cn("h-[18px] w-[18px]", busy && "animate-pulse")} strokeWidth={2} aria-hidden />
