@@ -871,7 +871,14 @@ export default function SpotPage() {
           )}
 
           {loading ? (
-            <ScanningButton progress={scanProgress} phases={SCAN_PHASES} />
+            // pt-3 on top of the column's own space-y-4: the photo and the
+            // progress panel were 16px apart, which read as one block rather
+            // than as the picture and what is being done to it. Padding, not
+            // a margin -- space-y sets margin-top on every child after the
+            // first and wins over an mt- utility.
+            <div className="pt-3">
+              <ScanningButton progress={scanProgress} phases={SCAN_PHASES} />
+            </div>
           ) : !car ? (
             <GlassButton onClick={run} disabled={!canRun} size="lg" className="w-full py-5">
               Identify car
