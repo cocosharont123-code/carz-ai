@@ -24,12 +24,17 @@ type Spot = {
 };
 
 /**
- * A flight over the real city.
+ * The real city, from above.
  *
- * Satellite photography in its own colours, 3D buildings standing on it, real
- * elevation under it and the light of whatever time of day it is where the
- * viewer is, on a globe tilted far enough to feel like altitude rather than a
- * plan view.
+ * Satellite photography in its own colours, 3D buildings standing on it and
+ * real elevation under it, looking straight down -- the view you get from a
+ * map, not from a helicopter banking over the city.
+ *
+ * It opened tilted at 62 degrees, which looked like altitude and meant the
+ * first thing anybody did was press the flatten button to see where anything
+ * actually was. Straight down is the default now and the button tilts rather
+ * than flattens: the cinematic angle is still one tap away, it is just no
+ * longer in the way of reading the map.
  *
  * It was a midnight flight until now -- the imagery desaturated to grey, a
  * black sheet over the ground, roads redrawn as white lamps. Handsome, and a
@@ -48,8 +53,17 @@ type Spot = {
  * and offering nothing.
  */
 const START = { lng: -80.1918, lat: 25.7617 } as const;
-const CINEMATIC_VIEW = { zoom: 12.5, pitch: 62, bearing: -15 } as const;
-const FLAT_VIEW = { zoom: 11.5, pitch: 0, bearing: 0 } as const;
+/**
+ * Straight down, north up, on both paths.
+ *
+ * Zoom 12.8 rather than the 12.5 the tilted view used: a plan view fits more
+ * ground into the same screen than a pitched one, so holding the old number
+ * would have opened further out than it looked before.
+ */
+const TOP_DOWN_VIEW = { zoom: 12.8, pitch: 0, bearing: 0 } as const;
+
+/** Where the tilt button goes, and what it eases back from. */
+const TILTED_VIEW = { pitch: 62, bearing: -15 } as const;
 
 /**
  * Whether to open at full quality.
@@ -112,7 +126,8 @@ export function SpotMap() {
   const [failed, setFailed] = useState(false);
   const [locating, setLocating] = useState(false);
   const [query, setQuery] = useState("");
-  const [tilted, setTilted] = useState(true);
+  // Opens flat, so the control reads "Tilt the map" rather than "Flatten".
+  const [tilted, setTilted] = useState(false);
 
   // Ask the server once, and only when the build did not supply one.
   useEffect(() => {
@@ -134,9 +149,11 @@ export function SpotMap() {
   useEffect(() => {
     if (!token || !holder.current || map.current) return;
     const release = claimGpu();
-    // Decided once, here, and never changed afterwards. Swapping the style at
-    // runtime is exactly what blanked this page.
-    const wanted: "cinematic" | "flat" = capableDevice() ? "cinematic" : "flat";
+    // How much map to draw, decided once here and never changed afterwards --
+    // swapping the style at runtime is exactly what blanked this page. It was
+    // called "cinematic" when it also chose the camera angle; it only chooses
+    // the quality now, and the camera looks straight down either way.
+    const quality: "rich" | "lite" = capableDevice() ? "rich" : "lite";
 
     try {
       mapboxgl.accessToken = token;
@@ -144,15 +161,15 @@ export function SpotMap() {
         container: holder.current,
         // Standard Satellite rather than satellite-streets: the photography
         // with 3D buildings, landmarks and labels standing on it rather than
-        // flat beside it, and a lighting model that applyRealism sets to the
-        // viewer's own time of day. The flat fallback is Standard -- vector,
-        // no raster tiles, far cheaper on a weak device, and still in colour.
+        // flat beside it, lit as daylight by applyRealism. The lite fallback
+        // is Standard -- vector, no raster tiles, far cheaper on a weak
+        // device, and still in colour.
         style:
-          wanted === "cinematic"
+          quality === "rich"
             ? "mapbox://styles/mapbox/standard-satellite"
             : "mapbox://styles/mapbox/standard",
         center: [START.lng, START.lat],
-        ...(wanted === "cinematic" ? CINEMATIC_VIEW : FLAT_VIEW),
+        ...TOP_DOWN_VIEW,
         projection: { name: "globe" },
         attributionControl: true,
         // High-inertia camera. Low linearity and low deceleration is what makes
@@ -164,14 +181,16 @@ export function SpotMap() {
       });
 
       m.on("style.load", () => {
-        if (wanted === "cinematic") applyRealism(m);
+        if (quality === "rich") applyRealism(m);
       });
       m.on("error", (e) => console.error("map error:", e?.error ?? e));
 
       map.current = m;
       // Deferred: a synchronous write here cascades renders, and the frame it
       // costs is one nobody sees.
-      void Promise.resolve().then(() => setTilted(wanted === "cinematic"));
+      // Flat on arrival whichever path we took -- `quality` decides how much
+      // map to draw, not which way the camera points.
+      void Promise.resolve().then(() => setTilted(false));
     } catch (e) {
       console.error("map failed to start:", e);
       void Promise.resolve().then(() => setFailed(true));
@@ -336,7 +355,11 @@ export function SpotMap() {
     if (!m) return;
     const next = !tilted;
     setTilted(next);
-    m.easeTo({ pitch: next ? 62 : 0, bearing: next ? -15 : 0, duration: 800 });
+    m.easeTo({
+      pitch: next ? TILTED_VIEW.pitch : TOP_DOWN_VIEW.pitch,
+      bearing: next ? TILTED_VIEW.bearing : TOP_DOWN_VIEW.bearing,
+      duration: 800,
+    });
   }, [tilted]);
 
   const locate = useCallback(() => {
