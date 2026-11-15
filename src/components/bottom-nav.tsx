@@ -1,7 +1,8 @@
 "use client";
 
+import { useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Home, Map, ScanLine, Crosshair, User } from "lucide-react";
 import { GlassFilter, GlassPane } from "@/components/ui/liquid-glass";
 import { cn } from "@/lib/utils";
@@ -37,10 +38,31 @@ const FULL_SCREEN = ["/signin"];
 
 const TABS = [
   { href: "/", label: "Home", Icon: Home, match: (p: string) => p === "/" },
-  { href: "/map", label: "Map", Icon: Map, match: (p: string) => p.startsWith("/map") },
-  { href: "/spot", label: "Scan", Icon: ScanLine, match: (p: string) => p === "/spot", center: true },
-  { href: "/hunt", label: "Hunt", Icon: Crosshair, match: (p: string) => p.startsWith("/hunt") },
-  { href: "/profile", label: "Profile", Icon: User, match: (p: string) => p.startsWith("/profile") },
+  {
+    href: "/map",
+    label: "Map",
+    Icon: Map,
+    match: (p: string) => p.startsWith("/map"),
+  },
+  {
+    href: "/spot",
+    label: "Scan",
+    Icon: ScanLine,
+    match: (p: string) => p === "/spot",
+    center: true,
+  },
+  {
+    href: "/hunt",
+    label: "Hunt",
+    Icon: Crosshair,
+    match: (p: string) => p.startsWith("/hunt"),
+  },
+  {
+    href: "/profile",
+    label: "Profile",
+    Icon: User,
+    match: (p: string) => p.startsWith("/profile"),
+  },
 ] as const;
 
 /**
@@ -59,13 +81,23 @@ const TABS = [
  * and width does neither. It composites on the GPU and lands in the same
  * places a layoutId animation would.
  */
-function Tubelight({ index, hidden }: { index: number; hidden: boolean }) {
+function Tubelight({
+  index,
+  hidden,
+  dragging,
+}: {
+  index: number;
+  hidden: boolean;
+  /** Shorter glide while a finger is driving it -- 350ms reads as lag. */
+  dragging: boolean;
+}) {
   return (
     <span
       aria-hidden
       className={cn(
         "pointer-events-none absolute inset-y-0 left-0 flex w-1/5 items-center justify-center",
-        "transition-[transform,opacity] duration-[350ms] ease-[cubic-bezier(.32,.72,0,1)]",
+        "transition-[transform,opacity] ease-[cubic-bezier(.32,.72,0,1)]",
+        dragging ? "duration-[120ms]" : "duration-[350ms]",
       )}
       style={{
         transform: `translate3d(${index * 100}%, 0, 0)`,
@@ -84,7 +116,16 @@ function Tubelight({ index, hidden }: { index: number; hidden: boolean }) {
 export function BottomNav() {
   const pathname = usePathname();
 
-  if (FULL_SCREEN.some((p) => pathname === p || pathname.startsWith(`${p}/`))) return null;
+  // Above the early return, because hooks cannot be called conditionally and
+  // this component bails out on the sign-in flow. The drag state they hold is
+  // described where it is used, below.
+  const router = useRouter();
+  const barRef = useRef<HTMLDivElement>(null);
+  const startIndex = useRef<number | null>(null);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+
+  if (FULL_SCREEN.some((p) => pathname === p || pathname.startsWith(`${p}/`)))
+    return null;
 
   /**
    * Which tab is lit, and whether to light one at all.
@@ -95,8 +136,78 @@ export function BottomNav() {
    * its own indicator, and a second one under it reads as two selections.
    */
   const activeIndex = TABS.findIndex((t) => t.match(pathname));
-  const lampIndex = activeIndex < 0 ? 0 : activeIndex;
-  const lampHidden = activeIndex < 0 || !!(TABS[activeIndex] as { center?: boolean }).center;
+
+  /**
+   * Drag a finger across the bar to pick a tab.
+   *
+   * The pill follows the finger and the tab under it lights up; letting go
+   * goes there. It is the iOS gesture for a row of segments: you can correct
+   * your aim without lifting, which on a 72px-wide target at the bottom edge
+   * of a phone is the difference between landing on Map and landing on Scan.
+   *
+   * Pointer events, not touch events, so a trackpad drag behaves the same.
+   * The pointer is captured on the bar, so a finger that slides off the end --
+   * or below the screen edge, which is most of a thumb's travel down here --
+   * keeps reporting to it instead of being lost to whatever is underneath.
+   *
+   * A tap is left alone. Nothing navigates on pointerup unless the finger
+   * actually moved to a different tab; a plain tap falls through to the
+   * <Link>, which is still a real link with a real href for the keyboard, the
+   * screen reader and a long-press "open in new tab".
+   */
+
+  function indexAt(clientX: number): number {
+    const rect = barRef.current?.getBoundingClientRect();
+    if (!rect || rect.width === 0) return 0;
+    const slot = rect.width / TABS.length;
+    const raw = Math.floor((clientX - rect.left) / slot);
+    return Math.max(0, Math.min(TABS.length - 1, raw));
+  }
+
+  function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    // Primary input only: a right-click or a second finger mid-drag should not
+    // take over the gesture.
+    if (e.button !== 0 && e.pointerType === "mouse") return;
+    const i = indexAt(e.clientX);
+    startIndex.current = i;
+    setDragIndex(i);
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
+
+  function onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (startIndex.current === null) return;
+    const i = indexAt(e.clientX);
+    setDragIndex((prev) => (prev === i ? prev : i));
+  }
+
+  function onPointerUp(e: React.PointerEvent<HTMLDivElement>) {
+    const from = startIndex.current;
+    const to = dragIndex;
+    startIndex.current = null;
+    setDragIndex(null);
+    if (from === null || to === null) return;
+    if (to === from) return; // a tap: the link handles it
+    // The finger moved, so this is the navigation -- and the click the browser
+    // is about to synthesise on whichever link is under the finger would be a
+    // second one to the same place.
+    e.preventDefault();
+    router.push(TABS[to].href);
+  }
+
+  function onPointerCancel() {
+    startIndex.current = null;
+    setDragIndex(null);
+  }
+
+  const dragging = dragIndex !== null;
+  const shownIndex = dragIndex ?? activeIndex;
+  const lampIndex = shownIndex < 0 ? 0 : shownIndex;
+  // Hidden on a route that is not a tab, and on Scan, whose raised circle is
+  // already its own indicator -- but never while dragging: during a drag the
+  // pill is the thing saying where your finger is, including over Scan.
+  const lampHidden =
+    !dragging &&
+    (activeIndex < 0 || !!(TABS[activeIndex] as { center?: boolean }).center);
 
   return (
     <>
@@ -132,73 +243,110 @@ export function BottomNav() {
             The shadow stays. Against the edge there is less for it to fall on,
             but it is still what separates the pill's lower curve from whatever
             scrolls past behind it. */}
-        <GlassPane
-          className="relative flex w-full items-stretch rounded-full shadow-[var(--glass-shadow)]"
-          style={{ height: BAR_H }}
+        {/* The drag surface wraps the pane rather than being it: GlassPane
+            takes a class and a style and nothing else, and threading a dozen
+            pointer handlers through it would make every other caller carry
+            them. touch-none because this is not a scroll surface -- without it
+            the browser claims the gesture as a page pan and the pill stutters
+            behind the finger. */}
+        <div
+          ref={barRef}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerCancel}
+          // A link is draggable by default, so pressing one and moving starts
+          // a native link-drag -- which fires pointercancel and killed this
+          // gesture on its first millimetre. Every tab is a link, so every
+          // drag started on one. The links below also carry draggable={false};
+          // this is the backstop for anything else that lands in here.
+          onDragStart={(e) => e.preventDefault()}
+          className="w-full max-w-[480px] touch-none select-none"
         >
-          <Tubelight index={lampIndex} hidden={lampHidden} />
+          <GlassPane
+            className="relative flex w-full items-stretch rounded-full shadow-[var(--glass-shadow)]"
+            style={{ height: BAR_H }}
+          >
+            <Tubelight
+              index={lampIndex}
+              hidden={lampHidden}
+              dragging={dragging}
+            />
 
-          {TABS.map(({ href, label, Icon, match, ...rest }) => {
-            const active = match(pathname);
-            const center = "center" in rest && rest.center;
+            {TABS.map(({ href, label, Icon, match, ...rest }) => {
+              const active = match(pathname);
+              const center = "center" in rest && rest.center;
 
-            if (center) {
+              if (center) {
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    draggable={false}
+                    aria-label={label}
+                    aria-current={active ? "page" : undefined}
+                    className="group relative flex flex-1 items-center justify-center"
+                  >
+                    {/* 64px, lifted clear of the row. Black inside a white ring
+                      rather than a filled white disc: filled, it is the
+                      brightest object on a black screen and pulls the eye off
+                      whatever the page is actually showing. */}
+                    <span
+                      className={cn(
+                        "press absolute -top-3 flex h-16 w-16 items-center justify-center rounded-full",
+                        "border-2 border-foreground bg-background shadow-[var(--glow)]",
+                      )}
+                    >
+                      <ScanLine
+                        className="h-7 w-7 text-foreground"
+                        strokeWidth={1.75}
+                        aria-hidden
+                      />
+                    </span>
+                    <span className="sr-only">{label}</span>
+                  </Link>
+                );
+              }
+
               return (
                 <Link
                   key={href}
                   href={href}
+                  draggable={false}
                   aria-label={label}
                   aria-current={active ? "page" : undefined}
-                  className="group relative flex flex-1 items-center justify-center"
+                  className="press flex min-h-11 flex-1 flex-col items-center justify-center gap-1"
                 >
-                  {/* 64px, lifted clear of the row. Black inside a white ring
-                      rather than a filled white disc: filled, it is the
-                      brightest object on a black screen and pulls the eye off
-                      whatever the page is actually showing. */}
+                  <Icon
+                    className={cn(
+                      "h-6 w-6",
+                      active
+                        ? "text-foreground"
+                        : "text-[var(--color-muted-text)]",
+                    )}
+                    strokeWidth={1.75}
+                    // Filled when current. Not colour alone: the label changes
+                    // weight and shade with it.
+                    fill={active ? "currentColor" : "none"}
+                    aria-hidden
+                  />
                   <span
                     className={cn(
-                      "press absolute -top-3 flex h-16 w-16 items-center justify-center rounded-full",
-                      "border-2 border-foreground bg-background shadow-[var(--glow)]",
+                      // 11px, per the spec. A blanket captions sweep had taken this to 12.
+                      "text-[11px] leading-none",
+                      active
+                        ? "font-semibold text-foreground"
+                        : "text-[var(--color-muted-text)]",
                     )}
                   >
-                    <ScanLine className="h-7 w-7 text-foreground" strokeWidth={1.75} aria-hidden />
+                    {label}
                   </span>
-                  <span className="sr-only">{label}</span>
                 </Link>
               );
-            }
-
-            return (
-              <Link
-                key={href}
-                href={href}
-                aria-label={label}
-                aria-current={active ? "page" : undefined}
-                className="press flex min-h-11 flex-1 flex-col items-center justify-center gap-1"
-              >
-                <Icon
-                  className={cn("h-6 w-6", active ? "text-foreground" : "text-[var(--color-muted-text)]")}
-                  strokeWidth={1.75}
-                  // Filled when current. Not colour alone: the label changes
-                  // weight and shade with it.
-                  fill={active ? "currentColor" : "none"}
-                  aria-hidden
-                />
-                <span
-                  className={cn(
-                    // 11px, per the spec. A blanket captions sweep had taken this to 12.
-                    "text-[11px] leading-none",
-                    active ? "font-semibold text-foreground" : "text-[var(--color-muted-text)]",
-                  )}
-                >
-                  {label}
-                </span>
-              </Link>
-            );
-          })}
-        </GlassPane>
+            })}
+          </GlassPane>
+        </div>
       </nav>
-
     </>
   );
 }

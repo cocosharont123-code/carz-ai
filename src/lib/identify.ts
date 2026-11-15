@@ -56,14 +56,33 @@ export type CarReport = {
   crossCheckNote: string;
 };
 
-const DEFAULT_MODEL = "claude-sonnet-5";
+/**
+ * The cheapest model there is, by request.
+ *
+ * Claude Haiku 5.5: $0.10 per million input tokens and $0.50 per million out,
+ * against Sonnet 5's $2 and $10 -- twenty times less -- and ten times less
+ * than Haiku 4.5, which it replaces below as the spec-sheet model. It takes
+ * images, tools and structured outputs, which is everything this pipeline
+ * needs, and it is the fastest of the line.
+ *
+ * The trade is written in the comments further down this file and is worth
+ * repeating here, because it was measured rather than assumed: on a pipeline
+ * whose accuracy comes from two looks agreeing, a cheaper look disagrees more
+ * often, and every disagreement buys an adjudication. That is how a cheaper
+ * wide look once made scans *slower* as well as vaguer. The whole pipeline is
+ * on one cheap model now rather than a cheap look against an expensive
+ * adjudicator, so the adjudication costs what the look costs -- but expect
+ * looser identifications ("911 Carrera" for a Carrera S) and more contested
+ * ones. CAR_SPOTTER_MODEL moves it back without a deploy.
+ */
+const DEFAULT_MODEL = "claude-haiku-5-5";
 
 // This pipeline depends on structured outputs, so an override naming a model
 // without them would 400 on every scan. Honour the env var only when it names a
 // model that can actually run this, and otherwise fall back rather than break
 // spotting for a value nobody remembers setting.
 const STRUCTURED_OUTPUT_CAPABLE =
-  /^claude-(opus-(5|4-8)|sonnet-5|haiku-4-5|(fable|mythos)-5(-1)?)$/;
+  /^claude-(opus-(5|4-8)|sonnet-(5|5-5)|haiku-(4-5|5-5)|(fable|mythos)-5(-[12])?)$/;
 
 function pickModel(): string {
   const override = process.env.CAR_SPOTTER_MODEL?.trim();
@@ -99,7 +118,8 @@ const LOOK_MODEL = (() => {
 const SPECS_MODEL = (() => {
   const override = process.env.CAR_SPOTTER_SPECS_MODEL?.trim();
   if (override && STRUCTURED_OUTPUT_CAPABLE.test(override)) return override;
-  return "claude-haiku-4-5";
+  // Haiku 5.5 rather than 4.5: a tenth of the price for the same job.
+  return "claude-haiku-5-5";
 })();
 
 // Fast mode runs the same model at up to 2.5x output speed. Only Opus 5 / 4.8
@@ -119,7 +139,18 @@ const FALLBACK_CAPABLE = /^claude-(opus-(5|4-8)|(fable|mythos)-5(-1)?)$/;
 // to switch thinking off to save the spotter a few seconds simply cannot on
 // these models — they ask for low effort instead, which is the supported way to
 // buy the same thing.
-const THINKING_ALWAYS_ON = /^claude-(fable|mythos)-5(-1)?$/;
+/**
+ * Haiku 5.5 is on this list deliberately, and conservatively.
+ *
+ * Its thinking is adaptive rather than always-on, so it might well accept
+ * being switched off -- but the Models API reports `thinking.types.disabled`
+ * as unsupported for its sibling Sonnet 5.5, and the failure mode if it
+ * refuses is a 400 on every single scan. Listing it here means the passes
+ * that wanted thinking off ask for low effort instead, which is supported
+ * either way and buys the same seconds. Worth re-testing against the live
+ * Models API before taking it back off.
+ */
+const THINKING_ALWAYS_ON = /^claude-(haiku-5-5|(fable|mythos)-5(-[12])?)$/;
 let fastMode = process.env.CAR_SPOTTER_FAST !== "0";
 
 type Effort = "low" | "medium" | "high" | "xhigh" | "max";
@@ -138,7 +169,7 @@ const LOOK_EFFORT = (process.env.CAR_SPOTTER_EFFORT as Effort) || "medium";
 // `effort` is rejected outright by Haiku 4.5 and Sonnet 4.5, so a
 // CAR_SPOTTER_MODEL override pointing at one of those must not send it.
 const EFFORT_CAPABLE =
-  /^claude-(opus-(5|4-8|4-7|4-6|4-5)|sonnet-(5|4-6)|(fable|mythos)-5(-1)?)$/;
+  /^claude-(opus-(5|4-8|4-7|4-6|4-5)|sonnet-(5|5-5|4-6)|haiku-5-5|(fable|mythos)-5(-[12])?)$/;
 
 export class IdentifyError extends Error {}
 

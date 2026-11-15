@@ -386,8 +386,12 @@ export function SpotMap() {
           to see what is on the map without hunting for pins, and on a phone
           most of the pins are off screen. */}
       <div
-        className="glass-card absolute inset-x-0 bottom-0 z-10 rounded-t-sheet rounded-b-none border-x-0 border-b-0 px-5 pb-4 pt-2"
-        style={{ paddingBottom: "1rem" }}
+        className="glass-card absolute inset-x-0 bottom-0 z-10 rounded-t-sheet rounded-b-none border-x-0 border-b-0 px-5 pt-2"
+        // The map runs full-bleed under the tab bar, so this sheet has to keep
+        // its own content clear of it: 1rem of padding left the row of cars
+        // underneath the capsule. --nav-h is the bar plus whatever gap is
+        // under it, which is the number that moves when the bar does.
+        style={{ paddingBottom: "calc(var(--nav-h) + 0.75rem)" }}
       >
         <div aria-hidden className="mx-auto h-1 w-10 rounded-full bg-foreground/25" />
         <h2 className="mt-3 text-[17px] font-semibold text-foreground">Cars Near You</h2>

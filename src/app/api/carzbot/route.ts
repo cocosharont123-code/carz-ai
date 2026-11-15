@@ -8,9 +8,12 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 // Conversation about cars is recall, not perception — there is no photo to
-// reason over — so it takes the cheapest model, same as the spec sheet and
-// Drops. CARZBOT_MODEL overrides it without a deploy.
-const MODEL = process.env.CARZBOT_MODEL || "claude-haiku-4-5";
+// reason over — so it takes the cheapest model, same as the spec sheet.
+//
+// Haiku 5.5 rather than 4.5: $0.10 per million input tokens against $1, and
+// $0.50 out against $5, for the same job. Drops is still on 4.5 and is the
+// next one to move. CARZBOT_MODEL overrides it without a deploy.
+const MODEL = process.env.CARZBOT_MODEL || "claude-haiku-5-5";
 
 // Kept short deliberately: this is a chat bubble, not an essay, and output
 // tokens are what a conversation actually costs.
