@@ -1,11 +1,12 @@
 import Link from "next/link";
 import {
-  Bot, Image as ImageIcon, Trophy, Ticket, ChevronRight, Calendar,
+  Bot, Image as ImageIcon, Trophy, Ticket,
   Crown, Sparkles, Settings,
 } from "lucide-react";
 import { HomeHero } from "@/components/home/home-hero";
 import { HomeSearch } from "@/components/home/home-search";
 import { FeaturedCars } from "@/components/home/featured-cars";
+import { HomeEvents } from "@/components/home/home-events";
 
 /**
  * Home.
@@ -94,37 +95,14 @@ export default function Home() {
       </Section>
 
       <Section title="Upcoming Events" href="/events">
-        {/* No scrim over it. §7 puts a bottom gradient on a card only when
-            text or glass sits on a photo, and there is no photo here -- the
-            black gradient was painting over a glass card, which in light mode
-            left the second line grey-on-grey and unreadable.
-
-            A placeholder, which the spec allows, and the honest option here.
-            Events are generated on demand by an AI call that needs a location,
-            so there is no stored list to read -- and running that on every home
-            page load would be a bill and a wait for a card nobody asked for. It
-            opens /events, which asks for a place and then has real ones. */}
-        <Link
-          href="/events"
-          className="press glass-card relative flex min-h-24 items-end overflow-hidden rounded-tile p-4"
-        >
-          <span className="relative flex w-full items-center gap-3">
-            <Calendar className="h-5 w-5 shrink-0 text-foreground" strokeWidth={1.75} aria-hidden />
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-[17px] font-bold text-foreground">
-                Find car meets near you
-              </span>
-              <span className="block truncate text-[12px] text-[var(--color-secondary-text)]">
-                Meets, concours and track days
-              </span>
-            </span>
-            <ChevronRight
-              className="h-[18px] w-[18px] shrink-0 text-[var(--color-muted-text)]"
-              strokeWidth={1.75}
-              aria-hidden
-            />
-          </span>
-        </Link>
+        {/* Real events, read from the cache the events route keeps per place.
+            This was a static "Find car meets near you" card, with a comment
+            explaining that generating a list on every home page load would be
+            a bill and a wait -- which was true until the route started
+            keeping the answer. HomeEvents only reads; it never prompts for a
+            location and never starts a generation, and it falls back to that
+            same card when nothing is stored for this browser's place yet. */}
+        <HomeEvents />
       </Section>
     </main>
   );

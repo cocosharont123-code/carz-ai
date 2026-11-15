@@ -1,11 +1,31 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
+import { cookies } from "next/headers";
 import { auth } from "@/auth";
 import { getProfile, isMaxMember } from "@/lib/profile-blob";
+import { readEvents, writeEvents, fresh, type CarEvent } from "@/lib/events-blob";
 
 export const runtime = "nodejs";
 export const maxDuration = 45;
 
-const MODEL = process.env.CAR_SPOTTER_MODEL || "claude-haiku-4-5";
+// Its own variable, and the cheapest model. It read CAR_SPOTTER_MODEL, which
+// is Spot's -- pointing that at a different model for the identification
+// pipeline silently retargeted this too.
+const MODEL = process.env.CAR_EVENTS_MODEL || "claude-haiku-5-5";
+
+/**
+ * The place this browser last looked at, so Home can show events without
+ * asking for a location of its own.
+ *
+ * A place name, not coordinates: it is what the model is prompted with, it is
+ * already shown on screen, and a city is not a position. Six months, because
+ * the answer to "where do you look at cars" does not change often, and
+ * lax: it only decides which cached list to show.
+ */
+const PLACE_COOKIE = "carz_place";
+const PLACE_MAX_AGE = 60 * 60 * 24 * 180;
+
+/** Somewhere to start before anybody has looked anything up. */
+const DEFAULT_PLACE = "Miami, Florida";
 
 const TOOL = {
   name: "report_events",
@@ -70,6 +90,66 @@ async function requireMax() {
   return null;
 }
 
+/**
+ * What we already know, for Home.
+ *
+ * Reads the cache and nothing else -- no model call, no location prompt, so
+ * Home can render real events on arrival rather than a card inviting you to
+ * go and look for some. Empty when this browser has never resolved a place
+ * and the default city has not been generated yet; Home falls back to its
+ * own card on an empty answer.
+ */
+export async function GET() {
+  const denied = await requireMax();
+  if (denied) return denied;
+
+  const place = (await cookies()).get(PLACE_COOKIE)?.value?.trim() || DEFAULT_PLACE;
+  const cached = await readEvents(place);
+  if (!cached) return NextResponse.json({ place, events: [], cached: false });
+
+  // Stale is still worth showing -- these recur -- and the refresh happens
+  // behind the response rather than in front of it.
+  if (!fresh(cached.at) && process.env.ANTHROPIC_API_KEY) {
+    const key = process.env.ANTHROPIC_API_KEY;
+    after(async () => {
+      const events = await generate(place, key);
+      if (events.length) await writeEvents(place, events);
+    });
+  }
+  return NextResponse.json({ place: cached.place, events: cached.events, cached: true });
+}
+
+/** Ask the model. Empty array on any failure -- the caller decides what that means. */
+async function generate(place: string, key: string): Promise<CarEvent[]> {
+  const prompt =
+    `List 6 to 10 real, well-known recurring luxury and sports car events in or near ${place} (within roughly 150 miles): ` +
+    `Cars & Coffee / supercar meets, concours d'elegance, major collector-car auctions, track days at nearby circuits, and notable annual car shows. ` +
+    `For each give the name, type, venue, city, and typical timing as a recurrence or season (e.g. "Monthly", "Every Saturday AM", "Every August") — ` +
+    `do NOT invent exact calendar dates. Prefer real, verifiable events and venues. Focus on luxury and sports/exotic cars.`;
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 1600,
+        tools: [TOOL],
+        tool_choice: { type: "tool", name: "report_events" },
+        messages: [{ role: "user", content: prompt }],
+      }),
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const block = (data.content || []).find(
+      (b: { type: string; name?: string }) => b.type === "tool_use" && b.name === "report_events",
+    );
+    const events = block?.input?.events;
+    return Array.isArray(events) ? (events as CarEvent[]) : [];
+  } catch {
+    return [];
+  }
+}
+
 export async function POST(req: Request) {
   const denied = await requireMax();
   if (denied) return denied;
@@ -90,32 +170,33 @@ export async function POST(req: Request) {
   }
   if (!place) return NextResponse.json({ error: "No location provided.", events: [] }, { status: 400 });
 
-  const prompt =
-    `List 6 to 10 real, well-known recurring luxury and sports car events in or near ${place} (within roughly 150 miles): ` +
-    `Cars & Coffee / supercar meets, concours d'elegance, major collector-car auctions, track days at nearby circuits, and notable annual car shows. ` +
-    `For each give the name, type, venue, city, and typical timing as a recurrence or season (e.g. "Monthly", "Every Saturday AM", "Every August") — ` +
-    `do NOT invent exact calendar dates. Prefer real, verifiable events and venues. Focus on luxury and sports/exotic cars.`;
+  // Remember where this browser is looking, so Home can show the same list
+  // without a location prompt of its own.
+  const jar = await cookies();
+  jar.set(PLACE_COOKIE, place, {
+    maxAge: PLACE_MAX_AGE,
+    sameSite: "lax",
+    path: "/",
+    httpOnly: true,
+  });
 
-  try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: 1600,
-        tools: [TOOL],
-        tool_choice: { type: "tool", name: "report_events" },
-        messages: [{ role: "user", content: prompt }],
-      }),
-    });
-    if (!res.ok) return NextResponse.json({ error: "AI error", events: [], place }, { status: 502 });
-    const data = await res.json();
-    const block = (data.content || []).find(
-      (b: { type: string; name?: string }) => b.type === "tool_use" && b.name === "report_events",
-    );
-    const events = block?.input?.events ?? [];
-    return NextResponse.json({ place, events });
-  } catch {
-    return NextResponse.json({ error: "fetch failed", events: [], place }, { status: 502 });
+  // A list we already have beats a two-second wait for the same answer.
+  const cached = await readEvents(place);
+  if (cached && fresh(cached.at)) {
+    return NextResponse.json({ place: cached.place, events: cached.events, cached: true });
   }
+  if (cached) {
+    after(async () => {
+      const refreshed = await generate(place, key);
+      if (refreshed.length) await writeEvents(place, refreshed);
+    });
+    return NextResponse.json({ place: cached.place, events: cached.events, cached: true, stale: true });
+  }
+
+  const events = await generate(place, key);
+  if (events.length === 0) {
+    return NextResponse.json({ error: "AI error", events: [], place }, { status: 502 });
+  }
+  await writeEvents(place, events);
+  return NextResponse.json({ place, events });
 }

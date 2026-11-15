@@ -22,7 +22,6 @@ import { addToGarage } from "@/lib/garage-local";
 import { putFullPhoto } from "@/lib/garage-photos";
 import { RarityMeter } from "@/components/car/rarity-meter";
 import { carzPlusMonthly, carzPlusAnnual, carzPlusAnnualSaving } from "@/lib/plans";
-import { SCAN_MODE_META, type ScanMode } from "@/lib/scan-mode";
 import { cn } from "@/lib/utils";
 import type { CarReport } from "@/lib/identify";
 
@@ -74,11 +73,9 @@ export function scanProgressAt(elapsedSeconds: number): number {
 function ScanningButton({
   progress,
   phases = SCAN_PHASES,
-  hint = "Reading badges, lights and body lines — this takes a few seconds",
 }: {
   progress: number;
   phases?: { at: number; label: string }[];
-  hint?: string;
 }) {
   return (
     <div
@@ -110,7 +107,11 @@ function ScanningButton({
         textClassName="text-[20px] font-bold text-foreground sm:text-[20px]"
         barClassName="h-3 bg-foreground/10"
       />
-      <p className="mt-4 text-center text-[12px] opacity-60">{hint}</p>
+      {/* No line under the bar. It read "PRO scan — a second look, a
+          magnified detail, and a tiebreak" or an explanation of what the
+          model was doing, which is a paragraph about the product on the one
+          screen where something is already being reported, phase by phase,
+          directly above it. */}
     </div>
   );
 }
@@ -327,41 +328,18 @@ export default function SpotPage() {
    * scan and must not be a render behind.
    */
   const liveCapture = useRef(false);
-  // Mirrored from the picker purely so the loader can say which mode is
-  // running — PRO is the slower one, and the wait makes more sense named.
-  /**
-   * Which pipeline will run, for the loading copy and nothing else.
-   *
-   * The choice itself lives in Settings now. It was a picker sitting on this
-   * screen as well, which meant two controls for one setting and a mode you
-   * could change in the middle of pointing a camera at a car.
-   *
-   * Read rather than chosen: /api/identify takes the mode from a cookie and
-   * downgrades it for non-members, so the client was never the authority on
-   * this. effectiveScanMode is what will actually run, which is what the
-   * progress text has to describe.
-   */
-  const [scanMode, setScanMode] = useState<ScanMode>("fast");
 
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/settings", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((d) => {
-        // Silent on failure: the copy falls back to Lightning's wording, and a
-        // scan is not worth blocking over which sentence appears under a
-        // progress bar.
-        if (!cancelled && d?.effectiveScanMode) setScanMode(d.effectiveScanMode);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  /* No scanMode here any more.
+  
+     It was read from /api/settings on every visit for one purpose: to name
+     the pipeline in the sentence under the progress bar. That sentence is
+     gone, so the state, the request and the import went with it -- a GET on
+     arrival to decide a word nobody asked for. The mode itself still lives in
+     Settings and /api/identify still takes it from the cookie; the client was
+     never the authority on it. */
 
   const {
     previewUrl,
-    fileName,
     fileInputRef,
     handleThumbnailClick,
     handleFileChange,
@@ -824,6 +802,22 @@ export default function SpotPage() {
           ) : (
             <div className="relative">
               <div className="group relative h-64 overflow-hidden rounded-thumb border border-border">
+                {/* Remove, on the photo and always visible.
+                
+                    The filename used to sit under the frame -- "IMG_4821.jpg"
+                    -- with the only touch-reachable remove button beside it:
+                    the pair of controls over the photo are hover-only, and a
+                    phone has no hover. Nobody needs to be told the name of
+                    the file they just took, so the row is gone and the
+                    control it was carrying is here. */}
+                <button
+                  type="button"
+                  onClick={handleRemove}
+                  aria-label="Remove this photo"
+                  className="press absolute right-2 top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-md"
+                >
+                  <X className="h-4 w-4" strokeWidth={2} aria-hidden />
+                </button>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={previewUrl}
@@ -840,14 +834,6 @@ export default function SpotPage() {
                   </Button>
                 </div>
               </div>
-              {fileName && (
-                <div className="mt-2 flex items-center gap-2 text-[14px] ">
-                  <span className="truncate">{fileName}</span>
-                  <button onClick={handleRemove} className="ml-auto rounded-full p-1 hover:bg-muted">
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              )}
             </div>
           )}
 
@@ -885,15 +871,7 @@ export default function SpotPage() {
           )}
 
           {loading ? (
-            <ScanningButton
-              progress={scanProgress}
-              phases={SCAN_PHASES}
-              hint={
-                scanMode === "precise"
-                  ? `${SCAN_MODE_META.precise.name} scan — a second look, a magnified detail, and a tiebreak`
-                  : "Reading badges, lights and body lines — this takes a few seconds"
-              }
-            />
+            <ScanningButton progress={scanProgress} phases={SCAN_PHASES} />
           ) : !car ? (
             <GlassButton onClick={run} disabled={!canRun} size="lg" className="w-full py-5">
               Identify car
