@@ -17,6 +17,7 @@ import { Button as GlassButton } from "@/components/ui/editorial";
 import { ProgressiveFluxLoader } from "@/components/ui/progressive-flux-loader";
 import { Input } from "@/components/ui/input";
 import { useImageUpload } from "@/components/hooks/use-image-upload";
+import { useCamera } from "@/components/hooks/use-camera";
 import { CarCustomizer } from "@/components/car-customizer";
 import { addToGarage } from "@/lib/garage-local";
 import { putFullPhoto } from "@/lib/garage-photos";
@@ -360,34 +361,53 @@ export default function SpotPage() {
   }, []);
 
   /**
-   * Open the camera on arrival, rather than waiting for a tap on the frame.
+   * The viewfinder, open on arrival.
    *
-   * This can only ever be an attempt. Opening the camera means clicking a file
-   * input, and a browser will only honour that while it holds a user
-   * activation -- it is the one thing a page cannot do to you unprompted.
+   * This used to click the hidden file input on mount -- `capture` on an
+   * input is a request to the operating system, so it worked only while the
+   * browser still held a user activation from the tap that navigated here,
+   * and when it did work it handed the whole screen to the camera app rather
+   * than putting a picture in the frame on this page.
    *
-   * Arriving from the Scan button is a tap, and a client-side route change
-   * keeps the same document, so the activation from that tap is usually still
-   * live when this runs and the camera opens by itself. A cold load has no
-   * activation and nothing happens: no error, no dialog, just the scanner
-   * frame waiting to be tapped, which is the screen as it was. So this is
-   * strictly an improvement on the common path and a no-op on the other.
+   * getUserMedia instead: the stream runs inside the square, under the
+   * outline, and the shutter takes a frame from it. The permission prompt is
+   * the one cost, and it is the prompt anybody expects from a page whose
+   * entire purpose is photographing a car.
    *
-   * Guarded by a ref rather than state so it cannot fire twice, and skipped
-   * outright if a photo is already in hand -- coming back to a scan in
-   * progress should not reopen the camera over it.
+   * useCamera owns the hard parts already -- it claims the GPU so the layout's
+   * shader stands down (two WebGL contexts on one phone is what left this
+   * page blank for days), it stops every track on unmount, and it reports
+   * denied and unsupported distinctly. Either of those falls back to the
+   * frame and the two buttons, which still work exactly as they did.
    */
-  const autoOpened = useRef(false);
+  const {
+    videoRef,
+    status: cameraStatus,
+    start: startCamera,
+    stop: stopCamera,
+    capturePhoto,
+  } = useCamera();
+
+  /*
+   * One rule, rather than a call at each of the places a frame goes empty.
+   *
+   * The frame is live whenever there is nothing in it: on arrival, after the
+   * photo is cleared, and after a result is dismissed. Driven by state rather
+   * than by the three handlers that cause it, because the fourth one will be
+   * added later and will not remember to call anything.
+   *
+   * It cannot loop. "starting" and "live" return early, and so do "denied"
+   * and "unsupported" -- a refusal is answered once and then left alone,
+   * which is the difference between a permission prompt and nagging.
+   *
+   * Deferred a microtask: start() sets state synchronously, and a state write
+   * in an effect body is the cascade this project lints against.
+   */
   useEffect(() => {
-    if (autoOpened.current) return;
-    autoOpened.current = true;
     if (previewUrl || car) return;
-    liveCapture.current = true;
-    cameraInputRef.current?.click();
-    // Mount only: a dependency on previewUrl would reopen the camera every
-    // time a photo is cleared.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (cameraStatus !== "idle") return;
+    void Promise.resolve().then(() => startCamera());
+  }, [previewUrl, car, cameraStatus, startCamera]);
 
   // Advance the scan bar while a scan is in flight. The write happens in the
   // interval callback — an external event — not in the effect body. `identify`
@@ -580,6 +600,33 @@ export default function SpotPage() {
     await runIdentify(await objectUrlToDataUrl(previewUrl));
   }
 
+  /** A File, as the change event the upload hook is written against. */
+  const asChangeEvent = (file: File) =>
+    ({ target: { files: [file] } }) as unknown as React.ChangeEvent<HTMLInputElement>;
+
+  /**
+   * The shutter.
+   *
+   * Takes a frame from the stream when one is running, and falls back to the
+   * system camera otherwise -- a refusal, a laptop with no camera, an
+   * insecure origin. Both paths are a live capture as far as the map is
+   * concerned: a frame off the viewfinder is a car in front of you by
+   * definition.
+   */
+  async function shoot() {
+    liveCapture.current = true;
+    if (cameraStatus === "live") {
+      const file = await capturePhoto();
+      if (file) {
+        stopCamera();
+        handleFileChange(asChangeEvent(file));
+        void identifyFile(file);
+        return;
+      }
+    }
+    cameraInputRef.current?.click();
+  }
+
   /**
    * Identify straight from a file.
    *
@@ -651,6 +698,7 @@ export default function SpotPage() {
     setCar(null);
     setSpottedImage("");
     setError("");
+    // The viewfinder comes back on its own -- see the effect above.
   }
 
 
@@ -774,6 +822,27 @@ export default function SpotPage() {
                 isDragging && "bg-[var(--color-surface)]",
               )}
             >
+              {/* The live view.
+              
+                  Mounted whether or not it is running, because useCamera
+                  needs the element to exist before it can attach a stream to
+                  it, and faded in when one arrives so a denied prompt leaves
+                  the frame as it was rather than a black rectangle. muted and
+                  playsInline are not optional: without playsInline iOS takes
+                  the video fullscreen the instant it plays, which is the
+                  behaviour this replaces. */}
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                aria-hidden
+                className={cn(
+                  "absolute inset-0 h-full w-full object-cover transition-opacity duration-500",
+                  cameraStatus === "live" ? "opacity-100" : "opacity-0",
+                )}
+              />
+
               {/* The scan outline: one continuous squircle in glass.
               
                   It was four right-angled brackets in solid --foreground, so
@@ -795,9 +864,15 @@ export default function SpotPage() {
                     "inset 1.5px 1.5px 1px 0 var(--glass-rim-hi), inset -1px -1px 1px 1px var(--glass-rim-lo)",
                 }}
               />
-              <p className="absolute inset-x-0 bottom-5 text-center text-[14px] text-[var(--color-secondary-text)]">
-                Point your camera at any car
-              </p>
+              {/* Only when there is nothing to look at. With the stream up,
+                  the picture of the road says it. */}
+              {cameraStatus !== "live" && (
+                <p className="absolute inset-x-0 bottom-5 text-center text-[14px] text-[var(--color-secondary-text)]">
+                  {cameraStatus === "denied"
+                    ? "Camera blocked — use the buttons below"
+                    : "Point your camera at any car"}
+                </p>
+              )}
             </div>
           ) : (
             <div className="relative">
@@ -854,10 +929,7 @@ export default function SpotPage() {
 
               <button
                 type="button"
-                onClick={() => {
-                  liveCapture.current = true;
-                  cameraInputRef.current?.click();
-                }}
+                onClick={() => void shoot()}
                 aria-label="Take a photo"
                 className="press flex h-[68px] w-[68px] items-center justify-center rounded-full border-2 border-foreground bg-background shadow-[var(--glow)]"
               >
