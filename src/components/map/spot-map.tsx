@@ -377,7 +377,13 @@ export function SpotMap() {
         // circle keeps "where I am" distinct from "where a car was".
         const dot = document.createElement("div");
         dot.style.cssText = [
-          "width:16px;height:16px;border-radius:9999px",
+          // corner-shape:round, explicitly. §3 sets `corner-shape: squircle`
+          // on every element and exempts .rounded-full -- a class this
+          // element cannot have, because Mapbox builds its marker from a bare
+          // div outside React. Without it a 16px box with a 9999px radius
+          // renders as a rounded square in Chromium, which is what the dot
+          // had become: a white tile sitting where you are.
+          "width:16px;height:16px;border-radius:9999px;corner-shape:round",
           "background:#ffffff",
           "box-shadow:0 0 0 4px rgba(255,255,255,0.25), 0 0 18px rgba(255,255,255,0.65)",
         ].join(";");
@@ -387,6 +393,42 @@ export function SpotMap() {
       { enableHighAccuracy: true, timeout: 8000 },
     );
   }, []);
+
+  /**
+   * Fly to where you are, on arrival, without being asked to.
+   *
+   * The same call the button makes -- same permission prompt, same 2s flight,
+   * same white dot -- just fired once when the map is ready. Opening on Miami
+   * and waiting to be told to find you is a button press standing between
+   * somebody and the only thing this screen is for.
+   *
+   * Three guards, and each one is a real case:
+   *
+   *  - Once per mount. `located` is a ref rather than state because flipping
+   *    state here would re-run the effect that owns it.
+   *  - Not when the URL names a spot. Opening a car's pin from a scan is a
+   *    deliberate destination, and two flights racing for the camera is how
+   *    you land between them.
+   *  - Not before the map object exists. The token can arrive from the server
+   *    a beat after mount, so this waits on `token` rather than on nothing.
+   *
+   * A refusal costs nothing: getCurrentPosition's error path only clears the
+   * spinner, so a denied prompt leaves the map exactly where it opened.
+   */
+  const located = useRef(false);
+  useEffect(() => {
+    if (!token || wantedSpot || located.current) return;
+    const m = map.current;
+    if (!m) return;
+    located.current = true;
+    // After the style is up: flyTo before the first tiles are in flight is a
+    // flight over grey squares.
+    if (m.isStyleLoaded()) {
+      locate();
+    } else {
+      m.once("load", locate);
+    }
+  }, [token, wantedSpot, locate]);
 
   // Nothing at all until the token question is settled -- see the note on the
   // state above. The map's own container is what fills the screen meanwhile.
@@ -459,7 +501,13 @@ export function SpotMap() {
           to see what is on the map without hunting for pins, and on a phone
           most of the pins are off screen. */}
       <div
-        className="glass-card absolute inset-x-0 bottom-0 z-10 rounded-t-sheet rounded-b-none border-x-0 border-b-0 px-5 pt-2"
+        // Nearly opaque, not glass. The app's glass is a translucent panel
+        // tuned against the page behind it; what is behind this is daylight
+        // satellite photography, and over a green park the sheet's own text
+        // was competing with street labels showing through it. 92% of the
+        // page colour keeps it a surface in both themes and still reads as
+        // something laid over the map rather than part of it.
+        className="absolute inset-x-0 bottom-0 z-10 rounded-t-sheet border-t border-[var(--line-divider)] bg-background/92 px-5 pt-2 backdrop-blur-xl"
         // The map runs full-bleed under the tab bar, so this sheet has to keep
         // its own content clear of it: 1rem of padding left the row of cars
         // underneath the capsule. --nav-h is the bar plus whatever gap is
