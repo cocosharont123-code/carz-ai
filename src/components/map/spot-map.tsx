@@ -87,11 +87,43 @@ export function SpotMap() {
       ? null
       : new URLSearchParams(window.location.search).get("spot");
 
-  const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+  /**
+   * The token, from the build or from the server.
+   *
+   * NEXT_PUBLIC_MAPBOX_TOKEN is inlined at compile time, so when a deployment
+   * sets it there is nothing to wait for and this renders exactly as it used
+   * to. When it does not -- which is what left the live map off while the
+   * local one drew -- the token comes from /api/map-token, which reads it out
+   * of Blob. One fetch, once, before the map initialises.
+   *
+   * `undefined` means "not known yet" and is distinct from "" ("there isn't
+   * one"): the first must not draw the Map is off card, or every visitor sees
+   * it flash before the map appears.
+   */
+  const [token, setToken] = useState<string | undefined>(
+    process.env.NEXT_PUBLIC_MAPBOX_TOKEN || undefined,
+  );
   const [failed, setFailed] = useState(false);
   const [locating, setLocating] = useState(false);
   const [query, setQuery] = useState("");
   const [tilted, setTilted] = useState(true);
+
+  // Ask the server once, and only when the build did not supply one.
+  useEffect(() => {
+    if (token !== undefined) return;
+    let cancelled = false;
+    fetch("/api/map-token", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : { token: "" }))
+      .then((d) => {
+        if (!cancelled) setToken(typeof d?.token === "string" ? d.token : "");
+      })
+      .catch(() => {
+        if (!cancelled) setToken("");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
 
   useEffect(() => {
     if (!token || !holder.current || map.current) return;
@@ -322,6 +354,10 @@ export function SpotMap() {
     );
   }, []);
 
+  // Nothing at all until the token question is settled -- see the note on the
+  // state above. The map's own container is what fills the screen meanwhile.
+  if (token === undefined) return <div className="h-full w-full" />;
+
   if (!token || failed) {
     return (
       <div className="flex h-full w-full items-center justify-center px-6">
@@ -330,7 +366,7 @@ export function SpotMap() {
           <h2 className="display mt-3 text-[20px]">Map is off</h2>
           <p className="mx-auto mt-2 max-w-xs text-[15px] leading-relaxed opacity-70">
             {!token
-              ? "NEXT_PUBLIC_MAPBOX_TOKEN isn't set on this deployment, so there is no map to draw."
+              ? "There is no Mapbox token on this deployment, so there is no map to draw."
               : "The map couldn't start on this device."}
           </p>
         </div>
