@@ -1,8 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Home, Map, ScanLine, Crosshair, User } from "lucide-react";
 import { GlassFilter, GlassPane } from "@/components/ui/liquid-glass";
 import { cn } from "@/lib/utils";
@@ -83,23 +82,13 @@ const TABS = [
  * and width does neither. It composites on the GPU and lands in the same
  * places a layoutId animation would.
  */
-function Tubelight({
-  index,
-  hidden,
-  dragging,
-}: {
-  index: number;
-  hidden: boolean;
-  /** Shorter glide while a finger is driving it -- 350ms reads as lag. */
-  dragging: boolean;
-}) {
+function Tubelight({ index, hidden }: { index: number; hidden: boolean }) {
   return (
     <span
       aria-hidden
       className={cn(
         "pointer-events-none absolute inset-y-0 left-0 flex w-1/5 items-center justify-center",
-        "transition-[transform,opacity] ease-[cubic-bezier(.32,.72,0,1)]",
-        dragging ? "duration-[120ms]" : "duration-[350ms]",
+        "transition-[transform,opacity] duration-[350ms] ease-[cubic-bezier(.32,.72,0,1)]",
       )}
       style={{
         transform: `translate3d(${index * 100}%, 0, 0)`,
@@ -118,14 +107,6 @@ function Tubelight({
 export function BottomNav() {
   const pathname = usePathname();
 
-  // Above the early return, because hooks cannot be called conditionally and
-  // this component bails out on the sign-in flow. The drag state they hold is
-  // described where it is used, below.
-  const router = useRouter();
-  const barRef = useRef<HTMLDivElement>(null);
-  const startIndex = useRef<number | null>(null);
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
-
   if (FULL_SCREEN.some((p) => pathname === p || pathname.startsWith(`${p}/`)))
     return null;
 
@@ -139,116 +120,33 @@ export function BottomNav() {
    */
   const activeIndex = TABS.findIndex((t) => t.match(pathname));
 
-  /**
-   * Drag a finger across the bar to pick a tab.
+  /*
+   * No drag gesture here any more, deliberately.
    *
-   * The pill follows the finger and the tab under it lights up; letting go
-   * goes there. It is the iOS gesture for a row of segments: you can correct
-   * your aim without lifting, which on a 72px-wide target at the bottom edge
-   * of a phone is the difference between landing on Map and landing on Scan.
+   * It was: press anywhere on the bar, slide, and the tab under your finger
+   * lit up and opened when you let go. Twice it took the bar's actual job
+   * with it -- the first time through setPointerCapture, which retargets the
+   * synthesised click away from the link under the finger, and the second
+   * time on a real phone in a way that did not reproduce in either engine
+   * here. A tab bar that sometimes does not change tabs is worse than one
+   * that cannot be scrubbed, and this is the third attempt at the same
+   * nicety, so it goes.
    *
-   * Pointer events, not touch events, so a trackpad drag behaves the same.
-   * The pointer is captured on the bar, so a finger that slides off the end --
-   * or below the screen edge, which is most of a thumb's travel down here --
-   * keeps reporting to it instead of being lost to whatever is underneath.
+   * What is left is five links. No pointer handlers, no capture, no
+   * preventDefault, nothing between a tap and the href -- the browser's own
+   * path, which is the one that always worked.
    *
-   * A tap is left alone. Nothing navigates on pointerup unless the finger
-   * actually moved to a different tab; a plain tap falls through to the
-   * <Link>, which is still a real link with a real href for the keyboard, the
-   * screen reader and a long-press "open in new tab".
+   * If it comes back: it cannot own navigation. The gesture would have to
+   * preview only, and the link's own click would still have to be what moves
+   * the page, which means a drag can only ever end where it started. That is
+   * the honest ceiling, and it is why this is not simply disabled behind a
+   * flag.
    */
-
-  function indexAt(clientX: number): number {
-    const rect = barRef.current?.getBoundingClientRect();
-    if (!rect || rect.width === 0) return 0;
-    const slot = rect.width / TABS.length;
-    const raw = Math.floor((clientX - rect.left) / slot);
-    return Math.max(0, Math.min(TABS.length - 1, raw));
-  }
-
-  function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
-    // Primary input only: a right-click or a second finger mid-drag should not
-    // take over the gesture.
-    if (e.button !== 0 && e.pointerType === "mouse") return;
-    const i = indexAt(e.clientX);
-    startIndex.current = i;
-    setDragIndex(i);
-    /**
-     * No setPointerCapture, and that was the bug.
-     *
-     * Capturing retargets every later pointer event *and the click the
-     * browser synthesises from them* to the capturing element. The capturing
-     * element here is this wrapper, not the <a> under the finger -- so the
-     * click never reached a link and tapping a tab stopped navigating at all.
-     * The drag went with it, because the gesture's own pointerup was being
-     * delivered somewhere this code was not reading it.
-     *
-     * It is not needed either: a touch pointer is implicitly captured to the
-     * element that received pointerdown, and these handlers are on that
-     * element's ancestor, so the moves bubble here regardless. A mouse drag
-     * stays over the bar, which is the whole gesture.
-     */
-  }
-
-  function onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
-    if (startIndex.current === null) return;
-    const i = indexAt(e.clientX);
-    setDragIndex((prev) => (prev === i ? prev : i));
-  }
-
-  /**
-   * Releasing navigates -- a tap and a drag alike.
-   *
-   * It used to leave a tap to the link's own click and only handle the drag
-   * itself, which meant the bar worked in two different ways depending on
-   * how far a finger moved, and worked at all only if the click arrived.
-   * Doing it here makes both the same gesture: wherever the finger is when
-   * it lifts is where you go.
-   *
-   * preventDefault stops the compatibility click that would otherwise follow
-   * and navigate a second time. The links keep their href -- they are still
-   * real links for the keyboard, for a screen reader, and for long-press.
-   */
-  function onPointerUp(e: React.PointerEvent<HTMLDivElement>) {
-    const from = startIndex.current;
-    const to = dragIndex;
-    startIndex.current = null;
-    setDragIndex(null);
-    if (from === null || to === null) return;
-
-    // Lifted away from the bar: a cancelled gesture, the way sliding off a
-    // button cancels it everywhere else.
-    const rect = barRef.current?.getBoundingClientRect();
-    if (rect) {
-      const slack = 44; // a thumb's worth, so a slightly low release still counts
-      if (
-        e.clientY < rect.top - slack ||
-        e.clientY > rect.bottom + slack ||
-        e.clientX < rect.left - slack ||
-        e.clientX > rect.right + slack
-      ) {
-        return;
-      }
-    }
-
-    e.preventDefault();
-    router.push(TABS[to].href);
-  }
-
-  function onPointerCancel() {
-    startIndex.current = null;
-    setDragIndex(null);
-  }
-
-  const dragging = dragIndex !== null;
-  const shownIndex = dragIndex ?? activeIndex;
-  const lampIndex = shownIndex < 0 ? 0 : shownIndex;
+  const lampIndex = activeIndex < 0 ? 0 : activeIndex;
   // Hidden on a route that is not a tab, and on Scan, whose raised circle is
-  // already its own indicator -- but never while dragging: during a drag the
-  // pill is the thing saying where your finger is, including over Scan.
+  // already its own indicator.
   const lampHidden =
-    !dragging &&
-    (activeIndex < 0 || !!(TABS[activeIndex] as { center?: boolean }).center);
+    activeIndex < 0 || !!(TABS[activeIndex] as { center?: boolean }).center;
 
   return (
     <>
@@ -284,26 +182,10 @@ export function BottomNav() {
             The shadow stays. Against the edge there is less for it to fall on,
             but it is still what separates the pill's lower curve from whatever
             scrolls past behind it. */}
-        {/* The drag surface wraps the pane rather than being it: GlassPane
-            takes a class and a style and nothing else, and threading a dozen
-            pointer handlers through it would make every other caller carry
-            them. touch-none because this is not a scroll surface -- without it
-            the browser claims the gesture as a page pan and the pill stutters
-            behind the finger. */}
-        <div
-          ref={barRef}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerCancel={onPointerCancel}
-          // A link is draggable by default, so pressing one and moving starts
-          // a native link-drag -- which fires pointercancel and killed this
-          // gesture on its first millimetre. Every tab is a link, so every
-          // drag started on one. The links below also carry draggable={false};
-          // this is the backstop for anything else that lands in here.
-          onDragStart={(e) => e.preventDefault()}
-          className="w-full max-w-[480px] touch-none select-none"
-        >
+        {/* A plain box around the pane. It held the drag gesture's pointer
+            handlers and `touch-action: none`; both are gone with it, so
+            nothing on this bar intercepts a tap before the link does. */}
+        <div className="w-full max-w-[480px] select-none">
           <GlassPane
             className="relative flex w-full items-stretch rounded-full shadow-[var(--glass-shadow)]"
             // The glass runs to the bottom of the screen; the tabs stop above
@@ -322,11 +204,7 @@ export function BottomNav() {
               paddingBottom: "env(safe-area-inset-bottom, 0px)",
             }}
           >
-            <Tubelight
-              index={lampIndex}
-              hidden={lampHidden}
-              dragging={dragging}
-            />
+            <Tubelight index={lampIndex} hidden={lampHidden} />
 
             {TABS.map(({ href, label, Icon, match, ...rest }) => {
               const active = match(pathname);
