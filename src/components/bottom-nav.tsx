@@ -11,7 +11,9 @@ import { cn } from "@/lib/utils";
  * The tab bar: Home, Map, Scan, Hunt, Profile.
  *
  * A capsule on the bottom edge of the screen: inset 16px either side, rounded
- * all the way round, with its bottom curve against the edge. Five fixed destinations and
+ * all the way round, with its bottom curve against the edge. The glass reaches
+ * the edge; the tabs stop above the home-indicator strip, which is the
+ * system's and not ours to put a target on. Five fixed destinations and
  * no menu -- what the menu used to hold now lives on Home as tiles and list
  * rows, which is the one place a list of everything the app does belongs.
  *
@@ -171,7 +173,21 @@ export function BottomNav() {
     const i = indexAt(e.clientX);
     startIndex.current = i;
     setDragIndex(i);
-    e.currentTarget.setPointerCapture(e.pointerId);
+    /**
+     * No setPointerCapture, and that was the bug.
+     *
+     * Capturing retargets every later pointer event *and the click the
+     * browser synthesises from them* to the capturing element. The capturing
+     * element here is this wrapper, not the <a> under the finger -- so the
+     * click never reached a link and tapping a tab stopped navigating at all.
+     * The drag went with it, because the gesture's own pointerup was being
+     * delivered somewhere this code was not reading it.
+     *
+     * It is not needed either: a touch pointer is implicitly captured to the
+     * element that received pointerdown, and these handlers are on that
+     * element's ancestor, so the moves bubble here regardless. A mouse drag
+     * stays over the bar, which is the whole gesture.
+     */
   }
 
   function onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
@@ -180,16 +196,41 @@ export function BottomNav() {
     setDragIndex((prev) => (prev === i ? prev : i));
   }
 
+  /**
+   * Releasing navigates -- a tap and a drag alike.
+   *
+   * It used to leave a tap to the link's own click and only handle the drag
+   * itself, which meant the bar worked in two different ways depending on
+   * how far a finger moved, and worked at all only if the click arrived.
+   * Doing it here makes both the same gesture: wherever the finger is when
+   * it lifts is where you go.
+   *
+   * preventDefault stops the compatibility click that would otherwise follow
+   * and navigate a second time. The links keep their href -- they are still
+   * real links for the keyboard, for a screen reader, and for long-press.
+   */
   function onPointerUp(e: React.PointerEvent<HTMLDivElement>) {
     const from = startIndex.current;
     const to = dragIndex;
     startIndex.current = null;
     setDragIndex(null);
     if (from === null || to === null) return;
-    if (to === from) return; // a tap: the link handles it
-    // The finger moved, so this is the navigation -- and the click the browser
-    // is about to synthesise on whichever link is under the finger would be a
-    // second one to the same place.
+
+    // Lifted away from the bar: a cancelled gesture, the way sliding off a
+    // button cancels it everywhere else.
+    const rect = barRef.current?.getBoundingClientRect();
+    if (rect) {
+      const slack = 44; // a thumb's worth, so a slightly low release still counts
+      if (
+        e.clientY < rect.top - slack ||
+        e.clientY > rect.bottom + slack ||
+        e.clientX < rect.left - slack ||
+        e.clientX > rect.right + slack
+      ) {
+        return;
+      }
+    }
+
     e.preventDefault();
     router.push(TABS[to].href);
   }
@@ -265,7 +306,21 @@ export function BottomNav() {
         >
           <GlassPane
             className="relative flex w-full items-stretch rounded-full shadow-[var(--glass-shadow)]"
-            style={{ height: BAR_H }}
+            // The glass runs to the bottom of the screen; the tabs stop above
+            // the home-indicator strip.
+            //
+            // They were on the strip itself, which is where iOS draws the
+            // indicator and where Safari parks its own toolbar -- so on a real
+            // phone a tap could land on the system's furniture rather than on
+            // a tab, and the bar stopped switching pages. Making the pane
+            // taller by the inset and padding the same amount off its bottom
+            // keeps the capsule visually on the edge, which is what was asked
+            // for, while every target sits above the part of the screen the
+            // system has already claimed.
+            style={{
+              height: `calc(${BAR_H} + env(safe-area-inset-bottom, 0px))`,
+              paddingBottom: "env(safe-area-inset-bottom, 0px)",
+            }}
           >
             <Tubelight
               index={lampIndex}

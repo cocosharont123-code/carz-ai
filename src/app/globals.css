@@ -43,7 +43,10 @@
      gap -- 0 now, kept in the arithmetic so changing it moves both. */
   --nav-gap: 0px;
   --nav-bubble-h: 56px;
-  --nav-h: calc(var(--nav-bubble-h) + var(--nav-gap));
+  /* The pill, the gap under it, and the home-indicator strip the pill now
+     covers with glass but keeps its tabs clear of -- all three are what a page
+     has to stay out of. */
+  --nav-h: calc(var(--nav-bubble-h) + var(--nav-gap) + env(safe-area-inset-bottom, 0px));
 }
 
 /* ==========================================================================
