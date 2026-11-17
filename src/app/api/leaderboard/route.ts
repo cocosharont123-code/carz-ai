@@ -39,6 +39,16 @@ export async function POST(req: Request) {
     priceRange?: string;
     /** Ties this entry to the map pin from the same scan. */
     scanId?: string;
+    /**
+     * Whether the photo came from a camera rather than the library.
+     *
+     * The client is the only witness to this, the same way it is for a map
+     * pin -- nothing in an image proves where it came from, and EXIF is both
+     * absent on a canvas capture and trivially written by anyone who wants
+     * to. What this check buys is that the ordinary path cannot put a press
+     * shot on the board by accident, which is what was happening.
+     */
+    live?: boolean;
   };
   try {
     body = await req.json();
@@ -51,6 +61,14 @@ export async function POST(req: Request) {
   const rarityScore = Number(body.rarityScore) || 0;
   if (!make || !model || rarityScore <= 0) {
     return NextResponse.json({ ok: false, error: "missing fields" }, { status: 400 });
+  }
+
+  // Live captures only. See `live` above for what this can and cannot
+  // promise. 200 rather than 400: a scan from the library is a perfectly good
+  // scan that simply does not rank, and the client treats this call as
+  // best-effort either way.
+  if (body.live !== true) {
+    return NextResponse.json({ ok: true, ranked: false, reason: "not a live capture" });
   }
 
   // Spotter identity comes from the server-side profile, not the client (no spoofing).

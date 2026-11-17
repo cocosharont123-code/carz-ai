@@ -64,6 +64,16 @@ const SCAN_PHASES = [
 const SCAN_CEILING = 94;
 const SCAN_TAU_SECONDS = 7;
 
+/**
+ * How long the live background takes to fade in or out.
+ *
+ * Not instant and not a dissolve: 700ms with the app's own easing reads as
+ * the camera stepping back for the photograph rather than as a cut or as a
+ * slideshow transition. The stop is scheduled off the same number, so the two
+ * cannot drift apart.
+ */
+const FADE_MS = 700;
+
 export function scanProgressAt(elapsedSeconds: number): number {
   return SCAN_CEILING * (1 - Math.exp(-elapsedSeconds / SCAN_TAU_SECONDS));
 }
@@ -348,6 +358,7 @@ export default function SpotPage() {
   } = useImageUpload();
 
   const canRun = !!previewUrl;
+
   const run = identify;
 
   async function refresh() {
@@ -387,6 +398,15 @@ export default function SpotPage() {
     stop: stopCamera,
     capturePhoto,
   } = useCamera();
+
+  /**
+   * Whether the live background is showing.
+   *
+   * Not simply "is the camera running": it goes false the instant a photo
+   * lands, which starts the fade while the stream is still feeding frames.
+   * The stream itself is stopped afterwards, by the effect that watches this.
+   */
+  const showCamera = cameraStatus === "live" && !previewUrl && !car;
 
   /*
    * One rule, rather than a call at each of the places a frame goes empty.
@@ -449,6 +469,10 @@ export default function SpotPage() {
       setIsDragging(false);
       const file = e.dataTransfer.files?.[0];
       if (file && file.type.startsWith("image/")) {
+        // A file dragged onto the frame is a file, whatever the last scan
+        // was. Without this the flag kept its previous value, so dropping a
+        // press shot right after a live capture would have ranked it.
+        liveCapture.current = false;
         const fakeEvent = {
           target: { files: [file] },
         } as unknown as React.ChangeEvent<HTMLInputElement>;
@@ -519,10 +543,25 @@ export default function SpotPage() {
           }
         }
 
-        // Submit to the global rarest-cars leaderboard (best-effort). Only with
-        // a photo of the car: a leaderboard
-        // of door jambs helps nobody.
-        if (full.rarityScore > 0 && rawImage) {
+        /**
+         * Submit to the global rarest-cars leaderboard (best-effort).
+         *
+         * Only a live capture counts. The board is a record of cars people
+         * found in the world, and a photo off the camera roll can be anything
+         * -- a press shot, a screenshot, somebody else's Ferrari from a search
+         * -- so a board that takes them is a board of whoever is best at
+         * finding pictures. The camera roll still scans, still saves to the
+         * garage, still drops a pin: it just does not rank.
+         *
+         * liveCapture is set by the two paths that are a camera -- the in-page
+         * viewfinder's shutter and the system camera input -- and cleared when
+         * a photo is chosen from the library. The same flag already decides
+         * whether a scan drops a map pin.
+         *
+         * And only with a photo of the car: a leaderboard of door jambs helps
+         * nobody.
+         */
+        if (full.rarityScore > 0 && rawImage && liveCapture.current) {
           // 1000px. It was 200 at quality 0.5, which was sized for a row
           // thumbnail and nothing else, and looked it the moment the board
           // could be opened. The board stores photos as files now rather than
@@ -541,6 +580,9 @@ export default function SpotPage() {
               rarityReason: full.rarityReason,
               priceRange: full.priceRangeUsed,
               scanId,
+              // The route checks this too, so the rule holds for anything
+              // else that ever posts here.
+              live: true,
             }),
           }).catch(() => {});
         }
@@ -623,8 +665,23 @@ export default function SpotPage() {
    * live.
    */
   useEffect(() => {
-    if (previewUrl || car) stopCamera();
-  }, [previewUrl, car, stopCamera]);
+    if (!previewUrl && !car) return;
+    if (cameraStatus !== "live") return;
+    /**
+     * Fade first, then stop -- in that order, and the order was the bug.
+     *
+     * Stopping the tracks blanks the video element the same frame: there are
+     * no more frames to paint, so it goes black at once and the opacity
+     * transition then runs on something already black. The background
+     * "changed instantly" because what was animating was invisible.
+     *
+     * Now the opacity flips the moment a photo lands -- `showCamera` below --
+     * while the stream keeps feeding the element, so there is a real picture
+     * to fade. The camera is handed back once the fade is over.
+     */
+    const timer = setTimeout(() => stopCamera(), FADE_MS + 60);
+    return () => clearTimeout(timer);
+  }, [previewUrl, car, cameraStatus, stopCamera]);
 
   /**
    * Hand the camera back when the app is not on screen.
@@ -782,9 +839,23 @@ export default function SpotPage() {
           playsInline
           muted
           className={cn(
-            "h-full w-full object-cover transition-opacity duration-[600ms] ease-[cubic-bezier(.32,.72,0,1)]",
-            cameraStatus === "live" ? "opacity-100" : "opacity-0",
+            "h-full w-full object-cover transition-opacity",
+            showCamera ? "opacity-100" : "opacity-0",
           )}
+          /**
+           * Both of these are inline, and the easing has to be.
+           *
+           * globals.css sets `*, ::before, ::after { transition-timing-function:
+           * var(--ease-apple) }`, which beats a utility class -- measured, the
+           * computed curve stayed cubic-bezier(.22,1,.36,1) however the class
+           * was written. That curve is fast-out by design, and on a crossfade
+           * it had the picture 92% gone 280ms into a 700ms fade: a cut with a
+           * tail rather than a fade. ease-in-out puts the middle in the middle.
+           */
+          style={{
+            transitionDuration: `${FADE_MS}ms`,
+            transitionTimingFunction: "ease-in-out",
+          }}
         />
         {/* Two fades, top and bottom. The header and the controls are white
             on whatever the camera happens to be pointed at, and a white sky
