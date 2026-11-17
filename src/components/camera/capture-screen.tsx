@@ -270,7 +270,7 @@ function Shutter({
       <span
         className={cn(
           "bg-carz transition-[opacity,transform] duration-200",
-          recording ? "h-6 w-6 rounded-[6px]" : "h-[58px] w-[58px] rounded-full",
+          recording ? "h-6 w-6 rounded-none" : "h-[58px] w-[58px] rounded-full",
         )}
       />
     </button>

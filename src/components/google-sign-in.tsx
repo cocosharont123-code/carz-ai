@@ -76,7 +76,7 @@ export function GoogleSignInButton({
           // squircle — a continuous corner rather than a quarter circle stuck
           // between two straight edges.
           "press glass-bubble group flex w-full flex-col items-center justify-center gap-4",
-          "aspect-[5/4] max-h-[16rem] rounded-[28%] px-6",
+          "aspect-[5/4] max-h-[16rem] rounded-none px-6",
           "transition-colors hover:bg-foreground/[0.06]",
           "disabled:cursor-not-allowed disabled:opacity-40",
           className,

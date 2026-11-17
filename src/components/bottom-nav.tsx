@@ -172,12 +172,10 @@ export function BottomNav() {
             complaint, because a flat-bottomed slab across the screen is not
             what a tab bar looks like. So: the pill, on the bottom edge.
 
-            Rounded the whole way round -- §3 gives .rounded-full
-            `corner-shape: round`, because a capsule is not a squircle -- inset
-            16px either side, and no gap underneath, so the bottom curve meets
-            the edge of the screen. It overlaps the home-indicator strip
-            deliberately, exactly as the flush bar did: taps register there,
-            and only the edge swipe belongs to iOS.
+            Square, now that every corner in the app is: the bar is a sharp
+            rectangle inset 16px either side with no gap underneath, so it
+            meets the bottom edge of the screen flat. It overlaps the
+            home-indicator strip with its glass while its tabs stop above it.
 
             The shadow stays. Against the edge there is less for it to fall on,
             but it is still what separates the pill's lower curve from whatever

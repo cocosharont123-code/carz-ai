@@ -228,7 +228,7 @@ function TierCard({
       colorVariant="ocean"
       theme="dark"
       strength={0.7}
-      borderRadius={24}
+      borderRadius={0}
       className="h-full"
     >
       {card}

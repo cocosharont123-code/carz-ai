@@ -4,7 +4,7 @@
 export function DefaultAvatar({
   size = 40,
   className = "",
-  rounded = "9999px",
+  rounded = "0",
 }: {
   size?: number;
   className?: string;
@@ -63,7 +63,7 @@ export function Avatar({
   src,
   size = 40,
   className = "",
-  rounded = "9999px",
+  rounded = "0",
 }: {
   src?: string | null;
   size?: number;
