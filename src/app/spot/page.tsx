@@ -406,6 +406,12 @@ export default function SpotPage() {
   useEffect(() => {
     if (previewUrl || car) return;
     if (cameraStatus !== "idle") return;
+    // Not while the app is in the background. Stopping the stream there sets
+    // the status back to idle, and without this check that is immediately
+    // read as "the frame is empty, open the camera" -- the two rules fought,
+    // and the camera stayed on behind a backgrounded tab. Coming back to the
+    // page restarts it; see the visibility handler below.
+    if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
     void Promise.resolve().then(() => startCamera());
   }, [previewUrl, car, cameraStatus, startCamera]);
 
@@ -600,6 +606,30 @@ export default function SpotPage() {
     await runIdentify(await objectUrlToDataUrl(previewUrl));
   }
 
+  /**
+   * Hand the camera back when the app is not on screen.
+   *
+   * A stream left running in a backgrounded tab keeps the camera light on,
+   * keeps the sensor warm and keeps draining the battery -- and on iOS the
+   * system may take it away anyway, which leaves a video element attached to
+   * a dead track and a frozen frame when you come back. Stopping and
+   * restarting is both the polite and the reliable thing.
+   *
+   * Only while the frame is empty: if a photo is already taken or a car is on
+   * screen, there is nothing to resume.
+   */
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        stopCamera();
+      } else if (!previewUrl && !car) {
+        void startCamera();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [previewUrl, car, startCamera, stopCamera]);
+
   /** A File, as the change event the upload hook is written against. */
   const asChangeEvent = (file: File) =>
     ({ target: { files: [file] } }) as unknown as React.ChangeEvent<HTMLInputElement>;
@@ -704,6 +734,46 @@ export default function SpotPage() {
 
   return (
     <>
+      {/* The live view, full bleed, behind everything.
+      
+          Absolute inside the shell rather than fixed to the window: the app
+          is a 480px column on a desktop and a window-wide video behind a
+          phone-width page is a letterbox, not a background. On a phone the
+          column is the viewport, so this is edge to edge.
+      
+          Before <main> in the DOM and with no z-index on either: both are
+          positioned, so paint order is document order, and the page's own
+          content sits over this without a stacking context to maintain. The
+          glass surfaces above it keep their backdrop-filter, so the feed is
+          what they refract.
+      
+          The element is mounted whether or not a stream is running --
+          useCamera needs it to exist before it can attach one -- and fades in
+          when the stream arrives, so a refusal leaves the black page it
+          replaced rather than a black rectangle appearing over it.
+      
+          muted and playsInline are not optional on iOS: without playsInline
+          Safari takes the video fullscreen the instant it plays, and without
+          muted it will not autoplay at all. */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          className={cn(
+            "h-full w-full object-cover transition-opacity duration-500",
+            cameraStatus === "live" ? "opacity-100" : "opacity-0",
+          )}
+        />
+        {/* Two fades, top and bottom. The header and the controls are white
+            on whatever the camera happens to be pointed at, and a white sky
+            is the common case outdoors. Only where the UI is -- the middle of
+            the frame, which is what you are aiming, stays untouched. */}
+        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black/70 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-52 bg-gradient-to-t from-black/75 to-transparent" />
+      </div>
+
       {/* py-2, not py-14. That 3.5rem at each end was written when the nav was
           at the top and nothing else reserved space: now the back arrow's
           spacer sits above this and the nav's sits below it, so the page was
@@ -815,34 +885,18 @@ export default function SpotPage() {
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               className={cn(
-                // Square and black: this is where the photo will be, framed
-                // the way a camera frames it. Drag and drop still lands here,
-                // which is the only way to use this screen on a desktop.
-                "relative aspect-square w-full overflow-hidden rounded-card bg-background transition-colors",
+                // Transparent, not black. The live view is the page's
+                // background now, so an opaque fill here would be a black
+                // square punched in the middle of it -- the frame is the
+                // glass outline and the air inside it. Same size, same
+                // position, same outline; only the fill is gone.
+                //
+                // Drag and drop still lands here, which is the only way to
+                // use this screen on a desktop.
+                "relative aspect-square w-full overflow-hidden rounded-card transition-colors",
                 isDragging && "bg-[var(--color-surface)]",
               )}
             >
-              {/* The live view.
-              
-                  Mounted whether or not it is running, because useCamera
-                  needs the element to exist before it can attach a stream to
-                  it, and faded in when one arrives so a denied prompt leaves
-                  the frame as it was rather than a black rectangle. muted and
-                  playsInline are not optional: without playsInline iOS takes
-                  the video fullscreen the instant it plays, which is the
-                  behaviour this replaces. */}
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                aria-hidden
-                className={cn(
-                  "absolute inset-0 h-full w-full object-cover transition-opacity duration-500",
-                  cameraStatus === "live" ? "opacity-100" : "opacity-0",
-                )}
-              />
-
               {/* The scan outline: one continuous squircle in glass.
               
                   It was four right-angled brackets in solid --foreground, so
@@ -865,13 +919,34 @@ export default function SpotPage() {
                 }}
               />
               {/* Only when there is nothing to look at. With the stream up,
-                  the picture of the road says it. */}
+                  the picture of the road says it.
+              
+                  A refusal gets a way back rather than only a sentence: the
+                  browser will not re-prompt once it has been told no, so the
+                  button is for after the setting has been changed, and for
+                  the "camera in use by another app" case, which clears by
+                  itself and would otherwise need a page reload. Uploading a
+                  photo works throughout -- the gallery button below is
+                  untouched. */}
               {cameraStatus !== "live" && (
-                <p className="absolute inset-x-0 bottom-5 text-center text-[14px] text-[var(--color-secondary-text)]">
-                  {cameraStatus === "denied"
-                    ? "Camera blocked — use the buttons below"
-                    : "Point your camera at any car"}
-                </p>
+                <div className="absolute inset-x-0 bottom-5 flex flex-col items-center gap-3 px-5">
+                  <p className="text-center text-[14px] text-[var(--color-secondary-text)]">
+                    {cameraStatus === "denied"
+                      ? "Camera is off for this site"
+                      : cameraStatus === "unsupported"
+                        ? "No camera on this device"
+                        : "Point your camera at any car"}
+                  </p>
+                  {(cameraStatus === "denied" || cameraStatus === "unsupported") && (
+                    <button
+                      type="button"
+                      onClick={() => void startCamera()}
+                      className="press glass-chip min-h-11 rounded-full px-5 text-[14px] font-semibold text-foreground"
+                    >
+                      Turn on camera
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           ) : (
