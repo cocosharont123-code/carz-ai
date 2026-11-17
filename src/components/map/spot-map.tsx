@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { MapPinOff, Search } from "lucide-react";
+import { MapPin, MapPinOff, Search } from "lucide-react";
 import { claimGpu } from "@/components/camera/camera-in-use";
 import { applyRealism } from "@/components/map/realistic";
 import { MapHud } from "@/components/map/map-hud";
@@ -21,6 +21,16 @@ type Spot = {
   at: number;
   /** The scan that also wrote this car's leaderboard entry, when it earned one. */
   scanId?: string;
+};
+
+/** A geocoder result: somewhere to fly to. */
+type Place = {
+  id: string;
+  /** "Miami" */
+  name: string;
+  /** "Miami, Florida, United States" */
+  context: string;
+  center: [number, number];
 };
 
 /**
@@ -126,6 +136,9 @@ export function SpotMap() {
   const [failed, setFailed] = useState(false);
   const [locating, setLocating] = useState(false);
   const [query, setQuery] = useState("");
+  const [places, setPlaces] = useState<Place[]>([]);
+  /** The request whose answer is still wanted. See the lookup below. */
+  const placeSeq = useRef(0);
   // Opens flat, so the control reads "Tilt the map" rather than "Flatten".
   const [tilted, setTilted] = useState(false);
 
@@ -427,6 +440,71 @@ export function SpotMap() {
     }
   }, [token, wantedSpot, locate]);
 
+  /**
+   * Places, as you type.
+   *
+   * The field already filtered the pins on the map by make, model and
+   * spotter; typing a city into it did nothing, which on a map is the one
+   * thing a search box is for. Mapbox's geocoder answers that, and the token
+   * the map is already drawing with is the token it takes.
+   *
+   * Debounced at 250ms: a request per keystroke is both a bill and a race,
+   * and the answers would arrive out of order. `seq` is what settles that --
+   * a reply that is not the newest request is dropped rather than rendered,
+   * so a slow lookup for "mia" cannot overwrite a fast one for "miami".
+   *
+   * Five results, `types` limited to the things worth flying to. Addresses
+   * are in there deliberately: "where was that car" is often a street.
+   */
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < 2 || !token) {
+      // Deferred: a synchronous write in an effect body cascades renders.
+      void Promise.resolve().then(() => setPlaces([]));
+      return;
+    }
+    const mine = ++placeSeq.current;
+    const timer = setTimeout(async () => {
+      try {
+        const url =
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(q)}.json` +
+          `?access_token=${encodeURIComponent(token)}&limit=5&language=en` +
+          `&types=country,region,place,locality,neighborhood,address,poi`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(String(res.status));
+        const data = await res.json();
+        if (mine !== placeSeq.current) return; // a newer query is in flight
+        const found: Place[] = (data?.features ?? [])
+          .filter((f: { center?: unknown }) => Array.isArray(f.center) && f.center.length === 2)
+          .map((f: { id: string; text: string; place_name: string; center: [number, number] }) => ({
+            id: f.id,
+            name: f.text,
+            context: f.place_name,
+            center: f.center,
+          }));
+        setPlaces(found);
+      } catch {
+        if (mine === placeSeq.current) setPlaces([]);
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [query, token]);
+
+  /** Fly to a result and put the field away. */
+  const goToPlace = useCallback((place: Place) => {
+    const m = map.current;
+    setQuery("");
+    setPlaces([]);
+    if (!m) return;
+    m.flyTo({
+      center: place.center,
+      // A country is not a street: zoom to what was actually asked for.
+      zoom: /country|region/.test(place.id) ? 6 : /address|poi/.test(place.id) ? 16 : 12,
+      duration: 2000,
+      essential: true,
+    });
+  }, []);
+
   // Nothing at all until the token question is settled -- see the note on the
   // state above. The map's own container is what fills the screen meanwhile.
   if (token === undefined) return <div className="h-full w-full" />;
@@ -484,6 +562,45 @@ export function SpotMap() {
             // out. White on a dim layer, in both themes.
             className="map-glass h-[52px] w-full rounded-full pl-11 pr-4 text-[15px] text-white outline-none [&::-webkit-search-cancel-button]:appearance-none"
           />
+
+          {/* The places, under the field.
+          
+              Darker than the field above it, and deliberately: the field is
+              52px of dim glass and reads fine, while a list this tall over
+              daylight satellite imagery at the same alpha had street labels
+              and restaurant names showing through its own text. 95% is where
+              the imagery stops competing altogether: a menu is a surface, not
+              a window, and the map is still right there around it.
+          
+              The pins are already filtered live on the map underneath, so
+              there is nothing to list for them here -- this is only for the
+              half of the query the map could not answer before. */}
+          {places.length > 0 && (
+            <ul className="absolute inset-x-0 top-[calc(100%+8px)] z-20 overflow-hidden border border-white/12 bg-black/[0.95] backdrop-blur-xl">
+              {places.map((place, i) => (
+                <li
+                  key={place.id}
+                  className={i === 0 ? "" : "border-t border-white/12"}
+                >
+                  <button
+                    type="button"
+                    onClick={() => goToPlace(place)}
+                    className="press flex min-h-11 w-full items-center gap-3 px-4 py-2.5 text-left"
+                  >
+                    <MapPin className="h-4 w-4 shrink-0 text-white/60" strokeWidth={1.75} aria-hidden />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[15px] font-semibold text-white">
+                        {place.name}
+                      </span>
+                      <span className="block truncate text-[12px] text-white/60">
+                        {place.context}
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 
