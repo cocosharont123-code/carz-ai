@@ -250,7 +250,7 @@ export function AvatarCropper({
       <div
         // touch-action: none, or the browser pans the page instead of the photo.
         ref={frameRef}
-        className="relative shrink-0 touch-none overflow-hidden rounded-none bg-black/40"
+        className="relative shrink-0 touch-none overflow-hidden rounded-[28%] bg-black/40"
         style={{ width: S, height: S }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}

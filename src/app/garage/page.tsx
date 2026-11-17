@@ -153,7 +153,7 @@ function Lightbox({
         onClick={(e) => e.stopPropagation()}
       >
         <div
-          className="aspect-square w-full overflow-hidden rounded-none"
+          className="aspect-square w-full overflow-hidden rounded-[28%]"
           style={{ maxWidth: "min(78vw, 58dvh)" }}
         >
           <CarPhoto
@@ -290,7 +290,7 @@ function GarageInner() {
         {loading ? (
           <div className="mt-6 grid grid-cols-3 gap-3">
             {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
-              <Skeleton key={i} className="aspect-square w-full rounded-none" />
+              <Skeleton key={i} className="aspect-square w-full rounded-[28%]" />
             ))}
           </div>
         ) : cars.length === 0 ? (
@@ -321,7 +321,7 @@ function GarageInner() {
                 filler: one is when the last car was saved, the other is which
                 car the score belongs to. */}
             <div className="mt-6 grid grid-cols-2 gap-3">
-              <div className="glass-card flex flex-col rounded-none p-5">
+              <div className="glass-card flex flex-col rounded-[2rem] p-5">
                 <div className="display text-[40px] leading-none tabular-nums">{cars.length}</div>
                 <div className="util-label mt-2 opacity-70">
                   {cars.length === 1 ? "Car found" : "Cars found"}
@@ -337,7 +337,7 @@ function GarageInner() {
                 type="button"
                 onClick={() => setOpen(cars.indexOf(rarest))}
                 aria-label={`Open ${rarest.make} ${rarest.model}, your rarest find`}
-                className="press glass-card flex flex-col rounded-none p-5 text-left"
+                className="press glass-card flex flex-col rounded-[2rem] p-5 text-left"
               >
                 <div className="display text-[40px] leading-none tabular-nums">
                   {rarest.rarityScore > 0 ? Math.round(rarest.rarityScore) : "\u2014"}
@@ -362,7 +362,7 @@ function GarageInner() {
                   type="button"
                   onClick={() => setOpen(i)}
                   aria-label={`Open ${c.make} ${c.model}`}
-                  // Square. It was a 28% squircle, whose corner
+                  // rounded-[28%] rather than a pixel radius: a squircle's corner
                     // has to scale with the tile, and these are a third of the
                     // viewport on a phone and fixed at 480 on a desktop. One
                     // fixed radius reads tight on one and clumsy on the other.
@@ -372,13 +372,13 @@ function GarageInner() {
                     // shows as an edge and the car underneath stays untouched.
                     // §2: a grid of these, so lite -- a blurred layer per tile is the
                     // most expensive thing a photo grid can do.
-                    className="press glass-lite group relative aspect-square overflow-hidden rounded-none p-px"
+                    className="press glass-lite group relative aspect-square overflow-hidden rounded-[28%] p-px"
                 >
                   <CarPhoto
                     src={c.image}
                     alt={`${c.make} ${c.model}`}
                     color
-                    className="h-full w-full rounded-none object-cover transition duration-300 group-hover:scale-[1.04]"
+                    className="h-full w-full rounded-[28%] object-cover transition duration-300 group-hover:scale-[1.04]"
                   />
 
                   {c.rarityScore >= 70 && (

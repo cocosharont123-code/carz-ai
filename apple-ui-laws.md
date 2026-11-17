@@ -50,19 +50,7 @@ Anatomy, all required: translucent fill, `blur(18px) saturate(170%)` (never abov
 
 Performance: <= 6 visible `backdrop-filter` elements per screen. Never on repeated items. Never animate blur/size/fill-opacity; move with `transform` only. `isolation: isolate` on every glass element. Never nest glass. `prefers-reduced-transparency: reduce` -> `.glass-lite`. Honor `<html data-glass="lite">` set at boot when `hardwareConcurrency < 4` or `deviceMemory < 4`. Refraction (`feDisplacementMap`) default OFF.
 
-## 3. Squircles — superseded
-
-> **The app is square.** The owner asked for sharp square corners everywhere,
-> which reverses this section and the earlier "not one pointy edge" rule. Every
-> radius token in `globals.css` is `0px`, including `--radius-full`, so
-> `rounded-card`, `rounded-thumb` and `rounded-full` all resolve to a square
-> corner; the global `corner-shape: squircle` rule is gone, because a corner
-> shape only means something where there is a radius to shape. Putting a number
-> back into those tokens is how this section comes back into force.
->
-> The rest of this section is kept as written, for whoever does that.
-
-### The original rules
+## 3. Squircles
 
 Every corner is continuous. `corner-shape: squircle` renders in Chromium 139+; Safari and Firefox show round corners until they ship it.
 

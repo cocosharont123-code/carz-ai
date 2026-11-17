@@ -390,10 +390,13 @@ export function SpotMap() {
         // circle keeps "where I am" distinct from "where a car was".
         const dot = document.createElement("div");
         dot.style.cssText = [
-          // Square, like the rest of the app. Mapbox builds its marker from
-          // a bare div outside React, so it carries no class and picks up no
-          // token -- the shape is written here or nowhere.
-          "width:16px;height:16px;border-radius:0",
+          // corner-shape:round, explicitly. §3 sets `corner-shape: squircle`
+          // on every element and exempts .rounded-full -- a class this
+          // element cannot have, because Mapbox builds its marker from a bare
+          // div outside React. Without it a 16px box with a 9999px radius
+          // renders as a rounded square in Chromium, which is what the dot
+          // had become: a white tile sitting where you are.
+          "width:16px;height:16px;border-radius:9999px;corner-shape:round",
           "background:#ffffff",
           "box-shadow:0 0 0 4px rgba(255,255,255,0.25), 0 0 18px rgba(255,255,255,0.65)",
         ].join(";");

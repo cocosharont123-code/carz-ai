@@ -96,35 +96,20 @@
   --color-rank-3: var(--muted-text);
   --color-success-600: var(--foreground);
 
-  /* Square. Every corner in the app, by request.
-     
-     The names stay and the values are all zero, which is the whole change:
-     `rounded-card`, `rounded-thumb`, `rounded-full` and the rest are used in
-     a hundred and fifty places and all of them resolve through here. Putting
-     a number back in one of these lines is how this is undone.
-     
-     This reverses §3 of the law book and the earlier instruction that nothing
-     in the app should have a pointy edge. The owner asked for sharp square
-     corners; the law book is noted accordingly. */
-  --radius-xs: 0px;
-  --radius-sm: 0px;
-  --radius-md: 0px;
-  --radius-lg: 0px;
-  --radius-xl: 0px;
+  /* Radii, per the spec */
+  /* §3 radius scale. Squircle reads tighter than round at the same number,
+     which is why these are larger than the round-corner equivalents. */
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 26px;
+  --radius-xl: 38px;
 
-  --radius-card: 0px;
-  --radius-tile: 0px;
-  --radius-stat: 0px;
-  --radius-thumb: 0px;
-  --radius-sheet: 0px;
-  /* Tailwind's own scale, including the one `rounded-full` reads. Capsules
-     and circles are squares now too -- the chips, the pills, the avatars and
-     the Scan button. */
-  --radius-none: 0px;
-  --radius-2xl: 0px;
-  --radius-3xl: 0px;
-  --radius-4xl: 0px;
-  --radius-full: 0px;
+  --radius-card: 20px;
+  --radius-tile: 18px;
+  --radius-stat: 18px;
+  --radius-thumb: 12px;
+  --radius-sheet: 24px;
 }
 
 /* Light is opt-in. :root is dark.
@@ -275,7 +260,7 @@
   --chart-3: #7a7a7a;
   --chart-4: #b0b0b0;
   --chart-5: #d4d4d4;
-  --radius: 0rem;
+  --radius: 0.9rem;
   --sidebar: #f5f5f5;
   --sidebar-foreground: #000000;
   --sidebar-primary: #000000;
@@ -326,9 +311,22 @@
 }
 
 @layer base {
-  /* The squircle rules that were here are gone: a corner shape only means
-     something where there is a radius to shape, and there are none left. The
-     one rule that replaces them cannot live in this layer -- see below. */
+  /* §3. Every corner is continuous. Chromium 139+ renders this; Safari and
+     Firefox ignore it and show round corners until they ship it, which is a
+     graceful fall-back rather than a break. Capsules and circles are round by
+     definition -- a squircled capsule is just a lumpy capsule. */
+  *,
+  ::before,
+  ::after {
+    corner-shape: squircle;
+  }
+
+  .rounded-full,
+  .capsule,
+  [data-shape="capsule"] {
+    border-radius: 9999px;
+    corner-shape: round;
+  }
 
   * {
     @apply border-border outline-ring/50;
@@ -875,23 +873,6 @@ body {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
-}
-
-/* Square, including the capsules.
-   
-   Unlayered on purpose. Tailwind v4 compiles `rounded-full` to
-   `border-radius: calc(infinity * 1px)` as a utility rather than from a theme
-   token, so there is no variable to set to zero and a rule in `@layer base`
-   loses to it. Plain CSS outside every layer wins against a layered rule
-   whatever its specificity, which is exactly what this needs.
-   
-   Everything else is already square through the tokens in @theme; this is the
-   one shape that had to be taken by force. */
-.rounded-full,
-.capsule,
-[data-shape="capsule"],
-[class*="rounded-"] {
-  border-radius: 0;
 }
 
 .glass-chip {

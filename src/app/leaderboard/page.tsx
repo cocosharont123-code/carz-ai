@@ -139,13 +139,12 @@ function LeaderboardInner() {
                     onClick={() => setOpen(c)}
                     aria-label={`See ${c.make} ${c.model} and its rarity`}
                     className={cn(
-                      // Square, like everything else now. It was a 28%
-                      // squircle: a radius on a 56px
+                      // rounded-[28%], not rounded-lg. An 8px radius on a 56px
                       // tile is a corner you read as a point -- and the global
                       // squircle makes a small radius look sharper still, not
                       // softer. A percentage scales with the tile, which is the
                       // same radius the detail view and the garage grid use.
-                      "press overflow-hidden rounded-none transition-transform hover:scale-105",
+                      "press overflow-hidden rounded-[28%] transition-transform hover:scale-105",
                       top ? "h-14 w-16" : "h-12 w-14",
                     )}
                   >
@@ -265,7 +264,7 @@ function CarViewer({
             height ceiling of its own: the photo is capped at half the viewport
             and everything under it is a fixed few lines, so the card is always
             shorter than the screen and has nothing to scroll. */}
-        <div className="nav-sheet-in glass-bubble w-full max-w-[24rem] overflow-hidden rounded-none p-4">
+        <div className="nav-sheet-in glass-bubble w-full max-w-[24rem] overflow-hidden rounded-[32px] p-4">
           {/* A squircle that always occupies its space.
           
               It was an <img> sized by its own pixel width inside a container with
@@ -280,7 +279,7 @@ function CarViewer({
               desktop, and bounded in dvh so the card plus the meter under it still
               fits without scrolling. */}
           <div
-            className="mx-auto aspect-square w-full overflow-hidden rounded-none bg-foreground/[0.06]"
+            className="mx-auto aspect-square w-full overflow-hidden rounded-[26%] bg-foreground/[0.06]"
             // Sized from the card, not the viewport. It was min(74vw, 44dvh),
           // and the card is 22rem wide less 1rem of padding either side -- so
           // on a wide phone 74vw exceeded the space and the photo pushed out
