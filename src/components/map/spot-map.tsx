@@ -1,13 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import Link from "next/link";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { MapPin, MapPinOff, Search } from "lucide-react";
 import { claimGpu } from "@/components/camera/camera-in-use";
-import { applyRealism } from "@/components/map/realistic";
+import { applyRealism, lightPresetForTheme } from "@/components/map/realistic";
 import { MapHud } from "@/components/map/map-hud";
 import { timeAgo } from "@/lib/time-ago";
+import { RarityMeter } from "@/components/car/rarity-meter";
 
 type Spot = {
   id: string;
@@ -21,6 +24,18 @@ type Spot = {
   at: number;
   /** The scan that also wrote this car's leaderboard entry, when it earned one. */
   scanId?: string;
+};
+
+/**
+ * What the leaderboard knows about a spotted car: its photograph, and the
+ * rarity it was scored at. Kept per scan so a pin can show the picture of the
+ * car that was actually standing there.
+ */
+type BoardEntry = {
+  id: string;
+  image?: string;
+  rarityScore: number;
+  rarityReason?: string;
 };
 
 /** A geocoder result: somewhere to fly to. */
@@ -97,13 +112,31 @@ export function SpotMap() {
   const map = useRef<mapboxgl.Map | null>(null);
   const marker = useRef<mapboxgl.Marker | null>(null);
   const pins = useRef<mapboxgl.Marker[]>([]);
-  /** spot id -> its marker, so ?spot= can open the right one. */
-  const byId = useRef<Map<string, mapboxgl.Marker>>(new Map());
+  /** spot id -> the spot, so ?spot= and the sheet can open the right card. */
+  const byId = useRef<Map<string, Spot>>(new Map());
+  /**
+   * One popup, reused.
+   *
+   * Its contents are React rendered through a portal into this node, rather
+   * than an HTML string passed to setHTML. The card shows the car's photo and
+   * the rarity meter, and the meter is a component the scan screen and the
+   * garage already use -- a second copy of it written as a template literal
+   * is a second thing to keep in step with the first.
+   */
+  // State with a lazy initialiser rather than a ref: the portal reads this
+  // during render, and a ref read during render is the thing React 19 lints
+  // against. Created once, and never on the server, where there is no
+  // document to create it with.
+  const [popupHost] = useState<HTMLDivElement | null>(() =>
+    typeof document === "undefined" ? null : document.createElement("div"),
+  );
+  const popup = useRef<mapboxgl.Popup | null>(null);
+  const [selected, setSelected] = useState<Spot | null>(null);
   /** The deep link is honoured once, not on every redraw. */
   const flown = useRef(false);
   const [spots, setSpots] = useState<Spot[]>([]);
-  /** scanId -> leaderboard entry id, for the pins whose car is on the board. */
-  const [board, setBoard] = useState<Map<string, string>>(new Map());
+  /** scanId -> what the board holds for that scan. */
+  const [board, setBoard] = useState<Map<string, BoardEntry>>(new Map());
 
   /**
    * A particular pin, when the leaderboard sent someone to look at it.
@@ -258,9 +291,17 @@ export function SpotMap() {
       .then((r) => r.json())
       .then((d) => {
         if (cancelled) return;
-        const cars: { id: string; scanId?: string }[] = Array.isArray(d.cars) ? d.cars : [];
-        const map = new Map<string, string>();
-        for (const c of cars) if (c.scanId) map.set(c.scanId, c.id);
+        const cars: (BoardEntry & { scanId?: string })[] = Array.isArray(d.cars) ? d.cars : [];
+        const map = new Map<string, BoardEntry>();
+        for (const c of cars) {
+          if (!c.scanId) continue;
+          map.set(c.scanId, {
+            id: c.id,
+            image: c.image,
+            rarityScore: Number(c.rarityScore) || 0,
+            rarityReason: c.rarityReason,
+          });
+        }
         setBoard(map);
       })
       .catch(() => {});
@@ -300,38 +341,16 @@ export function SpotMap() {
           rare ? "box-shadow:0 0 12px rgba(255,255,255,0.9)" : "",
         ].join(";");
 
-        const name = `${s.make} ${s.model}`.trim();
-        // Only when this car actually has an entry. A link that leads to a board
-        // the car is not on is worse than no link, and the board keeps just the
-        // highest scorer per model, so plenty of pins have none.
-        const entryId = s.scanId ? board.get(s.scanId) : undefined;
-        const rarity = Math.round(s.rarityScore);
-        return new mapboxgl.Marker({ element: el })
-          .setLngLat([s.lng, s.lat])
-          .setPopup(
-            new mapboxgl.Popup({ offset: 16, closeButton: false }).setHTML(
-              `<div style="font:600 13px/1.4 -apple-system,system-ui,sans-serif;color:#fff">
-                 ${escapeHtml(name)}
-                 <div style="font-weight:400;opacity:.65;margin-top:2px">
-                   ${escapeHtml(s.spotter)} · ${escapeHtml(timeAgo(s.at))}${
-                     rarity > 0 ? ` · rarity ${rarity}` : ""
-                   }
-                 </div>
-                 ${
-                   entryId
-                     ? `<a href="/leaderboard?car=${encodeURIComponent(entryId)}"
-                          style="display:flex;align-items:center;min-height:44px;margin-top:6px;
-                                 color:#ffffff;font-weight:600;text-decoration:underline">
-                          See it on the leaderboard &rsaquo;
-                        </a>`
-                     : ""
-                 }
-               </div>`,
-            ),
-          )
-          .addTo(m);
+        // The card is React, rendered through a portal into one shared popup
+        // -- see `selected` -- so the marker only has to say which spot was
+        // tapped. No setPopup, no HTML string, no escaping by hand.
+        el.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          setSelected(s);
+        });
+        return new mapboxgl.Marker({ element: el }).setLngLat([s.lng, s.lat]).addTo(m);
       });
-      byId.current = new Map(spots.map((s, i) => [s.id, pins.current[i]]));
+      byId.current = new Map(spots.map((s) => [s.id, s]));
     };
 
     if (m.isStyleLoaded()) draw();
@@ -360,8 +379,96 @@ export function SpotMap() {
     m.flyTo({ center: [target.lng, target.lat], zoom: 15.5, duration: 2200, essential: true });
     // Opened after the flight rather than during it, so the popup is not left
     // hanging over the map while the camera is still moving.
-    m.once("moveend", () => byId.current.get(wantedSpot)?.togglePopup());
+    m.once("moveend", () => {
+      const spot = byId.current.get(wantedSpot);
+      if (spot) setSelected(spot);
+    });
   }, [spots, wantedSpot]);
+
+  /**
+   * The card, over the pin.
+   *
+   * One popup for the whole map, moved and refilled rather than one built per
+   * marker: the contents are a React subtree, and a root per pin would mean
+   * mounting and unmounting a few hundred of them every time the spot list
+   * changes. The node it renders into is created once, here, and handed to
+   * Mapbox as the popup's DOM content.
+   *
+   * Closing is the popup's own close button and a tap on the map, both of
+   * which have to clear `selected` or the next tap on the same pin would set
+   * state that is already set and open nothing.
+   */
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !popupHost) return;
+    if (!popup.current) {
+      popup.current = new mapboxgl.Popup({
+        offset: 18,
+        closeButton: true,
+        // Above the pin, always. Left to choose for itself Mapbox opens the
+        // card downwards for a pin in the top half of the screen, and down
+        // there it lands behind the Cars Near You sheet.
+        anchor: "bottom",
+        // The card has its own padding and its own corners; Mapbox's default
+        // white box around it would be a second surface.
+        className: "carz-map-popup",
+        maxWidth: "260px",
+      }).setDOMContent(popupHost);
+      popup.current.on("close", () => setSelected(null));
+    }
+    if (!selected) {
+      popup.current.remove();
+      return;
+    }
+    /**
+     * Move it if it is already up, rather than adding it again.
+     *
+     * Popup.addTo on a popup that is already on the map removes it first, and
+     * remove() fires "close" -- which clears the selection a beat after this
+     * set it. Tapping a second pin while a card was open therefore closed the
+     * card instead of switching to the new one.
+     */
+    if (popup.current.isOpen()) {
+      popup.current.setLngLat([selected.lng, selected.lat]);
+    } else {
+      popup.current.setLngLat([selected.lng, selected.lat]).addTo(m);
+    }
+  }, [selected, popupHost]);
+
+  /**
+   * Relight the basemap when the theme changes.
+   *
+   * The preset is set once when the style loads, which is right for the first
+   * paint and wrong the moment somebody switches theme in Settings with the
+   * map already open. The theme is a class on <html>, so the class is what
+   * this watches -- no event to subscribe to, and no plumbing through a
+   * provider the map does not otherwise use.
+   */
+  useEffect(() => {
+    const html = document.documentElement;
+    const relight = () => {
+      try {
+        map.current?.setConfigProperty("basemap", "lightPreset", lightPresetForTheme());
+      } catch {
+        /* a style without the Standard config; nothing to relight */
+      }
+    };
+    const observer = new MutationObserver(relight);
+    observer.observe(html, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, [token]);
+
+  // A tap on open water closes the card, the way tapping away from anything
+  // else does.
+  useEffect(() => {
+    const m = map.current;
+    if (!m) return;
+    const close = () => setSelected(null);
+    m.on("click", close);
+    return () => {
+      m.off("click", close);
+    };
+  }, [token]);
 
   const toggleTilt = useCallback(() => {
     const m = map.current;
@@ -607,6 +714,17 @@ export function SpotMap() {
         </div>
       </div>
 
+      {/* The card goes into the popup Mapbox positions for us. */}
+      {selected && popupHost
+        ? createPortal(
+            <SpotCard
+              spot={selected}
+              entry={selected.scanId ? board.get(selected.scanId) : undefined}
+            />,
+            popupHost,
+          )
+        : null}
+
       <MapHud
         tilted={tilted}
         onTilt={toggleTilt}
@@ -652,7 +770,7 @@ export function SpotMap() {
                   const m = map.current;
                   if (!m) return;
                   m.flyTo({ center: [sp.lng, sp.lat], zoom: 15.5, duration: 1400, essential: true });
-                  m.once("moveend", () => byId.current.get(sp.id)?.togglePopup());
+                  m.once("moveend", () => setSelected(sp));
                 }}
                 className="press w-36 shrink-0 text-left"
               >
@@ -674,11 +792,68 @@ export function SpotMap() {
   );
 }
 
-/** Popups take HTML, and a car name is user-supplied text. */
-function escapeHtml(v: string): string {
-  return v
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+/**
+ * The card for one spotted car.
+ *
+ * What a pin used to show was three lines of text built as an HTML string --
+ * name, spotter, "rarity 83" -- which told you a rare car had been standing
+ * there without showing you the car. This is the photograph the spotter took,
+ * the same rounded frame the leaderboard uses for it, and the same rarity
+ * meter the scan screen and the garage draw.
+ *
+ * Both of those come from the leaderboard entry for this scan, which is the
+ * only place the photo exists: a spot record carries coordinates, a name and
+ * a score, never an image. A car with no entry -- the board keeps one per
+ * model, so plenty have none -- still gets its name, its spotter and its
+ * score, which is exactly what the old popup had.
+ *
+ * No escaping by hand anywhere: this is React, so a car called
+ * `<script>` is text.
+ */
+function SpotCard({ spot, entry }: { spot: Spot; entry?: BoardEntry }) {
+  const name = `${spot.make} ${spot.model}`.trim();
+  const score = entry?.rarityScore || spot.rarityScore;
+
+  return (
+    <div className="w-[232px] rounded-card bg-black/[0.92] p-3 text-white backdrop-blur-xl">
+      <div className="flex items-center gap-3">
+        {entry?.image && (
+          // A 76px square at the leaderboard's own 28% radius, so a car looks
+          // the same wherever it turns up. Small deliberately: this is a card
+          // over a map, and a photo the width of it buries the two things
+          // underneath that say what the car is.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={entry.image}
+            alt={name}
+            className="h-[76px] w-[76px] shrink-0 rounded-[28%] object-cover"
+            loading="lazy"
+            draggable={false}
+          />
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[15px] font-bold leading-tight">{name}</p>
+          <p className="mt-0.5 truncate text-[12px] text-white/60">{spot.spotter}</p>
+          <p className="truncate text-[12px] text-white/60">{timeAgo(spot.at)}</p>
+        </div>
+      </div>
+
+      {score > 0 && (
+        // The meter carries its own mt-4, which is more air than a 228px card
+        // wants; -mt-2 trims it without touching the component.
+        <div className="-mt-2">
+          <RarityMeter score={score} reason={entry?.rarityReason} />
+        </div>
+      )}
+
+      {entry && (
+        <Link
+          href={`/leaderboard?car=${encodeURIComponent(entry.id)}`}
+          className="press mt-2 flex min-h-11 items-center text-[13px] font-semibold text-white underline underline-offset-2"
+        >
+          See it on the leaderboard ›
+        </Link>
+      )}
+    </div>
+  );
 }

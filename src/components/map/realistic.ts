@@ -17,7 +17,7 @@ import type mapboxgl from "mapbox-gl";
  *  - Mapbox Standard Satellite, which puts 3D buildings and labels over the
  *    photography rather than beside it.
  *  - Real elevation under the imagery, so hills are hills.
- *  - Daylight, always.
+ *  - Light that follows the app's theme: day in light mode, night in dark.
  *
  * This is the one screen in the app that is deliberately not monochrome. §7's
  * palette governs the interface; the imagery is a photograph of the world, and
@@ -25,19 +25,22 @@ import type mapboxgl from "mapbox-gl";
  */
 
 /**
- * Always "day", and that is the realistic choice rather than the lazy one.
+ * The light follows the app's theme, not the clock.
  *
- * Mapbox's four presets relight the whole basemap -- sun angle, shadow length,
- * lit windows, sky. Following the device clock sounds more real and is not:
- * satellite imagery is photographed in daylight, so the night preset works by
- * dimming that photograph, which is a darker version of the exact complaint
- * this change answers. Day is the light the pictures were taken in, and it is
- * also the one you can find a car in.
+ * Mapbox's presets relight the whole basemap -- sun angle, shadow length, lit
+ * windows, sky. "night" works by dimming the satellite photograph, which is
+ * the right thing to do inside a dark app and the wrong thing inside a light
+ * one; a bright aerial behind black type is the same mismatch the home hero
+ * had.
  *
- * Swap this for a clock if you want dusk in the evening -- the preset names
- * are "dawn", "day", "dusk" and "night".
+ * Read from the class the theme script puts on <html> before first paint, so
+ * the first frame of the map is already the right one. The other two presets,
+ * "dawn" and "dusk", are unused -- there are two themes, not four.
  */
-const LIGHT_PRESET = "day";
+export function lightPresetForTheme(): "day" | "night" {
+  if (typeof document === "undefined") return "day";
+  return document.documentElement.classList.contains("dark") ? "night" : "day";
+}
 
 /** Elevation under the imagery. */
 function addTerrain(map: mapboxgl.Map): void {
@@ -67,8 +70,18 @@ export function applyRealism(map: mapboxgl.Map): void {
     // rather than as layers -- there is no raster layer to recolour and no
     // road layer to restyle, which is also why the old runtime repaint could
     // not have worked against this style.
-    map.setConfigProperty("basemap", "lightPreset", LIGHT_PRESET);
+    map.setConfigProperty("basemap", "lightPreset", lightPresetForTheme());
     map.setConfigProperty("basemap", "show3dObjects", true);
+    /**
+     * No points of interest.
+     *
+     * Standard Satellite labels restaurants, hotels, shops and bars with
+     * coloured pills, and this map has its own pins on it: a screen about
+     * where cars were spotted was reading as a restaurant guide with cars in
+     * between. Place names, roads and transit stay -- those are how you know
+     * where you are looking.
+     */
+    map.setConfigProperty("basemap", "showPointOfInterestLabels", false);
   } catch {
     /* the style draws at its default lighting */
   }

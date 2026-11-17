@@ -875,6 +875,48 @@ body {
   }
 }
 
+/* The map's own card.
+   
+   Mapbox ships a white rounded box with a white tip and 10px of padding. The
+   card inside it has its own surface, its own corners and its own padding, so
+   all the wrapper has to do is hold it and point at the pin -- anything else
+   is a second card drawn around the first. The tip keeps a fill, because a
+   popup with no tip is a box floating near a dot rather than attached to it. */
+/* Over the Cars Near You sheet, which is z-10 inside the same stacking
+   context. A card you opened disappearing behind the furniture is worse than
+   no card. */
+.carz-map-popup {
+  z-index: 20;
+}
+
+.carz-map-popup .mapboxgl-popup-content {
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.carz-map-popup .mapboxgl-popup-tip {
+  border-top-color: rgba(0, 0, 0, 0.92);
+  border-bottom-color: rgba(0, 0, 0, 0.92);
+}
+
+/* Mapbox's close button is a bare × at 16px in the corner of the content.
+   Given the card is dark, it has to be light, and given §7 it has to be a
+   target rather than a glyph. */
+.carz-map-popup .mapboxgl-popup-close-button {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 36px;
+  height: 36px;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 20px;
+  line-height: 36px;
+  background: transparent;
+  border: 0;
+}
+
 .glass-chip {
   position: relative;
   isolation: isolate;
