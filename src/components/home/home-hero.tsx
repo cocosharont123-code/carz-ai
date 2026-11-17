@@ -1,5 +1,3 @@
-import { CarzAiTitle } from "@/components/home/carz-ai-title";
-
 /**
  * The home hero: photo and headline.
  *
@@ -41,19 +39,12 @@ export function HomeHero() {
       <div aria-hidden className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-background/60 to-transparent" />
       <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-transparent via-background/55 to-background" />
 
-      {/* The wordmark, where the four-line headline was.
-      
-          The h1 stays: the component renders a canvas with role="img" and an
-          aria-label of its own text, so a screen reader still reads a
-          first-level heading that says "Carz AI".
-      
-          pb-3 rather than pb-5, and no type size here at all. The canvas
-          brings its own height and the old line-height is meaningless against
-          it; two points of padding came off so the glass sits the same
-          distance above the search field as four lines of 36px type did. */}
-      <div className="absolute inset-x-0 bottom-0 px-5 pb-3">
-        <h1>
-          <CarzAiTitle />
+      <div className="absolute inset-x-0 bottom-0 px-5 pb-5">
+        <h1 className="text-[36px] font-extrabold uppercase leading-[0.95] tracking-[-0.02em]">
+          <span className="block text-foreground">Snap</span>
+          <span className="block text-foreground">Any car.</span>
+          <span className="block text-foreground/60">Know</span>
+          <span className="block text-foreground/60">Everything.</span>
         </h1>
       </div>
     </section>
