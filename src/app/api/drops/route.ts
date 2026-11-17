@@ -8,7 +8,11 @@ export const maxDuration = 60;
 
 // Recall, not vision — the same reasoning as the spec sheet in identify.ts, so
 // it takes the cheapest model rather than the identification pipeline's.
-const MODEL = process.env.CAR_DROPS_MODEL || "claude-haiku-4-5";
+//
+// Haiku 5.5 rather than 4.5: the fastest model in the line and a tenth of the
+// price, which on the one path that still waits for a generation is the
+// difference people actually feel.
+const MODEL = process.env.CAR_DROPS_MODEL || "claude-haiku-5-5";
 
 /** Floor for what counts as a drop worth listing here. */
 export const MIN_PRICE_USD = 120_000;
@@ -35,7 +39,7 @@ const TOOL = {
     properties: {
       drops: {
         type: "array",
-        description: "10–16 genuinely new high-end car launches or announcements.",
+        description: "10–12 genuinely new high-end car launches or announcements.",
         items: {
           type: "object",
           properties: {
@@ -85,7 +89,7 @@ const TOOL = {
 } as const;
 
 const PROMPT =
-  "List 10 to 16 genuinely new high-end car drops — models revealed, opened for order, or entering customer deliveries most recently. " +
+  "List 10 to 12 genuinely new high-end car drops — models revealed, opened for order, or entering customer deliveries most recently. " +
   `Only cars with a starting MSRP of at least $${MIN_PRICE_USD.toLocaleString("en-US")} USD, and only hypercars, supercars, or luxury cars (grand tourers, luxury saloons, luxury SUVs, ultra-luxury coachbuilt). ` +
   "Exclude anything below that price, ordinary mass-market cars, and models that have been on sale unchanged for years. " +
   "Prefer real, verifiable, publicly announced cars from manufacturers that actually exist, and give prices as published rather than guessed. " +
@@ -103,7 +107,16 @@ const PROMPT =
 //
 // Past the TTL the stored list is still served immediately and refreshed after
 // the response, so nobody ever waits for a regeneration they did not cause.
-const TTL_MS = 6 * 60 * 60 * 1000;
+/**
+ * A week, not six hours.
+ *
+ * What is on this list changes when a manufacturer reveals something, which
+ * is a weekly event at best. Six hours meant four chances a day for somebody
+ * to be the one who waits -- and since a stale list is served immediately and
+ * refreshed behind the response, a longer window costs nothing but a list
+ * that is at most a week behind.
+ */
+const TTL_MS = 7 * 24 * 60 * 60 * 1000;
 let cache: { at: number; drops: Drop[] } | null = null;
 
 const fresh = (at: number) => Date.now() - at < TTL_MS;
@@ -164,7 +177,10 @@ async function generate(key: string): Promise<Drop[] | null> {
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 4000,
+        // 2600 rather than 4000. The ceiling is not the cost, but a model
+        // that knows it has room writes longer notes, and every token of
+        // those is latency on the one request somebody is waiting for.
+        max_tokens: 2600,
         tools: [TOOL],
         tool_choice: { type: "tool", name: "report_drops" },
         messages: [{ role: "user", content: PROMPT }],

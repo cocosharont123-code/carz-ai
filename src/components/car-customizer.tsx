@@ -59,6 +59,33 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
   const [mods, setMods] = useState<string>("");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveNote, setSaveNote] = useState("");
+  /**
+   * Whether this device can hand a file to the system.
+   *
+   * navigator.share with files is what puts "Save Image" in front of someone
+   * on a phone -- it opens the share sheet, and Photos is in it. Desktop
+   * browsers either lack it or refuse files, and there a download is the
+   * right answer anyway.
+   *
+   * Decided after mount rather than during render: navigator does not exist
+   * on the server, and a label that depended on it would disagree with the
+   * HTML that was sent.
+   */
+  const [canShare, setCanShare] = useState(false);
+  useEffect(() => {
+    // Deferred a microtask: a state write in an effect body cascades renders,
+    // which this project lints against.
+    void Promise.resolve().then(() => {
+      try {
+        const probe = new File([new Blob(["x"])], "probe.jpg", { type: "image/jpeg" });
+        setCanShare(!!navigator.canShare?.({ files: [probe] }));
+      } catch {
+        setCanShare(false);
+      }
+    });
+  }, []);
   const [error, setError] = useState("");
   const [needSignIn, setNeedSignIn] = useState(false);
   const [quota, setQuota] = useState<Quota | null>(null);
@@ -211,6 +238,55 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
   const price = access?.extraPriceUsd ?? 0.5;
   const outOfQuota = !!quota && quota.available <= 0;
 
+  /**
+   * Save the customized car.
+   *
+   * To the camera roll where the phone allows it: fetch the image the model
+   * produced, wrap it in a File and hand it to the share sheet, where "Save
+   * Image" writes it to Photos. The button was a download link, which on iOS
+   * lands the file in Files rather than in the photo library -- the one place
+   * a picture of your car is actually useful.
+   *
+   * Falling back to the download rather than failing: desktop browsers have
+   * no share sheet, and a cancelled share is a decision, not an error.
+   */
+  async function saveImage() {
+    if (!result || saving) return;
+    const name = `carz-${car.make}-${car.model}.jpg`.toLowerCase().replace(/\s+/g, "-");
+
+    const download = () => {
+      const a = document.createElement("a");
+      a.href = result;
+      a.download = name;
+      a.click();
+    };
+
+    if (!canShare) {
+      download();
+      return;
+    }
+
+    setSaving(true);
+    setSaveNote("");
+    try {
+      const blob = await (await fetch(result)).blob();
+      const file = new File([blob], name, { type: blob.type || "image/jpeg" });
+      if (!navigator.canShare?.({ files: [file] })) {
+        download();
+        return;
+      }
+      await navigator.share({ files: [file] });
+    } catch (e) {
+      if (!(e instanceof DOMException && e.name === "AbortError")) {
+        download();
+        setSaveNote("Saved as a file instead — your browser wouldn't open the share sheet.");
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+
   return (
     <div className="mt-6 border-t border-[var(--line-card)] pt-5">
       <h3 className="text-[12px] font-bold uppercase tracking-wide text-carz">Customize this car</h3>
@@ -338,13 +414,13 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
             <img src={result} alt={`Customized ${car.make} ${car.model}`} className="w-full" />
           </div>
           <div className="mt-2 flex gap-2">
-            <a
-              href={result}
-              download={`carz-${car.make}-${car.model}.jpg`.toLowerCase().replace(/\s+/g, "-")}
+            <button
+              type="button"
+              onClick={() => void saveImage()}
               className="press flex-1 rounded-thumb border border-black/20 py-2.5 text-center text-[14px] font-semibold transition hover:border-black/40"
             >
-              Download
-            </a>
+              {saving ? "Saving…" : canShare ? "Save to camera roll" : "Download"}
+            </button>
             <button
               onClick={generate}
               disabled={busy}
@@ -353,6 +429,7 @@ export function CarCustomizer({ image, car }: { image: string; car: CarLike }) {
               Regenerate
             </button>
           </div>
+          {saveNote && <p className="mt-2 text-[12px] opacity-70">{saveNote}</p>}
         </div>
       )}
     </div>

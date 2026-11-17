@@ -28,52 +28,64 @@ function money(n: number): string {
   return `$${Math.round(n / 1000)}k`;
 }
 
+/**
+ * One drop.
+ *
+ * Rewritten because the old card leaked out of itself. Three things did it,
+ * and they are worth naming so they are not rebuilt:
+ *
+ *  - A 34px price in a `shrink-0` column. The model name truncated politely,
+ *    the price could not, and on a narrow screen it pushed through the side
+ *    of the card. It is 22px, tabular, and allowed to wrap off its own line
+ *    rather than shove the name.
+ *  - Two nested boxes holding model text -- "Twin-turbo V8 hybrid with
+ *    electric front axle" against a 50% column -- with nothing to break a
+ *    long word on. The figures are one line now, not two boxes, and the text
+ *    may break anywhere it has to (break-words).
+ *  - glass-card on every item of a list. That is a live backdrop-filter per
+ *    card and up to sixteen cards: §2 allows six on a whole screen, and the
+ *    lag was them. glass-lite is the same material without the blur, which
+ *    is what §2 says a repeated item gets.
+ */
 function DropCard({ drop }: { drop: Drop }) {
   return (
-    <article className="rounded-card glass-card p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="util-label opacity-60">{drop.make}</p>
-          <h2 className="mt-0.5 truncate text-[17px] font-extrabold tracking-tight">{drop.model}</h2>
-        </div>
-        <div className="shrink-0 text-right">
-          <div className="display text-[34px] leading-none">{money(drop.startingPriceUsd)}</div>
-          <p className="util-label mt-1 opacity-50">from</p>
-        </div>
+    <article className="rounded-card glass-lite p-4">
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="util-label min-w-0 truncate opacity-60">{drop.make}</p>
+        <p className="shrink-0 text-[17px] font-bold tabular-nums">
+          {money(drop.startingPriceUsd)}
+        </p>
       </div>
 
+      {/* Two lines at most, then an ellipsis. A model name is three words;
+          anything longer is the model returning a sentence, and a sentence
+          here would push the card open. */}
+      <h2 className="mt-1 line-clamp-2 text-[20px] font-extrabold leading-tight tracking-tight">
+        {drop.model}
+      </h2>
+
+      {/* The one number that defines it, and what makes it. One line of
+          text rather than a pair of boxes: break-words so a hyphenated
+          powertrain cannot reach past the edge. */}
+      <p className="mt-1.5 break-words text-[14px] leading-snug text-[var(--color-secondary-text)]">
+        {[drop.headline, drop.powertrain].filter(Boolean).join(" · ")}
+      </p>
+
       <div className="mt-3 flex flex-wrap gap-1.5">
-        <span
-          className={cn(
-            "rounded-full px-2.5 py-1 text-[12px] font-bold uppercase tracking-wide",
-            // Was red for Hypercar and cyan for Supercar. A category is not a
-            // status and nothing here is an error, so all three are the same
-            // chip and the word carries the distinction.
-            "bg-foreground/10 text-foreground",
-          )}
-        >
+        <span className="rounded-full bg-foreground/10 px-2.5 py-1 text-[12px] font-bold uppercase tracking-wide text-foreground">
           {drop.category}
         </span>
-        <span className="glass-chip rounded-full px-2.5 py-1 text-[12px] font-semibold">
+        <span className="glass-lite rounded-full px-2.5 py-1 text-[12px] font-semibold">
           {drop.status}
         </span>
-        <span className="glass-chip rounded-full px-2.5 py-1 text-[12px] font-semibold">
+        <span className="glass-lite rounded-full px-2.5 py-1 text-[12px] font-semibold">
           {drop.timing}
         </span>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <div className="glass-chip rounded-thumb p-3">
-          <div className="text-[12px] uppercase tracking-wide opacity-60">Powertrain</div>
-          <div className="mt-0.5 text-[15px] font-semibold">{drop.powertrain}</div>
-        </div>
-        <div className="glass-chip rounded-thumb p-3">
-          <div className="text-[12px] uppercase tracking-wide opacity-60">Headline</div>
-          <div className="mt-0.5 text-[15px] font-semibold">{drop.headline}</div>
-        </div>
-      </div>
-
-      {drop.note && <p className="mt-3 text-[15px] leading-relaxed opacity-70">{drop.note}</p>}
+      {drop.note && (
+        <p className="mt-3 break-words text-[14px] leading-relaxed opacity-70">{drop.note}</p>
+      )}
     </article>
   );
 }
@@ -153,8 +165,10 @@ export default function DropsPage() {
 
         {loading ? (
           <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+            {/* Four at the card's real height, so nothing jumps when the
+                list arrives. The cards are shorter than they were. */}
             {[0, 1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-56 w-full rounded-card" />
+              <Skeleton key={i} className="h-44 w-full rounded-card" />
             ))}
           </div>
         ) : !configured ? (

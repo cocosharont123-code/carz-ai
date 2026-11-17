@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Calendar, MapPin } from "lucide-react";
 import { MemberGate } from "@/components/member-gate";
 import { PageMasthead, Button, Skeleton } from "@/components/ui/editorial";
+import { useMapboxToken } from "@/components/map/use-mapbox-token";
 
 type Ev = { name: string; type: string; venue?: string; city: string; when: string; note?: string };
 
@@ -36,6 +37,9 @@ export default function EventsPage() {
   );
 }
 
+/** A place the geocoder knows: somewhere to look for events. */
+type Suggestion = { id: string; name: string; context: string };
+
 function EventsInner() {
   const [events, setEvents] = useState<Ev[] | null>(null);
   const [place, setPlace] = useState("");
@@ -43,6 +47,10 @@ function EventsInner() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [needCity, setNeedCity] = useState(false);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const mapboxToken = useMapboxToken();
+  /** The lookup whose answer is still wanted; see the effect below. */
+  const lookupSeq = useRef(0);
 
   const load = useCallback(async (payload: { lat?: number; lng?: number; place?: string }) => {
     setLoading(true);
@@ -68,6 +76,50 @@ function EventsInner() {
       setLoading(false);
     }
   }, []);
+
+  /**
+   * Cities, as you type.
+   *
+   * The field took a city and did nothing until Find was pressed, which on a
+   * screen whose whole job is "events near somewhere" means typing a name you
+   * have to spell correctly with no confirmation that it is a place at all.
+   * Mapbox's geocoder answers that -- the same lookup the map search uses,
+   * against the same token.
+   *
+   * Debounced at 250ms with a sequence number, so a slow answer for "mia"
+   * cannot land on top of a fast one for "miami". Places only: a country or
+   * an address is not somewhere to list car meets for.
+   */
+  useEffect(() => {
+    const q = query.trim();
+    const token = mapboxToken;
+    if (q.length < 2 || !token) {
+      void Promise.resolve().then(() => setSuggestions([]));
+      return;
+    }
+    const mine = ++lookupSeq.current;
+    const timer = setTimeout(async () => {
+      try {
+        const url =
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(q)}.json` +
+          `?access_token=${encodeURIComponent(token)}&limit=5&language=en&types=place,locality,region`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(String(res.status));
+        const data = await res.json();
+        if (mine !== lookupSeq.current) return;
+        setSuggestions(
+          (data?.features ?? []).map((f: { id: string; text: string; place_name: string }) => ({
+            id: f.id,
+            name: f.text,
+            context: f.place_name,
+          })),
+        );
+      } catch {
+        if (mine === lookupSeq.current) setSuggestions([]);
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [query, mapboxToken]);
 
   useEffect(() => {
     if (!("geolocation" in navigator)) {
@@ -101,7 +153,7 @@ function EventsInner() {
             e.preventDefault();
             if (query.trim()) load({ place: query.trim() });
           }}
-          className="mt-5 flex gap-2"
+          className="relative mt-5 flex gap-2"
         >
           <input
             value={query}
@@ -113,6 +165,42 @@ function EventsInner() {
           <Button type="submit" size="md">
             Find
           </Button>
+
+          {/* The matches, under the field. Opaque rather than glass: it hangs
+              over the list of events, and a translucent panel over text is
+              two things to read at once. Picking one loads that city and puts
+              the list away. */}
+          {suggestions.length > 0 && (
+            <ul className="absolute inset-x-0 top-[calc(100%+8px)] z-30 overflow-hidden rounded-card border border-[var(--line-divider)] bg-[var(--color-raised)] shadow-[0_10px_40px_rgb(0_0_0/0.35)]">
+              {suggestions.map((s, i) => (
+                <li key={s.id} className={i === 0 ? "" : "border-t border-[var(--line-divider)]"}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setQuery("");
+                      setSuggestions([]);
+                      void load({ place: s.context });
+                    }}
+                    className="press flex min-h-11 w-full items-center gap-3 px-4 py-2.5 text-left"
+                  >
+                    <MapPin
+                      className="h-4 w-4 shrink-0 text-[var(--color-muted-text)]"
+                      strokeWidth={1.75}
+                      aria-hidden
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[15px] font-semibold text-foreground">
+                        {s.name}
+                      </span>
+                      <span className="block truncate text-[13px] text-[var(--color-secondary-text)]">
+                        {s.context}
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </form>
 
         {loading ? (
