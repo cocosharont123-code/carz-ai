@@ -607,6 +607,26 @@ export default function SpotPage() {
   }
 
   /**
+   * The live background belongs to the frame being empty, and nothing else.
+   *
+   * Once there is a photo in hand -- captured here or picked from the library
+   * -- or a car on screen, the camera goes off and the page fades back to the
+   * black it was built on. Two reasons, and the second is the one that
+   * matters: a live street behind a photograph of a car is two pictures
+   * arguing, and leaving the sensor running through a scan and a result is a
+   * camera light on for a minute while nobody is pointing anything.
+   *
+   * The fade is the video's own opacity transition -- 600ms either way --
+   * because the black underneath it is the body's own background, always
+   * there, never animated. Starting again is the rule above: clearing the
+   * photo or pressing Scan another empties the frame, and an empty frame is
+   * live.
+   */
+  useEffect(() => {
+    if (previewUrl || car) stopCamera();
+  }, [previewUrl, car, stopCamera]);
+
+  /**
    * Hand the camera back when the app is not on screen.
    *
    * A stream left running in a backgrounded tab keeps the camera light on,
@@ -762,7 +782,7 @@ export default function SpotPage() {
           playsInline
           muted
           className={cn(
-            "h-full w-full object-cover transition-opacity duration-500",
+            "h-full w-full object-cover transition-opacity duration-[600ms] ease-[cubic-bezier(.32,.72,0,1)]",
             cameraStatus === "live" ? "opacity-100" : "opacity-0",
           )}
         />

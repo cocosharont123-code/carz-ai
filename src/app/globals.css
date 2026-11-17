@@ -611,10 +611,41 @@ body {
 }
 ::selection { background: rgba(255, 255, 255, 0.18); color: #fff; }
 
-/* Keyboard-only focus: a crisp, contained ring — never the chunky default. */
-:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+/* Keyboard-only focus: a crisp, contained ring — never the chunky default.
+   
+   Text entry is not in the list, and that is the point. Safari matches
+   :focus-visible on a field focused by touch, because typing is what a field
+   is for -- so tapping the CarzBot composer, the map search or any sign-in
+   field drew a hard white ring around it and left it there for as long as you
+   were typing. A caret in a field already says where the keyboard is
+   pointing; the ring was telling you a second time, in a box.
+   
+   Buttons, links and anything else tabbable keep it. Those have no caret, and
+   a keyboard user tabbing through a screen has nothing else to go on. */
+:where(a, button, [tabindex]):focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px #000, 0 0 0 4px rgba(255, 255, 255, 0.9);
+}
+
+/* And nothing at all on a field, including the browser's own.
+   
+   Written without :where(), which was the mistake in the first attempt:
+   :where() contributes zero specificity, so this lost to WebKit's own
+   `input:focus { outline: auto }` and Safari kept drawing its ring on top of
+   a rule that said not to. Measured after the change -- outline-style reads
+   `none` on the sign-in fields, the CarzBot composer and the map search while
+   typing.
+   
+   Only the outline. The box-shadow on these elements is their glass, not a
+   focus ring, and clearing it would make a field flicker flat the moment it
+   was tapped. */
+input:focus,
+input:focus-visible,
+select:focus,
+select:focus-visible,
+textarea:focus,
+textarea:focus-visible {
+  outline: none;
 }
 
 /* ==========================================================================
