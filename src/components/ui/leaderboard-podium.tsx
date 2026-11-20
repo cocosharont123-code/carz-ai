@@ -37,10 +37,33 @@ const nf = new Intl.NumberFormat("en-US")
  * greyed out. All three are white now, by request; the block a step taller is
  * what says who won, which is how a podium works anyway.
  */
-const RANK_STYLE: Record<number, { ring: string; text: string; height: string }> = {
-  1: { ring: "ring-foreground", text: "text-foreground", height: "h-24" },
-  2: { ring: "ring-foreground", text: "text-foreground", height: "h-16" },
-  3: { ring: "ring-foreground", text: "text-foreground", height: "h-12" },
+const RANK_STYLE: Record<
+  number,
+  { ring: string; text: string; height: string; block: string }
+> = {
+  // First place is a solid white block, which is the only thing on the podium
+  // that is filled rather than tinted -- so the winner reads before the
+  // heights do. Its number has to invert with it: white on white is nothing,
+  // and --accent-ink-fg is black on a white app and white on a dark one, so
+  // the pair stays legible in either theme.
+  1: {
+    ring: "ring-foreground",
+    text: "text-carz-ink",
+    height: "h-24",
+    block: "border-foreground bg-foreground",
+  },
+  2: {
+    ring: "ring-foreground",
+    text: "text-foreground",
+    height: "h-16",
+    block: "border-foreground/20 bg-foreground/[0.12]",
+  },
+  3: {
+    ring: "ring-foreground",
+    text: "text-foreground",
+    height: "h-12",
+    block: "border-foreground/20 bg-foreground/[0.12]",
+  },
 }
 
 function initials(name: string): string {
@@ -93,7 +116,8 @@ function PodiumPlace({ entry }: { entry: LeaderboardRanking }) {
           12px it had -- the corners are meant to be visible. */}
       <div
         className={cn(
-          "mt-2 flex w-full items-start justify-center rounded-t-[24px] border border-b-0 border-foreground/20 bg-foreground/[0.12] pt-2",
+          "mt-2 flex w-full items-start justify-center rounded-t-[24px] border border-b-0 pt-2",
+          style.block,
           style.height,
         )}
       >
