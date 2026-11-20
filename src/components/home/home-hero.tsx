@@ -1,3 +1,5 @@
+import { HomePodium } from "@/components/home/home-podium";
+
 /**
  * The home hero: photo and headline.
  *
@@ -29,7 +31,21 @@ const HERO_PHOTO = "/home-hero-default.jpg";
 export function HomeHero() {
   return (
     <section
-      className="relative -mx-5 h-[30%] min-h-[200px] overflow-hidden bg-background bg-cover bg-center"
+      /**
+       * Sized by what is in it, not by a percentage of the screen.
+       *
+       * It was `h-[30%] min-h-[200px]` with its content absolutely positioned
+       * at the bottom -- fine for four lines of type whose height was known
+       * when the number was written, and wrong for a podium: the content ran
+       * 22px past the box, which `overflow-hidden` then cut off at the top of
+       * the search field. A percentage height with absolute content cannot be
+       * made correct by picking a better number; it can only be made correct
+       * by not being one.
+       *
+       * min-h keeps a short hero from collapsing when the board is empty and
+       * the headline is back.
+       */
+      className="relative -mx-5 min-h-[200px] overflow-hidden bg-background bg-cover bg-center"
       style={{ backgroundImage: `url(${HERO_PHOTO})` }}
     >
       {/* Two overlays, not one. The top is a short scrim for anything laid
@@ -39,13 +55,15 @@ export function HomeHero() {
       <div aria-hidden className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-background/60 to-transparent" />
       <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-transparent via-background/55 to-background" />
 
-      <div className="absolute inset-x-0 bottom-0 px-5 pb-5">
-        <h1 className="text-[36px] font-extrabold uppercase leading-[0.95] tracking-[-0.02em]">
-          <span className="block text-foreground">Snap</span>
-          <span className="block text-foreground">Any car.</span>
-          <span className="block text-foreground/60">Know</span>
-          <span className="block text-foreground/60">Everything.</span>
-        </h1>
+      {/* The top three, where the headline was. HomePodium owns the h1 now,
+          including in its fallback -- which is that same headline, for a board
+          with nothing on it yet.
+      
+          In the flow rather than absolutely placed, so the section grows to
+          whatever this is and nothing is clipped or overlapped. relative to
+          sit above the two scrims. */}
+      <div className="relative flex min-h-[200px] flex-col justify-end px-5 pb-4 pt-6">
+        <HomePodium />
       </div>
     </section>
   );
