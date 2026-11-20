@@ -5,15 +5,12 @@ import { useEffect, useState } from "react";
 /**
  * The leaderboard's top entries, fetched once for the whole screen.
  *
- * Home shows the board in two places -- the podium at the top and the rest of
- * it further down -- and they are far enough apart in the layout that they
- * cannot be one component. Two components each calling /api/leaderboard would
- * be two requests for one answer, and worse, two answers: the board can be
- * written between them, which would put a car on the podium that the list
- * below disagrees about.
- *
- * So the request is module-level and shared. The promise is created on first
- * use and every later caller gets the same one, for the life of the page.
+ * One caller today -- the podium -- and it was two: the rest of the board was
+ * a section further down the page, and the request is shared so that the two
+ * could not disagree about who was winning. That section is gone, and this
+ * stays as it is: a module-level promise is the right shape for a page-wide
+ * read whether one component or three are asking, and it is what keeps a
+ * remount from spending another request.
  */
 
 export type TopCar = {
@@ -37,7 +34,10 @@ function load(): Promise<TopCar[]> {
       return list
         .filter((c) => c && c.make && (Number(c.rarityScore) || 0) > 0)
         .sort((a, b) => (Number(b.rarityScore) || 0) - (Number(a.rarityScore) || 0))
-        .slice(0, 8);
+        // Three is all Home draws now. The slice is here rather than at the
+        // caller so the shared promise holds one answer rather than one per
+        // caller's appetite.
+        .slice(0, 3);
     })
     .catch(() => []);
   return pending;
