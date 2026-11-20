@@ -58,7 +58,10 @@ export function HomePodium() {
           [...list]
             .filter((c) => c && c.make && (Number(c.rarityScore) || 0) > 0)
             .sort((a, b) => (Number(b.rarityScore) || 0) - (Number(a.rarityScore) || 0))
-            .slice(0, 3),
+            // Three for the podium and five to scroll into. Eight is where a
+            // board stops being a glance and starts being the leaderboard
+            // page, which is one tap away at the end of the list.
+            .slice(0, 8),
         );
       })
       .catch(() => {
@@ -82,7 +85,9 @@ export function HomePodium() {
     );
   }
 
-  const rankings: LeaderboardRanking[] = cars.map((car, i) => ({
+  const [podium, rest] = [cars.slice(0, 3), cars.slice(3)];
+
+  const rankings: LeaderboardRanking[] = podium.map((car, i) => ({
     userId: car.id,
     userName: `${car.make} ${car.model}`.trim(),
     rank: i + 1,
@@ -98,6 +103,54 @@ export function HomePodium() {
       <h1 className="util-label mb-2 text-foreground/60">Rarest finds</h1>
       <Link href="/leaderboard" className="press block" aria-label="See the full leaderboard">
         <LeaderboardPodium rankings={rankings} />
+      </Link>
+
+      {/* The rest of the board, under the podium.
+      
+          In the page's own flow rather than a scroller of its own: §9 bans a
+          second same-axis scroller, and one here would mean a list you can
+          scroll inside a page you can scroll, which on a phone is a coin toss
+          over which one moves. Scrolling Home goes down the board, which is
+          what was asked for. */}
+      {rest.length > 0 && (
+        <ol className="mt-5 space-y-1.5">
+          {rest.map((car, i) => (
+            <li key={car.id}>
+              <Link
+                href="/leaderboard"
+                className="press glass-lite flex min-h-11 items-center gap-3 rounded-card px-3 py-2"
+              >
+                <span className="w-5 shrink-0 text-center text-[13px] font-bold tabular-nums text-foreground/60">
+                  {i + 4}
+                </span>
+                {car.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={car.image}
+                    alt=""
+                    className="h-9 w-9 shrink-0 rounded-thumb object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <span aria-hidden className="h-9 w-9 shrink-0 rounded-thumb bg-foreground/10" />
+                )}
+                <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-foreground">
+                  {`${car.make} ${car.model}`.trim()}
+                </span>
+                <span className="shrink-0 text-[14px] font-bold tabular-nums text-foreground">
+                  {Math.round(Number(car.rarityScore) || 0)}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ol>
+      )}
+
+      <Link
+        href="/leaderboard"
+        className="press mt-3 flex min-h-11 items-center justify-center text-[14px] font-semibold text-foreground/70"
+      >
+        See the whole board ›
       </Link>
     </div>
   );

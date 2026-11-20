@@ -28,10 +28,19 @@ export interface LeaderboardRanking {
 // number formatted two ways is a hydration mismatch.
 const nf = new Intl.NumberFormat("en-US")
 
+/**
+ * White, all three, with height carrying the ranking.
+ *
+ * The rings and numbers were --color-rank-1/2/3, which in this palette are
+ * white, secondary and muted -- so second and third read as dimmer versions
+ * of first rather than as places on a podium, and the whole thing looked
+ * greyed out. All three are white now, by request; the block a step taller is
+ * what says who won, which is how a podium works anyway.
+ */
 const RANK_STYLE: Record<number, { ring: string; text: string; height: string }> = {
-  1: { ring: "ring-rank-1", text: "text-rank-1", height: "h-24" },
-  2: { ring: "ring-rank-2", text: "text-rank-2", height: "h-16" },
-  3: { ring: "ring-rank-3", text: "text-rank-3", height: "h-12" },
+  1: { ring: "ring-foreground", text: "text-foreground", height: "h-24" },
+  2: { ring: "ring-foreground", text: "text-foreground", height: "h-16" },
+  3: { ring: "ring-foreground", text: "text-foreground", height: "h-12" },
 }
 
 function initials(name: string): string {
@@ -75,10 +84,16 @@ function PodiumPlace({ entry }: { entry: LeaderboardRanking }) {
       <span className="text-muted-foreground text-[12px] tabular-nums">{nf.format(entry.value)}</span>
 
       {/* The block itself. Height carries the ranking, so the shape reads
-          before any of the text does. */}
+          before any of the text does.
+      
+          A white fill at 12%, not the grey surface it was: the ask was a
+          white podium with a white number, and a solid white block would have
+          to carry a black number to stay legible, which is a different design
+          rather than a lighter one. 24px on the top corners, well past the
+          12px it had -- the corners are meant to be visible. */}
       <div
         className={cn(
-          "mt-2 flex w-full items-start justify-center rounded-t-xl border border-b-0 bg-muted/40 pt-2",
+          "mt-2 flex w-full items-start justify-center rounded-t-[24px] border border-b-0 border-foreground/20 bg-foreground/[0.12] pt-2",
           style.height,
         )}
       >
