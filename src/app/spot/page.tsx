@@ -580,9 +580,10 @@ export default function SpotPage() {
               rarityReason: full.rarityReason,
               priceRange: full.priceRangeUsed,
               scanId,
-              // The route checks this too, so the rule holds for anything
-              // else that ever posts here.
+              // The route checks both of these too, so the rules hold for
+              // anything else that ever posts here.
               live: true,
+              confidence: full.confidence,
             }),
           }).catch(() => {});
         }

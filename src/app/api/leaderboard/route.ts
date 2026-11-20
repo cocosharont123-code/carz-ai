@@ -49,6 +49,14 @@ export async function POST(req: Request) {
      * shot on the board by accident, which is what was happening.
      */
     live?: boolean;
+    /**
+     * How sure the identification was: "high", "medium" or "low".
+     *
+     * Sent so the board can refuse a guess. Absent on anything posting from
+     * an older client, which is read as "not stated" rather than as low --
+     * the rule below only turns away what is positively unidentified.
+     */
+    confidence?: string;
   };
   try {
     body = await req.json();
@@ -69,6 +77,31 @@ export async function POST(req: Request) {
   // best-effort either way.
   if (body.live !== true) {
     return NextResponse.json({ ok: true, ranked: false, reason: "not a live capture" });
+  }
+
+  /**
+   * Identified cars only.
+   *
+   * A scan that could not name what it was looking at still produces a row --
+   * the model fills the fields it has to fill, and what comes back is
+   * "Unknown", "Unidentified", "Unknown SUV", a question mark, or the word
+   * sitting in the model while the make is blank. On a board of the rarest
+   * cars anyone has found, an unknown is the one thing that cannot be rare:
+   * nobody knows what it is.
+   *
+   * Low confidence goes with it. The pipeline says so itself when two looks
+   * disagreed and the adjudicator was not convinced, and a contested guess is
+   * not a find.
+   */
+  const unknown = /^(unknown|unidentified|unrecognis(ed|zed)|not identified|n\/?a|\?+)$/i;
+  const looksUnknown = (v: string) => !v || unknown.test(v.trim());
+  if (
+    looksUnknown(make) ||
+    looksUnknown(model) ||
+    unknown.test(`${make} ${model}`.trim()) ||
+    (typeof body.confidence === "string" && body.confidence.toLowerCase() === "low")
+  ) {
+    return NextResponse.json({ ok: true, ranked: false, reason: "not identified" });
   }
 
   // Spotter identity comes from the server-side profile, not the client (no spoofing).
