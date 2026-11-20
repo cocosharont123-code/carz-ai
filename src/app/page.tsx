@@ -7,6 +7,7 @@ import { HomeHero } from "@/components/home/home-hero";
 import { HomeSearch } from "@/components/home/home-search";
 import { FeaturedCars } from "@/components/home/featured-cars";
 import { HomeEvents } from "@/components/home/home-events";
+import { HomeBoardRest } from "@/components/home/home-board-rest";
 
 /**
  * Home.
@@ -93,6 +94,14 @@ export default function Home() {
       <Section title="Your Spots" href="/garage">
         <FeaturedCars />
       </Section>
+
+      {/* The rest of the leaderboard: the podium is at the top of the page,
+          and this is what the podium is the top of. A section rather than
+          five more rows under the hero, so it is something you scroll to. It
+          brings its own heading, so that when the board is three cars or
+          fewer the whole section disappears rather than leaving a title over
+          an empty list. */}
+      <HomeBoardRest />
 
       <Section title="Upcoming Events" href="/events">
         {/* Real events, read from the cache the events route keeps per place.
