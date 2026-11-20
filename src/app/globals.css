@@ -1228,6 +1228,30 @@ progress::-moz-progress-bar {
    underneath them. Giving ::-webkit-scrollbar a height and a thumb also turns
    iOS's overlay scrollbar, which fades out by itself, into a permanent one. */
 
+/* And no scrollbar either.
+   
+   The line that appeared down the right-hand side while scrolling was the
+   browser's own, on <main> -- the app's single scroller. On a phone it is an
+   overlay that fades; on a desktop it is a permanent track beside a 480px
+   column, which is where it reads as a stray line rather than as a control.
+   
+   Hidden on every scroller inside the shell, including the horizontal rows,
+   which already asked for this through utilities. The trade is real: a
+   desktop mouse user loses the one affordance that says a region scrolls.
+   This is a phone app in a phone-width column, the content it hides is a page
+   that scrolls under your thumb either way, and it was asked for. */
+#app main,
+#app [class*="overflow-x-auto"],
+#app [class*="overflow-y-auto"] {
+  scrollbar-width: none;
+}
+
+#app main::-webkit-scrollbar,
+#app [class*="overflow-x-auto"]::-webkit-scrollbar,
+#app [class*="overflow-y-auto"]::-webkit-scrollbar {
+  display: none;
+}
+
 /* --- Glass buttons --------------------------------------------------------
    The capsule from the brief: a conic rim that catches light in three arcs, a
    diagonal specular band across the face, and a soft shadow underneath.

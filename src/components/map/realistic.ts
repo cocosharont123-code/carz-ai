@@ -14,8 +14,8 @@ import type mapboxgl from "mapbox-gl";
  * roofs are whatever colour they are -- and realism comes from the three
  * things that actually make a map look like a place:
  *
- *  - Mapbox Standard Satellite, which puts 3D buildings and labels over the
- *    photography rather than beside it.
+ *  - Mapbox Standard Satellite, with everything it would normally draw on
+ *    top of the photography turned off.
  *  - Real elevation under the imagery, so hills are hills.
  *  - Light that follows the app's theme: day in light mode, night in dark.
  *
@@ -73,15 +73,35 @@ export function applyRealism(map: mapboxgl.Map): void {
     map.setConfigProperty("basemap", "lightPreset", lightPresetForTheme());
     map.setConfigProperty("basemap", "show3dObjects", true);
     /**
-     * No points of interest.
+     * Nothing on top of the photograph.
      *
-     * Standard Satellite labels restaurants, hotels, shops and bars with
-     * coloured pills, and this map has its own pins on it: a screen about
-     * where cars were spotted was reading as a restaurant guide with cars in
-     * between. Place names, roads and transit stay -- those are how you know
-     * where you are looking.
+     * Standard Satellite draws a whole vector map over the imagery -- road
+     * lines, transit lines, place names, road shields, POI pills, admin
+     * borders -- and this screen has its own pins on it. With all of it off,
+     * what is left is the aerial itself and the cars people found, which is
+     * what the map is for.
+     *
+     * Every one of these is a documented Standard Satellite config property;
+     * showRoadsAndTransit is the one that takes the road *lines* rather than
+     * only their labels, which is what made the city look like a diagram.
+     * Each is set on its own so a style revision that drops one does not take
+     * the rest with it.
      */
-    map.setConfigProperty("basemap", "showPointOfInterestLabels", false);
+    for (const [key, value] of [
+      ["showRoadsAndTransit", false],
+      ["showPedestrianRoads", false],
+      ["showRoadLabels", false],
+      ["showPlaceLabels", false],
+      ["showPointOfInterestLabels", false],
+      ["showTransitLabels", false],
+      ["showAdminBoundaries", false],
+    ] as const) {
+      try {
+        map.setConfigProperty("basemap", key, value);
+      } catch {
+        /* a style without this property; the rest still apply */
+      }
+    }
   } catch {
     /* the style draws at its default lighting */
   }
