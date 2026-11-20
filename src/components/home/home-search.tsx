@@ -41,8 +41,14 @@ export function HomeSearch() {
           const term = q.trim();
           if (term) router.push(`/search?q=${encodeURIComponent(term)}`);
         }}
-        placeholder="Search any car..."
-        label="Search any car"
+        // "Browse features", not "Search any car". What typing here actually
+        // matches is the feature list -- Garage, CarzBot, Leaderboard, the
+        // rest -- and the old placeholder promised a car search that the
+        // suggestions underneath never answered. Submitting still runs the
+        // car search at /search, so nothing is taken away; the field just
+        // stops advertising the half of itself you cannot see.
+        placeholder="Browse features"
+        label="Browse features"
       />
 
       {matches.length > 0 && (
