@@ -1159,8 +1159,19 @@ textarea:focus-visible {
    appears in a search for "blue". This block is that list.
    ========================================================================== */
 
-/* A link is whatever colour its text already is. */
-a {
+/* A link is whatever colour its text already is -- unless it says otherwise.
+   
+   This rule is unlayered, and an unlayered rule beats every @layer including
+   Tailwind's utilities, so `a` was winning over `text-black` on the anchor
+   itself: a filled white button written as a link had a white label on it.
+   Two in the app did -- the 404's "Back home" and the map card's Directions
+   -- both invisible in dark mode, which is also the mode the app opens in.
+   
+   The exceptions are the three ink utilities a filled control uses, named
+   rather than matched with [class*="text-"]: that pattern would also catch
+   `text-[15px]` and hand every sized link back to the browser's default
+   blue. */
+a:not(.text-black):not(.text-white):not(.text-carz-ink) {
   color: inherit;
 }
 

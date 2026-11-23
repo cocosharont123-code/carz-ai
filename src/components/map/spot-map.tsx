@@ -5,9 +5,9 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { MapPin, MapPinOff, Search } from "lucide-react";
+import { MapPin, MapPinOff, Navigation, Search } from "lucide-react";
 import { claimGpu } from "@/components/camera/camera-in-use";
-import { applyRealism, lightPresetForTheme } from "@/components/map/realistic";
+import { applySnapLook } from "@/components/map/snap-style";
 import { MapHud } from "@/components/map/map-hud";
 import { timeAgo } from "@/lib/time-ago";
 import { RarityMeter } from "@/components/car/rarity-meter";
@@ -49,22 +49,16 @@ type Place = {
 };
 
 /**
- * The real city, from above.
+ * A model of the city, seen from an angle.
  *
- * Satellite photography in its own colours, 3D buildings standing on it and
- * real elevation under it, looking straight down -- the view you get from a
- * map, not from a helicopter banking over the city.
+ * Plain extruded blocks on flat monochrome ground, tilted by default -- the
+ * Snap Map read. It was satellite photography with terrain under it until
+ * now; the look is in snap-style.ts and the reasoning with it.
  *
- * It opened tilted at 62 degrees, which looked like altitude and meant the
- * first thing anybody did was press the flatten button to see where anything
- * actually was. Straight down is the default now and the button tilts rather
- * than flattens: the cinematic angle is still one tap away, it is just no
- * longer in the way of reading the map.
- *
- * It was a midnight flight until now -- the imagery desaturated to grey, a
- * black sheet over the ground, roads redrawn as white lamps. Handsome, and a
- * monochrome photograph of a city, which is not what a map of real cars in
- * real places should look like.
+ * The camera opens pitched rather than straight down, which reverses an
+ * earlier decision here and is the point of the restyle: blocks seen from
+ * directly above are squares. The flatten button is a 2D/3D pill now, so the
+ * plan view is one tap away and says what it is.
  *
  * Two things about it are defensive rather than decorative.
  *
@@ -78,17 +72,28 @@ type Place = {
  * and offering nothing.
  */
 const START = { lng: -80.1918, lat: 25.7617 } as const;
-/**
- * Straight down, north up, on both paths.
- *
- * Zoom 12.8 rather than the 12.5 the tilted view used: a plan view fits more
- * ground into the same screen than a pitched one, so holding the old number
- * would have opened further out than it looked before.
- */
-const TOP_DOWN_VIEW = { zoom: 12.8, pitch: 0, bearing: 0 } as const;
 
-/** Where the tilt button goes, and what it eases back from. */
-const TILTED_VIEW = { pitch: 62, bearing: -15 } as const;
+/**
+ * The 3D view, which is the default.
+ *
+ * 58 degrees is inside the 55-60 the brief asks for and short of the 62 this
+ * had before, which at street zoom buries the far half of the screen in the
+ * sides of buildings.
+ *
+ * Zoom 15.4 rather than the 12.8 a plan view opened at, because Standard
+ * starts drawing extrusions in the mid-15s: at 12.8 there is nothing in 3D
+ * to see. It is the one visible trade in this change -- a neighbourhood
+ * instead of a metro area, so fewer pins are on screen at once. The sheet at
+ * the bottom still lists every car, and the first thing the map does is fly
+ * to where you are.
+ *
+ * The bearing is a few degrees off north so the grid runs diagonally, which
+ * is what stops a tilted city from looking like a wall.
+ */
+const TILTED_VIEW = { zoom: 15.4, pitch: 58, bearing: -17 } as const;
+
+/** What the 2D half of the pill eases to: straight down, north up. */
+const TOP_DOWN_VIEW = { zoom: 15.4, pitch: 0, bearing: 0 } as const;
 
 /**
  * Whether to open at full quality.
@@ -172,8 +177,10 @@ export function SpotMap() {
   const [places, setPlaces] = useState<Place[]>([]);
   /** The request whose answer is still wanted. See the lookup below. */
   const placeSeq = useRef(0);
-  // Opens flat, so the control reads "Tilt the map" rather than "Flatten".
-  const [tilted, setTilted] = useState(false);
+  // Opens tilted, so the pill starts on 3D.
+  const [tilted, setTilted] = useState(true);
+  /** Whether this device got the extrusions; see `quality` at startup. */
+  const rich = useRef(true);
 
   // Ask the server once, and only when the build did not supply one.
   useEffect(() => {
@@ -205,18 +212,21 @@ export function SpotMap() {
       mapboxgl.accessToken = token;
       const m = new mapboxgl.Map({
         container: holder.current,
-        // Standard Satellite rather than satellite-streets: the photography
-        // with 3D buildings, landmarks and labels standing on it rather than
-        // flat beside it, lit as daylight by applyRealism. The lite fallback
-        // is Standard -- vector, no raster tiles, far cheaper on a weak
-        // device, and still in colour.
-        style:
-          quality === "rich"
-            ? "mapbox://styles/mapbox/standard-satellite"
-            : "mapbox://styles/mapbox/standard",
+        // Standard, not Standard Satellite: vector, so the whole basemap is
+        // configurable and there is no aerial photograph to tint. One style
+        // on both paths now -- `quality` decides whether the buildings are
+        // extruded, not which map is loaded, so a weak device gets the same
+        // flat monochrome city without the blocks.
+        style: "mapbox://styles/mapbox/standard",
         center: [START.lng, START.lat],
-        ...TOP_DOWN_VIEW,
-        projection: { name: "globe" },
+        ...TILTED_VIEW,
+        // Mercator, not globe. At street zoom a globe is the same picture
+        // with an atmosphere around it, and that atmosphere is blue -- the
+        // one thing the palette rules out. It is also a frame cheaper.
+        projection: { name: "mercator" },
+        // Past 60 the horizon comes into the frame and the far distance has
+        // to be drawn; this is a city block away from a right angle.
+        maxPitch: 65,
         attributionControl: true,
         // High-inertia camera. Low linearity and low deceleration is what makes
         // a drag carry on and ease out rather than stopping under the finger;
@@ -226,17 +236,15 @@ export function SpotMap() {
         dragRotate: true,
       });
 
-      m.on("style.load", () => {
-        if (quality === "rich") applyRealism(m);
-      });
+      rich.current = quality === "rich";
+      m.on("style.load", () => applySnapLook(m, quality === "rich"));
       m.on("error", (e) => console.error("map error:", e?.error ?? e));
 
       map.current = m;
       // Deferred: a synchronous write here cascades renders, and the frame it
-      // costs is one nobody sees.
-      // Flat on arrival whichever path we took -- `quality` decides how much
-      // map to draw, not which way the camera points.
-      void Promise.resolve().then(() => setTilted(false));
+      // costs is one nobody sees. Tilted on arrival on both paths -- the
+      // pill starts on 3D because the camera does.
+      void Promise.resolve().then(() => setTilted(true));
     } catch (e) {
       console.error("map failed to start:", e);
       void Promise.resolve().then(() => setFailed(true));
@@ -348,7 +356,21 @@ export function SpotMap() {
           ev.stopPropagation();
           setSelected(s);
         });
-        return new mapboxgl.Marker({ element: el }).setLngLat([s.lng, s.lat]).addTo(m);
+        /**
+         * Upright at any pitch.
+         *
+         * Both alignments default to "auto", which already resolves to
+         * viewport for a marker -- said out loud because the map is tilted
+         * by default now, and "auto" is only correct until someone reads it
+         * as "whatever the map is doing" and changes it.
+         */
+        return new mapboxgl.Marker({
+          element: el,
+          pitchAlignment: "viewport",
+          rotationAlignment: "viewport",
+        })
+          .setLngLat([s.lng, s.lat])
+          .addTo(m);
       });
       byId.current = new Map(spots.map((s) => [s.id, s]));
     };
@@ -433,25 +455,46 @@ export function SpotMap() {
     } else {
       popup.current.setLngLat([selected.lng, selected.lat]).addTo(m);
     }
+
+    /**
+     * Put the pin where its card fits.
+     *
+     * The card stands above the pin and is a little over 300px tall with the
+     * photo, the meter and Directions in it, so a pin tapped in the top half
+     * of the screen opens a card whose top is off it -- and Mapbox has no
+     * auto-pan: it picks an anchor, not a camera.
+     *
+     * So the camera moves instead. offset is in pixels from the centre of
+     * the container, +y being down, which parks the pin below the middle and
+     * leaves the card the room it needs. Centre only, at the zoom and pitch
+     * the viewer already has -- it is a nudge, not a flight.
+     */
+    m.easeTo({
+      center: [selected.lng, selected.lat],
+      offset: [0, 120],
+      duration: 500,
+      essential: true,
+    });
   }, [selected, popupHost]);
 
   /**
-   * Relight the basemap when the theme changes.
+   * Restyle when the theme changes.
    *
-   * The preset is set once when the style loads, which is right for the first
-   * paint and wrong the moment somebody switches theme in Settings with the
-   * map already open. The theme is a class on <html>, so the class is what
-   * this watches -- no event to subscribe to, and no plumbing through a
+   * The look is applied once when the style loads, which is right for the
+   * first paint and wrong the moment somebody switches theme in Settings with
+   * the map already open. The theme is a class on <html>, so the class is
+   * what this watches -- no event to subscribe to, and no plumbing through a
    * provider the map does not otherwise use.
+   *
+   * The whole look rather than only the light preset: the palette is two
+   * palettes now, and relighting a dark-grey city for daylight leaves a
+   * dark-grey city in a white app.
    */
   useEffect(() => {
     const html = document.documentElement;
     const relight = () => {
-      try {
-        map.current?.setConfigProperty("basemap", "lightPreset", lightPresetForTheme());
-      } catch {
-        /* a style without the Standard config; nothing to relight */
-      }
+      const m = map.current;
+      if (m) applySnapLook(m, rich.current);
     };
     const observer = new MutationObserver(relight);
     observer.observe(html, { attributes: true, attributeFilter: ["class"] });
@@ -470,6 +513,17 @@ export function SpotMap() {
     };
   }, [token]);
 
+  /**
+   * The 2D/3D pill.
+   *
+   * Pitch and bearing only. Zoom is deliberately left alone: whatever the
+   * viewer has framed is what they want to look at, and a toggle that also
+   * zoomed would move the ground out from under the pin they were reading.
+   *
+   * 650ms with the app's own easing, inside §6's 200-350 for an interface
+   * animation doubled for a camera move -- a pitch change that lands in
+   * 300ms reads as a glitch rather than as the map tipping.
+   */
   const toggleTilt = useCallback(() => {
     const m = map.current;
     if (!m) return;
@@ -478,7 +532,8 @@ export function SpotMap() {
     m.easeTo({
       pitch: next ? TILTED_VIEW.pitch : TOP_DOWN_VIEW.pitch,
       bearing: next ? TILTED_VIEW.bearing : TOP_DOWN_VIEW.bearing,
-      duration: 800,
+      duration: 650,
+      essential: true,
     });
   }, [tilted]);
 
@@ -490,7 +545,9 @@ export function SpotMap() {
       (pos) => {
         setLocating(false);
         const at: [number, number] = [pos.coords.longitude, pos.coords.latitude];
-        m.flyTo({ center: at, zoom: 14, essential: true, duration: 2000 });
+        // 16 rather than 14: the buildings are the view now, and 14 lands
+        // above the zoom where Standard starts extruding them.
+        m.flyTo({ center: at, zoom: 16, essential: true, duration: 2000 });
         marker.current?.remove();
         // The viewer's own position: a white dot, per the spec. Mapbox's default
         // marker is a teardrop pin, which is the shape used for cars -- a plain
@@ -507,7 +564,13 @@ export function SpotMap() {
           "background:#ffffff",
           "box-shadow:0 0 0 4px rgba(255,255,255,0.25), 0 0 18px rgba(255,255,255,0.65)",
         ].join(";");
-        marker.current = new mapboxgl.Marker({ element: dot }).setLngLat(at).addTo(m);
+        marker.current = new mapboxgl.Marker({
+          element: dot,
+          pitchAlignment: "viewport",
+          rotationAlignment: "viewport",
+        })
+          .setLngLat(at)
+          .addTo(m);
       },
       () => setLocating(false),
       { enableHighAccuracy: true, timeout: 8000 },
@@ -645,7 +708,22 @@ export function SpotMap() {
 
   return (
     <div className="relative h-full w-full bg-background">
-      <div ref={holder} className="h-full w-full" />
+      {/*
+        touch-action:none and overscroll-behavior:none on the element that
+        owns the gestures.
+      
+        Mapbox sets touch-action on its own canvas container, which stops a
+        pinch from zooming the page while the finger is on the canvas -- and
+        leaves the gutter between the canvas and this box, where a pinch is
+        still the browser's. none here means every touch inside the map
+        belongs to the map, and overscroll-behavior stops a drag that reaches
+        the top of the world from turning into pull-to-refresh.
+      */}
+      <div
+        ref={holder}
+        className="h-full w-full"
+        style={{ touchAction: "none", overscrollBehavior: "none" }}
+      />
 
       {/* Floating search. No filter button beside it: the spec asks for one
           only if we have filters, and a spot carries a car, a spotter and a
@@ -810,6 +888,28 @@ export function SpotMap() {
  * No escaping by hand anywhere: this is React, so a car called
  * `<script>` is text.
  */
+/**
+ * Where to send someone who wants to drive to a car.
+ *
+ * Apple Maps on Apple hardware, Google Maps everywhere else. Both are plain
+ * https links rather than the maps:// and geo: schemes, because a custom
+ * scheme that no app claims fails silently in a webview, while
+ * maps.apple.com opens the app on iOS and the web page on anything that does
+ * not have it -- the link always goes somewhere.
+ *
+ * Coordinates only, never the car's name: a place name is a search, and a
+ * search for "Ferrari F40" is a dealership. The pin is the point.
+ */
+function directionsUrl(lat: number, lng: number): string {
+  const at = `${lat},${lng}`;
+  const apple =
+    typeof navigator !== "undefined" &&
+    /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent);
+  return apple
+    ? `https://maps.apple.com/?daddr=${at}&dirflg=d`
+    : `https://www.google.com/maps/dir/?api=1&destination=${at}`;
+}
+
 function SpotCard({ spot, entry }: { spot: Spot; entry?: BoardEntry }) {
   const name = `${spot.make} ${spot.model}`.trim();
   const score = entry?.rarityScore || spot.rarityScore;
@@ -846,10 +946,25 @@ function SpotCard({ spot, entry }: { spot: Spot; entry?: BoardEntry }) {
         </div>
       )}
 
+      {/* Directions, to the pin's own coordinates. Filled and first: it is
+          the one thing on this card that leaves the app, and on a map of
+          where cars were found, "how do I get there" is the question the
+          card exists to answer. New tab, with rel=noopener, so the map keeps
+          its WebGL context and its state while the maps app opens. */}
+      <a
+        href={directionsUrl(spot.lat, spot.lng)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="press mt-3 flex min-h-11 items-center justify-center gap-2 rounded-full bg-white text-[14px] font-bold text-black"
+      >
+        <Navigation className="h-4 w-4" strokeWidth={2.25} aria-hidden />
+        Directions
+      </a>
+
       {entry && (
         <Link
           href={`/leaderboard?car=${encodeURIComponent(entry.id)}`}
-          className="press mt-2 flex min-h-11 items-center text-[13px] font-semibold text-white underline underline-offset-2"
+          className="press mt-1 flex min-h-11 items-center justify-center text-[13px] font-semibold text-white underline underline-offset-2"
         >
           See it on the leaderboard ›
         </Link>
