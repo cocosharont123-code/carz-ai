@@ -1425,3 +1425,40 @@ button.bg-white:disabled {
     display: none;
   }
 }
+
+/* --- The launch splash ----------------------------------------------------
+
+   Over everything, black, once per app open. The component inside it is the
+   installed LiquidGlassLogo; this is only the plate it sits on.
+
+   Unlayered, like the shell rules above it: it has to beat every utility on
+   the page, including whatever a screen does with z-index.
+
+   §1: opacity is the only thing that animates. The element is unmounted after
+   the fade rather than left hidden, because the logo holds a WebGL context
+   and the map wants it. */
+.launch-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  background: #000;
+  display: grid;
+  place-items: center;
+  /* Nothing underneath can be tapped, scrolled or pinched while it is up. */
+  touch-action: none;
+  overscroll-behavior: none;
+  opacity: 1;
+  transition: opacity 350ms var(--ease-apple);
+}
+
+.launch-splash[data-phase="fading"] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Set before first paint by the script in the layout when this session has
+   already seen the splash. display:none rather than opacity, so the canvas
+   inside is never composited at all. */
+html[data-splash="done"] .launch-splash {
+  display: none;
+}

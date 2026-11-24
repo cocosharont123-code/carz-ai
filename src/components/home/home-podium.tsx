@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { LeaderboardPodium, type LeaderboardRanking } from "@/components/ui/leaderboard-podium";
 import { useTopCars } from "@/components/home/use-top-cars";
+import { useSplashHold } from "@/components/splash-hold";
 
 /**
  * The top three on the leaderboard, at the top of Home.
@@ -40,6 +41,20 @@ const LOADING_BLOCK = "h-[212px]";
 
 export function HomePodium() {
   const cars = useTopCars();
+
+  /**
+   * Hold the launch splash until the board is in.
+   *
+   * This is the top of the screen the app lands on, and it is the one thing
+   * above the fold that arrives over the network -- lifting the splash before
+   * it would reveal the placeholder block below and then swap a podium into
+   * it a moment later, which is the pop-in the splash exists to prevent.
+   *
+   * Only the first open pays for it: the splash is gone after that, and the
+   * hold is a no-op nobody sees. Its own hard cap lives in the splash, so a
+   * board that never answers delays the app by seconds, not for ever.
+   */
+  useSplashHold(cars === null);
 
   if (cars === null) return <div aria-hidden className={LOADING_BLOCK} />;
 

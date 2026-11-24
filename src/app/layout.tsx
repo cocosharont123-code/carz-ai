@@ -3,6 +3,7 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 import { BackButton } from "@/components/back-button";
 import { AppChrome } from "@/components/app-chrome";
+import { LaunchSplash } from "@/components/launch-splash";
 
 /**
  * No downloaded webfont.
@@ -55,6 +56,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className="h-full antialiased">
+      {/* The splash's logo, fetched as early as the HTML itself.
+      
+          React hoists this into <head>, so it starts downloading alongside
+          the first stylesheet rather than when the canvas asks for it -- and
+          the animation's clock does not start until the raster is uploaded,
+          so every millisecond saved here is a millisecond of animation the
+          viewer actually sees rather than one the 2s net eats. */}
+      <link rel="preload" as="image" href="/carz-ai-logo.png" fetchPriority="high" />
       <body className="bg-background">
         <script
           dangerouslySetInnerHTML={{
@@ -100,6 +109,21 @@ export default function RootLayout({
             __html: `try{var n=navigator;if((n.hardwareConcurrency&&n.hardwareConcurrency<4)||(n.deviceMemory&&n.deviceMemory<4)){document.documentElement.setAttribute('data-glass','lite');}}catch(e){}`,
           }}
         />
+        <script
+          dangerouslySetInnerHTML={{
+            /* Hides the launch splash before first paint when this session has
+               already seen it.
+               
+               Inline and synchronous, next to the theme script and for the
+               same reason: the splash is in the server-rendered HTML so that
+               the first frame of a cold open is black, which means a reload
+               mid-session would paint it too and then unmount it a frame
+               later -- a flash of logo on the way back from Google sign-in.
+               An attribute on <html> is the only thing that can be set before
+               the element it hides exists; globals.css does the hiding. */
+            __html: `try{if(sessionStorage.getItem('carz-splash-shown')==='1'){document.documentElement.setAttribute('data-splash','done');}}catch(e){}`,
+          }}
+        />
         {/* The cyan gradient bars that used to sit behind every page are gone.
             The background is #000, flat. */}
         {/* §4. The shell: fixed height, no scroll of its own. The page's own
@@ -122,6 +146,11 @@ export default function RootLayout({
             <AppChrome />
           </Providers>
         </div>
+
+        {/* Over everything, and last in the DOM so it wins without a stacking
+            context fight. In the first bundle rather than lazily imported:
+            the whole point is that it is on screen before anything else is. */}
+        <LaunchSplash />
       </body>
     </html>
   );
