@@ -19,13 +19,37 @@ const MODEL = process.env.CARZBOT_MODEL || "claude-haiku-5-5";
 // tokens are what a conversation actually costs.
 const MAX_TOKENS = 700;
 
+/**
+ * The answer's shape, not just its subject.
+ *
+ * The old prompt asked for "two or three short paragraphs", which is how a
+ * chat bubble fills with preamble: the model would set the scene, answer, and
+ * then summarise what it had just said. The answer goes first now, and the
+ * rest is allowed to exist only if it supports it.
+ *
+ * The formatting clauses are real instructions rather than decoration: the
+ * client renders markdown, so bold, bullets and pipe tables arrive as bold,
+ * bullets and tables. Saying which to use when is what stops a two-car
+ * comparison coming back as six paragraphs the reader has to diff by eye.
+ */
 const SYSTEM =
-  "You are CarzBot, the assistant inside Carz AI — an app for spotting, identifying and valuing cars. " +
-  "Answer questions about cars: models, specs, history, reliability, what something is worth, what to look for when buying, how to tell two similar cars apart. " +
-  "Be direct and specific. Two or three short paragraphs at most, and prefer concrete numbers over hedging. " +
-  "If a question needs a photo to answer — 'what car is this' — say so and point them at the Spot tab, which identifies a car from a picture. " +
+  "You are CarzBot, the assistant inside Carz AI — an app for spotting, identifying and valuing vehicles. " +
+  "Answer questions about anything that moves under its own power and the world around it: cars, motorcycles, trucks and vans, boats and jet skis, aircraft, electric and hybrid vehicles, karts, campers, tractors and heavy machinery. " +
+  "Models, specs, history, reliability, what something is worth, what to look for when buying, running costs, maintenance, racing, the industry, and how to tell two similar machines apart. " +
+  "A question about a motorcycle, a boat or a plane is as much yours as one about a car — the app is named for cars, you are not limited to them. " +
+  "\n\nHOW TO ANSWER\n" +
+  "Lead with the direct answer in one or two sentences. Then, only if it genuinely helps, a few short supporting details. " +
+  "No preamble, no restating the question, no closing summary, no offers of further help — the reader can simply ask again. " +
+  "Prefer concrete numbers over hedging, and never pad to seem thorough. " +
+  "\n\nFORMATTING\n" +
+  "Your reply is rendered as markdown. Use **bold** for the numbers and model names that carry the answer. " +
+  "Use a bullet list only for specs or a genuine list of items, never for prose. " +
+  "When comparing two or more cars, use a markdown table with one column per car and one row per attribute. " +
+  "Use short paragraphs; never a wall of text. No headings unless the answer really has sections. " +
+  "\n\nLIMITS\n" +
+  "If a question needs a photo to answer — 'what is this one' — say so and point them at the Spot tab, which identifies a vehicle from a picture. " +
   "If you are not confident about a figure, say which part you are unsure of rather than rounding it into a claim. " +
-  "Politely decline anything that isn't about cars or this app.";
+  "Decline only what is genuinely nothing to do with vehicles, machines that move, or this app — and do it in one short line, without a lecture.";
 
 type Turn = { role: "user" | "assistant"; content: string };
 
@@ -84,25 +108,78 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Nothing to answer." }, { status: 400 });
   }
 
+  /**
+   * The answer streams.
+   *
+   * It used to be one messages.create and a JSON body, which meant the bubble
+   * sat empty for as long as the whole answer took to generate and then
+   * appeared at once. Every gate above still answers with JSON and a status
+   * code, because they all fail before a single token exists; once the model
+   * starts talking the response is plain text and the client appends it.
+   *
+   * Plain text rather than SSE framing: there is one stream of one thing here,
+   * and `data:` prefixes would only be something for both ends to strip.
+   */
   try {
-    const res = await new Anthropic({ apiKey: key }).messages.create({
+    const anthropic = new Anthropic({ apiKey: key });
+    const stream = anthropic.messages.stream({
       model: MODEL,
       max_tokens: MAX_TOKENS,
       system: SYSTEM,
       messages,
     });
 
-    if (res.stop_reason === "refusal") {
-      return NextResponse.json({ reply: "I can't help with that one." });
-    }
+    const body = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        const encode = new TextEncoder();
+        let wrote = false;
+        try {
+          for await (const event of stream) {
+            if (
+              event.type === "content_block_delta" &&
+              event.delta.type === "text_delta" &&
+              event.delta.text
+            ) {
+              wrote = true;
+              controller.enqueue(encode.encode(event.delta.text));
+            }
+          }
+          const final = await stream.finalMessage();
+          if (final.stop_reason === "refusal") {
+            // Nothing was streamed in this case -- a refusal stops before any
+            // text block -- so this is the whole reply rather than a suffix.
+            controller.enqueue(encode.encode("I can't help with that one."));
+          } else if (!wrote) {
+            controller.enqueue(encode.encode("I didn't catch that — try asking again."));
+          }
+        } catch (e) {
+          /**
+           * A failure after the first token cannot become a status code: the
+           * headers are long gone. The client keeps what it has and the line
+           * below says why it stopped, which is more use than a bubble that
+           * ends mid-sentence for no visible reason.
+           */
+          console.error("carzbot stream failed:", e);
+          if (wrote) controller.enqueue(encode.encode("\n\n_(cut off — ask again to continue.)_"));
+          else controller.error(e);
+          return;
+        }
+        controller.close();
+      },
+      cancel() {
+        // The reader left -- stop paying for tokens nobody will read.
+        void stream.abort();
+      },
+    });
 
-    const reply = res.content
-      .filter((b): b is Anthropic.TextBlock => b.type === "text")
-      .map((b) => b.text)
-      .join("")
-      .trim();
-
-    return NextResponse.json({ reply: reply || "I didn't catch that — try asking again." });
+    return new Response(body, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store",
+        // Proxies that buffer a response defeat the point of streaming it.
+        "X-Accel-Buffering": "no",
+      },
+    });
   } catch (e) {
     if (e instanceof Anthropic.RateLimitError) {
       return NextResponse.json({ error: "Busy right now — try again in a moment." }, { status: 429 });

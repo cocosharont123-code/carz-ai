@@ -1473,3 +1473,115 @@ button.bg-white:disabled {
 html[data-splash="done"] .launch-splash {
   display: none;
 }
+
+/* --- CarzBot: message motion ----------------------------------------------
+
+   Transform and opacity only, per §1 and the brief: a chat that animates
+   height or blur is the thing that makes a phone stutter, and these run while
+   text is streaming into the page.
+
+   The curve is the one the brief names. It is close enough to --ease-apple to
+   be a sibling, and written out rather than aliased so the number in the
+   source is the number in the request. */
+@keyframes carz-msg-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.msg-in {
+  animation: carz-msg-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* The answer taking the dots' place inside the same bubble. Opacity alone --
+   the bubble is already where it will be, and sliding the text would be a
+   second movement arriving on top of the first. */
+@keyframes carz-crossfade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.crossfade-in {
+  animation: carz-crossfade-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Three dots, one wave. Staggered inline by 160ms each. */
+@keyframes carz-dot {
+  0%,
+  65%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.72);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.carz-dot {
+  animation: carz-dot 1.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .msg-in,
+  .crossfade-in {
+    animation: none;
+  }
+  /* Still three dots, still saying "working" -- they just hold still. */
+  .carz-dot {
+    animation: none;
+    opacity: 0.55;
+  }
+}
+
+/* --- CarzBot: the keyboard ------------------------------------------------
+
+   iOS lays the keyboard over the page and then scrolls to reveal the focused
+   field. That scroll is the jump -- the heading going under the status bar
+   and the back button leaving the screen -- and it is a system scroll, not a
+   layout change, so no amount of dvh fixes it. use-keyboard-inset.ts cancels
+   it and writes two values here:
+
+     --kb         the keyboard's height, 0 when it is down
+     --kb-closed  1 when it is down, 0 when it is up
+     --pan        how far iOS has panned the visual viewport
+
+   Only the composer moves. The heading, the back button and the thread stay
+   exactly where they were. */
+.carzbot-screen {
+  /* Undo a panned visual viewport, so the screen keeps its place even while
+     iOS is trying to scroll it. */
+  transform: translate3d(0, var(--pan, 0px), 0);
+}
+
+.carzbot-composer {
+  /* transform only, per §1 -- a glass surface animating its height or its
+     padding is the lag this screen was reported for. */
+  /* --lift, not --kb: this box is sticky, so on the empty screen it already
+     sits well above the bottom and moving it by a whole keyboard throws it
+     off the top. The hook measures the distance from its own bottom edge to
+     the top of the keys, plus the 8px gap. */
+  transform: translate3d(0, calc(-1 * var(--lift, 0px)), 0);
+  transition: transform 250ms cubic-bezier(0.22, 1, 0.36, 1);
+  /* The home indicator's room belongs under a composer resting at the bottom
+     of the screen, not under one floating above a keyboard. env() directly:
+     there is no --safe-bottom token in this app, on purpose -- see the note
+     by --safe-top -- so the one place that needs it asks for it. */
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) * var(--kb-closed, 1));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carzbot-composer {
+    transition: none;
+  }
+}
