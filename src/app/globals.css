@@ -1585,3 +1585,25 @@ html[data-splash="done"] .launch-splash {
     transition: none;
   }
 }
+
+/* --- 16px on anything you type into ---------------------------------------
+
+   iOS zooms the page in when a field smaller than 16px takes focus, and that
+   zoom is indistinguishable from the page jumping: the layout grows, the
+   header leaves the screen, and dismissing the keyboard leaves you scrolled
+   somewhere you did not ask to be. Fields in this app were 14 and 15px.
+
+   §7's own rule already says 16 minimum and the law book lists the breach;
+   this is one declaration rather than an edit to every field, and it is
+   scoped to touch pointers so the desktop layout is untouched.
+
+   max() rather than a flat 16px: a field that deliberately sets something
+   larger keeps it. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea,
+  select,
+  [contenteditable]:not([contenteditable="false"]) {
+    font-size: max(16px, 1em);
+  }
+}

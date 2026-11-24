@@ -4,6 +4,7 @@ import { Providers } from "@/components/providers";
 import { BackButton } from "@/components/back-button";
 import { AppChrome } from "@/components/app-chrome";
 import { LaunchSplash } from "@/components/launch-splash";
+import { KeyboardManager } from "@/components/keyboard-manager";
 
 /**
  * No downloaded webfont.
@@ -157,6 +158,11 @@ export default function RootLayout({
             <AppChrome />
           </Providers>
         </div>
+
+        {/* Renders nothing. It holds the page still when the keyboard opens,
+            on every screen, and publishes --kb for anything that wants to
+            move with it. */}
+        <KeyboardManager />
 
         {/* Over everything, and last in the DOM so it wins without a stacking
             context fight. In the first bundle rather than lazily imported:
