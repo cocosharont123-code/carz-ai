@@ -205,7 +205,21 @@ export function applySnapLook(map: mapboxgl.Map, buildings: boolean): void {
     /* no terrain to remove */
   }
 
-  if (buildings) addBlocks(map, c);
+  /**
+   * The blocks come second.
+   *
+   * They are a whole extra vector tileset -- measured at 11 of the map's 33
+   * requests on a cold open -- and they are the one thing on this map that
+   * nobody needs in the first second: the flat city underneath is already a
+   * map you can read and pan. Waiting for the basemap to settle lets those
+   * tiles have the connection to themselves, so the first paint arrives
+   * sooner and the buildings rise a moment later.
+   *
+   * `once("idle")` rather than a timer: idle means every tile for the
+   * current view has arrived and been drawn, which is exactly the moment
+   * there is spare bandwidth.
+   */
+  if (buildings) map.once("idle", () => addBlocks(map, c));
   else removeBlocks(map);
 }
 

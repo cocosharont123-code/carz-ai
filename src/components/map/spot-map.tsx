@@ -234,6 +234,16 @@ export function SpotMap() {
         // map across the world.
         dragPan: { linearity: 0.25, deceleration: 1800, maxSpeed: 1200 },
         dragRotate: true,
+        /**
+         * No cross-fade on tiles.
+         *
+         * The default 300ms fade means a tile that has arrived still is not
+         * readable for another third of a second, and on a cold open every
+         * tile pays it at once. Nothing is lost on a monochrome basemap:
+         * the fade exists to hide the seam between zoom levels on
+         * photography.
+         */
+        fadeDuration: 0,
       });
 
       rich.current = quality === "rich";
@@ -293,28 +303,51 @@ export function SpotMap() {
    * this arrives, so the two are not made to wait for each other. Failing leaves
    * the map exactly as it was before the link existed.
    */
+  /**
+   * The board, after the map rather than beside it.
+   *
+   * It is only needed when a pin is tapped -- it supplies the photo and the
+   * rarity meter on the card -- and fetching it while tiles are still
+   * arriving takes bandwidth from the thing being looked at.
+   *
+   * "idle" is the map saying every tile for this view has arrived and been
+   * drawn. The timer is for the map that never gets there, which is a map
+   * that failed: the list at the bottom of the screen should still fill.
+   */
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/leaderboard", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((d) => {
-        if (cancelled) return;
-        const cars: (BoardEntry & { scanId?: string })[] = Array.isArray(d.cars) ? d.cars : [];
-        const map = new Map<string, BoardEntry>();
-        for (const c of cars) {
-          if (!c.scanId) continue;
-          map.set(c.scanId, {
-            id: c.id,
-            image: c.image,
-            rarityScore: Number(c.rarityScore) || 0,
-            rarityReason: c.rarityReason,
-          });
-        }
-        setBoard(map);
-      })
-      .catch(() => {});
+    let ran = false;
+
+    const load = () => {
+      if (ran || cancelled) return;
+      ran = true;
+      fetch("/api/leaderboard", { cache: "no-store" })
+        .then((r) => r.json())
+        .then((d) => {
+          if (cancelled) return;
+          const cars: (BoardEntry & { scanId?: string })[] = Array.isArray(d.cars) ? d.cars : [];
+          const entries = new Map<string, BoardEntry>();
+          for (const c of cars) {
+            if (!c.scanId) continue;
+            entries.set(c.scanId, {
+              id: c.id,
+              image: c.image,
+              rarityScore: Number(c.rarityScore) || 0,
+              rarityReason: c.rarityReason,
+            });
+          }
+          setBoard(entries);
+        })
+        .catch(() => {});
+    };
+
+    const m = map.current;
+    m?.once("idle", load);
+    const fallback = setTimeout(load, 4000);
     return () => {
       cancelled = true;
+      clearTimeout(fallback);
+      m?.off("idle", load);
     };
   }, []);
 
@@ -910,6 +943,19 @@ function directionsUrl(lat: number, lng: number): string {
     : `https://www.google.com/maps/dir/?api=1&destination=${at}`;
 }
 
+/**
+ * "Spotted 20m ago", and the two cases where "ago" is wrong.
+ *
+ * timeAgo answers "just now" under a minute and a plain date past a month,
+ * neither of which takes a suffix -- "Spotted just now ago" and "Spotted 3
+ * Nov ago". Only the counted forms (20m, 3h, 2d, 1w) get one, which is what
+ * the trailing-unit test picks out.
+ */
+function spottedLabel(at: number): string {
+  const ago = timeAgo(at);
+  return /^\d+[mhdw]$/.test(ago) ? `Spotted ${ago} ago` : `Spotted ${ago}`;
+}
+
 function SpotCard({ spot, entry }: { spot: Spot; entry?: BoardEntry }) {
   const name = `${spot.make} ${spot.model}`.trim();
   const score = entry?.rarityScore || spot.rarityScore;
@@ -934,7 +980,10 @@ function SpotCard({ spot, entry }: { spot: Spot; entry?: BoardEntry }) {
         <div className="min-w-0 flex-1">
           <p className="truncate text-[15px] font-bold leading-tight">{name}</p>
           <p className="mt-0.5 truncate text-[12px] text-white/60">{spot.spotter}</p>
-          <p className="truncate text-[12px] text-white/60">{timeAgo(spot.at)}</p>
+          {/* "Spotted 1h ago", not a bare "1h". It sat directly under the
+              spotter's name in the same grey at the same size, so it read as
+              part of the name rather than as a time. */}
+          <p className="truncate text-[12px] text-white/60">{spottedLabel(spot.at)}</p>
         </div>
       </div>
 
