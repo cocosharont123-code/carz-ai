@@ -5,11 +5,11 @@ import { ArrowUp, Gauge, Wrench, BadgeDollarSign, GitCompareArrows } from "lucid
 import { cn } from "@/lib/utils";
 import { Markdown } from "@/components/carzbot/markdown";
 import {
-  useKeyboardLift,
   useReducedMotion,
   useStickToBottom,
   useTypedStream,
 } from "@/components/carzbot/chat-motion";
+import { useKeyboardInset } from "@/components/carzbot/use-keyboard-inset";
 
 /**
  * CarzBot, as a chat.
@@ -121,8 +121,31 @@ export function CarzBotChat() {
   const [error, setError] = useState("");
   const { ref: fieldRef, resize } = useAutoResize(52, 160);
   const endRef = useRef<HTMLDivElement>(null);
-  /** Both owned by the keyboard hook, which writes to them. */
-  const { composer: composerRef, thread: threadRef } = useKeyboardLift();
+  const threadRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * Keep the newest message clear of the lifted composer.
+   *
+   * The only part of this the CSS variable cannot do. Adding room under the
+   * thread does not move what is already on screen, so a message sitting
+   * where the composer has just risen to would be behind it -- this scrolls
+   * the thread by exactly the overlap and no more. Not "scroll to the
+   * bottom": that was the old behaviour and it threw the conversation
+   * around every time the keyboard appeared.
+   */
+  const onKeyboard = useCallback((kb: number) => {
+    const list = threadRef.current;
+    const scroller = list?.closest("main");
+    if (!list || !(scroller instanceof HTMLElement) || !kb) return;
+    requestAnimationFrame(() => {
+      const last = list.lastElementChild?.previousElementSibling;
+      if (!(last instanceof HTMLElement)) return;
+      const hidden = last.getBoundingClientRect().bottom - (window.innerHeight - kb);
+      if (hidden > 0) scroller.scrollTop += hidden + 12;
+    });
+  }, []);
+
+  const { shell: shellRef, onHeadingTap, debug, debugVisible } = useKeyboardInset(onKeyboard);
   const reduced = useReducedMotion();
   /** The answer being typed out; "" while the dots are up. */
   const stream = useTypedStream(reduced);
@@ -247,10 +270,14 @@ export function CarzBotChat() {
   return (
     // The page's <main> is the scroller (§4). The composer sticks to its
     // bottom rather than the thread getting a scroller of its own.
-    <div className="flex min-h-full flex-col px-5 pb-4">
+    <div ref={shellRef} className="carzbot-screen flex min-h-full flex-col px-5 pb-4">
       {empty ? (
         <div className="flex flex-1 flex-col items-center justify-center py-10 text-center">
-          <h1 className="display text-[34px] leading-tight">What can I tell you?</h1>
+          {/* Triple-tap toggles the viewport readout. Temporary, and the
+              only way to see these numbers on a device with no inspector. */}
+          <h1 onClick={onHeadingTap} className="display text-[34px] leading-tight">
+            What can I tell you?
+          </h1>
           <p className="mt-3 max-w-[18rem] text-[15px] leading-relaxed text-[var(--color-secondary-text)]">
             Specs, values, what to look for, how to tell two cars apart.
           </p>
@@ -284,6 +311,20 @@ export function CarzBotChat() {
         </div>
       )}
 
+      {debugVisible() && (
+        <div className="pointer-events-none fixed left-2 top-2 z-50 rounded-[8px] bg-black/80 px-2 py-1 font-mono text-[10px] leading-tight text-white">
+          innerHeight {debug.inner}
+          <br />
+          vv.height {debug.vv}
+          <br />
+          vv.offsetTop {debug.offset}
+          <br />
+          scrollY {debug.scrollY}
+          <br />
+          keyboard {debug.kb}
+        </div>
+      )}
+
       {error && (
         <p role="alert" className="mb-3 text-center text-[14px] text-error">
           {error}
@@ -293,13 +334,13 @@ export function CarzBotChat() {
       {/* The composer. Sticky so it stays reachable in a long thread, and
           bottom-0 against a <main> whose own padding already clears the tab
           bar. */}
-      <div ref={composerRef} className="sticky bottom-0 pt-2 will-change-transform">
+      <div className="carzbot-composer sticky bottom-0 pt-2">
         <form
           onSubmit={(e) => {
             e.preventDefault();
             void send(value);
           }}
-          className="glass-card rounded-card"
+          className="carzbot-box glass-card rounded-card"
         >
           <label className="sr-only" htmlFor="carzbot-field">
             Ask CarzBot anything
