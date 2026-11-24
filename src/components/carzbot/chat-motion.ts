@@ -156,3 +156,112 @@ export function useStickToBottom(anchor: React.RefObject<HTMLElement | null>) {
 
   return { follow, snapBack };
 }
+
+/**
+ * Lift the composer above the keyboard.
+ *
+ * iOS does not move the page when the keyboard opens. The layout viewport
+ * keeps its full height and the keyboard is painted over the bottom of it,
+ * so a composer stuck to bottom-0 is behind the keys -- you type into a box
+ * you cannot see. Only the *visual* viewport knows: its height shrinks by
+ * the keyboard, and offsetTop grows when Safari scrolls it to reveal a
+ * focused field.
+ *
+ * overlap = layout height - (visual height + how far it has been scrolled).
+ * That is how many pixels of page the keyboard is covering.
+ *
+ * The composer does not move by that number, though, which was the first
+ * version of this and was wrong: with a short thread the composer is already
+ * well above the bottom of the screen -- it is sticky, not fixed -- and
+ * shifting it by a whole keyboard's height threw it off the top. What it
+ * moves by is the overlap between *itself* and the keyboard: the distance
+ * from its own bottom edge down to the top of the keys, and nothing when it
+ * is already above that line.
+ *
+ * transform, not bottom: §1 allows transform and opacity and nothing else,
+ * and this runs while the keyboard animates up. The thread's padding is a
+ * separate matter -- a discrete change when the keyboard opens and closes,
+ * not a per-frame one -- and it is what keeps the newest message from
+ * hiding behind the lifted composer.
+ *
+ * Every read happens inside a rAF: visualViewport fires resize and scroll in
+ * bursts while the keyboard animates, and reading offsetTop in the handler
+ * measures mid-animation values that the next frame throws away.
+ *
+ * The hook owns both refs rather than taking them. Reaching through a hook
+ * argument to set a style is mutating the caller's object, which the React
+ * Compiler rejects -- and it is right to: a hook that writes into something
+ * handed to it is a hook you cannot read the call site of.
+ */
+export function useKeyboardLift() {
+  const composer = useRef<HTMLDivElement>(null);
+  const thread = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    let frame = 0;
+    let last = -1;
+
+    const apply = () => {
+      frame = 0;
+      /**
+       * Read the refs here, not at setup.
+       *
+       * The thread only exists once there is a turn in it -- an empty
+       * CarzBot renders the "What can I tell you?" panel instead -- so a
+       * reference captured when this effect ran is null for the whole of
+       * the first conversation. The composer is always mounted; the thread
+       * is the one that catches this out.
+       */
+      const box = composer.current;
+      const list = thread.current;
+      const overlap = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+
+      let lift = 0;
+      if (box && overlap) {
+        // Untransformed first: a rect measured through the last lift would
+        // compound, and the box would climb with every event.
+        box.style.transform = "";
+        const bottom = box.getBoundingClientRect().bottom;
+        lift = Math.max(0, Math.round(bottom - (window.innerHeight - overlap)));
+      }
+      if (lift === last) {
+        if (box && lift) box.style.transform = `translate3d(0, -${lift}px, 0)`;
+        return;
+      }
+      last = lift;
+      if (box) box.style.transform = lift ? `translate3d(0, -${lift}px, 0)` : "";
+      if (list) list.style.paddingBottom = lift ? `${lift}px` : "";
+      /**
+       * Straight to the bottom when the keyboard arrives.
+       *
+       * Unconditional, unlike the follow during streaming: the keyboard only
+       * opens because the composer was tapped, and someone about to type is
+       * someone who wants to see the end of the conversation. The screen has
+       * just lost half its height to the keys, so without this the message
+       * being answered slides out of view at the moment of answering it.
+       */
+      const scroller = list?.closest("main");
+      if (lift && scroller instanceof HTMLElement) scroller.scrollTop = scroller.scrollHeight;
+    };
+
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(apply);
+    };
+
+    vv.addEventListener("resize", schedule);
+    vv.addEventListener("scroll", schedule);
+    apply();
+    return () => {
+      vv.removeEventListener("resize", schedule);
+      vv.removeEventListener("scroll", schedule);
+      if (frame) cancelAnimationFrame(frame);
+      // No styles to undo: this effect lives as long as the chat does, so
+      // the only thing that ends it is the screen going away and taking
+      // both elements with it.
+    };
+  }, []);
+
+  return { composer, thread };
+}

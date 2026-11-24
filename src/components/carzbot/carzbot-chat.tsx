@@ -4,7 +4,12 @@ import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { ArrowUp, Gauge, Wrench, BadgeDollarSign, GitCompareArrows } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Markdown } from "@/components/carzbot/markdown";
-import { useReducedMotion, useStickToBottom, useTypedStream } from "@/components/carzbot/chat-motion";
+import {
+  useKeyboardLift,
+  useReducedMotion,
+  useStickToBottom,
+  useTypedStream,
+} from "@/components/carzbot/chat-motion";
 
 /**
  * CarzBot, as a chat.
@@ -116,7 +121,8 @@ export function CarzBotChat() {
   const [error, setError] = useState("");
   const { ref: fieldRef, resize } = useAutoResize(52, 160);
   const endRef = useRef<HTMLDivElement>(null);
-  const threadRef = useRef<HTMLDivElement>(null);
+  /** Both owned by the keyboard hook, which writes to them. */
+  const { composer: composerRef, thread: threadRef } = useKeyboardLift();
   const reduced = useReducedMotion();
   /** The answer being typed out; "" while the dots are up. */
   const stream = useTypedStream(reduced);
@@ -287,7 +293,7 @@ export function CarzBotChat() {
       {/* The composer. Sticky so it stays reachable in a long thread, and
           bottom-0 against a <main> whose own padding already clears the tab
           bar. */}
-      <div className="sticky bottom-0 pt-2">
+      <div ref={composerRef} className="sticky bottom-0 pt-2 will-change-transform">
         <form
           onSubmit={(e) => {
             e.preventDefault();
