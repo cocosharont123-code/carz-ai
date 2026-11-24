@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isIdentified } from "@/lib/identified";
 import { auth } from "@/auth";
 import {
   readBoard,
@@ -93,12 +94,8 @@ export async function POST(req: Request) {
    * disagreed and the adjudicator was not convinced, and a contested guess is
    * not a find.
    */
-  const unknown = /^(unknown|unidentified|unrecognis(ed|zed)|not identified|n\/?a|\?+)$/i;
-  const looksUnknown = (v: string) => !v || unknown.test(v.trim());
   if (
-    looksUnknown(make) ||
-    looksUnknown(model) ||
-    unknown.test(`${make} ${model}`.trim()) ||
+    !isIdentified(make, model) ||
     (typeof body.confidence === "string" && body.confidence.toLowerCase() === "low")
   ) {
     return NextResponse.json({ ok: true, ranked: false, reason: "not identified" });

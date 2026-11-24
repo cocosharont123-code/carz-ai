@@ -1,5 +1,6 @@
 import { put, list } from "@vercel/blob";
 import { blobToken, blobConfigured } from "./blob-token";
+import { isIdentified } from "./identified";
 
 // Global "rarest cars spotted" leaderboard, shared across ALL accounts.
 // Backed by a single JSON file in a Vercel Blob store (auto-provisioned).
@@ -107,7 +108,21 @@ const isLegacyPhoto = (image: string | undefined): boolean => !!image?.startsWit
  * than a blurred photograph, so they are not what this is about, and removing
  * them would delete a legitimate top score for an unrelated reason.
  */
-const usable = (cars: RareCar[]): RareCar[] => cars.filter((c) => !isLegacyPhoto(c.image));
+/**
+ * ...and entries that never named the car.
+ *
+ * The write gate turns away an unidentified scan, which fixes the future and
+ * does nothing about the rows already on the board -- "Unknown", "Unknown
+ * SUV", a question mark where a model should be. On a board of the rarest
+ * cars anyone has found, an unknown is the one thing that cannot be rare, so
+ * it comes off the board it is already on, not just the next one.
+ *
+ * Here rather than in a migration: a filter is idempotent and reversible,
+ * and it applies to every store this code runs against -- including the
+ * production one, which a script run from a laptop cannot reach.
+ */
+const usable = (cars: RareCar[]): RareCar[] =>
+  cars.filter((c) => !isLegacyPhoto(c.image) && isIdentified(c.make, c.model));
 
 /**
  * The stored board, exactly as written.
@@ -140,6 +155,7 @@ async function readBoardRaw(): Promise<RareCar[]> {
 export async function readBoard(): Promise<RareCar[]> {
   return usable(await readBoardRaw());
 }
+
 
 async function writeBoard(cars: RareCar[]): Promise<void> {
   await put(PATH, JSON.stringify(cars), {
@@ -199,7 +215,9 @@ export async function recordRareSpot(car: Omit<RareCar, "id" | "ts">): Promise<v
   }
   // And the other half: anything still holding an inline thumbnail after the
   // swap above is a car nobody has re-photographed, so it leaves the board for
-  // good rather than sitting there blurred.
+  // good rather than sitting there blurred. `usable` also drops the rows that
+  // never named a car, so this write is what makes that permanent: the next
+  // car anyone spots cleans the store on its way past.
   const top = usable([...byModel.values()])
     .sort((a, b) => b.rarityScore - a.rarityScore)
     .slice(0, MAX);
