@@ -57,7 +57,7 @@ export const CARZ_PLUS = {
   id: "plus" as const,
   name: "Carz PRO",
   monthly: 5.99,
-  annual: 59.99,
+  annual: 49.99,
   blurb: "For spotting regularly.",
   perks: [
     // Reads from the cap rather than restating it, so the two cannot disagree.
@@ -73,7 +73,7 @@ export const CARZ_MAX = {
   id: "max" as const,
   name: "Carz MAX",
   monthly: 9.99,
-  annual: 99.99,
+  annual: 89.99,
   blurb: "Everything in Carz PRO, without the ceiling.",
   /** Shown under "Everything in Carz PRO, plus:" — these are the additions. */
   perks: [

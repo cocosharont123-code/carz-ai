@@ -23,7 +23,7 @@ import { TimelineContent } from "@/components/ui/timeline-animation";
 import { VerticalCutReveal } from "@/components/ui/vertical-cut-reveal";
 import { cn } from "@/lib/utils";
 import NumberFlow from "@number-flow/react";
-import { CheckCheck, Zap } from "lucide-react";
+import { CheckCheck } from "lucide-react";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { BorderBeam } from "border-beam";
 import { useId, useRef, useState, type ReactNode } from "react";
@@ -239,7 +239,6 @@ function TierCard({
 /* --- The section ---------------------------------------------------------- */
 
 export default function PricingSection({
-  eyebrow,
   title,
   subtitle,
   tiers,
@@ -248,7 +247,6 @@ export default function PricingSection({
   busy,
   children,
 }: {
-  eyebrow: string;
   title: string;
   subtitle: string;
   tiers: PricingTier[];
@@ -273,20 +271,20 @@ export default function PricingSection({
   };
 
   return (
-    <div ref={sectionRef} className="mx-auto w-full max-w-3xl px-5 py-10">
+    // pt-4 rather than py-10: the title is the first thing on the screen
+    // now, and 40px of nothing above it was the "extra scroll on top". The
+    // bottom keeps its room so the last card clears the tab bar.
+    <div ref={sectionRef} className="mx-auto w-full max-w-3xl px-5 pb-10 pt-4">
       <div className="text-center">
-        <TimelineContent
-          as="div"
-          animationNum={0}
-          timelineRef={sectionRef}
-          customVariants={revealVariants}
-          className="flex items-center justify-center gap-2"
-        >
-          <Zap className="h-4 w-4 fill-carz text-carz" aria-hidden />
-          <span className="util-label text-carz">{eyebrow}</span>
-        </TimelineContent>
-
-        <h1 className="display mt-4 text-[34px] sm:text-[50px]">
+        {/* No eyebrow.
+        
+            It was a Zap icon and the word "Memberships" over a title that
+            already says what the page is -- §5's "never label the obvious",
+            and the icon was decoration above the one heading on the screen.
+            Removing it also takes its 4px top margin and its own line
+            height out of the gap above the title, which is the space that
+            had to be scrolled past to reach the plans. */}
+        <h1 className="display text-[34px] sm:text-[50px]">
           <VerticalCutReveal
             splitBy="words"
             staggerDuration={0.12}

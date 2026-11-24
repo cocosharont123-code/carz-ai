@@ -238,7 +238,6 @@ export default function PricingPage() {
     // own inner rhythm.
     <main>
       <PricingSection
-        eyebrow="Memberships"
         title={member === true ? "You're in" : "Choose your plan"}
         subtitle={
           member
