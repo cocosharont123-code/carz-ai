@@ -34,9 +34,20 @@ export const metadata: Metadata = {
     title: "Carz AI",
     statusBarStyle: "black-translucent",
   },
-  // No `icon` entry: app/favicon.ico is picked up by file convention and is
-  // drawn for tab sizes, where the full wave would be an illegible smudge.
+  /**
+   * The icons, declared rather than left to file convention.
+   *
+   * app/favicon.ico alone is one 32px bitmap, which is all a browser tab
+   * needs and not what anything else asks for: a PWA install, a bookmark on
+   * a desktop, a link preview and iOS all reach for a larger PNG, and
+   * without one they scale the 32 up. These are the three Next renders as
+   * <link> tags, in the order a browser reads them.
+   */
   icons: {
+    icon: [
+      { url: "/favicon-32.png", type: "image/png", sizes: "32x32" },
+      { url: "/favicon-512.png", type: "image/png", sizes: "512x512" },
+    ],
     apple: "/apple-touch-icon.png",
   },
 };
