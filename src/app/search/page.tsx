@@ -5,8 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Search as SearchIcon, Crown, X, ChevronRight } from "lucide-react";
 import { Avatar } from "@/components/default-avatar";
-import { Input } from "@/components/ui/input";
 import { EXPLORE_BUBBLES, matchesExploreQuery } from "@/config/explore";
+import { cn } from "@/lib/utils";
 
 type Account = {
   username: string;
@@ -64,28 +64,50 @@ function SearchInner() {
 
   return (
     <main className="mx-auto w-full max-w-2xl px-5 py-6">
+      {/* The app's own capsule, not the stock shadcn <Input>.
+      
+          That component draws `rounded-lg border border-input` on top of
+          `shadow-sm`, and in this app neither token resolves at the element:
+          measured in WebKit it came out as border-radius 0 with a 1px opaque
+          white border, so searching from Home landed you on a hard-cornered
+          white box around a field that is a capsule everywhere else in the
+          app. That box is the "random square on top of the textbox".
+      
+          The classes below are the ones SearchPill uses, so this field and
+          the one on Home are the same object seen twice. Not SearchPill
+          itself only because this one carries a clear button inside the
+          field, which that component has no slot for. */}
       <div className="relative">
         <SearchIcon
-          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 opacity-40"
+          className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[var(--color-muted-text)]"
+          strokeWidth={1.75}
           aria-hidden
         />
-        <Input
+        <input
           autoFocus
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search cars, features or people…"
           aria-label="Search cars, features or people"
-          className="h-12 pl-9 pr-10"
+          className={cn(
+            "h-[52px] w-full rounded-full glass-card",
+            "pl-11 pr-14 text-[15px] text-foreground outline-none",
+            "placeholder:text-[var(--color-muted-text)]",
+            // Safari draws its own X inside type=search and it is not ours.
+            "[&::-webkit-search-cancel-button]:appearance-none",
+          )}
         />
         {q && (
           <button
             type="button"
             onClick={() => setQ("")}
             aria-label="Clear"
-            className="press absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full hover:bg-foreground/[0.08]"
+            // 44px, not the 32 it was: it sits inside a field people are
+            // typing into, which is the worst place to miss a target.
+            className="press absolute right-1 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full"
           >
-            <X className="h-4 w-4 opacity-60" aria-hidden />
+            <X className="h-[18px] w-[18px] text-[var(--color-secondary-text)]" aria-hidden />
           </button>
         )}
       </div>

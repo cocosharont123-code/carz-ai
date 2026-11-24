@@ -361,7 +361,11 @@ function GarageInner() {
                   key={c.id}
                   type="button"
                   onClick={() => setOpen(i)}
-                  aria-label={`Open ${c.make} ${c.model}`}
+                  aria-label={
+                    c.rarityScore > 0
+                      ? `Open ${c.make} ${c.model}, rarity ${Math.round(c.rarityScore)} out of 100`
+                      : `Open ${c.make} ${c.model}`
+                  }
                   // rounded-[28%] rather than a pixel radius: a squircle's corner
                     // has to scale with the tile, and these are a third of the
                     // viewport on a phone and fixed at 480 on a desktop. One
@@ -381,9 +385,23 @@ function GarageInner() {
                     className="h-full w-full rounded-[28%] object-cover transition duration-300 group-hover:scale-[1.04]"
                   />
 
-                  {c.rarityScore >= 70 && (
-                    <span className="util-label absolute left-2 top-2 rounded-md bg-carz px-1.5 py-0.5">
-                      Rare
+                  {/* The score, on every car that has one.
+                  
+                      It was the word "Rare" in a small solid white square,
+                      and only on cars over 70 -- so the corner of the tile
+                      was either a bright chip or nothing, and the chip said
+                      less than the number it was standing in for. A dark
+                      capsule with the score reads on any photograph, in
+                      either theme, and says which of two rare cars is the
+                      rarer.
+                  
+                      No blur: §2 puts no backdrop-filter on repeated grid
+                      items, and a photo grid is the most expensive place to
+                      break that rule. A flat scrim does the same job here
+                      because what is behind it is always a photograph. */}
+                  {c.rarityScore > 0 && (
+                    <span className="absolute left-2 top-2 rounded-full bg-black/60 px-2 py-[3px] text-[11px] font-bold tabular-nums leading-none text-white">
+                      {Math.round(c.rarityScore)}
                     </span>
                   )}
 
